@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
-  SearchIcon, TrashIcon,
+  SearchIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon,
 } from '../../components/Icons';
 import { adminApi } from '../../api/admin.api';
 import type { User } from '../../types';
