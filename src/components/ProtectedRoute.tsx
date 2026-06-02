@@ -2,8 +2,10 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import type { ReactNode } from 'react';
 
+const ADMIN_ROLES = ['super_admin', 'admin'];
+
 export default function ProtectedRoute({ children }: { children: ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
 
   if (isLoading) {
     return (
@@ -18,5 +20,8 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
     );
   }
 
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (user && !ADMIN_ROLES.includes(user.role)) return <Navigate to="/login" replace />;
+
+  return <>{children}</>;
 }

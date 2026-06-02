@@ -1,63 +1,91 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
-  SearchIcon, EditIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon,
+  SearchIcon, TrashIcon,
 } from '../../components/Icons';
+import { adminApi } from '../../api/admin.api';
+import type { User } from '../../types';
 
-type TabKey = 'tous' | 'bailleurs' | 'locataires' | 'agents';
-
-interface UserRow {
-  id: number;
-  initials: string;
-  bg: string;
-  nom: string;
-  telephone: string;
-  role: string;
-  localisation: string;
-  verif: 'verified' | 'pending';
-  verifLabel: string;
-  date: string;
-}
-
-const USERS: UserRow[] = [
-  {
-    id: 1, initials: 'KB', bg: '#2563EB',
-    nom: 'Koffi BENOIT', telephone: '+229 97 00 00 01',
-    role: 'Bailleur', localisation: 'Cotonou, Fidjrossè',
-    verif: 'verified', verifLabel: '✓ VÉRIFIÉ (CIP)',
-    date: '12 Oct 2023',
-  },
-  {
-    id: 2, initials: 'SO', bg: '#F97316',
-    nom: 'Sèna Odile', telephone: '+229 61 22 33 44',
-    role: 'Locataire', localisation: 'Abomey-Calavi',
-    verif: 'pending', verifLabel: '⚠ EN ATTENTE',
-    date: '20 Déc 2023',
-  },
-  {
-    id: 3, initials: 'KB', bg: '#2563EB',
-    nom: 'Koffi BENOIT', telephone: '+229 97 00 00 01',
-    role: 'Bailleur', localisation: 'Cotonou, Fidjrossè',
-    verif: 'verified', verifLabel: '✓ VÉRIFIÉ (CIP)',
-    date: '12 Oct 2023',
-  },
-  {
-    id: 4, initials: 'SO', bg: '#F97316',
-    nom: 'Kodjo luc', telephone: '+229 61 22 33 44',
-    role: 'Locataire', localisation: 'Abomey-Calavi',
-    verif: 'pending', verifLabel: '⚠ EN ATTENTE',
-    date: '20 Déc 2023',
-  },
-];
+type TabKey = 'tous' | 'detenteur' | 'client';
 
 const TABS: { key: TabKey; label: string }[] = [
-  { key: 'tous', label: 'Tous (12,480)' },
-  { key: 'bailleurs', label: 'Bailleurs' },
-  { key: 'locataires', label: 'Locataires' },
-  { key: 'agents', label: 'Agents Immo' },
+  { key: 'tous',     label: 'Tous' },
+  { key: 'detenteur', label: 'Propriétaires / Bailleurs' },
+  { key: 'client',   label: 'Clients' },
 ];
 
+const ROLE_LABELS: Record<string, string> = {
+  client:      'Client',
+  detenteur:   'Propriétaire / Bailleur',
+  super_admin: 'Super Admin',
+};
+
+const AVATAR_COLORS = [
+  '#2563EB', '#F97316', '#6366F1', '#16A34A', '#DC2626', '#7C3AED',
+];
+
+function initials(u: User) {
+  return `${u.nom[0] ?? ''}${u.prenom[0] ?? ''}`.toUpperCase();
+}
+
+function avatarColor(id: number) {
+  return AVATAR_COLORS[id % AVATAR_COLORS.length];
+}
+
+function formatDate(d: string) {
+  return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+const LIMIT = 10;
+
 export default function UtilisateursPage() {
-  const [activeTab, setActiveTab] = useState<TabKey>('tous');
+  const [activeTab, setActiveTab]   = useState<TabKey>('tous');
+  const [users, setUsers]           = useState<User[]>([]);
+  const [total, setTotal]           = useState(0);
+  const [page, setPage]             = useState(1);
+  const [search, setSearch]         = useState('');
+  const [loading, setLoading]       = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await adminApi.getUsers({
+        page,
+        limit: LIMIT,
+        role:  activeTab === 'tous' ? undefined : activeTab,
+        search: search || undefined,
+      });
+      setUsers(res.data);
+      setTotal(res.total);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, activeTab, search]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const totalPages = Math.ceil(total / LIMIT);
+
+  async function toggleActif(u: User) {
+    await adminApi.updateUser(u.id, { actif: !u.actif });
+    load();
+  }
+
+  async function handleDelete(id: number) {
+    await adminApi.deleteUser(id);
+    setConfirmDelete(null);
+    load();
+  }
+
+  function handleTabChange(t: TabKey) {
+    setActiveTab(t);
+    setPage(1);
+  }
+
+  function handleSearch(e: React.ChangeEvent<HTMLInputElement>) {
+    setSearch(e.target.value);
+    setPage(1);
+  }
 
   return (
     <>
@@ -65,11 +93,9 @@ export default function UtilisateursPage() {
       <div className="immo-topbar">
         <div className="immo-topbar-title">
           <h1 style={{ color: 'var(--c-text)' }}>Gestion des Utilisateurs</h1>
+          <p>{total} utilisateur{total > 1 ? 's' : ''} au total</p>
         </div>
         <div className="immo-spacer" />
-        <button className="btn-blue-main">
-          <PlusIcon /> Ajouter un utilisateur
-        </button>
       </div>
 
       {/* ── Content ── */}
@@ -81,7 +107,7 @@ export default function UtilisateursPage() {
               <button
                 key={t.key}
                 className={`user-tab ${activeTab === t.key ? 'active' : 'inactive'}`}
-                onClick={() => setActiveTab(t.key)}
+                onClick={() => handleTabChange(t.key)}
               >
                 {t.label}
               </button>
@@ -90,63 +116,138 @@ export default function UtilisateursPage() {
           <div className="immo-spacer" />
           <div className="immo-search-wrap">
             <SearchIcon />
-            <input placeholder="Rechercher par nom ou téléphone..." style={{ width: 220 }} />
+            <input
+              placeholder="Rechercher par nom, email..."
+              value={search}
+              onChange={handleSearch}
+              style={{ width: 220 }}
+            />
           </div>
         </div>
 
         {/* Table */}
         <div className="user-table-wrap">
-          {/* Header */}
           <div className="user-table-header">
             <span className="user-table-col">Utilisateur</span>
-            <span className="user-table-col">Rôle & Localisation</span>
-            <span className="user-table-col">Vérification</span>
-            <span className="user-table-col">Date d'inscription</span>
+            <span className="user-table-col">Rôle</span>
+            <span className="user-table-col">Contact</span>
+            <span className="user-table-col">Statut</span>
+            <span className="user-table-col">Inscription</span>
             <span className="user-table-col">Actions</span>
           </div>
 
-          {/* Rows */}
-          {USERS.map((u) => (
-            <div className="user-row" key={u.id}>
-              {/* Utilisateur */}
-              <div className="user-cell">
-                <div className="user-av" style={{ background: u.bg }}>{u.initials}</div>
+          {loading ? (
+            <div style={{ padding: '32px 20px', textAlign: 'center', color: 'var(--c-muted)' }}>
+              Chargement…
+            </div>
+          ) : users.length === 0 ? (
+            <div style={{ padding: '32px 20px', textAlign: 'center', color: 'var(--c-muted)' }}>
+              Aucun utilisateur trouvé.
+            </div>
+          ) : (
+            users.map((u) => (
+              <div className="user-row" key={u.id}>
+                {/* Avatar + nom */}
+                <div className="user-cell">
+                  <div className="user-av" style={{ background: avatarColor(u.id) }}>
+                    {initials(u)}
+                  </div>
+                  <div>
+                    <div className="user-name">{u.nom} {u.prenom}</div>
+                    <div className="user-phone" style={{ fontSize: 11, color: 'var(--c-muted)' }}>
+                      ID #{u.id}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Rôle */}
                 <div>
-                  <div className="user-name">{u.nom}</div>
-                  <div className="user-phone">{u.telephone}</div>
+                  <span className="user-role">{ROLE_LABELS[u.role] ?? u.role}</span>
+                </div>
+
+                {/* Contact */}
+                <div>
+                  <div style={{ fontSize: 12, color: 'var(--c-text)' }}>{u.email ?? '—'}</div>
+                  <div className="user-phone">{u.telephone ?? '—'}</div>
+                </div>
+
+                {/* Statut */}
+                <div>
+                  <button
+                    onClick={() => toggleActif(u)}
+                    className={`badge-verif ${u.actif ? 'verified' : 'pending'}`}
+                    style={{ cursor: 'pointer', border: 'none', background: 'transparent' }}
+                    title="Cliquer pour basculer"
+                  >
+                    {u.actif ? '✓ ACTIF' : '✗ BLOQUÉ'}
+                  </button>
+                </div>
+
+                {/* Date */}
+                <div className="user-date">{formatDate(u.created_at)}</div>
+
+                {/* Actions */}
+                <div className="user-actions">
+                  {confirmDelete === u.id ? (
+                    <>
+                      <button
+                        className="btn-icon-sm danger"
+                        onClick={() => handleDelete(u.id)}
+                        title="Confirmer la suppression"
+                      >
+                        ✓
+                      </button>
+                      <button
+                        className="btn-icon-sm"
+                        onClick={() => setConfirmDelete(null)}
+                        title="Annuler"
+                      >
+                        ✗
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      className="btn-icon-sm danger"
+                      onClick={() => setConfirmDelete(u.id)}
+                      title="Supprimer"
+                    >
+                      <TrashIcon />
+                    </button>
+                  )}
                 </div>
               </div>
+            ))
+          )}
 
-              {/* Rôle */}
-              <div>
-                <div className="user-role">{u.role}</div>
-                <div className="user-location">{u.localisation}</div>
-              </div>
-
-              {/* Vérification */}
-              <div>
-                <span className={`badge-verif ${u.verif}`}>{u.verifLabel}</span>
-              </div>
-
-              {/* Date */}
-              <div className="user-date">{u.date}</div>
-
-              {/* Actions */}
-              <div className="user-actions">
-                <button className="btn-icon-sm"><EditIcon /></button>
-                <button className="btn-icon-sm danger"><TrashIcon /></button>
-              </div>
-            </div>
-          ))}
-
-          {/* Footer */}
+          {/* Footer pagination */}
           <div className="user-table-footer">
-            <span>Affichage de 1–10 sur 12,480</span>
+            <span>
+              {total === 0 ? '0 résultat' : `${(page - 1) * LIMIT + 1}–${Math.min(page * LIMIT, total)} sur ${total}`}
+            </span>
             <div className="immo-pagination">
-              <button className="page-btn">Précédent</button>
-              <button className="page-btn active">1</button>
-              <button className="page-btn">2</button>
-              <button className="page-btn">Suivant</button>
+              <button
+                className="page-btn"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => p - 1)}
+              >
+                <ChevronLeftIcon />
+              </button>
+              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map((p) => (
+                <button
+                  key={p}
+                  className={`page-btn ${page === p ? 'active' : ''}`}
+                  onClick={() => setPage(p)}
+                >
+                  {p}
+                </button>
+              ))}
+              <button
+                className="page-btn"
+                disabled={page >= totalPages}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                <ChevronRightIcon />
+              </button>
             </div>
           </div>
         </div>

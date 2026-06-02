@@ -1,5 +1,5 @@
 import api from './axios';
-import type { AuthTokens, LoginPayload } from '../types';
+import type { AuthTokens, LoginPayload, User } from '../types';
 
 export const authApi = {
   login: (payload: LoginPayload) =>
@@ -12,5 +12,8 @@ export const authApi = {
     api.post<AuthTokens>('/auth/refresh', { refresh_token }).then((r) => r.data),
 
   getProfile: () =>
-    api.get('/auth/me').then((r) => r.data),
+    api.get<User>('/users/me').then((r) => r.data),
+
+  updateProfile: (data: { nom?: string; prenom?: string; email?: string; telephone?: string }) =>
+    api.patch<User>('/users/me', data).then((r) => r.data),
 };
