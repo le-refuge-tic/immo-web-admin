@@ -1,139 +1,32 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { adminApi } from '../../api/admin.api';
-import type { CreateAdminPayload } from '../../api/admin.api';
-import type { User } from '../../types';
-
-// ── Modal création admin ──────────────────────────────────────────────────────
-
-function CreateAdminModal({
-  onClose,
-  onCreated,
-}: {
-  onClose: () => void;
-  onCreated: (u: User) => void;
-}) {
-  const [form, setForm] = useState<CreateAdminPayload>({ nom: '', prenom: '', email: '', password: '' });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  const set = (field: keyof CreateAdminPayload) =>
-    (e: React.ChangeEvent<HTMLInputElement>) =>
-      setForm(f => ({ ...f, [field]: e.target.value }));
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-    try {
-      const res = await adminApi.createAdmin(form);
-      onCreated(res.user);
-      onClose();
-    } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Une erreur est survenue');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="immo-modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="immo-modal">
-        <div className="immo-modal-title">Nouvel administrateur</div>
-        <div className="immo-modal-sub">
-          Ce compte aura accès à l'interface d'administration.
-          Seul vous (Super Admin) pourrez le supprimer.
-        </div>
-
-        {error && (
-          <div style={{
-            background: 'var(--c-red-bg)', color: 'var(--c-red)',
-            border: '1px solid #FECACA', borderRadius: 8,
-            padding: '9px 13px', fontSize: 12, fontWeight: 500, marginBottom: 14,
-          }}>
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <div className="immo-form-field">
-              <label className="immo-form-label">Nom</label>
-              <input className="immo-form-input" value={form.nom} onChange={set('nom')} required placeholder="Dupont" />
-            </div>
-            <div className="immo-form-field">
-              <label className="immo-form-label">Prénom</label>
-              <input className="immo-form-input" value={form.prenom} onChange={set('prenom')} required placeholder="Jean" />
-            </div>
-          </div>
-          <div className="immo-form-field">
-            <label className="immo-form-label">Adresse email</label>
-            <input className="immo-form-input" type="email" value={form.email} onChange={set('email')} required placeholder="admin@houetche.com" />
-          </div>
-          <div className="immo-form-field">
-            <label className="immo-form-label">Mot de passe temporaire</label>
-            <input className="immo-form-input" type="password" value={form.password} onChange={set('password')} required minLength={8} placeholder="Min. 8 caractères" />
-          </div>
-          <div className="immo-modal-actions">
-            <button type="button" className="btn-cancel" onClick={onClose}>Annuler</button>
-            <button type="submit" className="btn-submit" disabled={loading}>
-              {loading ? (
-                <>
-                  <span style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite', flexShrink: 0 }} />
-                  Création…
-                </>
-              ) : 'Créer l\'administrateur'}
-            </button>
-          </div>
-        </form>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      </div>
-    </div>
-  );
-}
-
-// ── Badge rôle ────────────────────────────────────────────────────────────────
-
-function RoleBadge({ role }: { role: string }) {
-  const isSuperAdmin = role === 'super_admin';
-  return (
-    <span style={{
-      display: 'inline-flex', alignItems: 'center', gap: 4,
-      padding: '3px 9px', borderRadius: 20, fontSize: 10, fontWeight: 700,
-      letterSpacing: '0.5px', textTransform: 'uppercase',
-      background: isSuperAdmin ? '#FFF7ED' : '#EFF6FF',
-      color: isSuperAdmin ? 'var(--c-orange)' : 'var(--c-blue)',
-      border: `1px solid ${isSuperAdmin ? '#FED7AA' : '#BFDBFE'}`,
-    }}>
-      {isSuperAdmin ? '★ Super Admin' : 'Administrateur'}
-    </span>
-  );
-}
-
-// ── Page ─────────────────────────────────────────────────────────────────────
+import { getAdmins } from '../../api/getAdmins';
+import { deleteAdmins } from '../../api/deleteAdmins';
+import GestionAdminModal from './GestionAdminModal';
+import GestionAdminRoleBadge from './GestionAdminRoleBadge';
 
 export default function GestionAdminPage() {
-  const { user: me } = useAuth();
-  const [admins, setAdmins]     = useState<User[]>([]);
-  const [loading, setLoading]   = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const { user: me }                    = useAuth();
+  const [admins, setAdmins]             = useState([] as any[]);
+  const [loading, setLoading]           = useState(true);
+  const [showModal, setShowModal]       = useState(false);
+  const [deletingId, setDeletingId]     = useState(null as any);
 
   useEffect(() => {
-    adminApi.getAdmins()
+    getAdmins.list()
       .then(setAdmins)
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
-  const handleCreated = (u: User) => setAdmins(a => [...a, u]);
+  const handleCreated = (u: any) => setAdmins(a => [...a, u]);
 
-  const handleDelete = async (admin: User) => {
+  const handleDelete = async (admin: any) => {
     if (!confirm(`Supprimer l'administrateur ${admin.prenom} ${admin.nom} ?`)) return;
     setDeletingId(admin.id);
     try {
-      await adminApi.deleteAdmin(admin.id);
-      setAdmins(a => a.filter(x => x.id !== admin.id));
+      await deleteAdmins.byId(admin.id);
+      setAdmins(a => a.filter((x: any) => x.id !== admin.id));
     } catch (err: any) {
       alert(err?.response?.data?.message ?? 'Erreur lors de la suppression');
     } finally {
@@ -141,9 +34,9 @@ export default function GestionAdminPage() {
     }
   };
 
-  const total       = admins.length;
-  const totalSuper  = admins.filter(a => a.role === 'super_admin').length;
-  const totalAdmin  = admins.filter(a => a.role === 'admin').length;
+  const total      = admins.length;
+  const totalSuper = admins.filter((a: any) => a.role === 'super_admin').length;
+  const totalAdmin = admins.filter((a: any) => a.role === 'admin').length;
 
   return (
     <>
@@ -155,7 +48,6 @@ export default function GestionAdminPage() {
       </div>
 
       <div className="immo-page">
-        {/* Stats */}
         <div className="mgmt-stats">
           <div className="mgmt-stat-card">
             <div className="mgmt-stat-icon" style={{ background: '#EFF6FF' }}>
@@ -193,25 +85,18 @@ export default function GestionAdminPage() {
           </div>
         </div>
 
-        {/* Liste */}
         <div className="immo-card" style={{ padding: 0, overflow: 'hidden' }}>
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             padding: '18px 24px', borderBottom: '1px solid var(--c-border)',
           }}>
             <div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--c-text)' }}>
-                Équipe d'administration
-              </div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--c-text)' }}>Équipe d'administration</div>
               <div style={{ fontSize: 12, color: 'var(--c-muted)', marginTop: 2 }}>
                 Les Super Admins ne peuvent pas être supprimés depuis cette interface.
               </div>
             </div>
-            <button
-              className="btn-blue-main"
-              style={{ fontSize: 12, padding: '8px 16px', flexShrink: 0 }}
-              onClick={() => setShowModal(true)}
-            >
+            <button className="btn-blue-main" style={{ fontSize: 12, padding: '8px 16px', flexShrink: 0 }} onClick={() => setShowModal(true)}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                 <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
               </svg>
@@ -230,8 +115,8 @@ export default function GestionAdminPage() {
             </div>
           ) : (
             <div className="admin-list" style={{ padding: '8px 24px' }}>
-              {admins.map(a => {
-                const initials = `${a.nom[0] ?? ''}${a.prenom[0] ?? ''}`.toUpperCase();
+              {admins.map((a: any) => {
+                const initials  = `${a.nom[0] ?? ''}${a.prenom[0] ?? ''}`.toUpperCase();
                 const isMe      = me?.id === a.id;
                 const isSuperAdm = a.role === 'super_admin';
                 const canDelete  = !isMe && !isSuperAdm;
@@ -246,15 +131,9 @@ export default function GestionAdminPage() {
                       </div>
                       <div className="admin-info-email">{a.email ?? '—'}</div>
                     </div>
-                    <RoleBadge role={a.role} />
+                    <GestionAdminRoleBadge role={a.role} />
                     {canDelete ? (
-                      <button
-                        className="btn-icon-sm danger"
-                        onClick={() => handleDelete(a)}
-                        disabled={deletingId === a.id}
-                        title="Supprimer cet administrateur"
-                        style={{ flexShrink: 0 }}
-                      >
+                      <button className="btn-icon-sm danger" onClick={() => handleDelete(a)} disabled={deletingId === a.id} title="Supprimer cet administrateur" style={{ flexShrink: 0 }}>
                         {deletingId === a.id ? (
                           <span style={{ width: 12, height: 12, border: '2px solid currentColor', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite', display: 'block' }} />
                         ) : (
@@ -274,7 +153,6 @@ export default function GestionAdminPage() {
           )}
         </div>
 
-        {/* Note explicative */}
         <div className="immo-card" style={{ padding: '14px 20px', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
           <div style={{ width: 34, height: 34, borderRadius: 8, background: '#FFF7ED', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -283,9 +161,7 @@ export default function GestionAdminPage() {
             </svg>
           </div>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-text)', marginBottom: 3 }}>
-              Hiérarchie des rôles
-            </div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-text)', marginBottom: 3 }}>Hiérarchie des rôles</div>
             <div style={{ fontSize: 12, color: 'var(--c-muted)', lineHeight: 1.6 }}>
               <strong>Administrateur</strong> : accès complet à la gestion des biens, utilisateurs et modération.<br/>
               <strong>Super Admin</strong> : mêmes droits + gestion des administrateurs. Ne peut être supprimé que via la base de données.
@@ -295,7 +171,7 @@ export default function GestionAdminPage() {
       </div>
 
       {showModal && (
-        <CreateAdminModal onClose={() => setShowModal(false)} onCreated={handleCreated} />
+        <GestionAdminModal onClose={() => setShowModal(false)} onCreated={handleCreated} />
       )}
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>

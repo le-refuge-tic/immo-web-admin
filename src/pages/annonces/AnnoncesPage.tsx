@@ -1,11 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { SearchIcon, PinIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon } from '../../components/Icons';
-import { adminApi } from '../../api/admin.api';
-import type { Bien, TypeBien, StatutModeration } from '../../types';
+import { getAdminBien } from '../../api/getAdminBien';
+import { patchAdminBien } from '../../api/patchAdminBien';
+import { deleteAdminBien } from '../../api/deleteAdminBien';
 
-const API_URL = import.meta.env.VITE_API_URL?.replace('/api/v1', '') ?? 'http://localhost:3000';
-
-type FilterTab = 'tous' | TypeBien;
+type FilterTab = 'tous' | 'maison' | 'appart_vide' | 'appart_meuble' | 'guesthouse' | 'terrain';
 
 const FILTER_TABS: { key: FilterTab; label: string }[] = [
   { key: 'tous',          label: 'Tous les biens' },
@@ -24,18 +23,18 @@ const TYPE_LABELS: Record<string, string> = {
   terrain:       'TERRAIN',
 };
 
-const MOD_BADGE: Record<StatutModeration, { label: string; className: string }> = {
-  en_attente:  { label: 'EN ATTENTE',   className: 'pending'  },
-  approuve:    { label: 'APPROUVÉ',     className: 'verified' },
-  rejete:      { label: 'REJETÉ',       className: 'danger'   },
-  conditionnel:{ label: 'CONDITIONNEL', className: 'pending'  },
+const MOD_BADGE: any = {
+  en_attente:   { label: 'EN ATTENTE',   className: 'pending'  },
+  approuve:     { label: 'APPROUVÉ',     className: 'verified' },
+  rejete:       { label: 'REJETÉ',       className: 'danger'   },
+  conditionnel: { label: 'CONDITIONNEL', className: 'pending'  },
 };
 
 const LIMIT = 12;
 
 export default function AnnoncesPage() {
-  const [activeFilter, setActiveFilter] = useState<FilterTab>('tous');
-  const [biens, setBiens]               = useState<Bien[]>([]);
+  const [activeFilter, setActiveFilter] = useState('tous' as any);
+  const [biens, setBiens]               = useState([] as any[]);
   const [total, setTotal]               = useState(0);
   const [page, setPage]                 = useState(1);
   const [search, setSearch]             = useState('');
@@ -44,7 +43,7 @@ export default function AnnoncesPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await adminApi.getBiens({
+      const res = await getAdminBien.list({
         page,
         limit: LIMIT,
         type:  activeFilter !== 'tous' ? activeFilter : undefined,
@@ -60,14 +59,14 @@ export default function AnnoncesPage() {
 
   const totalPages = Math.ceil(total / LIMIT);
 
-  async function handleModerate(id: number, statut: StatutModeration) {
-    await adminApi.moderateBien(id, { statut_moderation: statut });
+  async function handleModerate(id: number, statut: string) {
+    await patchAdminBien.moderate(id, { statut_moderation: statut });
     load();
   }
 
   async function handleDelete(id: number) {
     if (!confirm('Supprimer ce bien définitivement ?')) return;
-    await adminApi.deleteBien(id);
+    await deleteAdminBien.byId(id);
     load();
   }
 
@@ -78,7 +77,7 @@ export default function AnnoncesPage() {
 
   const displayed = search
     ? biens.filter(
-        (b) =>
+        (b: any) =>
           b.localisation?.ville?.toLowerCase().includes(search.toLowerCase()) ||
           b.localisation?.quartier?.toLowerCase().includes(search.toLowerCase()) ||
           b.description?.toLowerCase().includes(search.toLowerCase()),
@@ -87,7 +86,6 @@ export default function AnnoncesPage() {
 
   return (
     <>
-      {/* ── Topbar ── */}
       <div className="immo-topbar">
         <div className="immo-topbar-title">
           <h1>Catalogue Immobilier</h1>
@@ -104,9 +102,7 @@ export default function AnnoncesPage() {
         </div>
       </div>
 
-      {/* ── Content ── */}
       <div className="immo-page">
-        {/* Filter pills */}
         <div className="filter-pills" style={{ overflowX: 'auto', flexWrap: 'nowrap' }}>
           <span className="filter-label">Type :</span>
           {FILTER_TABS.map((p) => (
@@ -120,7 +116,6 @@ export default function AnnoncesPage() {
           ))}
         </div>
 
-        {/* Grid */}
         {loading ? (
           <div style={{ padding: '48px 0', textAlign: 'center', color: 'var(--c-muted)' }}>
             Chargement…
@@ -131,17 +126,16 @@ export default function AnnoncesPage() {
           </div>
         ) : (
           <div className="annonce-grid">
-            {displayed.map((b) => {
-              const cover = b.photos?.find((p) => p.is_cover) ?? b.photos?.[0];
+            {displayed.map((b: any) => {
+              const cover = b.photos?.find((p: any) => p.is_cover) ?? b.photos?.[0];
               const mod   = b.statut_moderation ?? 'en_attente';
-              const badge = MOD_BADGE[mod as StatutModeration];
+              const badge = MOD_BADGE[mod] ?? MOD_BADGE.en_attente;
 
               return (
                 <div className="annonce-card" key={b.id}>
-                  {/* Image */}
                   <div className="annonce-img">
                     {cover ? (
-                      <img src={`${API_URL}/${cover.url}`} alt={b.type} />
+                      <img src={cover.url} alt={b.type} />
                     ) : (
                       <div style={{
                         width: '100%', height: '100%', background: '#E2E8F0',
@@ -161,7 +155,6 @@ export default function AnnoncesPage() {
                     </span>
                   </div>
 
-                  {/* Body */}
                   <div className="annonce-body">
                     <div className="annonce-title-row">
                       <div className="annonce-name">
@@ -254,7 +247,6 @@ export default function AnnoncesPage() {
           </div>
         )}
 
-        {/* Pagination */}
         <div className="annonce-pagination-row">
           <span>
             {total === 0 ? '0 résultat' : `Affichage de ${(page - 1) * LIMIT + 1}–${Math.min(page * LIMIT, total)} sur ${total}`}

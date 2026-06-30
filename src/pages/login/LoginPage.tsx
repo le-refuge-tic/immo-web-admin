@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import villaImg       from '../../assets/login/villa.jpg';
@@ -20,16 +20,15 @@ export default function LoginPage() {
     return null;
   }
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
       await login({ email, password });
       navigate('/dashboard', { replace: true });
-    } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })
-        ?.response?.data?.message;
+    } catch (err: any) {
+      const msg = err?.response?.data?.message;
       setError(msg || 'Email ou mot de passe incorrect.');
     } finally {
       setLoading(false);

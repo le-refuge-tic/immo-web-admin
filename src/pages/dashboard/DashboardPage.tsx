@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { SearchIcon, CardIcon, UsersIcon, HomeIcon, AlertIcon } from '../../components/Icons';
-import { adminApi } from '../../api/admin.api';
-import type { AdminStats } from '../../types';
+import { getAdminStats } from '../../api/getAdminStats';
 
 export default function DashboardPage() {
-  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [stats, setStats] = useState(null as any);
 
   useEffect(() => {
-    adminApi.getStats().then(setStats).catch(() => {});
+    getAdminStats.get().then(setStats).catch(() => {});
   }, []);
 
   const statCards = [
@@ -57,7 +56,6 @@ export default function DashboardPage() {
 
   return (
     <>
-      {/* ── Topbar ── */}
       <div className="immo-topbar">
         <div className="immo-search-wrap">
           <SearchIcon />
@@ -65,7 +63,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ── Content ── */}
       <div className="immo-page">
         <div>
           <h2 style={{ fontSize: 26, fontWeight: 800, color: 'var(--c-text)', margin: 0 }}>
@@ -76,7 +73,6 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        {/* Stat cards */}
         <div className="stat-grid">
           {statCards.map((s) => (
             <div className="stat-card" key={s.label}>
@@ -96,9 +92,7 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        {/* Bottom section */}
         <div className="dashboard-bottom">
-          {/* Biens en attente de modération */}
           <div className="immo-card" style={{ padding: '20px 24px' }}>
             <div className="section-header">
               <span className="section-title">Annonces en attente de modération</span>
@@ -117,7 +111,6 @@ export default function DashboardPage() {
             )}
           </div>
 
-          {/* Résumé plateforme */}
           <div className="flux-momo-card">
             <div className="flux-header">
               <CardIcon size={18} />

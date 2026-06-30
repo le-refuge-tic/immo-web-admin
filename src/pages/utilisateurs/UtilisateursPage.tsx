@@ -1,29 +1,26 @@
 import { useState, useEffect, useCallback } from 'react';
-import {
-  SearchIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon,
-} from '../../components/Icons';
-import { adminApi } from '../../api/admin.api';
-import type { User } from '../../types';
+import { SearchIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon } from '../../components/Icons';
+import { getAdminUser } from '../../api/getAdminUser';
+import { patchAdminUser } from '../../api/patchAdminUser';
+import { deleteAdminUser } from '../../api/deleteAdminUser';
 
 type TabKey = 'tous' | 'detenteur' | 'client';
 
 const TABS: { key: TabKey; label: string }[] = [
-  { key: 'tous',     label: 'Tous' },
+  { key: 'tous',      label: 'Tous' },
   { key: 'detenteur', label: 'Propriétaires / Bailleurs' },
-  { key: 'client',   label: 'Clients' },
+  { key: 'client',    label: 'Clients' },
 ];
 
-const ROLE_LABELS: Record<string, string> = {
+const ROLE_LABELS: any = {
   client:      'Client',
   detenteur:   'Propriétaire / Bailleur',
   super_admin: 'Super Admin',
 };
 
-const AVATAR_COLORS = [
-  '#2563EB', '#F97316', '#6366F1', '#16A34A', '#DC2626', '#7C3AED',
-];
+const AVATAR_COLORS = ['#2563EB', '#F97316', '#6366F1', '#16A34A', '#DC2626', '#7C3AED'];
 
-function initials(u: User) {
+function initials(u: any) {
   return `${u.nom[0] ?? ''}${u.prenom[0] ?? ''}`.toUpperCase();
 }
 
@@ -38,21 +35,21 @@ function formatDate(d: string) {
 const LIMIT = 10;
 
 export default function UtilisateursPage() {
-  const [activeTab, setActiveTab]   = useState<TabKey>('tous');
-  const [users, setUsers]           = useState<User[]>([]);
-  const [total, setTotal]           = useState(0);
-  const [page, setPage]             = useState(1);
-  const [search, setSearch]         = useState('');
-  const [loading, setLoading]       = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
+  const [activeTab, setActiveTab]         = useState('tous' as any);
+  const [users, setUsers]                 = useState([] as any[]);
+  const [total, setTotal]                 = useState(0);
+  const [page, setPage]                   = useState(1);
+  const [search, setSearch]               = useState('');
+  const [loading, setLoading]             = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(null as any);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await adminApi.getUsers({
+      const res = await getAdminUser.list({
         page,
         limit: LIMIT,
-        role:  activeTab === 'tous' ? undefined : activeTab,
+        role:   activeTab === 'tous' ? undefined : activeTab,
         search: search || undefined,
       });
       setUsers(res.data);
@@ -66,13 +63,13 @@ export default function UtilisateursPage() {
 
   const totalPages = Math.ceil(total / LIMIT);
 
-  async function toggleActif(u: User) {
-    await adminApi.updateUser(u.id, { actif: !u.actif });
+  async function toggleActif(u: any) {
+    await patchAdminUser.update(u.id, { actif: !u.actif });
     load();
   }
 
   async function handleDelete(id: number) {
-    await adminApi.deleteUser(id);
+    await deleteAdminUser.byId(id);
     setConfirmDelete(null);
     load();
   }
@@ -82,14 +79,13 @@ export default function UtilisateursPage() {
     setPage(1);
   }
 
-  function handleSearch(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleSearch(e: any) {
     setSearch(e.target.value);
     setPage(1);
   }
 
   return (
     <>
-      {/* ── Topbar ── */}
       <div className="immo-topbar">
         <div className="immo-topbar-title">
           <h1 style={{ color: 'var(--c-text)' }}>Gestion des Utilisateurs</h1>
@@ -98,9 +94,7 @@ export default function UtilisateursPage() {
         <div className="immo-spacer" />
       </div>
 
-      {/* ── Content ── */}
       <div className="immo-page">
-        {/* Tabs + search */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <div className="user-tabs">
             {TABS.map((t) => (
@@ -125,7 +119,6 @@ export default function UtilisateursPage() {
           </div>
         </div>
 
-        {/* Table */}
         <div className="user-table-wrap">
           <div className="user-table-header">
             <span className="user-table-col">Utilisateur</span>
@@ -137,41 +130,24 @@ export default function UtilisateursPage() {
           </div>
 
           {loading ? (
-            <div style={{ padding: '32px 20px', textAlign: 'center', color: 'var(--c-muted)' }}>
-              Chargement…
-            </div>
+            <div style={{ padding: '32px 20px', textAlign: 'center', color: 'var(--c-muted)' }}>Chargement…</div>
           ) : users.length === 0 ? (
-            <div style={{ padding: '32px 20px', textAlign: 'center', color: 'var(--c-muted)' }}>
-              Aucun utilisateur trouvé.
-            </div>
+            <div style={{ padding: '32px 20px', textAlign: 'center', color: 'var(--c-muted)' }}>Aucun utilisateur trouvé.</div>
           ) : (
-            users.map((u) => (
+            users.map((u: any) => (
               <div className="user-row" key={u.id}>
-                {/* Avatar + nom */}
                 <div className="user-cell">
-                  <div className="user-av" style={{ background: avatarColor(u.id) }}>
-                    {initials(u)}
-                  </div>
+                  <div className="user-av" style={{ background: avatarColor(u.id) }}>{initials(u)}</div>
                   <div>
                     <div className="user-name">{u.nom} {u.prenom}</div>
-                    <div className="user-phone" style={{ fontSize: 11, color: 'var(--c-muted)' }}>
-                      ID #{u.id}
-                    </div>
+                    <div className="user-phone" style={{ fontSize: 11, color: 'var(--c-muted)' }}>ID #{u.id}</div>
                   </div>
                 </div>
-
-                {/* Rôle */}
-                <div>
-                  <span className="user-role">{ROLE_LABELS[u.role] ?? u.role}</span>
-                </div>
-
-                {/* Contact */}
+                <div><span className="user-role">{ROLE_LABELS[u.role] ?? u.role}</span></div>
                 <div>
                   <div style={{ fontSize: 12, color: 'var(--c-text)' }}>{u.email ?? '—'}</div>
                   <div className="user-phone">{u.telephone ?? '—'}</div>
                 </div>
-
-                {/* Statut */}
                 <div>
                   <button
                     onClick={() => toggleActif(u)}
@@ -182,35 +158,15 @@ export default function UtilisateursPage() {
                     {u.actif ? '✓ ACTIF' : '✗ BLOQUÉ'}
                   </button>
                 </div>
-
-                {/* Date */}
                 <div className="user-date">{formatDate(u.created_at)}</div>
-
-                {/* Actions */}
                 <div className="user-actions">
                   {confirmDelete === u.id ? (
                     <>
-                      <button
-                        className="btn-icon-sm danger"
-                        onClick={() => handleDelete(u.id)}
-                        title="Confirmer la suppression"
-                      >
-                        ✓
-                      </button>
-                      <button
-                        className="btn-icon-sm"
-                        onClick={() => setConfirmDelete(null)}
-                        title="Annuler"
-                      >
-                        ✗
-                      </button>
+                      <button className="btn-icon-sm danger" onClick={() => handleDelete(u.id)} title="Confirmer la suppression">✓</button>
+                      <button className="btn-icon-sm" onClick={() => setConfirmDelete(null)} title="Annuler">✗</button>
                     </>
                   ) : (
-                    <button
-                      className="btn-icon-sm danger"
-                      onClick={() => setConfirmDelete(u.id)}
-                      title="Supprimer"
-                    >
+                    <button className="btn-icon-sm danger" onClick={() => setConfirmDelete(u.id)} title="Supprimer">
                       <TrashIcon />
                     </button>
                   )}
@@ -219,35 +175,16 @@ export default function UtilisateursPage() {
             ))
           )}
 
-          {/* Footer pagination */}
           <div className="user-table-footer">
             <span>
               {total === 0 ? '0 résultat' : `${(page - 1) * LIMIT + 1}–${Math.min(page * LIMIT, total)} sur ${total}`}
             </span>
             <div className="immo-pagination">
-              <button
-                className="page-btn"
-                disabled={page <= 1}
-                onClick={() => setPage((p) => p - 1)}
-              >
-                <ChevronLeftIcon />
-              </button>
+              <button className="page-btn" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}><ChevronLeftIcon /></button>
               {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map((p) => (
-                <button
-                  key={p}
-                  className={`page-btn ${page === p ? 'active' : ''}`}
-                  onClick={() => setPage(p)}
-                >
-                  {p}
-                </button>
+                <button key={p} className={`page-btn ${page === p ? 'active' : ''}`} onClick={() => setPage(p)}>{p}</button>
               ))}
-              <button
-                className="page-btn"
-                disabled={page >= totalPages}
-                onClick={() => setPage((p) => p + 1)}
-              >
-                <ChevronRightIcon />
-              </button>
+              <button className="page-btn" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}><ChevronRightIcon /></button>
             </div>
           </div>
         </div>

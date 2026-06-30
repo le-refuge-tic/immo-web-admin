@@ -1,51 +1,42 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { authApi } from '../api/auth.api';
-import type { LoginPayload, User } from '../types';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { getAuth } from '../api/getAuth';
+import { postAuth } from '../api/postAuth';
 
-interface AuthContextValue {
-  user: User | null;
-  isLoading: boolean;
-  login: (payload: LoginPayload) => Promise<void>;
-  logout: () => Promise<void>;
-  refreshUser: () => Promise<void>;
-  isAuthenticated: boolean;
-}
+const AuthContext = createContext(null as any);
 
-const AuthContext = createContext<AuthContextValue | null>(null);
-
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+export function AuthProvider({ children }: { children: any }) {
+  const [user, setUser]         = useState(null as any);
+  const [isLoading, setLoading] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem('access_token');
-    if (!token) { setIsLoading(false); return; }
-    authApi.getProfile()
+    if (!token) { setLoading(false); return; }
+    getAuth.profile()
       .then(setUser)
       .catch(() => {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
       })
-      .finally(() => setIsLoading(false));
+      .finally(() => setLoading(false));
   }, []);
 
-  const login = async (payload: LoginPayload) => {
-    const tokens = await authApi.login(payload);
+  const login = async (payload: any) => {
+    const tokens = await postAuth.login(payload);
     localStorage.setItem('access_token', tokens.access_token);
     localStorage.setItem('refresh_token', tokens.refresh_token);
-    const profile = await authApi.getProfile();
+    const profile = await getAuth.profile();
     setUser(profile);
   };
 
   const logout = async () => {
-    try { await authApi.logout(); } catch { /* ignore */ }
+    try { await postAuth.logout(); } catch { /* ignore */ }
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     setUser(null);
   };
 
   const refreshUser = async () => {
-    const profile = await authApi.getProfile();
+    const profile = await getAuth.profile();
     setUser(profile);
   };
 

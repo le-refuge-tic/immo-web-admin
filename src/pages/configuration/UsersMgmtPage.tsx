@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { adminApi } from '../../api/admin.api';
+import { getAdminUser } from '../../api/getAdminUser';
+import { patchAdminUser } from '../../api/patchAdminUser';
+import { deleteAdminUser } from '../../api/deleteAdminUser';
 import { SearchIcon, TrashIcon } from '../../components/Icons';
-import type { User, UserRole } from '../../types';
 
 const AVATAR_COLORS = ['#2563EB', '#7C3AED', '#DB2777', '#D97706', '#16A34A'];
+
 function getColor(name: string) {
   let h = 0;
   for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0xffffff;
@@ -14,43 +16,37 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-const ROLE_LABELS: Record<UserRole, string> = {
-  prospect:    'Prospect',
-  locataire:   'Locataire',
+const ROLE_LABELS: any = {
+  prospect:     'Prospect',
+  locataire:    'Locataire',
   proprietaire: 'Propriétaire',
-  demarcheur:  'Démarcheur',
-  detenteur:   'Propriétaire (dépr.)',   // rétrocompat
-  admin:       'Administrateur',
-  super_admin: 'Super Admin',
+  demarcheur:   'Démarcheur',
+  detenteur:    'Propriétaire (dépr.)',
+  admin:        'Administrateur',
+  super_admin:  'Super Admin',
 };
 
-// ── Props ────────────────────────────────────────────────────────────────────
-
-export interface UsersMgmtConfig {
+export default function UsersMgmtPage({ title, subtitle, roleFilter, emptyLabel }: {
   title: string;
   subtitle: string;
   roleFilter?: string;
   emptyLabel: string;
-}
-
-// ── Page ─────────────────────────────────────────────────────────────────────
-
-export default function UsersMgmtPage({ title, subtitle, roleFilter, emptyLabel }: UsersMgmtConfig) {
-  const [users, setUsers]       = useState<User[]>([]);
-  const [total, setTotal]       = useState(0);
-  const [loading, setLoading]   = useState(true);
-  const [search, setSearch]     = useState('');
-  const [actifFilter, setActifFilter] = useState<string>('');
-  const [page, setPage]         = useState(1);
-  const [togglingId, setTogglingId]   = useState<number | null>(null);
-  const [deletingId, setDeletingId]   = useState<number | null>(null);
+}) {
+  const [users, setUsers]           = useState([] as any[]);
+  const [total, setTotal]           = useState(0);
+  const [loading, setLoading]       = useState(true);
+  const [search, setSearch]         = useState('');
+  const [actifFilter, setActifFilter] = useState('');
+  const [page, setPage]             = useState(1);
+  const [togglingId, setTogglingId] = useState(null as any);
+  const [deletingId, setDeletingId] = useState(null as any);
 
   const limit = 10;
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await adminApi.getUsers({
+      const res = await getAdminUser.list({
         page,
         limit,
         role:   roleFilter,
@@ -67,21 +63,17 @@ export default function UsersMgmtPage({ title, subtitle, roleFilter, emptyLabel 
   }, [page, roleFilter, actifFilter, search]);
 
   useEffect(() => { load(); }, [load]);
-
-  // Reset to page 1 when filters change
   useEffect(() => { setPage(1); }, [search, actifFilter, roleFilter]);
 
   const totalPages = Math.max(1, Math.ceil(total / limit));
+  const actifs     = users.filter((u: any) => u.actif).length;
+  const inactifs   = users.filter((u: any) => !u.actif).length;
 
-  // Stats
-  const actifs   = users.filter(u => u.actif).length;
-  const inactifs = users.filter(u => !u.actif).length;
-
-  const handleToggleActif = async (u: User) => {
+  const handleToggleActif = async (u: any) => {
     setTogglingId(u.id);
     try {
-      const updated = await adminApi.updateUser(u.id, { actif: !u.actif });
-      setUsers(prev => prev.map(x => x.id === u.id ? updated : x));
+      const updated = await patchAdminUser.update(u.id, { actif: !u.actif });
+      setUsers(prev => prev.map((x: any) => x.id === u.id ? updated : x));
     } catch (err: any) {
       alert(err?.response?.data?.message ?? 'Erreur');
     } finally {
@@ -89,12 +81,12 @@ export default function UsersMgmtPage({ title, subtitle, roleFilter, emptyLabel 
     }
   };
 
-  const handleDelete = async (u: User) => {
+  const handleDelete = async (u: any) => {
     if (!confirm(`Supprimer définitivement ${u.prenom} ${u.nom} ?`)) return;
     setDeletingId(u.id);
     try {
-      await adminApi.deleteUser(u.id);
-      setUsers(prev => prev.filter(x => x.id !== u.id));
+      await deleteAdminUser.byId(u.id);
+      setUsers(prev => prev.filter((x: any) => x.id !== u.id));
       setTotal(t => t - 1);
     } catch (err: any) {
       alert(err?.response?.data?.message ?? 'Erreur');
@@ -105,7 +97,6 @@ export default function UsersMgmtPage({ title, subtitle, roleFilter, emptyLabel 
 
   return (
     <>
-      {/* Topbar */}
       <div className="immo-topbar">
         <div className="immo-topbar-title">
           <h1>{title}</h1>
@@ -114,7 +105,6 @@ export default function UsersMgmtPage({ title, subtitle, roleFilter, emptyLabel 
       </div>
 
       <div className="immo-page">
-        {/* Stats */}
         <div className="mgmt-stats">
           <div className="mgmt-stat-card">
             <div className="mgmt-stat-icon" style={{ background: '#EFF6FF' }}>
@@ -152,7 +142,6 @@ export default function UsersMgmtPage({ title, subtitle, roleFilter, emptyLabel 
           </div>
         </div>
 
-        {/* Toolbar */}
         <div className="mgmt-toolbar">
           <div style={{ position: 'relative', flex: 1, maxWidth: 340 }}>
             <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--c-muted)', pointerEvents: 'none' }}>
@@ -173,9 +162,7 @@ export default function UsersMgmtPage({ title, subtitle, roleFilter, emptyLabel 
           </select>
         </div>
 
-        {/* Table */}
         <div className="mgmt-table-wrap">
-          {/* Header */}
           <div className="mgmt-table-head">
             <div className="mgmt-table-col">Utilisateur</div>
             <div className="mgmt-table-col">Contact</div>
@@ -197,30 +184,23 @@ export default function UsersMgmtPage({ title, subtitle, roleFilter, emptyLabel 
               <div style={{ fontSize: 13 }}>Essayez de modifier vos filtres de recherche.</div>
             </div>
           ) : (
-            users.map(u => {
-              const initials = `${u.nom[0] ?? ''}${u.prenom[0] ?? ''}`.toUpperCase();
-              const color    = getColor(u.nom + u.prenom);
+            users.map((u: any) => {
+              const inits = `${u.nom[0] ?? ''}${u.prenom[0] ?? ''}`.toUpperCase();
+              const color = getColor(u.nom + u.prenom);
               return (
                 <div className="mgmt-row" key={u.id}>
-                  {/* User */}
                   <div className="mgmt-user-cell">
-                    <div className="mgmt-avatar" style={{ background: color }}>{initials}</div>
+                    <div className="mgmt-avatar" style={{ background: color }}>{inits}</div>
                     <div>
                       <div className="mgmt-user-name">{u.prenom} {u.nom}</div>
                       <div className="mgmt-user-email">{u.email ?? '—'}</div>
                     </div>
                   </div>
-
-                  {/* Contact */}
                   <div>
                     <div className="mgmt-contact">{u.telephone ?? '—'}</div>
                     <div className="mgmt-contact-sub">{ROLE_LABELS[u.role]}</div>
                   </div>
-
-                  {/* Date */}
                   <div className="mgmt-date">{formatDate(u.created_at)}</div>
-
-                  {/* Status toggle */}
                   <div>
                     <button
                       className={`toggle-active-btn ${u.actif ? 'actif' : 'inactif'}`}
@@ -235,8 +215,6 @@ export default function UsersMgmtPage({ title, subtitle, roleFilter, emptyLabel 
                       {u.actif ? 'Actif' : 'Inactif'}
                     </button>
                   </div>
-
-                  {/* Actions */}
                   <div className="mgmt-actions">
                     <button
                       className="btn-icon-sm danger"
@@ -257,7 +235,6 @@ export default function UsersMgmtPage({ title, subtitle, roleFilter, emptyLabel 
           )}
         </div>
 
-        {/* Pagination */}
         {totalPages > 1 && (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
             <div style={{ fontSize: 12, color: 'var(--c-muted)' }}>
