@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
-  GridIcon, HomeIcon, UsersIcon, SettingsIcon,
+  GridIcon, HomeIcon, UsersIcon, SettingsIcon, ShieldIcon,
   ChevronDownIcon, UserIcon, BuildingIcon, KeyIcon, FileTextIcon, TrendingUpIcon, StarIcon,
   MessageIcon,
 } from '../components/Icons';
