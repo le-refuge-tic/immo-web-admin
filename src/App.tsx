@@ -5,7 +5,7 @@ import AdminLayout from './layout/AdminLayout';
 import LoginPage from './pages/login/LoginPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import AnnoncesPage from './pages/annonces/AnnoncesPage';
-import ModerationPage from './pages/moderation/ModerationPage';
+import MessagesPage from './pages/messages/MessagesPage';
 import UtilisateursPage from './pages/utilisateurs/UtilisateursPage';
 import ProfilPage from './pages/configuration/ProfilPage';
 import GestionProprietairePage from './pages/configuration/GestionProprietairePage';
@@ -33,7 +33,7 @@ export default function App() {
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard"    element={<DashboardPage />} />
             <Route path="annonces"     element={<AnnoncesPage />} />
-            <Route path="moderation"   element={<ModerationPage />} />
+            <Route path="messages"     element={<MessagesPage />} />
             <Route path="utilisateurs" element={<UtilisateursPage />} />
             <Route path="loyers"       element={<LoyersPage />} />
             <Route path="finances"     element={<FinancesPage />} />

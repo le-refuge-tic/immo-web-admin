@@ -1,15 +1,16 @@
 import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
-  GridIcon, HomeIcon, ShieldIcon, UsersIcon, SettingsIcon,
+  GridIcon, HomeIcon, UsersIcon, SettingsIcon,
   ChevronDownIcon, UserIcon, BuildingIcon, KeyIcon, FileTextIcon, TrendingUpIcon, StarIcon,
+  MessageIcon,
 } from '../components/Icons';
 import { useAuth } from '../context/AuthContext';
 
 const TOP_NAV = [
   { to: '/dashboard',    label: 'Tableau de bord', Icon: GridIcon        },
   { to: '/annonces',     label: 'Annonces Immo',   Icon: HomeIcon        },
-  { to: '/moderation',   label: 'Modération',      Icon: ShieldIcon      },
+  { to: '/messages',     label: 'Messages',        Icon: MessageIcon     },
   { to: '/utilisateurs', label: 'Utilisateurs',    Icon: UsersIcon       },
   { to: '/loyers',       label: 'Loyers',          Icon: FileTextIcon    },
   { to: '/finances',     label: 'Finances',        Icon: TrendingUpIcon  },
