@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef, Fragment } from 'react';
 import { getMessages } from '../../api/getMessages';
 import { postMessage } from '../../api/postMessage';
-import { SearchIcon, SendIcon } from '../../components/Icons';
+import { SearchIcon, SendIcon, PlusIcon } from '../../components/Icons';
+import NewConversationModal from './NewConversationModal';
 
 const COLORS = ['#2563EB', '#7C3AED', '#DB2777', '#D97706', '#16A34A', '#0891B2'];
 function avatarColor(id: number) { return COLORS[Math.abs(id) % COLORS.length]; }
@@ -45,15 +46,22 @@ export default function MessagesPage() {
   const [sending, setSending]           = useState(false);
   const [loadingConvs, setLoadingConvs] = useState(true);
   const [loadingMsgs, setLoadingMsgs]   = useState(false);
+  const [showNewModal, setShowNewModal] = useState(false);
   const bottomRef                       = useRef(null as any);
 
-  useEffect(() => {
+  const loadConvs = useCallback(async () => {
     setLoadingConvs(true);
-    getMessages.conversations()
-      .then(res => setConvs(res.data ?? res))
-      .catch(() => {})
-      .finally(() => setLoadingConvs(false));
+    try {
+      const res = await getMessages.conversations();
+      setConvs(res.data ?? res);
+    } catch {
+      setConvs([]);
+    } finally {
+      setLoadingConvs(false);
+    }
   }, []);
+
+  useEffect(() => { loadConvs(); }, [loadConvs]);
 
   const loadThread = useCallback(async (id: number) => {
     setLoadingMsgs(true);
@@ -101,6 +109,15 @@ export default function MessagesPage() {
       e.preventDefault();
       handleSend();
     }
+  };
+
+  const handleConvCreated = (conv: any) => {
+    setShowNewModal(false);
+    const exists = convs.find((c: any) => c.id === conv.id);
+    if (!exists) {
+      setConvs(prev => [conv, ...prev]);
+    }
+    setActiveId(conv.id);
   };
 
   const activeConv = convs.find((c: any) => c.id === activeId);
@@ -165,6 +182,14 @@ export default function MessagesPage() {
             </div>
           ))}
         </div>
+
+        {/* ── Bouton nouveau message ── */}
+        <div className="msg-new-btn-wrap">
+          <button className="msg-new-btn" onClick={() => setShowNewModal(true)}>
+            <PlusIcon />
+            Nouveau message
+          </button>
+        </div>
       </div>
 
       {/* ── Panel droit : fil de discussion ── */}
@@ -173,7 +198,7 @@ export default function MessagesPage() {
           <div className="msg-empty-state">
             <div className="msg-empty-icon">💬</div>
             <div className="msg-empty-title">Sélectionnez une conversation</div>
-            <div className="msg-empty-sub">Choisissez un contact à gauche pour voir les messages.</div>
+            <div className="msg-empty-sub">Choisissez un contact à gauche ou démarrez une nouvelle conversation.</div>
           </div>
         </div>
       ) : (
@@ -265,6 +290,14 @@ export default function MessagesPage() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* ── Modal nouveau message ── */}
+      {showNewModal && (
+        <NewConversationModal
+          onClose={() => setShowNewModal(false)}
+          onCreated={handleConvCreated}
+        />
       )}
     </div>
   );
