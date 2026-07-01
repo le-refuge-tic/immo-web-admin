@@ -107,7 +107,6 @@ export default function AnnonceDetailPage() {
 
   const mod   = bien.statut_moderation ?? 'en_attente';
   const badge = MOD_BADGE[mod] ?? MOD_BADGE.en_attente;
-  const cover = bien.photos?.find((p: any) => p.is_cover) ?? bien.photos?.[0];
 
   return (
     <>
