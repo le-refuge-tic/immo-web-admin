@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { SearchIcon, PinIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon } from '../../components/Icons';
+import { useNavigate } from 'react-router-dom';
+import { SearchIcon, PinIcon, ChevronLeftIcon, ChevronRightIcon } from '../../components/Icons';
 import { getAdminBien } from '../../api/getAdminBien';
-import { patchAdminBien } from '../../api/patchAdminBien';
-import { deleteAdminBien } from '../../api/deleteAdminBien';
 
 type FilterTab = 'tous' | 'maison' | 'appart_vide' | 'appart_meuble' | 'guesthouse' | 'terrain';
 
@@ -33,6 +32,7 @@ const MOD_BADGE: any = {
 const LIMIT = 12;
 
 export default function AnnoncesPage() {
+  const navigate                       = useNavigate();
   const [activeFilter, setActiveFilter] = useState('tous' as any);
   const [biens, setBiens]               = useState([] as any[]);
   const [total, setTotal]               = useState(0);
@@ -58,17 +58,6 @@ export default function AnnoncesPage() {
   useEffect(() => { load(); }, [load]);
 
   const totalPages = Math.ceil(total / LIMIT);
-
-  async function handleModerate(id: number, statut: string) {
-    await patchAdminBien.moderate(id, { statut_moderation: statut });
-    load();
-  }
-
-  async function handleDelete(id: number) {
-    if (!confirm('Supprimer ce bien définitivement ?')) return;
-    await deleteAdminBien.byId(id);
-    load();
-  }
 
   function handleTabChange(t: FilterTab) {
     setActiveFilter(t);
@@ -132,7 +121,11 @@ export default function AnnoncesPage() {
               const badge = MOD_BADGE[mod] ?? MOD_BADGE.en_attente;
 
               return (
-                <div className="annonce-card" key={b.id}>
+                <div
+                  className="annonce-card annonce-card--clickable"
+                  key={b.id}
+                  onClick={() => navigate(`/annonces/${b.id}`)}
+                >
                   <div className="annonce-img">
                     {cover ? (
                       <img src={cover.url} alt={b.type} />
@@ -158,11 +151,11 @@ export default function AnnoncesPage() {
                   <div className="annonce-body">
                     <div className="annonce-title-row">
                       <div className="annonce-name">
-                        {b.type === 'maison' && 'Maison'}
-                        {b.type === 'appart_vide' && 'Appart. vide'}
+                        {b.type === 'maison'        && 'Maison'}
+                        {b.type === 'appart_vide'   && 'Appart. vide'}
                         {b.type === 'appart_meuble' && 'Appart. meublé'}
-                        {b.type === 'guesthouse' && 'Guesthouse'}
-                        {b.type === 'terrain' && 'Terrain'}
+                        {b.type === 'guesthouse'    && 'Guesthouse'}
+                        {b.type === 'terrain'       && 'Terrain'}
                         {b.localisation?.quartier ? ` – ${b.localisation.quartier.toUpperCase()}` : ''}
                       </div>
                       <div className="annonce-price-block">
@@ -187,58 +180,21 @@ export default function AnnoncesPage() {
                       <div className="annonce-meta-item">
                         <span className="annonce-meta-label">Auteur</span>
                         <span className="annonce-meta-value">
-                          {b.user ? `${b.user.nom} ${b.user.prenom}` : `#${b.user_id}`}
+                          {b.user ? `${b.user.prenom} ${b.user.nom}` : `#${b.user_id}`}
                         </span>
                       </div>
                       <div className="annonce-meta-item">
                         <span className="annonce-meta-label">Photos</span>
                         <span className="annonce-meta-value">{b.photos?.length ?? 0}</span>
                       </div>
+                      <div className="annonce-meta-item">
+                        <span className="annonce-meta-label">Vues</span>
+                        <span className="annonce-meta-value">{b.nb_consultations ?? 0}</span>
+                      </div>
                     </div>
 
-                    <div className="annonce-actions">
-                      {mod === 'en_attente' && (
-                        <>
-                          <button
-                            className="btn-validate-immo"
-                            onClick={() => handleModerate(b.id, 'approuve')}
-                          >
-                            APPROUVER
-                          </button>
-                          <button
-                            className="btn-icon-sm danger"
-                            onClick={() => handleModerate(b.id, 'rejete')}
-                            title="Rejeter"
-                          >
-                            ✗
-                          </button>
-                        </>
-                      )}
-                      {mod === 'approuve' && (
-                        <button
-                          className="btn-icon-sm"
-                          onClick={() => handleModerate(b.id, 'rejete')}
-                          title="Révoquer"
-                          style={{ fontSize: 11, padding: '4px 10px', width: 'auto' }}
-                        >
-                          Révoquer
-                        </button>
-                      )}
-                      {mod === 'rejete' && (
-                        <button
-                          className="btn-validate-immo"
-                          onClick={() => handleModerate(b.id, 'approuve')}
-                        >
-                          RE-APPROUVER
-                        </button>
-                      )}
-                      <button
-                        className="btn-icon-sm danger"
-                        onClick={() => handleDelete(b.id)}
-                        title="Supprimer définitivement"
-                      >
-                        <TrashIcon />
-                      </button>
+                    <div className="annonce-card-arrow">
+                      Voir le détail →
                     </div>
                   </div>
                 </div>
