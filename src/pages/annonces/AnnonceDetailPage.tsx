@@ -48,6 +48,7 @@ export default function AnnonceDetailPage() {
 
   const [bien, setBien]         = useState(null as any);
   const [loading, setLoading]   = useState(true);
+  const [error, setError]       = useState('');
   const [saving, setSaving]     = useState(false);
   const [photoIdx, setPhotoIdx] = useState(0);
   const [action, setAction]     = useState(null as any);
@@ -57,11 +58,12 @@ export default function AnnonceDetailPage() {
   useEffect(() => {
     if (!id) return;
     setLoading(true);
+    setError('');
     getAdminBien.byId(Number(id))
       .then(setBien)
-      .catch(() => navigate('/annonces'))
+      .catch(() => setError('Impossible de charger ce bien. Vérifie que le backend est bien déployé.'))
       .finally(() => setLoading(false));
-  }, [id, navigate]);
+  }, [id]);
 
   const allPhotos: any[] = bien
     ? [
@@ -99,6 +101,17 @@ export default function AnnonceDetailPage() {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: 'var(--c-muted)' }}>
         Chargement…
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: '1rem' }}>
+        <div style={{ color: 'var(--c-red)', fontWeight: 600 }}>{error}</div>
+        <button className="detail-back-btn" onClick={() => navigate('/annonces')}>
+          <ChevronLeftIcon size={16} /> Retour aux annonces
+        </button>
       </div>
     );
   }
