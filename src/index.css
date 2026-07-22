@@ -24,7 +24,7 @@
 
 body {
   margin: 0;
-  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   font-size: 0.875rem;
   color: var(--c-text);
   background: var(--c-bg);
