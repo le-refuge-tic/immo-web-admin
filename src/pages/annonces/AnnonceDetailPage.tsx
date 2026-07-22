@@ -91,13 +91,14 @@ export default function AnnonceDetailPage() {
   const [conditions, setConditions] = useState('');
   const [editMode, setEditMode] = useState(false);
   const [editData, setEditData] = useState(null as any);
+  const [fraisVisite, setFraisVisite] = useState('0');
 
   useEffect(() => {
     if (!id) return;
     setLoading(true);
     setError('');
     getAdminBien.byId(Number(id))
-      .then(setBien)
+      .then(data => { setBien(data); setFraisVisite(String(data.frais_visite ?? 0)); })
       .catch(() => setError('Impossible de charger ce bien. Vérifie que le backend est bien déployé.'))
       .finally(() => setLoading(false));
   }, [id]);
@@ -115,9 +116,26 @@ export default function AnnonceDetailPage() {
       await patchAdminBien.moderate(bien.id, { statut_moderation: statut, ...extra });
       const updated = await getAdminBien.byId(bien.id);
       setBien(updated);
+      setFraisVisite(String(updated.frais_visite ?? 0));
       setAction(null);
       setMotif('');
       setConditions('');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleApprove() {
+    setSaving(true);
+    try {
+      if (Number(fraisVisite) !== Number(bien.frais_visite)) {
+        await patchAdminBien.update(bien.id, { frais_visite: Number(fraisVisite) });
+      }
+      await patchAdminBien.moderate(bien.id, { statut_moderation: 'approuve' });
+      const updated = await getAdminBien.byId(bien.id);
+      setBien(updated);
+      setFraisVisite(String(updated.frais_visite ?? 0));
+      setAction(null);
     } finally {
       setSaving(false);
     }
@@ -161,7 +179,6 @@ export default function AnnonceDetailPage() {
   const hasChanges = editMode && editData && (
     editData.description  !== (bien.description ?? '')              ||
     Number(editData.prix) !== Number(bien.prix)                     ||
-    Number(editData.frais_visite) !== Number(bien.frais_visite)     ||
     editData.adresse  !== (bien.localisation?.adresse  ?? '')       ||
     editData.ville    !== (bien.localisation?.ville    ?? '')       ||
     editData.quartier !== (bien.localisation?.quartier ?? '')
@@ -171,7 +188,6 @@ export default function AnnonceDetailPage() {
     setEditData({
       description:  bien.description ?? '',
       prix:         String(bien.prix),
-      frais_visite: String(bien.frais_visite),
       adresse:      bien.localisation?.adresse  ?? '',
       ville:        bien.localisation?.ville    ?? '',
       quartier:     bien.localisation?.quartier ?? '',
@@ -190,7 +206,7 @@ export default function AnnonceDetailPage() {
       await patchAdminBien.update(bien.id, {
         description:  editData.description,
         prix:         Number(editData.prix),
-        frais_visite: Number(editData.frais_visite),
+        frais_visite: Number(fraisVisite),
         adresse:      editData.adresse,
         ville:        editData.ville,
         quartier:     editData.quartier,
@@ -198,6 +214,7 @@ export default function AnnonceDetailPage() {
       await patchAdminBien.moderate(bien.id, { statut_moderation: 'approuve' });
       const updated = await getAdminBien.byId(bien.id);
       setBien(updated);
+      setFraisVisite(String(updated.frais_visite ?? 0));
       setEditMode(false);
       setEditData(null);
       setAction(null);
@@ -391,17 +408,17 @@ export default function AnnonceDetailPage() {
               </div>
               <div className="detail-info-row">
                 <span>Frais de visite</span>
-                {editMode ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                   <input
                     className="detail-edit-input detail-edit-input--sm"
                     type="number"
                     min="0"
-                    value={editData.frais_visite}
-                    onChange={e => setEditData({ ...editData, frais_visite: e.target.value })}
+                    value={fraisVisite}
+                    onChange={e => setFraisVisite(e.target.value)}
+                    placeholder="0"
                   />
-                ) : (
-                  <strong>{formatPrice(bien.frais_visite)} FCFA</strong>
-                )}
+                  <span style={{ fontSize: 12, color: 'var(--c-muted)', whiteSpace: 'nowrap' }}>FCFA</span>
+                </div>
               </div>
               {bien.details_maison && (
                 <>
@@ -548,7 +565,7 @@ export default function AnnonceDetailPage() {
                 {mod !== 'approuve' && (
                   <button
                     className="detail-btn detail-btn--approve"
-                    onClick={hasChanges ? handleSaveAndApprove : () => handleModerate('approuve')}
+                    onClick={hasChanges ? handleSaveAndApprove : handleApprove}
                     disabled={saving}
                   >
                     {hasChanges ? '✓ Modifier & approuver' : '✓ Approuver'}
