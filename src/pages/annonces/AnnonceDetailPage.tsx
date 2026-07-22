@@ -5,6 +5,41 @@ import { patchAdminBien } from '../../api/patchAdminBien';
 import { deleteAdminBien } from '../../api/deleteAdminBien';
 import { ChevronLeftIcon, PinIcon, TrashIcon, EditIcon, XIcon } from '../../components/Icons';
 
+// ── Labels lisibles pour les champs amenites ────────────────────────────────
+const AMENITE_FIELD_GROUPS = [
+  {
+    title: 'Caractéristiques',
+    fields: [
+      { key: 'parking',          label: 'Parking',            fmt: (v: any, a: any) => v ? (a.parking_capacite ? `Oui — ×${a.parking_capacite}` : 'Oui') : 'Non' },
+      { key: 'cour',             label: 'Cour',               fmt: (v: any) => v ? 'Oui' : 'Non' },
+      { key: 'boyerie',          label: 'Boyerie',            fmt: (v: any) => v ? 'Oui' : 'Non' },
+      { key: 'sanitaire',        label: 'Sanitaires',         fmt: (v: any) => v == null ? null : (v ? 'Intérieur' : 'Extérieur') },
+      { key: 'chambre_couloir',  label: 'Maison à couloir',   fmt: (v: any) => v == null ? null : (v ? 'Oui' : 'Non') },
+      { key: 'acces_vehicule',   label: 'Accès véhicule',     fmt: (v: any, a: any) => v == null ? null : (v ? (a.nb_vehicules ? `Oui — ${a.nb_vehicules} véh.` : 'Oui') : 'Non') },
+    ],
+  },
+  {
+    title: 'Équipements',
+    fields: [
+      { key: 'electricite_label', label: 'Électricité', fmt: (v: any) => v || null },
+      { key: 'eau_label',         label: 'Eau',         fmt: (v: any) => v || null },
+      { key: 'cuisine_label',     label: 'Cuisine',     fmt: (v: any) => v || null },
+      { key: 'finition_label',    label: 'Finition',    fmt: (v: any) => v || null },
+    ],
+  },
+  {
+    title: 'Conditions financières',
+    fields: [
+      { key: 'avance_mois',          label: 'Avance',             fmt: (v: any) => v > 0 ? `${v} mois` : null },
+      { key: 'loyer_pre_paye_mois',  label: 'Loyer prépayé',      fmt: (v: any) => v > 0 ? `${v} mois` : null },
+      { key: 'caution_eau',          label: 'Caution eau',         fmt: (v: any) => v > 0 ? `${Number(v).toLocaleString('fr-FR')} FCFA` : null },
+      { key: 'caution_elec',         label: 'Caution élec.',       fmt: (v: any) => v > 0 ? `${Number(v).toLocaleString('fr-FR')} FCFA` : null },
+      { key: 'commission_agence',    label: 'Commission agence',   fmt: (v: any) => v > 0 ? `${Number(v).toLocaleString('fr-FR')} FCFA` : null },
+      { key: 'echeance_mois',        label: 'Échéance loyer',      fmt: (v: any) => v > 1 ? `${v} mois` : null },
+    ],
+  },
+];
+
 const TYPE_LABELS: any = {
   maison:        'Maison',
   appart_vide:   'Appartement vide',
@@ -256,43 +291,62 @@ export default function AnnonceDetailPage() {
             </div>
           )}
 
-          {/* Pièces */}
-          {bien.pieces?.length > 0 && (
-            <div className="detail-section">
-              <div className="detail-section-title">Pièces ({bien.pieces.length})</div>
-              <div className="detail-pieces-grid">
-                {bien.pieces.map((piece: any) => (
-                  <div className="detail-piece-card" key={piece.id}>
-                    <div className="detail-piece-name">{piece.nom}</div>
-                    <div className="detail-piece-surface">{Number(piece.surface).toLocaleString('fr-FR')} m²</div>
-                    {piece.photos?.length > 0 && (
-                      <div className="detail-piece-photo-count">{piece.photos.length} photo{piece.photos.length > 1 ? 's' : ''}</div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Aménités */}
-          {bien.amenites && Object.keys(bien.amenites).length > 0 && (
+          {/* Aménités & équipements — affichage structuré par groupes */}
+          {bien.amenites && (
             <div className="detail-section">
               <div className="detail-section-title">Aménités &amp; équipements</div>
-              <div className="detail-amenites-grid">
-                {Object.entries(bien.amenites).map(([key, val]: any) => {
-                  if (val === false || val === null || val === undefined || val === 0 || val === '') return null;
-                  const label = key.replace(/_/g, ' ');
-                  return (
-                    <div className="detail-amenite-item" key={key}>
-                      <span className="detail-amenite-dot" />
-                      <span className="detail-amenite-label">
-                        {label.charAt(0).toUpperCase() + label.slice(1)}
-                        {typeof val !== 'boolean' && val !== true && ` : ${val}`}
-                      </span>
+
+              {/* Composition (pièces groupées) */}
+              {bien.pieces?.length > 0 && (() => {
+                const counts: Record<string, number> = {};
+                for (const p of bien.pieces) counts[p.nom] = (counts[p.nom] ?? 0) + 1;
+                return (
+                  <div className="detail-amenites-group">
+                    <div className="detail-amenites-group-title">Composition</div>
+                    <div className="detail-amenites-rows">
+                      {Object.entries(counts).map(([nom, n]) => (
+                        <div className="detail-amenite-row" key={nom}>
+                          <span className="detail-amenite-key">{nom}</span>
+                          <span className="detail-amenite-val">{n as number}</span>
+                        </div>
+                      ))}
                     </div>
-                  );
-                })}
-              </div>
+                  </div>
+                );
+              })()}
+
+              {/* Groupes structurés */}
+              {AMENITE_FIELD_GROUPS.map(group => {
+                const rows = group.fields
+                  .map(f => ({ label: f.label, value: f.fmt(bien.amenites[f.key], bien.amenites) }))
+                  .filter(r => r.value != null);
+                if (rows.length === 0) return null;
+                return (
+                  <div className="detail-amenites-group" key={group.title}>
+                    <div className="detail-amenites-group-title">{group.title}</div>
+                    <div className="detail-amenites-rows">
+                      {rows.map(r => (
+                        <div className="detail-amenite-row" key={r.label}>
+                          <span className="detail-amenite-key">{r.label}</span>
+                          <span className="detail-amenite-val">{r.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Voisinage */}
+              {bien.amenites.voisinage?.length > 0 && (
+                <div className="detail-amenites-group">
+                  <div className="detail-amenites-group-title">Voisinage</div>
+                  <div className="detail-amenites-tags">
+                    {bien.amenites.voisinage.map((tag: string) => (
+                      <span className="detail-amenite-tag" key={tag}>{tag}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
