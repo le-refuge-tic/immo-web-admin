@@ -45,7 +45,7 @@ export default function LoginPage() {
         {/* Logo / marque */}
         <div className="lp-brand">
           <img src={logoUrl} alt="REFUGE" style={{ width: 58, height: 58, objectFit: 'contain' }} />
-          <span className="lp-brand-name" style={{ color: '#00AEEF', fontSize: 22 }}>REFUGE</span>
+          <span className="lp-brand-name">REFUGE</span>
         </div>
 
         {/* ── Collage de propriétés superposées ── */}
