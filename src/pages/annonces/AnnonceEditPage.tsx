@@ -430,8 +430,8 @@ export default function AnnonceEditPage() {
                   fontSize:13, fontWeight: active ? 700 : 400, cursor:'pointer', textAlign:'left',
                   background: active ? '#EFF6FF' : 'transparent',
                   color: active ? '#2563EB' : '#64748B',
+                  border:'none',
                   borderLeft: `3px solid ${active ? '#2563EB' : 'transparent'}`,
-                  border:'none', borderLeft: `3px solid ${active ? '#2563EB' : 'transparent'}` as any,
                   transition:'all .12s',
                 }}
               >
