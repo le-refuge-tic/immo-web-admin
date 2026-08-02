@@ -9,10 +9,11 @@ import { useAuth } from '../context/AuthContext';
 
 const TOP_NAV = [
   { to: '/dashboard',    label: 'Tableau de bord', Icon: GridIcon        },
-  { to: '/annonces',     label: 'Annonces Immo',   Icon: HomeIcon        },
+  { to: '/annonces',     label: 'Annonces',         Icon: HomeIcon        },
   { to: '/messages',     label: 'Messages',        Icon: MessageIcon     },
   { to: '/utilisateurs', label: 'Utilisateurs',    Icon: UsersIcon       },
   { to: '/loyers',       label: 'Loyers',          Icon: FileTextIcon    },
+  { to: '/liaisons',     label: 'Liaisons gestion',Icon: KeyIcon         },
   { to: '/finances',     label: 'Finances',        Icon: TrendingUpIcon  },
   { to: '/feedbacks',    label: 'Feedbacks',       Icon: StarIcon        },
 ];

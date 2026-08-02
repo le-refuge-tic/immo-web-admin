@@ -6,6 +6,7 @@ import LoginPage from './pages/login/LoginPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import AnnoncesPage       from './pages/annonces/AnnoncesPage';
 import AnnonceDetailPage  from './pages/annonces/AnnonceDetailPage';
+import AnnonceEditPage    from './pages/annonces/AnnonceEditPage';
 import MessagesPage from './pages/messages/MessagesPage';
 import UtilisateursPage from './pages/utilisateurs/UtilisateursPage';
 import ProfilPage from './pages/configuration/ProfilPage';
@@ -16,6 +17,7 @@ import GestionAdminPage from './pages/configuration/GestionAdminPage';
 import LoyersPage    from './pages/loyers/LoyersPage';
 import FinancesPage  from './pages/finances/FinancesPage';
 import FeedbacksPage from './pages/feedbacks/FeedbacksPage';
+import GestionLiaisonsPage from './pages/gestion/GestionLiaisonsPage';
 
 export default function App() {
   return (
@@ -33,13 +35,15 @@ export default function App() {
           >
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard"    element={<DashboardPage />} />
-            <Route path="annonces"        element={<AnnoncesPage />} />
-            <Route path="annonces/:id"   element={<AnnonceDetailPage />} />
+            <Route path="annonces"           element={<AnnoncesPage />} />
+            <Route path="annonces/:id"      element={<AnnonceDetailPage />} />
+            <Route path="annonces/:id/modifier" element={<AnnonceEditPage />} />
             <Route path="messages"     element={<MessagesPage />} />
             <Route path="utilisateurs" element={<UtilisateursPage />} />
             <Route path="loyers"       element={<LoyersPage />} />
             <Route path="finances"     element={<FinancesPage />} />
             <Route path="feedbacks"    element={<FeedbacksPage />} />
+            <Route path="liaisons"     element={<GestionLiaisonsPage />} />
 
             {/* Configuration */}
             <Route path="configuration">
