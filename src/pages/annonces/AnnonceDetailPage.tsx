@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getAdminBien } from '../../api/getAdminBien';
 import { patchAdminBien } from '../../api/patchAdminBien';
 import { deleteAdminBien } from '../../api/deleteAdminBien';
-import { ChevronLeftIcon, PinIcon, TrashIcon, EditIcon, XIcon } from '../../components/Icons';
+import { ChevronLeftIcon, PinIcon, TrashIcon, EditIcon } from '../../components/Icons';
 
 // ── Labels lisibles pour les champs amenites ────────────────────────────────
 const AMENITE_FIELD_GROUPS = [
@@ -34,7 +34,12 @@ const AMENITE_FIELD_GROUPS = [
       { key: 'loyer_pre_paye_mois',  label: 'Loyer prépayé',      fmt: (v: any) => v > 0 ? `${v} mois` : null },
       { key: 'caution_eau',          label: 'Caution eau',         fmt: (v: any) => v > 0 ? `${Number(v).toLocaleString('fr-FR')} FCFA` : null },
       { key: 'caution_elec',         label: 'Caution élec.',       fmt: (v: any) => v > 0 ? `${Number(v).toLocaleString('fr-FR')} FCFA` : null },
-      { key: 'commission_agence',    label: 'Commission agence',   fmt: (v: any) => v > 0 ? `${Number(v).toLocaleString('fr-FR')} FCFA` : null },
+      { key: 'commission_agence',    label: 'Commission agence',   fmt: (_v: any, _a: any, bien?: any) => {
+        const role = bien?.user?.role_principal ?? bien?.user?.role;
+        if (role === 'proprietaire' || role === 'locataire' || role === 'prospect') return '500 FCFA (fixe Refuge)';
+        const v = _v;
+        return v > 0 ? `${Number(v).toLocaleString('fr-FR')} FCFA` : '—';
+      }},
       { key: 'echeance_mois',        label: 'Échéance loyer',      fmt: (v: any) => v > 1 ? `${v} mois` : null },
     ],
   },
@@ -89,8 +94,6 @@ export default function AnnonceDetailPage() {
   const [action, setAction]     = useState(null as any);
   const [motif, setMotif]       = useState('');
   const [conditions, setConditions] = useState('');
-  const [editMode, setEditMode] = useState(false);
-  const [editData, setEditData] = useState(null as any);
   const [fraisVisite, setFraisVisite] = useState('0');
 
   useEffect(() => {
@@ -176,53 +179,6 @@ export default function AnnonceDetailPage() {
   const mod   = bien.statut_moderation ?? 'en_attente';
   const badge = MOD_BADGE[mod] ?? MOD_BADGE.en_attente;
 
-  const hasChanges = editMode && editData && (
-    editData.description  !== (bien.description ?? '')              ||
-    Number(editData.prix) !== Number(bien.prix)                     ||
-    editData.adresse  !== (bien.localisation?.adresse  ?? '')       ||
-    editData.ville    !== (bien.localisation?.ville    ?? '')       ||
-    editData.quartier !== (bien.localisation?.quartier ?? '')
-  );
-
-  function startEdit() {
-    setEditData({
-      description:  bien.description ?? '',
-      prix:         String(bien.prix),
-      adresse:      bien.localisation?.adresse  ?? '',
-      ville:        bien.localisation?.ville    ?? '',
-      quartier:     bien.localisation?.quartier ?? '',
-    });
-    setEditMode(true);
-  }
-
-  function cancelEdit() {
-    setEditMode(false);
-    setEditData(null);
-  }
-
-  async function handleSaveAndApprove() {
-    setSaving(true);
-    try {
-      await patchAdminBien.update(bien.id, {
-        description:  editData.description,
-        prix:         Number(editData.prix),
-        frais_visite: Number(fraisVisite),
-        adresse:      editData.adresse,
-        ville:        editData.ville,
-        quartier:     editData.quartier,
-      });
-      await patchAdminBien.moderate(bien.id, { statut_moderation: 'approuve' });
-      const updated = await getAdminBien.byId(bien.id);
-      setBien(updated);
-      setFraisVisite(String(updated.frais_visite ?? 0));
-      setEditMode(false);
-      setEditData(null);
-      setAction(null);
-    } finally {
-      setSaving(false);
-    }
-  }
-
   return (
     <>
       {/* ── Topbar ── */}
@@ -235,17 +191,10 @@ export default function AnnonceDetailPage() {
         <span className={`badge-statut badge-verif ${badge.cls}`} style={{ fontSize: 11 }}>
           {badge.label}
         </span>
-        {!editMode ? (
-          <button className="detail-edit-btn" onClick={startEdit}>
-            <EditIcon size={14} />
-            Modifier
-          </button>
-        ) : (
-          <button className="detail-edit-btn detail-edit-btn--active" onClick={cancelEdit}>
-            <XIcon size={14} />
-            Annuler
-          </button>
-        )}
+        <button className="detail-edit-btn" onClick={() => navigate(`/annonces/${id}/modifier`)}>
+          <EditIcon size={14} />
+          Modifier
+        </button>
       </div>
 
       <div className="immo-page detail-page-layout">
@@ -291,20 +240,10 @@ export default function AnnonceDetailPage() {
           )}
 
           {/* Description */}
-          {(bien.description || editMode) && (
+          {bien.description && (
             <div className="detail-section">
               <div className="detail-section-title">Description</div>
-              {editMode ? (
-                <textarea
-                  className="detail-form-textarea"
-                  style={{ marginTop: 0, resize: 'vertical', minHeight: 110 }}
-                  value={editData.description}
-                  onChange={e => setEditData({ ...editData, description: e.target.value })}
-                  placeholder="Description du bien…"
-                />
-              ) : (
-                <p className="detail-description">{bien.description}</p>
-              )}
+              <p className="detail-description">{bien.description}</p>
             </div>
           )}
 
@@ -335,7 +274,7 @@ export default function AnnonceDetailPage() {
               {/* Groupes structurés */}
               {AMENITE_FIELD_GROUPS.map(group => {
                 const rows = group.fields
-                  .map(f => ({ label: f.label, value: f.fmt(bien.amenites[f.key], bien.amenites) }))
+                  .map(f => ({ label: f.label, value: (f.fmt as any)(bien.amenites[f.key], bien.amenites, bien) }))
                   .filter(r => r.value != null);
                 if (rows.length === 0) return null;
                 return (
@@ -375,16 +314,7 @@ export default function AnnonceDetailPage() {
           <div className="detail-card">
             <div className="detail-bien-type">{TYPE_LABELS[bien.type] ?? bien.type}</div>
             <div className="detail-bien-price">
-              {editMode ? (
-                <input
-                  className="detail-edit-input"
-                  type="number"
-                  min="0"
-                  value={editData.prix}
-                  onChange={e => setEditData({ ...editData, prix: e.target.value })}
-                />
-              ) : formatPrice(bien.prix)}
-              {' '}<span>FCFA</span>
+              {formatPrice(bien.prix)} <span>FCFA</span>
             </div>
             <div className="detail-bien-price-type">
               {bien.transaction === 'vente' ? 'Prix de vente' : 'Loyer mensuel'}
@@ -472,45 +402,17 @@ export default function AnnonceDetailPage() {
               <div className="detail-info-rows">
                 <div className="detail-info-row">
                   <span>Adresse</span>
-                  {editMode ? (
-                    <input
-                      className="detail-edit-input detail-edit-input--sm"
-                      type="text"
-                      value={editData.adresse}
-                      onChange={e => setEditData({ ...editData, adresse: e.target.value })}
-                    />
-                  ) : (
-                    <strong>{bien.localisation.adresse}</strong>
-                  )}
+                  <strong>{bien.localisation.adresse}</strong>
                 </div>
                 <div className="detail-info-row">
                   <span>Ville</span>
-                  {editMode ? (
-                    <input
-                      className="detail-edit-input detail-edit-input--sm"
-                      type="text"
-                      value={editData.ville}
-                      onChange={e => setEditData({ ...editData, ville: e.target.value })}
-                    />
-                  ) : (
-                    <strong>{bien.localisation.ville}</strong>
-                  )}
+                  <strong>{bien.localisation.ville}</strong>
                 </div>
                 <div className="detail-info-row">
                   <span>Quartier</span>
-                  {editMode ? (
-                    <input
-                      className="detail-edit-input detail-edit-input--sm"
-                      type="text"
-                      value={editData.quartier}
-                      onChange={e => setEditData({ ...editData, quartier: e.target.value })}
-                      placeholder="Optionnel"
-                    />
-                  ) : (
-                    bien.localisation.quartier
-                      ? <strong>{bien.localisation.quartier}</strong>
-                      : <strong style={{ color: 'var(--c-muted)' }}>—</strong>
-                  )}
+                  {bien.localisation.quartier
+                    ? <strong>{bien.localisation.quartier}</strong>
+                    : <strong style={{ color: 'var(--c-muted)' }}>—</strong>}
                 </div>
                 <div className="detail-info-row">
                   <span>GPS</span>
@@ -565,10 +467,10 @@ export default function AnnonceDetailPage() {
                 {mod !== 'approuve' && (
                   <button
                     className="detail-btn detail-btn--approve"
-                    onClick={hasChanges ? handleSaveAndApprove : handleApprove}
+                    onClick={handleApprove}
                     disabled={saving}
                   >
-                    {hasChanges ? '✓ Modifier & approuver' : '✓ Approuver'}
+                    ✓ Approuver
                   </button>
                 )}
                 {mod !== 'rejete' && (

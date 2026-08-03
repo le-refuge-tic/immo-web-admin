@@ -1,5 +1,5 @@
 import { useAuth } from '../context/AuthContext';
-import logoUrl from '../assets/REFUGE-LOGO.png';
+import logoUrl from '../assets/logo_complet.jpeg';
 
 export default function Topbar({
   minimized,
@@ -44,7 +44,7 @@ export default function Topbar({
       {/* Logo + toggle desktop */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
         <div className="immo-logo" style={{ padding: 0, border: 'none', gap: 8 }}>
-          <img src={logoUrl} alt="REFUGE" style={{ width: 42, height: 42, objectFit: 'contain' }} />
+          <img src={logoUrl} alt="REFUGE" style={{ width: 42, height: 42, objectFit: 'contain', borderRadius: 10 }} />
           <span className="immo-logo-text" style={{ fontSize: 20, color: '#00AEEF' }}>REFUGE</span>
         </div>
 

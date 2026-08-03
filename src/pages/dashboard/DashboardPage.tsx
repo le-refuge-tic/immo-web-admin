@@ -66,10 +66,10 @@ export default function DashboardPage() {
       <div className="immo-page">
         <div>
           <h2 style={{ fontSize: 26, fontWeight: 800, color: 'var(--c-text)', margin: 0 }}>
-            Akwaba, Admin !
+            LeRefugeTIC
           </h2>
           <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--c-muted)', letterSpacing: '0.7px', textTransform: 'uppercase', marginTop: 4 }}>
-            Vue d'ensemble — MY HAVENKEY
+            Vue d'ensemble — REFUGE
           </p>
         </div>
 

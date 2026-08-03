@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import villaImg       from '../../assets/login/villa.jpg';
 import appartementImg from '../../assets/login/appartement.jpg';
 import terrainImg     from '../../assets/login/terrain.jpg';
-import logoUrl        from '../../assets/REFUGE-LOGO.png';
+import logoUrl        from '../../assets/logo_complet.jpeg';
 
 export default function LoginPage() {
   const { login, isAuthenticated } = useAuth();
@@ -44,7 +44,7 @@ export default function LoginPage() {
 
         {/* Logo / marque */}
         <div className="lp-brand">
-          <img src={logoUrl} alt="REFUGE" style={{ width: 58, height: 58, objectFit: 'contain' }} />
+          <img src={logoUrl} alt="REFUGE" style={{ width: 80, height: 80, objectFit: 'contain', borderRadius: 16 }} />
           <span className="lp-brand-name">REFUGE</span>
         </div>
 
@@ -80,7 +80,7 @@ export default function LoginPage() {
 
           {/* Logo centré */}
           <div className="lp-form-logo">
-            <img src={logoUrl} alt="REFUGE" style={{ width: 58, height: 58, objectFit: 'contain' }} />
+            <img src={logoUrl} alt="REFUGE" style={{ width: 80, height: 80, objectFit: 'contain', borderRadius: 16 }} />
           </div>
 
           {/* Titre + sous-titre */}

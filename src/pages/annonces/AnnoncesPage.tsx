@@ -7,20 +7,54 @@ type FilterTab = 'tous' | 'maison' | 'appart_vide' | 'appart_meuble' | 'guesthou
 
 const FILTER_TABS: { key: FilterTab; label: string }[] = [
   { key: 'tous',          label: 'Tous les biens' },
-  { key: 'maison',        label: 'Maisons' },
-  { key: 'appart_vide',   label: 'Appartements vides' },
+  { key: 'maison',        label: 'Maisons / Villas' },
+  { key: 'appart_vide',   label: 'Apparts / Chambres' },
   { key: 'appart_meuble', label: 'Appartements meublés' },
   { key: 'guesthouse',    label: 'Guesthouses' },
   { key: 'terrain',       label: 'Terrains' },
 ];
 
-const TYPE_LABELS: Record<string, string> = {
-  maison:        'MAISON',
-  appart_vide:   'APPART VIDE',
-  appart_meuble: 'APPART MEUBLÉ',
-  guesthouse:    'GUESTHOUSE',
-  terrain:       'TERRAIN',
+const TYPE_BADGE: Record<string, string> = {
+  // sous-types (prioritaires)
+  chambre_salon:       'CHAMBRE-SALON',
+  entree_coucher:      'ENTRÉE-COUCHER',
+  appartement:         'APPARTEMENT',
+  villa:               'VILLA',
+  maison_individuelle: 'MAISON',
+  villa_maison:        'VILLA / MAISON',
+  boutique:            'BOUTIQUE / LOCAL',
+  terrain:             'TERRAIN',
+  // types DB (fallback)
+  maison:              'MAISON',
+  appart_vide:         'APPARTEMENT',
+  appart_meuble:       'APPART. MEUBLÉ',
+  guesthouse:          'GUESTHOUSE',
 };
+
+const TYPE_NAME: Record<string, string> = {
+  chambre_salon:       'Chambre-Salon',
+  entree_coucher:      'Entrée-Coucher',
+  appartement:         'Appartement',
+  villa:               'Villa',
+  maison_individuelle: 'Maison',
+  villa_maison:        'Villa / Maison',
+  boutique:            'Boutique / Local',
+  terrain:             'Terrain',
+  maison:              'Maison',
+  appart_vide:         'Appartement',
+  appart_meuble:       'Appartement meublé',
+  guesthouse:          'Guesthouse',
+};
+
+function getBienBadge(b: any): string {
+  const sous = b.amenites?.sous_type;
+  return TYPE_BADGE[sous] ?? TYPE_BADGE[b.type] ?? b.type.toUpperCase();
+}
+
+function getBienName(b: any): string {
+  const sous = b.amenites?.sous_type;
+  return TYPE_NAME[sous] ?? TYPE_NAME[b.type] ?? b.type;
+}
 
 const MOD_BADGE: any = {
   en_attente:   { label: 'EN ATTENTE',   className: 'pending'  },
@@ -139,7 +173,7 @@ export default function AnnoncesPage() {
                       </div>
                     )}
                     <div className="annonce-img-badges">
-                      <span className="badge-type">{TYPE_LABELS[b.type] ?? b.type.toUpperCase()}</span>
+                      <span className="badge-type">{getBienBadge(b)}</span>
                     </div>
                     <span className={`badge-statut badge-verif ${badge.className}`} style={{
                       position: 'absolute', bottom: 8, right: 8, fontSize: 10,
@@ -151,11 +185,7 @@ export default function AnnoncesPage() {
                   <div className="annonce-body">
                     <div className="annonce-title-row">
                       <div className="annonce-name">
-                        {b.type === 'maison'        && 'Maison'}
-                        {b.type === 'appart_vide'   && 'Appart. vide'}
-                        {b.type === 'appart_meuble' && 'Appart. meublé'}
-                        {b.type === 'guesthouse'    && 'Guesthouse'}
-                        {b.type === 'terrain'       && 'Terrain'}
+                        {getBienName(b)}
                         {b.localisation?.quartier ? ` – ${b.localisation.quartier.toUpperCase()}` : ''}
                       </div>
                       <div className="annonce-price-block">

@@ -23,6 +23,7 @@ export type User = {
 };
 
 export type TypeBien = 'maison' | 'appart_vide' | 'appart_meuble' | 'guesthouse' | 'terrain';
+export type SousTypeBien = 'chambre_salon' | 'entree_coucher' | 'appartement' | 'villa' | 'maison_individuelle' | 'villa_maison' | 'boutique' | 'terrain';
 export type TypeTransaction = 'vente' | 'location';
 export type StatutBien = 'actif' | 'vendu' | 'loue' | 'archive';
 export type StatutModeration = 'en_attente' | 'approuve' | 'rejete' | 'conditionnel';
@@ -48,6 +49,11 @@ export type Piece = {
   surface: number | null;
 };
 
+export type Amenites = {
+  sous_type?: SousTypeBien | string;
+  [key: string]: unknown;
+};
+
 export type Bien = {
   id: number;
   user_id: number;
@@ -68,6 +74,7 @@ export type Bien = {
   updated_at: string;
   pieces: Piece[];
   photos: Photo[];
+  amenites?: Amenites;
 };
 
 export type StatutContrat = 'actif' | 'resilie' | 'expire';
