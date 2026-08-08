@@ -3,7 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import {
   GridIcon, HomeIcon, UsersIcon, SettingsIcon, ShieldIcon,
   ChevronDownIcon, UserIcon, BuildingIcon, KeyIcon, FileTextIcon, TrendingUpIcon, StarIcon,
-  MessageIcon,
+  MessageIcon, WithdrawIcon,
 } from '../components/Icons';
 import { useAuth } from '../context/AuthContext';
 
@@ -16,6 +16,10 @@ const TOP_NAV = [
   { to: '/liaisons',     label: 'Liaisons gestion',Icon: KeyIcon         },
   { to: '/finances',     label: 'Finances',        Icon: TrendingUpIcon  },
   { to: '/feedbacks',    label: 'Feedbacks',       Icon: StarIcon        },
+];
+
+const SUPER_ADMIN_NAV = [
+  { to: '/retraits', label: 'Retraits MoMo', Icon: WithdrawIcon },
 ];
 
 const CONFIG_SUBS_BASE = [
@@ -55,6 +59,19 @@ export default function Sidebar({
       <nav className="immo-nav">
         {/* Top nav items */}
         {TOP_NAV.map(({ to, label, Icon }) => (
+          <NavLink
+            key={to}
+            to={to}
+            title={minimized ? label : undefined}
+            className={({ isActive }) => `immo-nav-item${isActive ? ' active' : ''}`}
+          >
+            <Icon />
+            <span className="immo-nav-label">{label}</span>
+          </NavLink>
+        ))}
+
+        {/* Super admin only */}
+        {user?.role === 'super_admin' && SUPER_ADMIN_NAV.map(({ to, label, Icon }) => (
           <NavLink
             key={to}
             to={to}

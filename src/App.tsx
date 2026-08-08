@@ -18,6 +18,7 @@ import LoyersPage    from './pages/loyers/LoyersPage';
 import FinancesPage  from './pages/finances/FinancesPage';
 import FeedbacksPage from './pages/feedbacks/FeedbacksPage';
 import GestionLiaisonsPage from './pages/gestion/GestionLiaisonsPage';
+import RetraitsPage        from './pages/retraits/RetraitsPage';
 
 export default function App() {
   return (
@@ -44,6 +45,7 @@ export default function App() {
             <Route path="finances"     element={<FinancesPage />} />
             <Route path="feedbacks"    element={<FeedbacksPage />} />
             <Route path="liaisons"     element={<GestionLiaisonsPage />} />
+            <Route path="retraits"     element={<RetraitsPage />} />
 
             {/* Configuration */}
             <Route path="configuration">

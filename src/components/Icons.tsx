@@ -216,6 +216,15 @@ export const SendIcon = ({ size = 16 }: { size?: number }) => (
   </svg>
 );
 
+export const WithdrawIcon = ({ size = 17 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="5" width="20" height="14" rx="2"/>
+    <line x1="2" y1="10" x2="22" y2="10"/>
+    <polyline points="12 15 9 18 12 21"/>
+    <line x1="9" y1="18" x2="15" y2="18"/>
+  </svg>
+);
+
 export const SettingsIcon = ({ size = 17 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="12" r="3"/>
