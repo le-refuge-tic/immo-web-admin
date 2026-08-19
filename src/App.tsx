@@ -25,7 +25,7 @@ import RetraitsPage        from './pages/retraits/RetraitsPage';
 
 function DefaultRedirect() {
   const { user } = useAuth();
-  if (user?.role === 'commercial') return <Navigate to="/annonces" replace />;
+  if ((user?.role_principal ?? user?.role) === 'commercial') return <Navigate to="/annonces" replace />;
   return <Navigate to="/dashboard" replace />;
 }
 

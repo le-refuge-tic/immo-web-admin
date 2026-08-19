@@ -17,7 +17,7 @@ export default function Sidebar({
   const { user } = useAuth();
   const location = useLocation();
 
-  const role        = user?.role ?? '';
+  const role        = user?.role_principal ?? user?.role ?? '';
   const isAdmin     = role === 'admin' || role === 'super_admin';
   const isSuperAdmin = role === 'super_admin';
 

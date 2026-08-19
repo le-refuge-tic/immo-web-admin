@@ -6,7 +6,7 @@ const SUPER_ADMIN_ROLES = ['super_admin'];
 
 export function AdminRoute({ children }: { children: any }) {
   const { user } = useAuth();
-  if (!user || !ADMIN_ROLES.includes(user.role_principal ?? user.role)) {
+  if (!user || !ADMIN_ROLES.includes(user.role_principal ?? user?.role)) {
     return <Navigate to="/annonces" replace />;
   }
   return <>{children}</>;
