@@ -33,7 +33,7 @@ export default function GestionCommercialPage() {
     }
   };
 
-  const canManage = me?.role === 'admin' || me?.role === 'super_admin';
+  const canManage = ['admin', 'super_admin'].includes(me?.role_principal ?? me?.role ?? '');
 
   return (
     <>

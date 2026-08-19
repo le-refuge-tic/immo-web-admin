@@ -18,6 +18,13 @@ export default function Topbar({
     ? `${user.nom[0] ?? ''}${user.prenom[0] ?? ''}`.toUpperCase()
     : 'SA';
 
+  const role = user?.role_principal ?? user?.role ?? '';
+  const roleLabel = role === 'super_admin'
+    ? 'Super Administrateur'
+    : role === 'admin'
+      ? 'Administrateur'
+      : 'Commercial';
+
   return (
     <div className="immo-layout-topbar">
       {/* Hamburger (mobile) */}
@@ -74,7 +81,7 @@ export default function Topbar({
             <div className="immo-admin-name">
               {user ? `${user.prenom} ${user.nom}` : 'Super Admin'}
             </div>
-            <div className="immo-admin-role">Super Administrateur</div>
+            <div className="immo-admin-role">{roleLabel}</div>
           </div>
           <div className="immo-avatar-sq">{initials}</div>
         </div>

@@ -35,8 +35,8 @@ export default function GestionAdminPage() {
   };
 
   const total      = admins.length;
-  const totalSuper = admins.filter((a: any) => a.role === 'super_admin').length;
-  const totalAdmin = admins.filter((a: any) => a.role === 'admin').length;
+  const totalSuper = admins.filter((a: any) => a.role_principal === 'super_admin').length;
+  const totalAdmin = admins.filter((a: any) => a.role_principal === 'admin').length;
 
   return (
     <>
@@ -118,7 +118,7 @@ export default function GestionAdminPage() {
               {admins.map((a: any) => {
                 const initials  = `${a.nom[0] ?? ''}${a.prenom[0] ?? ''}`.toUpperCase();
                 const isMe      = me?.id === a.id;
-                const isSuperAdm = a.role === 'super_admin';
+                const isSuperAdm = a.role_principal === 'super_admin';
                 const canDelete  = !isMe && !isSuperAdm;
 
                 return (
@@ -131,7 +131,7 @@ export default function GestionAdminPage() {
                       </div>
                       <div className="admin-info-email">{a.email ?? '—'}</div>
                     </div>
-                    <GestionAdminRoleBadge role={a.role} />
+                    <GestionAdminRoleBadge role={a.role_principal} />
                     {canDelete ? (
                       <button className="btn-icon-sm danger" onClick={() => handleDelete(a)} disabled={deletingId === a.id} title="Supprimer cet administrateur" style={{ flexShrink: 0 }}>
                         {deletingId === a.id ? (
