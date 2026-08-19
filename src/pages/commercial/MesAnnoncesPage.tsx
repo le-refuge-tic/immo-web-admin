@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getMesBiens } from '../../api/getMesBiens';
 import { postBien } from '../../api/postBien';
-import PublierBienModal from './PublierBienModal';
 
 /* ─── Helpers ─────────────────────────────────────────────── */
 
@@ -46,10 +45,9 @@ function formatDate(iso: string) {
 
 export default function MesAnnoncesPage() {
   const navigate = useNavigate();
-  const [biens, setBiens]         = useState<any[]>([]);
-  const [loading, setLoading]     = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [deleting, setDeleting]   = useState<number | null>(null);
+  const [biens, setBiens]       = useState<any[]>([]);
+  const [loading, setLoading]   = useState(true);
+  const [deleting, setDeleting] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -78,11 +76,6 @@ export default function MesAnnoncesPage() {
     }
   };
 
-  const handleCreated = (b: any) => {
-    setBiens(prev => [b, ...prev]);
-    setShowModal(false);
-  };
-
   const getBienLabel = (b: any) => {
     const sous = b.amenites?.sous_type;
     return TYPE_LABEL[sous] ?? TYPE_LABEL[b.type] ?? b.type;
@@ -100,7 +93,7 @@ export default function MesAnnoncesPage() {
           <h1 className="immo-page-title">Mes annonces</h1>
           <p className="immo-page-sub">Vos biens publiés sur la plateforme</p>
         </div>
-        <button className="btn-submit" onClick={() => setShowModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <button className="btn-submit" onClick={() => navigate('/publier-bien')} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 18, lineHeight: 1 }}>＋</span>
           Publier un bien
         </button>
@@ -136,7 +129,7 @@ export default function MesAnnoncesPage() {
             <div style={{ color: 'var(--c-muted)', fontSize: 13, marginBottom: 18 }}>
               Commencez par publier votre première annonce.
             </div>
-            <button className="btn-submit" onClick={() => setShowModal(true)}>Publier un bien</button>
+            <button className="btn-submit" onClick={() => navigate('/publier-bien')}>Publier un bien</button>
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
@@ -212,12 +205,6 @@ export default function MesAnnoncesPage() {
         )}
       </div>
 
-      {showModal && (
-        <PublierBienModal
-          onClose={() => setShowModal(false)}
-          onCreated={handleCreated}
-        />
-      )}
     </div>
   );
 }

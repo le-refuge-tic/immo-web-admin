@@ -3,7 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import {
   GridIcon, HomeIcon, UsersIcon, SettingsIcon, ShieldIcon,
   ChevronDownIcon, UserIcon, BuildingIcon, KeyIcon, FileTextIcon, TrendingUpIcon, StarIcon,
-  MessageIcon, WithdrawIcon, CalendarIcon,
+  MessageIcon, WithdrawIcon, ListingsIcon, VisitIcon,
 } from '../components/Icons';
 import { useAuth } from '../context/AuthContext';
 
@@ -35,8 +35,8 @@ export default function Sidebar({
     ...(isAdmin     ? [{ to: '/dashboard',    label: 'Tableau de bord',  Icon: GridIcon       }] : []),
     { to: '/annonces',     label: 'Annonces',          Icon: HomeIcon       },
     ...(isCommercial ? [
-      { to: '/mes-annonces', label: 'Mes annonces',    Icon: BuildingIcon   },
-      { to: '/mes-visites',  label: 'Mes visites',     Icon: CalendarIcon   },
+      { to: '/mes-annonces', label: 'Mes annonces',    Icon: ListingsIcon   },
+      { to: '/mes-visites',  label: 'Mes visites',     Icon: VisitIcon      },
     ] : []),
     { to: '/messages',     label: 'Messages',           Icon: MessageIcon    },
     ...(isAdmin ? [

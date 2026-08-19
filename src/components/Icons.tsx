@@ -240,3 +240,24 @@ export const CalendarIcon = ({ size = 17 }: { size?: number }) => (
     <line x1="3" y1="10" x2="21" y2="10"/>
   </svg>
 );
+
+/* Icône "Mes annonces" — liste de fiches immo */
+export const ListingsIcon = ({ size = 17 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+    <rect x="9" y="3" width="6" height="4" rx="1"/>
+    <line x1="9" y1="12" x2="15" y2="12"/>
+    <line x1="9" y1="16" x2="13" y2="16"/>
+  </svg>
+);
+
+/* Icône "Mes visites" — clé remise à la main */
+export const VisitIcon = ({ size = 17 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="7.5" cy="15.5" r="5.5"/>
+    <path d="M7.5 15.5h.01"/>
+    <path d="M11 12l8-8"/>
+    <path d="M19 4l1 1-1.5 1.5"/>
+    <path d="M17 6l1 1"/>
+  </svg>
+);

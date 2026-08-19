@@ -24,6 +24,7 @@ import GestionLiaisonsPage from './pages/gestion/GestionLiaisonsPage';
 import RetraitsPage        from './pages/retraits/RetraitsPage';
 import MesAnnoncesPage    from './pages/commercial/MesAnnoncesPage';
 import MesVisitesPage     from './pages/commercial/MesVisitesPage';
+import PublierBienPage    from './pages/commercial/PublierBienPage';
 
 function DefaultRedirect() {
   const { user } = useAuth();
@@ -52,6 +53,7 @@ export default function App() {
             <Route path="annonces/:id/modifier" element={<AnnonceEditPage />} />
             <Route path="mes-annonces" element={<MesAnnoncesPage />} />
             <Route path="mes-visites"  element={<MesVisitesPage />} />
+            <Route path="publier-bien" element={<PublierBienPage />} />
             <Route path="messages"     element={<MessagesPage />} />
             <Route path="utilisateurs" element={<AdminRoute><UtilisateursPage /></AdminRoute>} />
             <Route path="loyers"       element={<AdminRoute><LoyersPage /></AdminRoute>} />

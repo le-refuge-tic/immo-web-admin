@@ -40,10 +40,14 @@ const ROLE_LABELS: any = {
 
 /* ─── Composant Popover info utilisateur ───────────────────── */
 
-function UserPopover({ user, onClose }: { user: any; onClose: () => void }) {
+function UserPopover({ user, x, y, onClose }: { user: any; x: number; y: number; onClose: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
   const role = user?.role_principal ?? user?.role ?? '';
   const roleLabel = ROLE_LABELS[role] ?? role;
+
+  // Ajuster pour ne pas sortir de l'écran
+  const safeX = Math.min(x, window.innerWidth - 280);
+  const safeY = Math.min(y, window.innerHeight - 180);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -54,7 +58,7 @@ function UserPopover({ user, onClose }: { user: any; onClose: () => void }) {
   }, [onClose]);
 
   return (
-    <div ref={ref} className="msg-user-popover">
+    <div ref={ref} className="msg-user-popover" style={{ position: 'fixed', left: safeX, top: safeY }}>
       <div className="msg-user-popover-av" style={{ background: avatarColor(user?.id ?? 0) }}>
         {user ? initials(user) : '?'}
       </div>
@@ -81,7 +85,7 @@ export default function MessagesPage() {
   const [loadingConvs, setLoadingConvs] = useState(true);
   const [loadingMsgs, setLoadingMsgs]   = useState(false);
   const [showNewModal, setShowNewModal] = useState(false);
-  const [popoverUser, setPopoverUser]   = useState<any>(null);
+  const [popover, setPopover] = useState<{ user: any; x: number; y: number } | null>(null);
   const bottomRef                       = useRef(null as any);
 
   const loadConvs = useCallback(async () => {
@@ -151,7 +155,12 @@ export default function MessagesPage() {
 
   const handleAvatarClick = (e: React.MouseEvent, user: any) => {
     e.stopPropagation();
-    setPopoverUser((prev: any) => prev?.id === user?.id ? null : user);
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    setPopover(prev => prev?.user?.id === user?.id ? null : {
+      user,
+      x: rect.right + 10,
+      y: rect.top,
+    });
   };
 
   const activeConv = convs.find((c: any) => c.id === activeId);
@@ -164,7 +173,7 @@ export default function MessagesPage() {
     : convs;
 
   return (
-    <div className="msg-layout" onClick={() => setPopoverUser(null)}>
+    <div className="msg-layout" onClick={() => setPopover(null)}>
 
       {/* ── Panel gauche ── */}
       <div className="msg-conv-panel">
@@ -264,7 +273,7 @@ export default function MessagesPage() {
           </div>
 
           {/* Zone de messages */}
-          <div className="msg-bubbles" onClick={() => setPopoverUser(null)}>
+          <div className="msg-bubbles" onClick={() => setPopover(null)}>
             {loadingMsgs ? (
               <div className="msg-spinner-wrap"><div className="msg-spinner" /></div>
             ) : messages.length === 0 ? (
@@ -366,9 +375,9 @@ export default function MessagesPage() {
             </button>
           </div>
 
-          {/* Popover info utilisateur */}
-          {popoverUser && (
-            <UserPopover user={popoverUser} onClose={() => setPopoverUser(null)} />
+          {/* Popover info utilisateur (fixed, positionné au clic) */}
+          {popover && (
+            <UserPopover user={popover.user} x={popover.x} y={popover.y} onClose={() => setPopover(null)} />
           )}
         </div>
       )}
