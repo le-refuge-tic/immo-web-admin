@@ -3,7 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import {
   GridIcon, HomeIcon, UsersIcon, SettingsIcon, ShieldIcon,
   ChevronDownIcon, UserIcon, BuildingIcon, KeyIcon, FileTextIcon, TrendingUpIcon, StarIcon,
-  MessageIcon, WithdrawIcon,
+  MessageIcon, WithdrawIcon, CalendarIcon,
 } from '../components/Icons';
 import { useAuth } from '../context/AuthContext';
 
@@ -17,9 +17,10 @@ export default function Sidebar({
   const { user } = useAuth();
   const location = useLocation();
 
-  const role        = user?.role_principal ?? user?.role ?? '';
-  const isAdmin     = role === 'admin' || role === 'super_admin';
+  const role         = user?.role_principal ?? user?.role ?? '';
+  const isAdmin      = role === 'admin' || role === 'super_admin';
   const isSuperAdmin = role === 'super_admin';
+  const isCommercial = role === 'commercial';
 
   const isConfigActive = location.pathname.startsWith('/configuration');
   const [configOpen, setConfigOpen] = useState(isConfigActive);
@@ -32,8 +33,12 @@ export default function Sidebar({
 
   const navItems = [
     ...(isAdmin     ? [{ to: '/dashboard',    label: 'Tableau de bord',  Icon: GridIcon       }] : []),
-    { to: '/annonces',     label: 'Annonces',         Icon: HomeIcon       },
-    { to: '/messages',     label: 'Messages',          Icon: MessageIcon    },
+    { to: '/annonces',     label: 'Annonces',          Icon: HomeIcon       },
+    ...(isCommercial ? [
+      { to: '/mes-annonces', label: 'Mes annonces',    Icon: BuildingIcon   },
+      { to: '/mes-visites',  label: 'Mes visites',     Icon: CalendarIcon   },
+    ] : []),
+    { to: '/messages',     label: 'Messages',           Icon: MessageIcon    },
     ...(isAdmin ? [
       { to: '/utilisateurs', label: 'Utilisateurs',    Icon: UsersIcon      },
       { to: '/loyers',       label: 'Loyers',          Icon: FileTextIcon   },
