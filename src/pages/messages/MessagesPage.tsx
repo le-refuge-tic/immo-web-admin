@@ -279,12 +279,11 @@ export default function MessagesPage() {
                 const isStaff  = m.sender_role === 'staff';
                 const showDate = i === 0 || !sameDay(messages[i - 1].created_at, m.created_at);
 
-                // Objet expéditeur réel pour l'avatar
+                // Objet expéditeur réel — m.expediteur est retourné par le backend
+                // pour TOUS les messages (locataire, propriétaire, staff, admin…)
                 const sender: any = isMine
                   ? me
-                  : isStaff
-                  ? (m.expediteur ?? null)
-                  : (activeConv.user ?? null);
+                  : (m.expediteur ?? activeConv.user ?? null);
 
                 const senderColor = avatarColor(sender?.id ?? 0);
                 const senderInit  = sender ? initials(sender) : '?';

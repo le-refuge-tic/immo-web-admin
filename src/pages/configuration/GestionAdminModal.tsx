@@ -1,11 +1,28 @@
 import { useState } from 'react';
 import { postAdmins } from '../../api/postAdmins';
 
+function EyeIcon({ open }: { open: boolean }) {
+  return open ? (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+      <circle cx="12" cy="12" r="3"/>
+    </svg>
+  ) : (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+      <line x1="1" y1="1" x2="23" y2="23"/>
+    </svg>
+  );
+}
+
 export default function GestionAdminModal({ onClose, onCreated }: {
   onClose: () => void;
   onCreated: (u: any) => void;
 }) {
-  const [form, setForm]       = useState({ nom: '', prenom: '', email: '', password: '' });
+  const [form, setForm]       = useState({ nom: '', prenom: '', email: '', password: '', confirm: '' });
+  const [showPwd, setShowPwd] = useState(false);
+  const [showCfm, setShowCfm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
 
@@ -14,9 +31,14 @@ export default function GestionAdminModal({ onClose, onCreated }: {
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     setError('');
+    if (form.password !== form.confirm) {
+      setError('Les mots de passe ne correspondent pas.');
+      return;
+    }
     setLoading(true);
     try {
-      const res = await postAdmins.create(form);
+      const { confirm: _, ...payload } = form;
+      const res = await postAdmins.create(payload);
       onCreated(res.user);
       onClose();
     } catch (err: any) {
@@ -25,6 +47,36 @@ export default function GestionAdminModal({ onClose, onCreated }: {
       setLoading(false);
     }
   };
+
+  const pwdField = (field: 'password' | 'confirm', show: boolean, toggle: () => void, label: string, placeholder: string) => (
+    <div className="immo-form-field">
+      <label className="immo-form-label">{label}</label>
+      <div style={{ position: 'relative' }}>
+        <input
+          className="immo-form-input"
+          type={show ? 'text' : 'password'}
+          value={form[field]}
+          onChange={set(field)}
+          required
+          minLength={field === 'password' ? 8 : undefined}
+          placeholder={placeholder}
+          style={{ paddingRight: '2.5rem' }}
+        />
+        <button
+          type="button"
+          onClick={toggle}
+          style={{
+            position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
+            background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-muted)',
+            display: 'flex', alignItems: 'center', padding: 0,
+          }}
+          tabIndex={-1}
+        >
+          <EyeIcon open={show} />
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="immo-modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
@@ -60,10 +112,9 @@ export default function GestionAdminModal({ onClose, onCreated }: {
             <label className="immo-form-label">Adresse email</label>
             <input className="immo-form-input" type="email" value={form.email} onChange={set('email')} required placeholder="admin@refuge-immo.com" />
           </div>
-          <div className="immo-form-field">
-            <label className="immo-form-label">Mot de passe temporaire</label>
-            <input className="immo-form-input" type="password" value={form.password} onChange={set('password')} required minLength={8} placeholder="Min. 8 caractères" />
-          </div>
+          {pwdField('password', showPwd, () => setShowPwd(v => !v), 'Mot de passe', 'Min. 8 caractères')}
+          {pwdField('confirm', showCfm, () => setShowCfm(v => !v), 'Confirmer le mot de passe', 'Répéter le mot de passe')}
+
           <div className="immo-modal-actions">
             <button type="button" className="btn-cancel" onClick={onClose}>Annuler</button>
             <button type="submit" className="btn-submit" disabled={loading}>
