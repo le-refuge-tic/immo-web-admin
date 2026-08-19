@@ -151,7 +151,7 @@ export default function MessagesPage() {
 
   const handleAvatarClick = (e: React.MouseEvent, user: any) => {
     e.stopPropagation();
-    setPopoverUser(prev => prev?.id === user?.id ? null : user);
+    setPopoverUser((prev: any) => prev?.id === user?.id ? null : user);
   };
 
   const activeConv = convs.find((c: any) => c.id === activeId);
