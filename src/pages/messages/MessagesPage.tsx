@@ -5,9 +5,11 @@ import { SearchIcon, SendIcon, PlusIcon } from '../../components/Icons';
 import { useAuth } from '../../context/AuthContext';
 import NewConversationModal from './NewConversationModal';
 
-const COLORS = ['#2563EB', '#7C3AED', '#DB2777', '#D97706', '#16A34A', '#0891B2'];
-function avatarColor(id: number) { return COLORS[Math.abs(id) % COLORS.length]; }
-function initials(u: any) { return `${u.nom?.[0] ?? ''}${u.prenom?.[0] ?? ''}`.toUpperCase(); }
+/* ─── Helpers ───────────────────────────────────────────────── */
+
+const COLORS = ['#2563EB', '#7C3AED', '#DB2777', '#D97706', '#16A34A', '#0891B2', '#DC2626', '#0284C7'];
+function avatarColor(id: number) { return COLORS[Math.abs(id ?? 0) % COLORS.length]; }
+function initials(u: any) { return `${u.prenom?.[0] ?? ''}${u.nom?.[0] ?? ''}`.toUpperCase() || '?'; }
 
 function formatConvTime(iso: string) {
   const d = new Date(iso);
@@ -16,15 +18,12 @@ function formatConvTime(iso: string) {
   if (diff < 604_800_000) return d.toLocaleDateString('fr-FR', { weekday: 'short' });
   return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
 }
-
 function formatMsgTime(iso: string) {
   return new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 }
-
 function formatDateSep(iso: string) {
   return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 }
-
 function sameDay(a: string, b: string) {
   return new Date(a).toDateString() === new Date(b).toDateString();
 }
@@ -36,13 +35,40 @@ const ROLE_LABELS: any = {
   demarcheur:   'Démarcheur',
   admin:        'Administrateur',
   super_admin:  'Super Admin',
+  commercial:   'Commercial',
 };
 
-const STAFF_ROLE_LABELS: any = {
-  admin:       'Administrateur',
-  super_admin: 'Super Admin',
-  commercial:  'Commercial',
-};
+/* ─── Composant Popover info utilisateur ───────────────────── */
+
+function UserPopover({ user, onClose }: { user: any; onClose: () => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const role = user?.role_principal ?? user?.role ?? '';
+  const roleLabel = ROLE_LABELS[role] ?? role;
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [onClose]);
+
+  return (
+    <div ref={ref} className="msg-user-popover">
+      <div className="msg-user-popover-av" style={{ background: avatarColor(user?.id ?? 0) }}>
+        {user ? initials(user) : '?'}
+      </div>
+      <div className="msg-user-popover-body">
+        <div className="msg-user-popover-name">{user?.prenom} {user?.nom}</div>
+        {roleLabel && <div className="msg-user-popover-role">{roleLabel}</div>}
+        {user?.email    && <div className="msg-user-popover-info">✉ {user.email}</div>}
+        {user?.telephone && <div className="msg-user-popover-info">📱 {user.telephone}</div>}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Page principale ───────────────────────────────────────── */
 
 export default function MessagesPage() {
   const { user: me }                    = useAuth();
@@ -55,6 +81,7 @@ export default function MessagesPage() {
   const [loadingConvs, setLoadingConvs] = useState(true);
   const [loadingMsgs, setLoadingMsgs]   = useState(false);
   const [showNewModal, setShowNewModal] = useState(false);
+  const [popoverUser, setPopoverUser]   = useState<any>(null);
   const bottomRef                       = useRef(null as any);
 
   const loadConvs = useCallback(async () => {
@@ -113,19 +140,18 @@ export default function MessagesPage() {
   };
 
   const handleKeyDown = (e: any) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
   };
 
   const handleConvCreated = (conv: any) => {
     setShowNewModal(false);
-    const exists = convs.find((c: any) => c.id === conv.id);
-    if (!exists) {
-      setConvs(prev => [conv, ...prev]);
-    }
+    if (!convs.find((c: any) => c.id === conv.id)) setConvs(prev => [conv, ...prev]);
     setActiveId(conv.id);
+  };
+
+  const handleAvatarClick = (e: React.MouseEvent, user: any) => {
+    e.stopPropagation();
+    setPopoverUser(prev => prev?.id === user?.id ? null : user);
   };
 
   const activeConv = convs.find((c: any) => c.id === activeId);
@@ -138,9 +164,9 @@ export default function MessagesPage() {
     : convs;
 
   return (
-    <div className="msg-layout">
+    <div className="msg-layout" onClick={() => setPopoverUser(null)}>
 
-      {/* ── Panel gauche : liste des conversations ── */}
+      {/* ── Panel gauche ── */}
       <div className="msg-conv-panel">
         <div className="msg-conv-panel-header">
           <span className="msg-conv-panel-title">Messages</span>
@@ -179,13 +205,9 @@ export default function MessagesPage() {
                     <span className="msg-conv-name">
                       {c.user ? `${c.user.prenom} ${c.user.nom}` : `Conv. #${c.id}`}
                     </span>
-                    {roleBadge && (
-                      <span className="msg-conv-role-badge">{roleBadge}</span>
-                    )}
+                    {roleBadge && <span className="msg-conv-role-badge">{roleBadge}</span>}
                   </div>
-                  <div className="msg-conv-preview">
-                    {c.last_message ?? 'Aucun message'}
-                  </div>
+                  <div className="msg-conv-preview">{c.last_message ?? 'Aucun message'}</div>
                 </div>
                 <div className="msg-conv-right">
                   {c.last_message_at && (
@@ -200,7 +222,6 @@ export default function MessagesPage() {
           })}
         </div>
 
-        {/* ── Bouton nouveau message ── */}
         <div className="msg-new-btn-wrap">
           <button className="msg-new-btn" onClick={() => setShowNewModal(true)}>
             <PlusIcon />
@@ -209,7 +230,7 @@ export default function MessagesPage() {
         </div>
       </div>
 
-      {/* ── Panel droit : fil de discussion ── */}
+      {/* ── Panel droit ── */}
       {!activeConv ? (
         <div className="msg-thread msg-thread-empty">
           <div className="msg-empty-state">
@@ -223,7 +244,11 @@ export default function MessagesPage() {
 
           {/* En-tête du fil */}
           <div className="msg-thread-header">
-            <div className="msg-av msg-av--md" style={{ background: avatarColor(activeConv.user?.id ?? activeConv.id) }}>
+            <div
+              className="msg-av msg-av--md msg-av--click"
+              style={{ background: avatarColor(activeConv.user?.id ?? activeConv.id) }}
+              onClick={e => handleAvatarClick(e, activeConv.user)}
+            >
               {activeConv.user ? initials(activeConv.user) : '?'}
             </div>
             <div className="msg-thread-user-info">
@@ -239,11 +264,9 @@ export default function MessagesPage() {
           </div>
 
           {/* Zone de messages */}
-          <div className="msg-bubbles">
+          <div className="msg-bubbles" onClick={() => setPopoverUser(null)}>
             {loadingMsgs ? (
-              <div className="msg-spinner-wrap">
-                <div className="msg-spinner" />
-              </div>
+              <div className="msg-spinner-wrap"><div className="msg-spinner" /></div>
             ) : messages.length === 0 ? (
               <div className="msg-empty-state" style={{ flex: 1 }}>
                 <div className="msg-empty-icon" style={{ fontSize: '1.75rem' }}>✉️</div>
@@ -251,25 +274,33 @@ export default function MessagesPage() {
               </div>
             ) : (
               messages.map((m: any, i: number) => {
-                const isMine      = m.expediteur_id === me?.id;
-                const isStaff     = m.sender_role === 'staff';
-                const isSystem    = m.sender_role === 'systeme';
-                const isOtherStaff = isStaff && !isMine;
-                const showDate    = i === 0 || !sameDay(messages[i - 1].created_at, m.created_at);
-                // Expéditeur staff (autre que moi) — nom + role
-                const staffSender = isOtherStaff && m.expediteur
+                const isMine   = m.expediteur_id != null && m.expediteur_id === me?.id;
+                const isSystem = m.sender_role === 'systeme';
+                const isStaff  = m.sender_role === 'staff';
+                const showDate = i === 0 || !sameDay(messages[i - 1].created_at, m.created_at);
+
+                // Objet expéditeur réel pour l'avatar
+                const sender: any = isMine
+                  ? me
+                  : isStaff
+                  ? (m.expediteur ?? null)
+                  : (activeConv.user ?? null);
+
+                const senderColor = avatarColor(sender?.id ?? 0);
+                const senderInit  = sender ? initials(sender) : '?';
+
+                // Label nom/rôle pour un autre membre du staff
+                const showStaffLabel = !isMine && isStaff && m.expediteur;
+                const staffName = showStaffLabel
                   ? `${m.expediteur.prenom ?? ''} ${m.expediteur.nom ?? ''}`.trim()
                   : null;
-                const staffSenderRole = isOtherStaff && m.expediteur?.role
-                  ? STAFF_ROLE_LABELS[m.expediteur.role] ?? m.expediteur.role
+                const staffRoleName = showStaffLabel && m.expediteur?.role
+                  ? (ROLE_LABELS[m.expediteur.role] ?? m.expediteur.role)
                   : null;
-                // Avatar pour les messages non-mine
-                const senderUser = isMine ? null
-                  : isOtherStaff ? (m.expediteur ?? null)
-                  : (activeConv.user ?? null);
-                const senderAvColor = senderUser
-                  ? avatarColor(senderUser.id ?? 0)
-                  : '#888';
+
+                // Classe de bulle
+                const bubbleClass = isMine ? 'mine' : isStaff ? 'staff' : 'theirs';
+
                 return (
                   <Fragment key={m.id}>
                     {showDate && (
@@ -285,22 +316,24 @@ export default function MessagesPage() {
                       </div>
                     ) : (
                       <div className={`msg-bubble-row${isMine ? ' mine' : ''}`}>
-                        {!isMine && (
-                          <div
-                            className="msg-av msg-av--sm"
-                            style={{ background: senderAvColor }}
-                          >
-                            {senderUser ? initials(senderUser) : '?'}
-                          </div>
-                        )}
+                        {/* Avatar cliquable — affiché des DEUX côtés */}
+                        <div
+                          className="msg-av msg-av--sm msg-av--click"
+                          style={{ background: senderColor }}
+                          onClick={e => handleAvatarClick(e, sender)}
+                          title={sender ? `${sender.prenom ?? ''} ${sender.nom ?? ''}`.trim() : ''}
+                        >
+                          {senderInit}
+                        </div>
+
                         <div className="msg-bubble-col">
-                          {isOtherStaff && staffSender && (
+                          {showStaffLabel && staffName && (
                             <span className="msg-sender-label">
-                              {staffSender}
-                              {staffSenderRole && <span className="msg-sender-role"> · {staffSenderRole}</span>}
+                              {staffName}
+                              {staffRoleName && <span className="msg-sender-role"> · {staffRoleName}</span>}
                             </span>
                           )}
-                          <div className={`msg-bubble${isMine ? ' mine' : isOtherStaff ? ' staff' : ' theirs'}`}>
+                          <div className={`msg-bubble ${bubbleClass}`}>
                             {m.contenu}
                           </div>
                           <span className="msg-bubble-time">{formatMsgTime(m.created_at)}</span>
@@ -330,17 +363,18 @@ export default function MessagesPage() {
               disabled={!input.trim() || sending}
               title="Envoyer"
             >
-              {sending ? (
-                <div className="msg-send-spinner" />
-              ) : (
-                <SendIcon size={15} />
-              )}
+              {sending ? <div className="msg-send-spinner" /> : <SendIcon size={15} />}
             </button>
           </div>
+
+          {/* Popover info utilisateur */}
+          {popoverUser && (
+            <UserPopover user={popoverUser} onClose={() => setPopoverUser(null)} />
+          )}
         </div>
       )}
 
-      {/* ── Modal nouveau message ── */}
+      {/* Modal nouveau message */}
       {showNewModal && (
         <NewConversationModal
           onClose={() => setShowNewModal(false)}

@@ -2767,6 +2767,7 @@ body {
 .msg-thread {
   flex: 1;
   min-width: 0;
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -2843,6 +2844,14 @@ body {
   background: var(--c-bg);
   padding: 0 0.5rem;
 }
+
+/* Avatar cliquable */
+.msg-av--click {
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.15s;
+  flex-shrink: 0;
+}
+.msg-av--click:hover { opacity: 0.82; transform: scale(1.08); }
 
 /* Ligne de bulle */
 .msg-bubble-row {
@@ -2952,6 +2961,74 @@ body {
   white-space: nowrap;
   flex-shrink: 0;
 }
+
+/* ── Popover info utilisateur (clic sur avatar) ────────────── */
+.msg-user-popover {
+  position: absolute;
+  bottom: calc(100% + 0.5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  background: var(--c-card, #fff);
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.14);
+  padding: 0.875rem 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  min-width: 210px;
+  max-width: 280px;
+  animation: popoverIn 0.15s ease;
+}
+@keyframes popoverIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(6px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+.msg-user-popover-av {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.msg-user-popover-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+.msg-user-popover-name {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--c-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.msg-user-popover-role {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--c-blue);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.msg-user-popover-info {
+  font-size: 0.75rem;
+  color: var(--c-muted);
+  margin-top: 0.15rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Ancrage relatif de l'input-area pour le popover */
+.msg-input-area { position: relative; }
 
 /* États vides / chargement */
 .msg-empty-state {
