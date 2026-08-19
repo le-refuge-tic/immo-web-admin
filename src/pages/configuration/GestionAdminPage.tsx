@@ -163,8 +163,9 @@ export default function GestionAdminPage() {
           <div>
             <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-text)', marginBottom: 3 }}>Hiérarchie des rôles</div>
             <div style={{ fontSize: 12, color: 'var(--c-muted)', lineHeight: 1.6 }}>
-              <strong>Administrateur</strong> : accès complet à la gestion des biens, utilisateurs et modération.<br/>
-              <strong>Super Admin</strong> : mêmes droits + gestion des administrateurs. Ne peut être supprimé que via la base de données.
+              <strong>Commercial</strong> : annonces, messagerie — ne peut pas valider de biens.<br/>
+              <strong>Administrateur</strong> : droits commercial + validation de biens, loyers, feedbacks, gestion des commerciaux.<br/>
+              <strong>Super Admin</strong> : tous les droits + gestion des administrateurs et des retraits. Ne peut être supprimé que via la base de données.
             </div>
           </div>
         </div>

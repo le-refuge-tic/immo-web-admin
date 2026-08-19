@@ -3,6 +3,7 @@ export type UserRole =
   | 'locataire'
   | 'demarcheur'
   | 'proprietaire'
+  | 'commercial'
   | 'admin'
   | 'super_admin'
   | 'detenteur';

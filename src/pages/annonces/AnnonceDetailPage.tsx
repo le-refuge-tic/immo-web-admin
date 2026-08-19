@@ -4,6 +4,7 @@ import { getAdminBien } from '../../api/getAdminBien';
 import { patchAdminBien } from '../../api/patchAdminBien';
 import { deleteAdminBien } from '../../api/deleteAdminBien';
 import { ChevronLeftIcon, PinIcon, TrashIcon, EditIcon } from '../../components/Icons';
+import { useAuth } from '../../context/AuthContext';
 
 // ── Labels lisibles pour les champs amenites ────────────────────────────────
 const AMENITE_FIELD_GROUPS = [
@@ -85,6 +86,8 @@ function formatDate(iso: string) {
 export default function AnnonceDetailPage() {
   const { id }   = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const canModerate = user?.role === 'admin' || user?.role === 'super_admin';
 
   const [bien, setBien]         = useState(null as any);
   const [loading, setLoading]   = useState(true);
@@ -459,7 +462,7 @@ export default function AnnonceDetailPage() {
           )}
 
           {/* ── Zone d'actions modération ── */}
-          <div className="detail-card detail-card--actions">
+          {canModerate && <div className="detail-card detail-card--actions">
             <div className="detail-section-title">Actions de modération</div>
 
             {action === null ? (
@@ -557,7 +560,7 @@ export default function AnnonceDetailPage() {
                 Supprimer définitivement
               </button>
             </div>
-          </div>
+          </div>}
 
         </div>
       </div>

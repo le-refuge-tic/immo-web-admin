@@ -17,7 +17,7 @@ export default function LoginPage() {
   const [loading,  setLoading]  = useState(false);
 
   if (isAuthenticated) {
-    navigate('/dashboard', { replace: true });
+    navigate('/', { replace: true });
     return null;
   }
 
@@ -27,7 +27,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login({ email, password });
-      navigate('/dashboard', { replace: true });
+      navigate('/', { replace: true });
     } catch (err: any) {
       const msg = err?.response?.data?.message;
       setError(msg || 'Email ou mot de passe incorrect.');

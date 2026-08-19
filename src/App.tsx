@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import { AdminRoute, SuperAdminRoute } from './components/RoleRoute';
 import AdminLayout from './layout/AdminLayout';
 import LoginPage from './pages/login/LoginPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
@@ -14,11 +16,18 @@ import GestionProprietairePage from './pages/configuration/GestionProprietairePa
 import GestionProspectPage from './pages/configuration/GestionProspectPage';
 import GestionLocatairePage from './pages/configuration/GestionLocatairePage';
 import GestionAdminPage from './pages/configuration/GestionAdminPage';
+import GestionCommercialPage from './pages/configuration/GestionCommercialPage';
 import LoyersPage    from './pages/loyers/LoyersPage';
 import FinancesPage  from './pages/finances/FinancesPage';
 import FeedbacksPage from './pages/feedbacks/FeedbacksPage';
 import GestionLiaisonsPage from './pages/gestion/GestionLiaisonsPage';
 import RetraitsPage        from './pages/retraits/RetraitsPage';
+
+function DefaultRedirect() {
+  const { user } = useAuth();
+  if (user?.role === 'commercial') return <Navigate to="/annonces" replace />;
+  return <Navigate to="/dashboard" replace />;
+}
 
 export default function App() {
   return (
@@ -34,30 +43,31 @@ export default function App() {
               </ProtectedRoute>
             }
           >
-            <Route index element={<Navigate to="/dashboard" replace />} />
-            <Route path="dashboard"    element={<DashboardPage />} />
+            <Route index element={<DefaultRedirect />} />
+            <Route path="dashboard"    element={<AdminRoute><DashboardPage /></AdminRoute>} />
             <Route path="annonces"           element={<AnnoncesPage />} />
             <Route path="annonces/:id"      element={<AnnonceDetailPage />} />
             <Route path="annonces/:id/modifier" element={<AnnonceEditPage />} />
             <Route path="messages"     element={<MessagesPage />} />
-            <Route path="utilisateurs" element={<UtilisateursPage />} />
-            <Route path="loyers"       element={<LoyersPage />} />
-            <Route path="finances"     element={<FinancesPage />} />
-            <Route path="feedbacks"    element={<FeedbacksPage />} />
-            <Route path="liaisons"     element={<GestionLiaisonsPage />} />
-            <Route path="retraits"     element={<RetraitsPage />} />
+            <Route path="utilisateurs" element={<AdminRoute><UtilisateursPage /></AdminRoute>} />
+            <Route path="loyers"       element={<AdminRoute><LoyersPage /></AdminRoute>} />
+            <Route path="finances"     element={<AdminRoute><FinancesPage /></AdminRoute>} />
+            <Route path="feedbacks"    element={<AdminRoute><FeedbacksPage /></AdminRoute>} />
+            <Route path="liaisons"     element={<AdminRoute><GestionLiaisonsPage /></AdminRoute>} />
+            <Route path="retraits"     element={<SuperAdminRoute><RetraitsPage /></SuperAdminRoute>} />
 
             {/* Configuration */}
             <Route path="configuration">
               <Route index element={<Navigate to="profil" replace />} />
               <Route path="profil"          element={<ProfilPage />} />
-              <Route path="proprietaires"   element={<GestionProprietairePage />} />
-              <Route path="prospects"       element={<GestionProspectPage />} />
-              <Route path="locataires"      element={<GestionLocatairePage />} />
-              <Route path="administrateurs" element={<GestionAdminPage />} />
+              <Route path="commerciaux"     element={<AdminRoute><GestionCommercialPage /></AdminRoute>} />
+              <Route path="proprietaires"   element={<AdminRoute><GestionProprietairePage /></AdminRoute>} />
+              <Route path="prospects"       element={<AdminRoute><GestionProspectPage /></AdminRoute>} />
+              <Route path="locataires"      element={<AdminRoute><GestionLocatairePage /></AdminRoute>} />
+              <Route path="administrateurs" element={<SuperAdminRoute><GestionAdminPage /></SuperAdminRoute>} />
             </Route>
           </Route>
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

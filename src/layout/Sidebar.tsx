@@ -7,34 +7,6 @@ import {
 } from '../components/Icons';
 import { useAuth } from '../context/AuthContext';
 
-const TOP_NAV = [
-  { to: '/dashboard',    label: 'Tableau de bord', Icon: GridIcon        },
-  { to: '/annonces',     label: 'Annonces',         Icon: HomeIcon        },
-  { to: '/messages',     label: 'Messages',        Icon: MessageIcon     },
-  { to: '/utilisateurs', label: 'Utilisateurs',    Icon: UsersIcon       },
-  { to: '/loyers',       label: 'Loyers',          Icon: FileTextIcon    },
-  { to: '/liaisons',     label: 'Liaisons gestion',Icon: KeyIcon         },
-  { to: '/finances',     label: 'Finances',        Icon: TrendingUpIcon  },
-  { to: '/feedbacks',    label: 'Feedbacks',       Icon: StarIcon        },
-];
-
-const SUPER_ADMIN_NAV = [
-  { to: '/retraits', label: 'Retraits MoMo', Icon: WithdrawIcon },
-];
-
-const CONFIG_SUBS_BASE = [
-  { to: '/configuration/profil',        label: 'Mon profil',    Icon: UserIcon     },
-  { to: '/configuration/proprietaires', label: 'Propriétaires', Icon: BuildingIcon },
-  { to: '/configuration/prospects',     label: 'Prospects',     Icon: UsersIcon    },
-  { to: '/configuration/locataires',    label: 'Locataires',    Icon: KeyIcon      },
-];
-
-const CONFIG_SUB_ADMINS = {
-  to: '/configuration/administrateurs',
-  label: 'Administrateurs',
-  Icon: ShieldIcon,
-};
-
 export default function Sidebar({
   minimized,
   mobileOpen,
@@ -45,6 +17,10 @@ export default function Sidebar({
   const { user } = useAuth();
   const location = useLocation();
 
+  const role        = user?.role ?? '';
+  const isAdmin     = role === 'admin' || role === 'super_admin';
+  const isSuperAdmin = role === 'super_admin';
+
   const isConfigActive = location.pathname.startsWith('/configuration');
   const [configOpen, setConfigOpen] = useState(isConfigActive);
 
@@ -54,24 +30,35 @@ export default function Sidebar({
     mobileOpen ? 'mobile-open' : '',
   ].filter(Boolean).join(' ');
 
+  const navItems = [
+    ...(isAdmin     ? [{ to: '/dashboard',    label: 'Tableau de bord',  Icon: GridIcon       }] : []),
+    { to: '/annonces',     label: 'Annonces',         Icon: HomeIcon       },
+    { to: '/messages',     label: 'Messages',          Icon: MessageIcon    },
+    ...(isAdmin ? [
+      { to: '/utilisateurs', label: 'Utilisateurs',    Icon: UsersIcon      },
+      { to: '/loyers',       label: 'Loyers',          Icon: FileTextIcon   },
+      { to: '/liaisons',     label: 'Liaisons gestion',Icon: KeyIcon        },
+      { to: '/finances',     label: 'Finances',        Icon: TrendingUpIcon },
+      { to: '/feedbacks',    label: 'Feedbacks',       Icon: StarIcon       },
+    ] : []),
+    ...(isSuperAdmin ? [{ to: '/retraits', label: 'Retraits MoMo', Icon: WithdrawIcon }] : []),
+  ];
+
+  const configSubs = [
+    { to: '/configuration/profil', label: 'Mon profil', Icon: UserIcon },
+    ...(isAdmin ? [
+      { to: '/configuration/commerciaux',    label: 'Commerciaux',    Icon: UsersIcon    },
+      { to: '/configuration/proprietaires',  label: 'Propriétaires',  Icon: BuildingIcon },
+      { to: '/configuration/prospects',      label: 'Prospects',      Icon: UsersIcon    },
+      { to: '/configuration/locataires',     label: 'Locataires',     Icon: KeyIcon      },
+    ] : []),
+    ...(isSuperAdmin ? [{ to: '/configuration/administrateurs', label: 'Administrateurs', Icon: ShieldIcon }] : []),
+  ];
+
   return (
     <aside className={classes}>
       <nav className="immo-nav">
-        {/* Top nav items */}
-        {TOP_NAV.map(({ to, label, Icon }) => (
-          <NavLink
-            key={to}
-            to={to}
-            title={minimized ? label : undefined}
-            className={({ isActive }) => `immo-nav-item${isActive ? ' active' : ''}`}
-          >
-            <Icon />
-            <span className="immo-nav-label">{label}</span>
-          </NavLink>
-        ))}
-
-        {/* Super admin only */}
-        {user?.role === 'super_admin' && SUPER_ADMIN_NAV.map(({ to, label, Icon }) => (
+        {navItems.map(({ to, label, Icon }) => (
           <NavLink
             key={to}
             to={to}
@@ -99,10 +86,7 @@ export default function Sidebar({
 
           {configOpen && !minimized && (
             <div className="config-submenu">
-              {[
-                ...CONFIG_SUBS_BASE,
-                ...(user?.role === 'super_admin' ? [CONFIG_SUB_ADMINS] : []),
-              ].map(({ to, label, Icon }) => (
+              {configSubs.map(({ to, label, Icon }) => (
                 <NavLink
                   key={to}
                   to={to}

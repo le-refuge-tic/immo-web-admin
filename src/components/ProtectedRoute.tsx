@@ -1,7 +1,7 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-const ADMIN_ROLES = ['super_admin', 'admin'];
+const ADMIN_ROLES = ['super_admin', 'admin', 'commercial'];
 
 export default function ProtectedRoute({ children }: { children: any }) {
   const { isAuthenticated, isLoading, user } = useAuth();
