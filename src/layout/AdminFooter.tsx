@@ -2,6 +2,10 @@ import { useAuth } from '../context/AuthContext';
 
 export default function AdminFooter() {
   const { user } = useAuth();
+  const role = user?.role_principal ?? user?.role ?? '';
+  const roleLabel = role === 'super_admin' ? 'SUPER ADMIN'
+    : role === 'admin' ? 'ADMIN'
+    : 'COMMERCIAL';
   const now = new Date().toLocaleString('fr-FR', {
     day: '2-digit', month: 'short', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
@@ -31,7 +35,7 @@ export default function AdminFooter() {
           fontSize: 10, fontWeight: 700, padding: '2px 8px',
           borderRadius: 4, letterSpacing: '0.5px',
         }}>
-          SUPER ADMIN
+          {roleLabel}
         </span>
       </div>
     </footer>
