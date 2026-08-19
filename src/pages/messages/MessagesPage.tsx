@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef, Fragment } from 'react';
 import { getMessages } from '../../api/getMessages';
 import { postMessage } from '../../api/postMessage';
 import { SearchIcon, SendIcon, PlusIcon } from '../../components/Icons';
+import { useAuth } from '../../context/AuthContext';
 import NewConversationModal from './NewConversationModal';
 
 const COLORS = ['#2563EB', '#7C3AED', '#DB2777', '#D97706', '#16A34A', '#0891B2'];
@@ -37,7 +38,14 @@ const ROLE_LABELS: any = {
   super_admin:  'Super Admin',
 };
 
+const STAFF_ROLE_LABELS: any = {
+  admin:       'Administrateur',
+  super_admin: 'Super Admin',
+  commercial:  'Commercial',
+};
+
 export default function MessagesPage() {
+  const { user: me }                    = useAuth();
   const [convs, setConvs]               = useState([] as any[]);
   const [activeId, setActiveId]         = useState(null as any);
   const [messages, setMessages]         = useState([] as any[]);
@@ -154,33 +162,42 @@ export default function MessagesPage() {
             <div className="msg-conv-placeholder">Chargement…</div>
           ) : filtered.length === 0 ? (
             <div className="msg-conv-placeholder">Aucune conversation.</div>
-          ) : filtered.map((c: any) => (
-            <div
-              key={c.id}
-              className={`msg-conv-item${activeId === c.id ? ' active' : ''}`}
-              onClick={() => setActiveId(c.id)}
-            >
-              <div className="msg-av" style={{ background: avatarColor(c.user?.id ?? c.id) }}>
-                {c.user ? initials(c.user) : '?'}
-              </div>
-              <div className="msg-conv-meta">
-                <div className="msg-conv-name">
-                  {c.user ? `${c.user.prenom} ${c.user.nom}` : `Conv. #${c.id}`}
+          ) : filtered.map((c: any) => {
+            const userRole = c.user?.role_principal ?? c.user?.role ?? '';
+            const roleBadge = ROLE_LABELS[userRole];
+            return (
+              <div
+                key={c.id}
+                className={`msg-conv-item${activeId === c.id ? ' active' : ''}`}
+                onClick={() => setActiveId(c.id)}
+              >
+                <div className="msg-av" style={{ background: avatarColor(c.user?.id ?? c.id) }}>
+                  {c.user ? initials(c.user) : '?'}
                 </div>
-                <div className="msg-conv-preview">
-                  {c.last_message ?? 'Aucun message'}
+                <div className="msg-conv-meta">
+                  <div className="msg-conv-name-row">
+                    <span className="msg-conv-name">
+                      {c.user ? `${c.user.prenom} ${c.user.nom}` : `Conv. #${c.id}`}
+                    </span>
+                    {roleBadge && (
+                      <span className="msg-conv-role-badge">{roleBadge}</span>
+                    )}
+                  </div>
+                  <div className="msg-conv-preview">
+                    {c.last_message ?? 'Aucun message'}
+                  </div>
+                </div>
+                <div className="msg-conv-right">
+                  {c.last_message_at && (
+                    <span className="msg-conv-time">{formatConvTime(c.last_message_at)}</span>
+                  )}
+                  {c.unread_count > 0 && (
+                    <span className="msg-unread-badge">{c.unread_count}</span>
+                  )}
                 </div>
               </div>
-              <div className="msg-conv-right">
-                {c.last_message_at && (
-                  <span className="msg-conv-time">{formatConvTime(c.last_message_at)}</span>
-                )}
-                {c.unread_count > 0 && (
-                  <span className="msg-unread-badge">{c.unread_count}</span>
-                )}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* ── Bouton nouveau message ── */}
@@ -214,7 +231,7 @@ export default function MessagesPage() {
                 {activeConv.user ? `${activeConv.user.prenom} ${activeConv.user.nom}` : `Conv. #${activeConv.id}`}
               </div>
               <div className="msg-thread-user-sub">
-                {ROLE_LABELS[activeConv.user?.role] ?? activeConv.user?.role ?? '—'}
+                {ROLE_LABELS[activeConv.user?.role_principal ?? activeConv.user?.role] ?? activeConv.user?.role_principal ?? '—'}
                 {activeConv.user?.email ? ` · ${activeConv.user.email}` : ''}
               </div>
             </div>
@@ -234,8 +251,25 @@ export default function MessagesPage() {
               </div>
             ) : (
               messages.map((m: any, i: number) => {
-                const isMine = m.sender_role === 'admin';
-                const showDate = i === 0 || !sameDay(messages[i - 1].created_at, m.created_at);
+                const isMine      = m.expediteur_id === me?.id;
+                const isStaff     = m.sender_role === 'staff';
+                const isSystem    = m.sender_role === 'systeme';
+                const isOtherStaff = isStaff && !isMine;
+                const showDate    = i === 0 || !sameDay(messages[i - 1].created_at, m.created_at);
+                // Expéditeur staff (autre que moi) — nom + role
+                const staffSender = isOtherStaff && m.expediteur
+                  ? `${m.expediteur.prenom ?? ''} ${m.expediteur.nom ?? ''}`.trim()
+                  : null;
+                const staffSenderRole = isOtherStaff && m.expediteur?.role
+                  ? STAFF_ROLE_LABELS[m.expediteur.role] ?? m.expediteur.role
+                  : null;
+                // Avatar pour les messages non-mine
+                const senderUser = isMine ? null
+                  : isOtherStaff ? (m.expediteur ?? null)
+                  : (activeConv.user ?? null);
+                const senderAvColor = senderUser
+                  ? avatarColor(senderUser.id ?? 0)
+                  : '#888';
                 return (
                   <Fragment key={m.id}>
                     {showDate && (
@@ -245,20 +279,34 @@ export default function MessagesPage() {
                         <div className="msg-date-sep-line" />
                       </div>
                     )}
-                    <div className={`msg-bubble-row${isMine ? ' mine' : ''}`}>
-                      {!isMine && (
-                        <div
-                          className="msg-av msg-av--sm"
-                          style={{ background: avatarColor(activeConv.user?.id ?? activeConv.id) }}
-                        >
-                          {activeConv.user ? initials(activeConv.user) : '?'}
-                        </div>
-                      )}
-                      <div className={`msg-bubble${isMine ? ' mine' : ' theirs'}`}>
-                        {m.contenu}
+                    {isSystem ? (
+                      <div className="msg-system-row">
+                        <span className="msg-system-label">{m.contenu}</span>
                       </div>
-                      <span className="msg-bubble-time">{formatMsgTime(m.created_at)}</span>
-                    </div>
+                    ) : (
+                      <div className={`msg-bubble-row${isMine ? ' mine' : ''}`}>
+                        {!isMine && (
+                          <div
+                            className="msg-av msg-av--sm"
+                            style={{ background: senderAvColor }}
+                          >
+                            {senderUser ? initials(senderUser) : '?'}
+                          </div>
+                        )}
+                        <div className="msg-bubble-col">
+                          {isOtherStaff && staffSender && (
+                            <span className="msg-sender-label">
+                              {staffSender}
+                              {staffSenderRole && <span className="msg-sender-role"> · {staffSenderRole}</span>}
+                            </span>
+                          )}
+                          <div className={`msg-bubble${isMine ? ' mine' : isOtherStaff ? ' staff' : ' theirs'}`}>
+                            {m.contenu}
+                          </div>
+                          <span className="msg-bubble-time">{formatMsgTime(m.created_at)}</span>
+                        </div>
+                      </div>
+                    )}
                   </Fragment>
                 );
               })

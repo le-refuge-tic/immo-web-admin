@@ -2886,6 +2886,73 @@ body {
 }
 .msg-bubble-row.mine .msg-bubble-time { text-align: right; }
 
+/* Bulle d'un autre staff (vert distingué du bleu "mine") */
+.msg-bubble.staff {
+  background: #ECFDF5;
+  border: 1px solid #6EE7B7;
+  color: #065F46;
+  border-bottom-left-radius: 0.3125rem;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+/* Colonne bulle + heure (pour ajouter le label sender au-dessus) */
+.msg-bubble-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 60%;
+}
+.msg-bubble-row.mine .msg-bubble-col { align-items: flex-end; }
+.msg-bubble-row .msg-bubble-col .msg-bubble { max-width: 100%; }
+
+/* Label expéditeur staff */
+.msg-sender-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #065F46;
+  padding-left: 0.25rem;
+}
+.msg-sender-role {
+  font-weight: 400;
+  color: #059669;
+}
+
+/* Ligne de message système */
+.msg-system-row {
+  display: flex;
+  justify-content: center;
+  margin: 0.5rem 0;
+}
+.msg-system-label {
+  font-size: 0.6875rem;
+  color: var(--c-muted);
+  background: var(--c-bg-2);
+  padding: 0.2rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--c-border);
+  font-style: italic;
+}
+
+/* Badge rôle dans la liste de conversations */
+.msg-conv-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-width: 0;
+}
+.msg-conv-role-badge {
+  font-size: 0.5625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--c-blue-bg, #EFF6FF);
+  color: var(--c-blue, #2563EB);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 /* États vides / chargement */
 .msg-empty-state {
   flex: 1;
