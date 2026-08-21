@@ -3,7 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import {
   GridIcon, HomeIcon, UsersIcon, SettingsIcon, ShieldIcon,
   ChevronDownIcon, UserIcon, BuildingIcon, KeyIcon, FileTextIcon, TrendingUpIcon, StarIcon,
-  MessageIcon, WithdrawIcon, ListingsIcon, VisitIcon,
+  MessageIcon, WithdrawIcon, ListingsIcon, VisitIcon, ClientsIcon,
 } from '../components/Icons';
 import { useAuth } from '../context/AuthContext';
 
@@ -32,11 +32,13 @@ export default function Sidebar({
   ].filter(Boolean).join(' ');
 
   const navItems = [
-    ...(isAdmin     ? [{ to: '/dashboard',    label: 'Tableau de bord',  Icon: GridIcon       }] : []),
-    { to: '/annonces',     label: 'Annonces',          Icon: HomeIcon       },
+    ...(isAdmin      ? [{ to: '/dashboard',           label: 'Tableau de bord',  Icon: GridIcon     }] : []),
+    ...(isCommercial ? [{ to: '/commercial-dashboard', label: 'Tableau de bord',  Icon: GridIcon     }] : []),
+    { to: '/annonces',     label: 'Annonces',           Icon: HomeIcon       },
     ...(isCommercial ? [
       { to: '/mes-annonces', label: 'Mes annonces',    Icon: ListingsIcon   },
       { to: '/mes-visites',  label: 'Mes visites',     Icon: VisitIcon      },
+      { to: '/mes-clients',  label: 'Mes clients',     Icon: ClientsIcon    },
     ] : []),
     { to: '/messages',     label: 'Messages',           Icon: MessageIcon    },
     ...(isAdmin ? [

@@ -22,13 +22,15 @@ import FinancesPage  from './pages/finances/FinancesPage';
 import FeedbacksPage from './pages/feedbacks/FeedbacksPage';
 import GestionLiaisonsPage from './pages/gestion/GestionLiaisonsPage';
 import RetraitsPage        from './pages/retraits/RetraitsPage';
-import MesAnnoncesPage    from './pages/commercial/MesAnnoncesPage';
-import MesVisitesPage     from './pages/commercial/MesVisitesPage';
-import PublierBienPage    from './pages/commercial/PublierBienPage';
+import MesAnnoncesPage         from './pages/commercial/MesAnnoncesPage';
+import MesVisitesPage          from './pages/commercial/MesVisitesPage';
+import PublierBienPage         from './pages/commercial/PublierBienPage';
+import CommercialDashboardPage from './pages/commercial/CommercialDashboardPage';
+import MesClientsPage          from './pages/commercial/MesClientsPage';
 
 function DefaultRedirect() {
   const { user } = useAuth();
-  if ((user?.role_principal ?? user?.role) === 'commercial') return <Navigate to="/annonces" replace />;
+  if ((user?.role_principal ?? user?.role) === 'commercial') return <Navigate to="/commercial-dashboard" replace />;
   return <Navigate to="/dashboard" replace />;
 }
 
@@ -51,9 +53,11 @@ export default function App() {
             <Route path="annonces"           element={<AnnoncesPage />} />
             <Route path="annonces/:id"      element={<AnnonceDetailPage />} />
             <Route path="annonces/:id/modifier" element={<AnnonceEditPage />} />
-            <Route path="mes-annonces" element={<MesAnnoncesPage />} />
-            <Route path="mes-visites"  element={<MesVisitesPage />} />
-            <Route path="publier-bien" element={<PublierBienPage />} />
+            <Route path="commercial-dashboard" element={<CommercialDashboardPage />} />
+            <Route path="mes-annonces"         element={<MesAnnoncesPage />} />
+            <Route path="mes-visites"          element={<MesVisitesPage />} />
+            <Route path="mes-clients"          element={<MesClientsPage />} />
+            <Route path="publier-bien"         element={<PublierBienPage />} />
             <Route path="messages"     element={<MessagesPage />} />
             <Route path="utilisateurs" element={<AdminRoute><UtilisateursPage /></AdminRoute>} />
             <Route path="loyers"       element={<AdminRoute><LoyersPage /></AdminRoute>} />

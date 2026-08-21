@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getMesVisites } from '../../api/getMesVisites';
 import { patchVisite } from '../../api/patchVisite';
+import { CalendarIcon, CheckCircleIcon } from '../../components/Icons';
 
 /* ─── Helpers ─────────────────────────────────────────────── */
 
@@ -105,6 +106,11 @@ export default function MesVisitesPage() {
     act(() => patchVisite.annuler(v.id, motif), v.id);
   };
 
+  const handleEffectuee = (v: any) => {
+    if (!confirm('Marquer cette visite comme effectuée ?')) return;
+    act(() => patchVisite.effectuee(v.id), v.id);
+  };
+
   const badge = (v: any) => STATUT_BADGE[v.statut] ?? { label: v.statut, cls: 'badge-pending' };
 
   const countBy = (s: string) => visites.filter(v => v.statut === s).length;
@@ -164,7 +170,9 @@ export default function MesVisitesPage() {
           <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--c-muted)' }}>Chargement…</div>
         ) : visites.length === 0 ? (
           <div style={{ padding: '3rem', textAlign: 'center' }}>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>📅</div>
+            <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}>
+              <CalendarIcon size={48} />
+            </div>
             <div style={{ fontWeight: 700, marginBottom: 6 }}>Aucune visite</div>
             <div style={{ color: 'var(--c-muted)', fontSize: 13 }}>
               Les demandes de visites sur vos biens apparaîtront ici.
@@ -189,6 +197,7 @@ export default function MesVisitesPage() {
                   const b = badge(v);
                   const peutConfirmer = v.statut === 'en_attente';
                   const peutContreProposer = v.statut === 'en_attente' || v.statut === 'contre_proposee';
+                  const peutEffectuee = v.statut === 'confirmee';
                   const peutAnnuler = !['annulee', 'effectuee'].includes(v.statut);
                   const isActing = acting === v.id;
 
@@ -235,7 +244,18 @@ export default function MesVisitesPage() {
                               disabled={isActing}
                               title="Contre-proposer une date"
                             >
-                              📅
+                              <CalendarIcon size={14} />
+                            </button>
+                          )}
+                          {peutEffectuee && (
+                            <button
+                              className="btn-table-action"
+                              style={{ background: '#EFF6FF', color: '#1D4ED8', border: '1px solid #BFDBFE' }}
+                              onClick={() => handleEffectuee(v)}
+                              disabled={isActing}
+                              title="Marquer effectuée"
+                            >
+                              <CheckCircleIcon size={14} />
                             </button>
                           )}
                           {peutAnnuler && (

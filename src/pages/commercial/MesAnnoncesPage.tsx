@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getMesBiens } from '../../api/getMesBiens';
 import { postBien } from '../../api/postBien';
+import { EyeIcon, EditIcon, TrashIcon } from '../../components/Icons';
 
 /* ─── Helpers ─────────────────────────────────────────────── */
 
@@ -124,7 +125,12 @@ export default function MesAnnoncesPage() {
           <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--c-muted)' }}>Chargement…</div>
         ) : biens.length === 0 ? (
           <div style={{ padding: '3rem', textAlign: 'center' }}>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>🏠</div>
+            <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--c-muted)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9 22 9 12 15 12 15 22"/>
+              </svg>
+            </div>
             <div style={{ fontWeight: 700, marginBottom: 6 }}>Aucun bien publié</div>
             <div style={{ color: 'var(--c-muted)', fontSize: 13, marginBottom: 18 }}>
               Commencez par publier votre première annonce.
@@ -177,14 +183,14 @@ export default function MesAnnoncesPage() {
                             onClick={() => navigate(`/annonces/${b.id}`)}
                             title="Voir le détail"
                           >
-                            👁
+                            <EyeIcon size={14} />
                           </button>
                           <button
                             className="btn-table-action"
                             onClick={() => navigate(`/annonces/${b.id}/modifier`)}
                             title="Modifier"
                           >
-                            ✏️
+                            <EditIcon size={14} />
                           </button>
                           <button
                             className="btn-table-action btn-table-danger"
@@ -192,7 +198,7 @@ export default function MesAnnoncesPage() {
                             disabled={deleting === b.id}
                             title="Supprimer"
                           >
-                            {deleting === b.id ? '…' : '🗑'}
+                            {deleting === b.id ? '…' : <TrashIcon size={14} />}
                           </button>
                         </div>
                       </td>
