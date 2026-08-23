@@ -3,8 +3,10 @@ import { Outlet, useLocation } from 'react-router-dom';
 import Topbar from './Topbar';
 import Sidebar from './Sidebar';
 import AdminFooter from './AdminFooter';
+import PhoneRequiredModal, { usePhoneRequired } from '../components/PhoneRequiredModal';
 
 export default function AdminLayout() {
+  const phoneRequired = usePhoneRequired();
   const [minimized, setMinimized] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
@@ -20,6 +22,7 @@ export default function AdminLayout() {
 
   return (
     <div className="immo-app">
+      {phoneRequired && <PhoneRequiredModal />}
       <Topbar
         minimized={minimized}
         mobileOpen={mobileOpen}
