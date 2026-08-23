@@ -7,5 +7,5 @@ export const commerciauxApi = {
   getClients:      (commercialId: number) =>
     axios.get(`${BASE}/admin/commerciaux/${commercialId}/clients`, auth()).then(r => r.data),
   attribuerClient: (commercialId: number, userId: number) =>
-    axios.post(`${BASE}/admin/commerciaux/${commercialId}/attribuer-client`, { userId }, auth()).then(r => r.data),
+    axios.post(`${BASE}/admin/commerciaux/${commercialId}/attribuer-client`, { user_id: userId }, auth()).then(r => r.data),
 };

@@ -114,10 +114,10 @@ function AttribuerClientModal({
   const [error, setError]         = useState('');
 
   const doSearch = useCallback(async (q: string) => {
-    if (!q.trim()) { setUsers([]); return; }
     setLoading(true);
     try {
-      const data = await getAdminUser.list({ search: q, limit: 20 });
+      const params = q.trim() ? { search: q, limit: 20 } : { limit: 50 };
+      const data = await getAdminUser.list(params);
       const list = Array.isArray(data) ? data : (data?.users ?? data?.data ?? []);
       setUsers(list.filter((u: any) => !['admin', 'super_admin', 'commercial'].includes(u.role_principal ?? u.role ?? '')));
     } catch {
@@ -127,10 +127,16 @@ function AttribuerClientModal({
     }
   }, []);
 
+  // Chargement initial sans filtre
+  useEffect(() => { doSearch(''); }, [doSearch]);
+
+  // Recherche à la frappe (debounce 350ms) — skip le premier rendu géré ci-dessus
+  const isFirstRender = useState(true);
   useEffect(() => {
+    if (isFirstRender[0]) { isFirstRender[1](false); return; }
     const t = setTimeout(() => doSearch(search), 350);
     return () => clearTimeout(t);
-  }, [search, doSearch]);
+  }, [search]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleAssign = async (userId: number) => {
     setAssigning(userId);
@@ -192,13 +198,9 @@ function AttribuerClientModal({
             <div style={{ display: 'flex', justifyContent: 'center', padding: '24px 0' }}>
               <span style={{ width: 24, height: 24, border: '3px solid var(--c-border)', borderTopColor: 'var(--c-blue)', borderRadius: '50%', animation: 'spin 0.8s linear infinite', display: 'block' }} />
             </div>
-          ) : !search.trim() ? (
-            <div style={{ padding: '20px 16px', textAlign: 'center', color: 'var(--c-muted)', fontSize: 13 }}>
-              Tapez pour rechercher un utilisateur.
-            </div>
           ) : users.length === 0 ? (
             <div style={{ padding: '20px 16px', textAlign: 'center', color: 'var(--c-muted)', fontSize: 13 }}>
-              Aucun utilisateur trouvé.
+              {search.trim() ? 'Aucun utilisateur trouvé pour cette recherche.' : 'Aucun utilisateur disponible.'}
             </div>
           ) : (
             users.map((u: any, idx: number) => (

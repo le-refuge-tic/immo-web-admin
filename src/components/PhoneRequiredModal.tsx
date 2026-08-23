@@ -117,7 +117,7 @@ export default function PhoneRequiredModal() {
 
         {/* Indicateur d'étape */}
         <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
-          {(['phone', 'otp'] as Step[]).map((s, i) => (
+          {(['phone', 'otp'] as Step[]).map((s) => (
             <div key={s} style={{
               height: 3, flex: 1, borderRadius: 2,
               background: step === s || (s === 'phone' && step === 'otp')
