@@ -1,4 +1,4 @@
-import { useState, FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { patchAuth } from '../api/patchAuth';
 import { useAuth } from '../context/AuthContext';
 
