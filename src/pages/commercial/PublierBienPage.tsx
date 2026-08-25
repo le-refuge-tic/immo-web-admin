@@ -247,6 +247,11 @@ export default function PublierBienPage() {
     const amenites: any = {};
     if (form.sous_type) amenites.sous_type = form.sous_type;
 
+    try {
+      const raw = sessionStorage.getItem('proprietaire_info');
+      if (raw) amenites.proprietaire_info = JSON.parse(raw);
+    } catch { /* noop */ }
+
     if (!isTerrain) {
       if (form.sanitaire)      amenites.sanitaire      = form.sanitaire !== 'cour';
       if (form.sanitaire_autre) amenites.sanitaire_autre = form.sanitaire_autre;
@@ -298,6 +303,7 @@ export default function PublierBienPage() {
     setSubmitting(true);
     try {
       await postBien.create(buildPayload());
+      sessionStorage.removeItem('proprietaire_info');
       navigate('/mes-annonces');
     } catch (err: any) {
       const msg = err?.response?.data?.message;

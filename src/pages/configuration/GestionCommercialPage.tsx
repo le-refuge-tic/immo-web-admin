@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { getCommerciaux } from '../../api/getCommerciaux';
 import { deleteCommerciaux } from '../../api/deleteCommerciaux';
 import { getAdminUser } from '../../api/getAdminUser';
 import { commerciauxApi } from '../../api/getClientsCommercial';
+import { supervisionApi } from '../../api/commercialSupervisionApi';
 import GestionCommercialModal from './GestionCommercialModal';
 
 /* ─── Helpers ─────────────────────────────────────────────── */
@@ -259,6 +260,274 @@ function AttribuerClientModal({
   );
 }
 
+/* ─── Modal : supervision d'un commercial ────────────────── */
+
+const TYPE_LABEL_MAP: Record<string, string> = {
+  maison: 'Maison', appart_vide: 'Appartement', appart_meuble: 'Appart. meublé',
+  guesthouse: 'Guesthouse', terrain: 'Terrain',
+  chambre_salon: 'Chambre-Salon', entree_coucher: 'Entrée-Coucher',
+  villa: 'Villa', maison_individuelle: 'Maison indiv.', appartement: 'Appartement',
+};
+const MOD_LABELS: Record<string, { label: string; color: string; bg: string }> = {
+  en_attente:   { label: 'En attente',  color: '#D97706', bg: '#FFFBEB' },
+  approuve:     { label: 'Publié',      color: '#16A34A', bg: '#F0FDF4' },
+  rejete:       { label: 'Rejeté',      color: '#DC2626', bg: '#FEF2F2' },
+  conditionnel: { label: 'Conditionnel',color: '#7C3AED', bg: '#F5F3FF' },
+};
+
+function SupervisionModal({ commercial, onClose }: { commercial: any; onClose: () => void }) {
+  const [tab, setTab]           = useState<'conversations' | 'biens'>('conversations');
+  const [convs, setConvs]       = useState<any[]>([]);
+  const [biens, setBiens]       = useState<any[]>([]);
+  const [loadingConvs, setLoadingConvs] = useState(false);
+  const [loadingBiens, setLoadingBiens] = useState(false);
+  const [openConv, setOpenConv] = useState<any | null>(null);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [loadingMsgs, setLoadingMsgs] = useState(false);
+  const [reply, setReply]       = useState('');
+  const [sending, setSending]   = useState(false);
+  const messagesEndRef           = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setLoadingConvs(true);
+    supervisionApi.getConversations(commercial.id)
+      .then(d => setConvs(Array.isArray(d) ? d : []))
+      .catch(() => setConvs([]))
+      .finally(() => setLoadingConvs(false));
+  }, [commercial.id]);
+
+  useEffect(() => {
+    if (tab !== 'biens' || biens.length > 0) return;
+    setLoadingBiens(true);
+    supervisionApi.getBiens(commercial.id)
+      .then(d => setBiens(Array.isArray(d) ? d : []))
+      .catch(() => setBiens([]))
+      .finally(() => setLoadingBiens(false));
+  }, [tab, commercial.id, biens.length]);
+
+  useEffect(() => {
+    if (!openConv) return;
+    setLoadingMsgs(true);
+    supervisionApi.getMessages(openConv.id, { limit: 50 })
+      .then(d => {
+        const list = Array.isArray(d) ? d : (d?.data ?? []);
+        setMessages([...list].reverse());
+      })
+      .catch(() => setMessages([]))
+      .finally(() => setLoadingMsgs(false));
+  }, [openConv]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const handleSend = async () => {
+    if (!reply.trim() || !openConv) return;
+    setSending(true);
+    try {
+      const msg = await supervisionApi.replyAsCommercial(openConv.id, reply.trim());
+      setMessages(prev => [...prev, msg]);
+      setReply('');
+    } catch {
+      // noop
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div className="immo-modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="immo-modal" style={{ maxWidth: 700, width: '95vw', maxHeight: '88vh', display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden' }}>
+        {/* Header */}
+        <div style={{ padding: '18px 24px', borderBottom: '1px solid var(--c-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+          <div>
+            <div style={{ fontWeight: 800, fontSize: 16, color: 'var(--c-text)' }}>
+              Supervision — {commercial.prenom} {commercial.nom}
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--c-muted)', marginTop: 2 }}>{commercial.email}</div>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-muted)', padding: 4 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        {/* Tabs */}
+        <div style={{ display: 'flex', borderBottom: '1px solid var(--c-border)', flexShrink: 0 }}>
+          {([['conversations', 'Conversations'], ['biens', 'Biens']] as const).map(([key, label]) => (
+            <button key={key} onClick={() => { setTab(key); setOpenConv(null); }} style={{
+              padding: '10px 20px', border: 'none', background: 'none', cursor: 'pointer',
+              fontSize: 13, fontWeight: 600,
+              color: tab === key ? 'var(--c-blue)' : 'var(--c-muted)',
+              borderBottom: tab === key ? '2px solid var(--c-blue)' : '2px solid transparent',
+              marginBottom: -1,
+            }}>
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Body */}
+        <div style={{ flex: 1, overflow: 'hidden', display: 'flex' }}>
+          {tab === 'conversations' && !openConv && (
+            <div style={{ flex: 1, overflowY: 'auto', padding: '8px 0' }}>
+              {loadingConvs ? (
+                <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
+                  <span style={{ width: 26, height: 26, border: '3px solid var(--c-border)', borderTopColor: 'var(--c-blue)', borderRadius: '50%', animation: 'spin 0.8s linear infinite', display: 'block' }} />
+                </div>
+              ) : convs.length === 0 ? (
+                <div style={{ padding: '32px 24px', textAlign: 'center', color: 'var(--c-muted)', fontSize: 13 }}>Aucune conversation.</div>
+              ) : convs.map((conv: any) => (
+                <div key={conv.id} onClick={() => setOpenConv(conv)} style={{
+                  padding: '12px 24px', display: 'flex', alignItems: 'center', gap: 12,
+                  borderBottom: '1px solid var(--c-border)', cursor: 'pointer',
+                  transition: 'background 0.15s',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--c-bg)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                >
+                  <div style={{
+                    width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
+                    background: avatarColor(conv.user?.id ?? 0),
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 13, fontWeight: 700, color: '#fff',
+                  }}>
+                    {initials(conv.user ?? {})}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--c-text)' }}>
+                      {conv.user?.prenom ?? ''} {conv.user?.nom ?? 'Client inconnu'}
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--c-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2 }}>
+                      {conv.last_message ?? 'Pas encore de message'}
+                    </div>
+                  </div>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--c-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="9 18 15 12 9 6"/>
+                  </svg>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {tab === 'conversations' && openConv && (
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+              {/* Conv header */}
+              <div style={{ padding: '10px 16px', borderBottom: '1px solid var(--c-border)', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                <button onClick={() => setOpenConv(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-blue)', padding: 4 }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="15 18 9 12 15 6"/>
+                  </svg>
+                </button>
+                <div style={{ fontWeight: 600, fontSize: 13 }}>
+                  {openConv.user?.prenom ?? ''} {openConv.user?.nom ?? ''}
+                </div>
+                <div style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--c-muted)', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 12, padding: '2px 8px' }}>
+                  Vous répondez en tant que {commercial.prenom}
+                </div>
+              </div>
+              {/* Messages */}
+              <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {loadingMsgs ? (
+                  <div style={{ display: 'flex', justifyContent: 'center', padding: 32 }}>
+                    <span style={{ width: 24, height: 24, border: '3px solid var(--c-border)', borderTopColor: 'var(--c-blue)', borderRadius: '50%', animation: 'spin 0.8s linear infinite', display: 'block' }} />
+                  </div>
+                ) : messages.length === 0 ? (
+                  <div style={{ textAlign: 'center', color: 'var(--c-muted)', fontSize: 13, paddingTop: 24 }}>Aucun message.</div>
+                ) : messages.map((m: any) => {
+                  const isGest = m.sender_role === 'gestionnaire' || m.sender_role === 'admin' || m.sender_role === 'staff';
+                  return (
+                    <div key={m.id} style={{ display: 'flex', justifyContent: isGest ? 'flex-end' : 'flex-start' }}>
+                      <div style={{
+                        maxWidth: '72%', padding: '8px 12px', borderRadius: isGest ? '12px 12px 2px 12px' : '12px 12px 12px 2px',
+                        background: isGest ? 'var(--c-blue)' : 'var(--c-bg)',
+                        border: isGest ? 'none' : '1px solid var(--c-border)',
+                        color: isGest ? '#fff' : 'var(--c-text)',
+                        fontSize: 13, lineHeight: 1.5,
+                      }}>
+                        {m.contenu}
+                        <div style={{ fontSize: 10, marginTop: 4, opacity: 0.65, textAlign: 'right' }}>
+                          {new Date(m.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                <div ref={messagesEndRef} />
+              </div>
+              {/* Input */}
+              <div style={{ padding: '10px 16px', borderTop: '1px solid var(--c-border)', display: 'flex', gap: 8, flexShrink: 0 }}>
+                <input
+                  className="immo-form-input"
+                  style={{ flex: 1 }}
+                  placeholder={`Répondre en tant que ${commercial.prenom}…`}
+                  value={reply}
+                  onChange={e => setReply(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+                  disabled={sending}
+                />
+                <button
+                  onClick={handleSend}
+                  disabled={sending || !reply.trim()}
+                  style={{
+                    padding: '0 16px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                    background: 'var(--c-blue)', color: '#fff', fontWeight: 600, fontSize: 13,
+                    opacity: sending || !reply.trim() ? 0.5 : 1,
+                  }}
+                >
+                  {sending ? '…' : 'Envoyer'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {tab === 'biens' && (
+            <div style={{ flex: 1, overflowY: 'auto', padding: '8px 0' }}>
+              {loadingBiens ? (
+                <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
+                  <span style={{ width: 26, height: 26, border: '3px solid var(--c-border)', borderTopColor: 'var(--c-blue)', borderRadius: '50%', animation: 'spin 0.8s linear infinite', display: 'block' }} />
+                </div>
+              ) : biens.length === 0 ? (
+                <div style={{ padding: '32px 24px', textAlign: 'center', color: 'var(--c-muted)', fontSize: 13 }}>Aucun bien publié par ce commercial.</div>
+              ) : biens.map((b: any) => {
+                const sousType = b.amenites?.sous_type;
+                const label = TYPE_LABEL_MAP[sousType] ?? TYPE_LABEL_MAP[b.type] ?? b.type;
+                const mod = MOD_LABELS[b.statut_moderation] ?? { label: b.statut_moderation, color: '#6B7280', bg: '#F3F4F6' };
+                const proprio = b.amenites?.proprietaire_info;
+                return (
+                  <div key={b.id} style={{ padding: '12px 24px', borderBottom: '1px solid var(--c-border)', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                        <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--c-text)' }}>{label}</div>
+                        <span style={{ padding: '2px 8px', borderRadius: 20, fontSize: 10, fontWeight: 700, background: mod.bg, color: mod.color, border: `1px solid ${mod.color}33` }}>
+                          {mod.label}
+                        </span>
+                        <span style={{ padding: '2px 8px', borderRadius: 20, fontSize: 10, fontWeight: 600, background: 'var(--c-bg)', color: 'var(--c-muted)', border: '1px solid var(--c-border)' }}>
+                          {b.transaction === 'location' ? 'Location' : 'Vente'}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: 12, color: 'var(--c-muted)', marginTop: 3 }}>
+                        {b.localisation?.ville ?? ''} {b.localisation?.quartier ? `· ${b.localisation.quartier}` : ''}
+                        {' · '}<strong style={{ color: 'var(--c-text)' }}>{new Intl.NumberFormat('fr-FR').format(b.prix)} FCFA</strong>
+                      </div>
+                      {proprio && (
+                        <div style={{ marginTop: 4, fontSize: 11, color: 'var(--c-muted)', background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 6, padding: '3px 8px', display: 'inline-block' }}>
+                          Proprio : {proprio.prenom ?? ''} {proprio.nom ?? ''}{proprio.telephone ? ` · ${proprio.telephone}` : ''}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Page principale ────────────────────────────────────── */
 
 export default function GestionCommercialPage() {
@@ -267,8 +536,9 @@ export default function GestionCommercialPage() {
   const [loading, setLoading]          = useState(true);
   const [showModal, setShowModal]      = useState(false);
   const [deletingId, setDeletingId]    = useState(null as any);
-  const [clientsModal, setClientsModal]  = useState<any | null>(null);
-  const [attribuerModal, setAttribuerModal] = useState<any | null>(null);
+  const [clientsModal, setClientsModal]       = useState<any | null>(null);
+  const [attribuerModal, setAttribuerModal]   = useState<any | null>(null);
+  const [supervisionModal, setSupervisionModal] = useState<any | null>(null);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -462,6 +732,16 @@ export default function GestionCommercialPage() {
                             <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
                           </svg>
                         </button>
+                        <button
+                          className="btn-icon-sm"
+                          title="Superviser (biens & conversations)"
+                          onClick={() => setSupervisionModal(c)}
+                          style={{ background: '#F5F3FF', color: '#7C3AED', border: '1px solid #DDD6FE' }}
+                        >
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="3"/><path d="M2.05 12A9.95 9.95 0 0 1 12 2.05M12 21.95A9.95 9.95 0 0 1 2.05 12M21.95 12A9.95 9.95 0 0 1 12 21.95M12 2.05A9.95 9.95 0 0 1 21.95 12"/>
+                          </svg>
+                        </button>
                         {!isMe && (
                           <button className="btn-icon-sm danger" onClick={() => handleDelete(c)} disabled={deletingId === c.id} title="Supprimer ce commercial">
                             {deletingId === c.id ? (
@@ -517,6 +797,9 @@ export default function GestionCommercialPage() {
             load();
           }}
         />
+      )}
+      {supervisionModal && (
+        <SupervisionModal commercial={supervisionModal} onClose={() => setSupervisionModal(null)} />
       )}
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>

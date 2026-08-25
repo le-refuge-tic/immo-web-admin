@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getMesBiens } from '../../api/getMesBiens';
 import { postBien } from '../../api/postBien';
@@ -42,6 +42,70 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
+/* ─── Modal : informations du propriétaire ───────────────── */
+
+function ProprietaireInfoModal({ onConfirm, onClose }: {
+  onConfirm: (info: { nom: string; prenom: string; telephone: string; email: string }) => void;
+  onClose: () => void;
+}) {
+  const [nom, setNom]           = useState('');
+  const [prenom, setPrenom]     = useState('');
+  const [telephone, setTelephone] = useState('');
+  const [email, setEmail]       = useState('');
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (!nom.trim() || !prenom.trim() || !telephone.trim()) return;
+    onConfirm({ nom: nom.trim(), prenom: prenom.trim(), telephone: telephone.trim(), email: email.trim() });
+  };
+
+  return (
+    <div className="immo-modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="immo-modal" style={{ maxWidth: 440 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+          <div>
+            <div className="immo-modal-title" style={{ marginBottom: 4 }}>Informations du propriétaire</div>
+            <div style={{ fontSize: 12, color: 'var(--c-muted)' }}>
+              Renseignez les coordonnées du propriétaire du bien que vous allez publier.
+            </div>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-muted)', padding: 4 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div className="immo-form-field">
+              <label className="immo-form-label">Prénom *</label>
+              <input className="immo-form-input" placeholder="Ex: Koffi" value={prenom} onChange={e => setPrenom(e.target.value)} required autoFocus />
+            </div>
+            <div className="immo-form-field">
+              <label className="immo-form-label">Nom *</label>
+              <input className="immo-form-input" placeholder="Ex: Adjovi" value={nom} onChange={e => setNom(e.target.value)} required />
+            </div>
+          </div>
+          <div className="immo-form-field">
+            <label className="immo-form-label">Téléphone *</label>
+            <input className="immo-form-input" type="tel" placeholder="+229 XX XX XX XX" value={telephone} onChange={e => setTelephone(e.target.value)} required />
+          </div>
+          <div className="immo-form-field">
+            <label className="immo-form-label">Email (optionnel)</label>
+            <input className="immo-form-input" type="email" placeholder="proprio@email.com" value={email} onChange={e => setEmail(e.target.value)} />
+          </div>
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 }}>
+            <button type="button" className="btn-cancel" onClick={onClose}>Annuler</button>
+            <button type="submit" className="btn-submit" disabled={!nom.trim() || !prenom.trim() || !telephone.trim()}>
+              Continuer
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Page ────────────────────────────────────────────────── */
 
 export default function MesAnnoncesPage() {
@@ -49,6 +113,7 @@ export default function MesAnnoncesPage() {
   const [biens, setBiens]       = useState<any[]>([]);
   const [loading, setLoading]   = useState(true);
   const [deleting, setDeleting] = useState<number | null>(null);
+  const [showProprietaireModal, setShowProprietaireModal] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -86,6 +151,7 @@ export default function MesAnnoncesPage() {
   const trans = (b: any) => TRANS[b.transaction] ?? b.transaction;
 
   return (
+    <>
     <div className="immo-page">
 
       {/* ── En-tête ── */}
@@ -94,7 +160,7 @@ export default function MesAnnoncesPage() {
           <h1 className="immo-page-title">Mes annonces</h1>
           <p className="immo-page-sub">Vos biens publiés sur la plateforme</p>
         </div>
-        <button className="btn-submit" onClick={() => navigate('/publier-bien')} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <button className="btn-submit" onClick={() => setShowProprietaireModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 18, lineHeight: 1 }}>＋</span>
           Publier un bien
         </button>
@@ -135,7 +201,7 @@ export default function MesAnnoncesPage() {
             <div style={{ color: 'var(--c-muted)', fontSize: 13, marginBottom: 18 }}>
               Commencez par publier votre première annonce.
             </div>
-            <button className="btn-submit" onClick={() => navigate('/publier-bien')}>Publier un bien</button>
+            <button className="btn-submit" onClick={() => setShowProprietaireModal(true)}>Publier un bien</button>
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
@@ -212,5 +278,16 @@ export default function MesAnnoncesPage() {
       </div>
 
     </div>
+    {showProprietaireModal && (
+      <ProprietaireInfoModal
+        onClose={() => setShowProprietaireModal(false)}
+        onConfirm={(info) => {
+          sessionStorage.setItem('proprietaire_info', JSON.stringify(info));
+          setShowProprietaireModal(false);
+          navigate('/publier-bien');
+        }}
+      />
+    )}
+    </>
   );
 }
