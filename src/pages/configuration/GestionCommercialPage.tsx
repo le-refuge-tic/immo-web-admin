@@ -314,7 +314,7 @@ function SupervisionModal({ commercial, onClose }: { commercial: any; onClose: (
     supervisionApi.getMessages(openConv.id, { limit: 50 })
       .then(d => {
         const list = Array.isArray(d) ? d : (d?.data ?? []);
-        setMessages([...list].reverse());
+        setMessages(list);
       })
       .catch(() => setMessages([]))
       .finally(() => setLoadingMsgs(false));
@@ -439,7 +439,7 @@ function SupervisionModal({ commercial, onClose }: { commercial: any; onClose: (
                 ) : messages.length === 0 ? (
                   <div style={{ textAlign: 'center', color: 'var(--c-muted)', fontSize: 13, paddingTop: 24 }}>Aucun message.</div>
                 ) : messages.map((m: any) => {
-                  const isGest = m.sender_role === 'gestionnaire' || m.sender_role === 'admin' || m.sender_role === 'staff';
+                  const isGest = ['gestionnaire', 'admin', 'staff'].includes(m.sender_role);
                   return (
                     <div key={m.id} style={{ display: 'flex', justifyContent: isGest ? 'flex-end' : 'flex-start' }}>
                       <div style={{
