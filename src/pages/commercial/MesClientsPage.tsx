@@ -5,7 +5,8 @@ import { commerciauxApi } from '../../api/getClientsCommercial';
 
 const COLORS = ['#2563EB', '#7C3AED', '#DB2777', '#D97706', '#16A34A', '#0891B2', '#DC2626', '#0284C7'];
 function avatarColor(id: number) { return COLORS[Math.abs(id ?? 0) % COLORS.length]; }
-function initials(u: any) { return `${u.prenom?.[0] ?? ''}${u.nom?.[0] ?? ''}`.toUpperCase() || '?'; }
+function initials(u: any) { return `${u.prenom?.[0] ?? ''}${u.nom?.[0] ?? ''}`.toUpperCase() || (u.email?.[0] ?? '#').toUpperCase(); }
+function displayName(u: any) { return (u.prenom || u.nom) ? `${u.prenom ?? ''} ${u.nom ?? ''}`.trim() : (u.email ?? u.telephone ?? `Utilisateur #${u.id}`); }
 
 const ROLE_LABELS: Record<string, string> = {
   prospect:     'Prospect',
@@ -19,15 +20,22 @@ export default function MesClientsPage() {
   const navigate                  = useNavigate();
   const [clients, setClients]     = useState<any[]>([]);
   const [loading, setLoading]     = useState(true);
+  const [error, setError]         = useState('');
   const [search, setSearch]       = useState('');
 
   const load = useCallback(async () => {
     if (!me?.id) return;
     setLoading(true);
+    setError('');
     try {
       const data = await commerciauxApi.getClients(me.id);
       setClients(Array.isArray(data) ? data : []);
-    } catch {
+    } catch (err: any) {
+      const status = err?.response?.status;
+      const msg = err?.response?.data?.message;
+      setError(status === 403
+        ? 'Accès refusé — contactez votre responsable.'
+        : (msg ?? 'Impossible de charger vos clients.'));
       setClients([]);
     } finally {
       setLoading(false);
@@ -79,6 +87,13 @@ export default function MesClientsPage() {
         />
       </div>
 
+      {/* ── Erreur ── */}
+      {error && (
+        <div style={{ marginBottom: 16, padding: '10px 16px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, fontSize: 13, color: '#DC2626' }}>
+          {error}
+        </div>
+      )}
+
       {/* ── Liste ── */}
       <div className="immo-card" style={{ padding: 0, overflow: 'hidden' }}>
         {loading ? (
@@ -128,12 +143,12 @@ export default function MesClientsPage() {
                   {/* Info */}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--c-text)' }}>
-                      {c.prenom} {c.nom}
+                      {displayName(c)}
                     </div>
-                    {c.email && (
+                    {(c.prenom || c.nom) && c.email && (
                       <div style={{ fontSize: 12, color: 'var(--c-muted)', marginTop: 1 }}>{c.email}</div>
                     )}
-                    {c.telephone && (
+                    {(c.prenom || c.nom) && c.telephone && (
                       <div style={{ fontSize: 12, color: 'var(--c-muted)' }}>{c.telephone}</div>
                     )}
                   </div>

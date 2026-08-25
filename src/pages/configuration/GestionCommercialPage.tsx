@@ -11,7 +11,8 @@ import GestionCommercialModal from './GestionCommercialModal';
 
 const COLORS = ['#2563EB', '#7C3AED', '#DB2777', '#D97706', '#16A34A', '#0891B2', '#DC2626', '#0284C7'];
 function avatarColor(id: number) { return COLORS[Math.abs(id ?? 0) % COLORS.length]; }
-function initials(u: any) { return `${u.prenom?.[0] ?? ''}${u.nom?.[0] ?? ''}`.toUpperCase() || '?'; }
+function initials(u: any) { return `${u.prenom?.[0] ?? ''}${u.nom?.[0] ?? ''}`.toUpperCase() || (u.email?.[0] ?? '#').toUpperCase(); }
+function displayName(u: any) { return (u.prenom || u.nom) ? `${u.prenom ?? ''} ${u.nom ?? ''}`.trim() : (u.email ?? u.telephone ?? `Utilisateur #${u.id}`); }
 
 /* ─── Modal : liste des clients d'un commercial ─────────── */
 
@@ -72,8 +73,10 @@ function ClientsListModal({ commercial, onClose }: { commercial: any; onClose: (
                   {initials(c)}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--c-text)' }}>{c.prenom} {c.nom}</div>
-                  <div style={{ fontSize: 11, color: 'var(--c-muted)' }}>{c.email ?? c.telephone ?? '—'}</div>
+                  <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--c-text)' }}>{displayName(c)}</div>
+                  {(c.prenom || c.nom) && (
+                    <div style={{ fontSize: 11, color: 'var(--c-muted)' }}>{c.email ?? c.telephone ?? '—'}</div>
+                  )}
                 </div>
                 <span style={{
                   padding: '2px 8px', borderRadius: 20, fontSize: 10, fontWeight: 700,
@@ -81,7 +84,7 @@ function ClientsListModal({ commercial, onClose }: { commercial: any; onClose: (
                   background: '#EFF6FF', color: '#1D4ED8', border: '1px solid #BFDBFE',
                   flexShrink: 0,
                 }}>
-                  {c.role_principal ?? c.role ?? 'client'}
+                  {c.role_principal ?? c.role ?? 'prospect'}
                 </span>
               </div>
             ))
