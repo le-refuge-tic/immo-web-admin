@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getMesBiens } from '../../api/getMesBiens';
-import { postBien } from '../../api/postBien';
-import { EyeIcon, EditIcon, TrashIcon } from '../../components/Icons';
+import { EyeIcon } from '../../components/Icons';
 
 /* ─── Helpers ─────────────────────────────────────────────── */
 
@@ -112,7 +111,6 @@ export default function MesAnnoncesPage() {
   const navigate = useNavigate();
   const [biens, setBiens]       = useState<any[]>([]);
   const [loading, setLoading]   = useState(true);
-  const [deleting, setDeleting] = useState<number | null>(null);
   const [showProprietaireModal, setShowProprietaireModal] = useState(false);
 
   const load = useCallback(async () => {
@@ -128,19 +126,6 @@ export default function MesAnnoncesPage() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
-
-  const handleDelete = async (b: any) => {
-    if (!confirm(`Supprimer « ${getBienLabel(b)} » ? Cette action est irréversible.`)) return;
-    setDeleting(b.id);
-    try {
-      await postBien.delete(b.id);
-      setBiens(prev => prev.filter(x => x.id !== b.id));
-    } catch {
-      alert('Erreur lors de la suppression.');
-    } finally {
-      setDeleting(null);
-    }
-  };
 
   const getBienLabel = (b: any) => {
     const sous = b.amenites?.sous_type;

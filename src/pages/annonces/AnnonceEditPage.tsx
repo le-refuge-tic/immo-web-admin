@@ -7,7 +7,7 @@ import {
   ChevronLeftIcon, CheckIcon, TrashIcon,
   HomeIcon, PinIcon, GridIcon, CardIcon, ImageIcon,
 } from '../../components/Icons';
-import { BENIN_VILLES, getQuartiersForVille, getAllQuartiers } from '../../data/beninLocations';
+import { BENIN_VILLES, getQuartiersByVille, ALL_QUARTIERS } from '../../data/beninLocations';
 
 // ── Icônes SVG locales ────────────────────────────────────────────────────────
 const SaveIcon = () => (
@@ -368,8 +368,8 @@ export default function AnnonceEditPage() {
   const isAppart  = dbType === 'appart_vide' || dbType === 'appart_meuble';
   const isSmall   = dbST === 'chambre_salon' || dbST === 'entree_coucher';
   const villeForQ = ville === 'autre' ? '' : ville;
-  const qList     = villeForQ ? getQuartiersForVille(villeForQ) : getAllQuartiers();
-  const filteredQ = qSearch.trim() ? qList.filter(q => q.toLowerCase().includes(qSearch.toLowerCase())) : qList;
+  const qList     = villeForQ ? getQuartiersByVille(villeForQ) : ALL_QUARTIERS;
+  const filteredQ = qSearch.trim() ? qList.filter((q: string) => q.toLowerCase().includes(qSearch.toLowerCase())) : qList;
   const amenites  = bien?.amenites ?? {};
   const isOwner   = bien?.user?.role === 'proprietaire';
   const CARD: React.CSSProperties = { background:'#fff', border:'1px solid #E2E8F0', borderRadius:12, padding:'22px 24px', marginBottom:18 };
@@ -511,7 +511,7 @@ export default function AnnonceEditPage() {
                   {qOpen && (
                     <div style={{ position:'absolute', top:'calc(100% + 4px)', left:0, right:0, background:'#fff', border:'2px solid #2563EB', borderRadius:8, maxHeight:240, overflowY:'auto', zIndex:100, boxShadow:'0 8px 24px rgba(0,0,0,.12)' }}>
                       {filteredQ.length === 0 && <div style={{ padding:'10px 12px', fontSize:12, color:'#64748B' }}>Aucun résultat pour "{qSearch}"</div>}
-                      {filteredQ.slice(0, 80).map(q => (
+                      {filteredQ.slice(0, 80).map((q: string) => (
                         <div key={q} onMouseDown={() => { setSelQ(q); setQOpen(false); setQSearch(''); }}
                           style={{ padding:'8px 12px', fontSize:13, cursor:'pointer', color:'#0F172A', background: selQ===q?'#EFF6FF':'transparent', fontWeight: selQ===q?600:400 }}
                           onMouseEnter={e => e.currentTarget.style.background='#F1F5F9'}
