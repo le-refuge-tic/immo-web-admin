@@ -220,7 +220,7 @@ export default function AnnonceEditPage() {
         if (BENIN_VILLES.includes(v)) setVille(v); else if (v) { setVille('autre'); setAutreVille(v); }
 
         const q = loc.quartier ?? '';
-        if (getAllQuartiers().includes(q)) setSelQ(q); else if (q) { setSelQ('autre'); setAutreQ(q); }
+        if (ALL_QUARTIERS.includes(q)) setSelQ(q); else if (q) { setSelQ('autre'); setAutreQ(q); }
         setAdresse(loc.adresse ?? '');
 
         setTypeLabel(getTypeLabel(b.type ?? '', a.sous_type ?? ''));
