@@ -251,21 +251,6 @@ export default function MesAnnoncesPage() {
                           >
                             <EyeIcon size={14} />
                           </button>
-                          <button
-                            className="btn-table-action"
-                            onClick={() => navigate(`/annonces/${b.id}/modifier`)}
-                            title="Modifier"
-                          >
-                            <EditIcon size={14} />
-                          </button>
-                          <button
-                            className="btn-table-action btn-table-danger"
-                            onClick={() => handleDelete(b)}
-                            disabled={deleting === b.id}
-                            title="Supprimer"
-                          >
-                            {deleting === b.id ? '…' : <TrashIcon size={14} />}
-                          </button>
                         </div>
                       </td>
                     </tr>

@@ -1,7 +1,7 @@
 export const BENIN_VILLES = ['Cotonou', 'Abomey-Calavi'];
 
 export const BENIN_LOCATION_DATA: Record<string, Record<string, string[]>> = {
-  Cotonou: {
+  'Cotonou': {
     '1er Arrondissement': ['Avotrou-Aïmonlonfidé','Avotrou-Gbégo','Avotrou-Houézèkomè','Dandji','Dandji-Hokanmè','Donatin','Finagnon','N\'vènamèdé','Suru-Léré','Tanto','Tchanhounkpamè','Tokplégbé','Yagbé'],
     '2ème Arrondissement': ['Ahouassa','Djèdjèlayé','Gankpodo','Irédé','Kowégbo','Kpondehou Tcheme','Lom-Nava','Minontchou','Sènadé','Sènadé Sekou','Yénawa','Yénawa Daho'],
     '3ème Arrondissement': ['Adjégounlè','Agbato','Agbondjèdo','Ayélawadjè 1','Ayélawadjè 2','Fifatin','Gbénonkpo','Hlacomey','Kpankpan','Midombo','Sègbeya-Nord','Sègbeya-Sud'],
@@ -28,39 +28,28 @@ export const BENIN_LOCATION_DATA: Record<string, Record<string, string[]>> = {
   },
 };
 
-function normalize(s: string) {
-  return s.toLowerCase()
-    .replace(/[àâäáãå]/g, 'a')
-    .replace(/[èéêë]/g, 'e')
-    .replace(/[ìíîï]/g, 'i')
-    .replace(/[òóôöõ]/g, 'o')
-    .replace(/[ùúûü]/g, 'u')
-    .replace(/[ç]/g, 'c')
-    .replace(/[ñ]/g, 'n')
-    .replace(/[^a-z0-9 ]/g, '')
-    .trim();
-}
+// Tous les quartiers triés (Cotonou + Abomey-Calavi)
+const _allSet = new Set<string>();
+Object.values(BENIN_LOCATION_DATA).forEach(arrs =>
+  Object.values(arrs).forEach(qs => qs.forEach(q => _allSet.add(q)))
+);
+export const ALL_QUARTIERS: string[] = [..._allSet].sort((a, b) => a.localeCompare(b, 'fr'));
 
-export function getAllQuartiers(): string[] {
+// Quartiers filtrés par ville
+export function getQuartiersByVille(ville: string): string[] {
+  const data = BENIN_LOCATION_DATA[ville];
+  if (!data) return ALL_QUARTIERS;
   const set = new Set<string>();
-  for (const ville of BENIN_VILLES) {
-    const arrondissements = BENIN_LOCATION_DATA[ville] ?? {};
-    for (const qs of Object.values(arrondissements)) {
-      for (const q of qs) set.add(q);
-    }
-  }
-  return Array.from(set).sort((a, b) => a.localeCompare(b, 'fr'));
+  Object.values(data).forEach(qs => qs.forEach(q => set.add(q)));
+  return [...set].sort((a, b) => a.localeCompare(b, 'fr'));
 }
 
-export function searchQuartiers(query: string, _ville?: string): string[] {
-  if (!query.trim()) return getAllQuartiers();
-  const q = normalize(query);
-  return getAllQuartiers().filter(candidate => normalize(candidate).includes(q));
+// Quartiers filtrés par arrondissement
+export function getQuartiersByArrondissement(ville: string, arr: string): string[] {
+  return BENIN_LOCATION_DATA[ville]?.[arr] ?? [];
 }
 
-export function getQuartiersForVille(ville: string): string[] {
-  const arrs = BENIN_LOCATION_DATA[ville] ?? {};
-  const set = new Set<string>();
-  for (const qs of Object.values(arrs)) for (const q of qs) set.add(q);
-  return Array.from(set).sort((a, b) => a.localeCompare(b, 'fr'));
+// Arrondissements pour une ville
+export function getArrondissements(ville: string): string[] {
+  return Object.keys(BENIN_LOCATION_DATA[ville] ?? {});
 }

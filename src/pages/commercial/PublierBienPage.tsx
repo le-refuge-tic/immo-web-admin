@@ -1,38 +1,39 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { postBien } from '../../api/postBien';
+import { BENIN_VILLES, getArrondissements, getQuartiersByVille, getQuartiersByArrondissement } from '../../data/beninLocations';
 
 /* ─── Référentiels ───────────────────────────────────────── */
 
 const TYPES_BIEN = [
-  { display: 'Chambre-Salon',      type: 'appart_vide', sousType: 'chambre_salon',       desc: 'Chambre + salon séparé' },
-  { display: 'Entrée-Coucher',     type: 'appart_vide', sousType: 'entree_coucher',      desc: 'Entrée indépendante + chambre' },
-  { display: 'Appartement',        type: 'appart_vide', sousType: 'appartement',         desc: 'Studio, F2, F3…' },
-  { display: 'Villa',              type: 'maison',       sousType: 'villa',               desc: 'Résidence avec jardin ou piscine' },
-  { display: 'Maison',             type: 'maison',       sousType: 'maison_individuelle', desc: 'Maison complète indépendante' },
-  { display: 'Boutique / Local',   type: 'maison',       sousType: 'boutique',            desc: 'Commerce, bureau, local' },
-  { display: 'Terrain / Parcelle', type: 'terrain',      sousType: 'terrain',             desc: 'Parcelle nue, lotissement' },
+  { display: 'Entrée-Coucher',     type: 'appart_vide', sousType: 'entree_coucher',      isSmall: true },
+  { display: 'Chambre-Salon',      type: 'appart_vide', sousType: 'chambre_salon',       isSmall: true },
+  { display: 'Appartement',        type: 'appart_vide', sousType: 'appartement',         isSmall: false },
+  { display: 'Villa',              type: 'maison',       sousType: 'villa',               isSmall: false },
+  { display: 'Maison',             type: 'maison',       sousType: 'maison_individuelle', isSmall: false },
+  { display: 'Terrain / Parcelle', type: 'terrain',      sousType: 'terrain',             isSmall: false },
+  { display: 'Boutique',           type: 'maison',       sousType: 'boutique',            isSmall: false },
 ];
 
 const PEUT_ETRE_MEUBLE = ['Appartement', 'Villa', 'Maison'];
 
 const SANITAIRE_OPTS = [
-  { value: 'interieur', label: 'Sanitaire intérieur', sub: 'Douche dans le logement' },
-  { value: 'cour',      label: 'Non sanitaire',       sub: 'Douche extérieure ou commune' },
-  { value: 'autre',     label: 'Autre',               sub: 'À préciser' },
+  { value: 'interieur', label: 'Sanitaire',        sub: '' },
+  { value: 'cour',      label: 'Non sanitaire',    sub: '' },
+  { value: 'autre',     label: 'Autre à préciser', sub: '' },
 ];
 
 const FINITION_OPTS = [
-  { value: 'ordinaire',     label: 'Ordinaire',     sub: 'Finition de base, fonctionnel' },
-  { value: 'semi_staffe',   label: 'Semi-Staffé',   sub: 'Salon staffé et carrelé' },
-  { value: 'staffe_carele', label: 'Staffé',        sub: 'Staff complet, carreaux modernes' },
-  { value: 'haut_standing', label: 'Haut Standing', sub: 'Baies vitrées, douche moderne, clim' },
+  { value: 'ordinaire',     label: 'Ordinaire',           sub: '' },
+  { value: 'semi_staffe',   label: 'Semi-Staffé',         sub: 'Salon staffé et carrelé ; chambre au plafond propre, sans carrelage.' },
+  { value: 'staffe_carele', label: 'Staffé',              sub: 'Staff complet moderne et carreaux récents partout.' },
+  { value: 'haut_standing', label: 'Haut Standing / VIP', sub: 'Baies vitrées, douche moderne, climatisation.' },
 ];
 
 const CUISINE_OPTS = [
   { value: 'separee_douche', label: 'Cuisine séparée de la douche', sub: '' },
   { value: 'americaine',     label: 'Cuisine américaine',           sub: 'Ouverte sur le salon' },
-  { value: 'autre',          label: 'Autre',                        sub: '' },
+  { value: 'autre',          label: 'Autres (à préciser)',          sub: '' },
 ];
 
 const DOC_TERRAIN_OPTS = [
@@ -83,7 +84,7 @@ const STEPS = [
   { id: 1, label: 'Type & Prix' },
   { id: 2, label: 'Localisation' },
   { id: 3, label: 'Confort' },
-  { id: 4, label: 'Honoraires' },
+  { id: 4, label: 'Description' },
   { id: 5, label: 'Photos' },
 ];
 
@@ -91,14 +92,14 @@ const STEPS = [
 
 function getTypeBackend(typeBien: string, estMeuble: boolean): string {
   if (typeBien === 'Terrain / Parcelle') return 'terrain';
-  if (['Villa', 'Maison', 'Boutique / Local'].includes(typeBien)) return 'maison';
+  if (['Villa', 'Maison', 'Boutique'].includes(typeBien)) return 'maison';
   if (typeBien === 'Appartement' && estMeuble) return 'appart_meuble';
   return 'appart_vide';
 }
 
 function getSousType(typeBien: string, estMeuble: boolean): string {
   if (typeBien === 'Terrain / Parcelle') return 'terrain';
-  if (typeBien === 'Boutique / Local')   return 'boutique';
+  if (typeBien === 'Boutique')           return 'boutique';
   if (typeBien === 'Chambre-Salon')      return 'chambre_salon';
   if (typeBien === 'Entrée-Coucher')     return 'entree_coucher';
   if (typeBien === 'Appartement')        return estMeuble ? 'appart_meuble' : 'appartement';
@@ -119,8 +120,8 @@ function buildPieces(
   for (let i = 0; i < chambres; i++) p.push({ nom: 'Chambre', surface: 0 });
   for (let i = 0; i < salons; i++)   p.push({ nom: 'Salon',   surface: 0 });
   if (typeBien !== 'Chambre-Salon') {
-    for (let i = 0; i < cuisines; i++) p.push({ nom: 'Cuisine',        surface: 0 });
-    for (let i = 0; i < douches; i++)  p.push({ nom: 'Salle de bain',  surface: 0 });
+    for (let i = 0; i < cuisines; i++) p.push({ nom: 'Cuisine',       surface: 0 });
+    for (let i = 0; i < douches; i++)  p.push({ nom: 'Salle de bain', surface: 0 });
   }
   return p;
 }
@@ -128,14 +129,11 @@ function buildPieces(
 /* ─── Types ──────────────────────────────────────────────── */
 
 type Form = {
-  // Step 1
   typeBien: string; estMeuble: boolean; transaction: string;
-  prix: string; prixPromo: string;
+  prix: string;
   tarifLongSejour: string; tarifSejRestreint: string; tarifHeure: string;
-  // Step 2
   adresse: string; ville: string; arrondissement: string; quartier: string;
   latitude: string; longitude: string;
-  // Step 3 résidentiel
   sanitaire: string; sanitaireAutre: string;
   finition: string;
   typeCuisine: string; cuisineAutre: string;
@@ -147,19 +145,16 @@ type Form = {
   eau: string; prixForage: string; prixM3: string; forageGestion: string;
   disponibilite: string;
   chambres: number; salons: number; cuisines: number; douches: number;
-  // Step 3 terrain
   superficieTerrain: string; documentTerrain: string; positionTerrain: string;
   angleRue: boolean; permissionConstruire: boolean; descriptionConstruction: string;
   estLoti: string; titreFoncier: string;
-  // Step 3 boutique
   typeVoie: string; visibiliteBoutique: string; parkingClients: string;
-  // Step 4
-  description: string; commission: string;
+  description: string;
 };
 
 const INIT: Form = {
   typeBien: '', estMeuble: false, transaction: '',
-  prix: '', prixPromo: '', tarifLongSejour: '', tarifSejRestreint: '', tarifHeure: '',
+  prix: '', tarifLongSejour: '', tarifSejRestreint: '', tarifHeure: '',
   adresse: '', ville: '', arrondissement: '', quartier: '',
   latitude: '6.3654', longitude: '2.4183',
   sanitaire: '', sanitaireAutre: '', finition: '',
@@ -176,8 +171,50 @@ const INIT: Form = {
   angleRue: false, permissionConstruire: false, descriptionConstruction: '',
   estLoti: '', titreFoncier: '',
   typeVoie: 'goudron', visibiliteBoutique: 'directe', parkingClients: 'aucun',
-  description: '', commission: '',
+  description: '',
 };
+
+/* ─── Icônes SVG ─────────────────────────────────────────── */
+
+function IconLightning() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+    </svg>
+  );
+}
+function IconMeter() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <path d="M12 8v4l3 3"/>
+    </svg>
+  );
+}
+function IconDrop() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+    </svg>
+  );
+}
+function IconWell() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="11" width="18" height="11" rx="1"/>
+      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      <line x1="12" y1="7" x2="12" y2="11"/>
+    </svg>
+  );
+}
+function IconBan() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+    </svg>
+  );
+}
 
 /* ─── Composants UI ──────────────────────────────────────── */
 
@@ -212,12 +249,15 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
   );
 }
 
-function ChoiceItem({ label, sub, active, onClick }: { label: string; sub?: string; active: boolean; onClick: () => void }) {
+function ChoiceItem({ label, sub, active, onClick, icon }: { label: string; sub?: string; active: boolean; onClick: () => void; icon?: React.ReactNode }) {
   return (
     <button type="button" className={`pb-choice-item${active ? ' pb-choice-item--active' : ''}`} onClick={onClick}>
-      <div>
-        <div className="pb-choice-label">{label}</div>
-        {sub && <div className="pb-choice-sub">{sub}</div>}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {icon && <span style={{ opacity: 0.7, display: 'flex', alignItems: 'center' }}>{icon}</span>}
+        <div>
+          <div className="pb-choice-label">{label}</div>
+          {sub && <div className="pb-choice-sub">{sub}</div>}
+        </div>
       </div>
       {active && <div className="pb-choice-check"><CheckSvg /></div>}
     </button>
@@ -297,6 +337,71 @@ function ToggleRow({ label, desc, checked, onChange }: { label: string; desc: st
   );
 }
 
+/* ─── Dropdown quartier avec recherche ───────────────────── */
+
+function QuartierDropdown({ ville, arrondissement, value, onChange }: {
+  ville: string; arrondissement: string; value: string; onChange: (v: string) => void;
+}) {
+  const [open, setOpen]   = useState(false);
+  const [query, setQuery] = useState('');
+  const ref = useRef<HTMLDivElement>(null);
+
+  const baseList = arrondissement
+    ? getQuartiersByArrondissement(ville, arrondissement)
+    : getQuartiersByVille(ville);
+
+  const filtered = query.trim()
+    ? baseList.filter(q => q.toLowerCase().includes(query.toLowerCase()))
+    : baseList;
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const select = (q: string) => { onChange(q); setOpen(false); setQuery(''); };
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <input
+        className="immo-form-input"
+        value={open ? query : value}
+        placeholder={value || 'Cliquer pour choisir un quartier…'}
+        onFocus={() => { setOpen(true); setQuery(''); }}
+        onChange={e => { setQuery(e.target.value); if (!open) setOpen(true); }}
+        autoComplete="off"
+      />
+      {open && (
+        <div style={{
+          position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 9999,
+          background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 10,
+          boxShadow: '0 8px 24px rgba(0,0,0,0.12)', maxHeight: 280, overflowY: 'auto',
+          marginTop: 4,
+        }}>
+          {filtered.length === 0 ? (
+            <div style={{ padding: '12px 16px', fontSize: 13, color: 'var(--c-muted)' }}>Aucun quartier trouvé</div>
+          ) : filtered.map(q => (
+            <div key={q}
+              onMouseDown={() => select(q)}
+              style={{
+                padding: '9px 16px', fontSize: 13, cursor: 'pointer',
+                background: value === q ? '#EFF6FF' : 'transparent',
+                color: value === q ? '#2563EB' : 'var(--c-text)',
+                fontWeight: value === q ? 600 : 400,
+              }}
+              onMouseEnter={e => { if (value !== q) (e.currentTarget as HTMLDivElement).style.background = 'var(--c-bg)'; }}
+              onMouseLeave={e => { if (value !== q) (e.currentTarget as HTMLDivElement).style.background = 'transparent'; }}
+            >{q}</div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ─── Barre d'étapes ─────────────────────────────────────── */
 
 function StepTrack({ current }: { current: number }) {
@@ -324,20 +429,17 @@ function StepTrack({ current }: { current: number }) {
 
 export default function PublierBienPage() {
   const navigate = useNavigate();
+  const topRef = useRef<HTMLDivElement>(null);
   const [step, setStep]           = useState(1);
   const [form, setForm]           = useState<Form>(INIT);
   const [errors, setErrors]       = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState('');
 
-  // Sets pour multi-sélection
   const [equipements, setEquipements] = useState<Set<string>>(new Set());
   const [alentours, setAlentours]     = useState<Set<string>>(new Set());
-
-  // Autres frais (dynamique)
   const [autresFrais, setAutresFrais] = useState<{ label: string; montant: string }[]>([]);
 
-  // Photos & Vidéo
   const [photos, setPhotos]           = useState<File[]>([]);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
   const [video, setVideo]             = useState<File | null>(null);
@@ -350,9 +452,31 @@ export default function PublierBienPage() {
   };
 
   const isTerrain  = form.typeBien === 'Terrain / Parcelle';
-  const isBoutique = form.typeBien === 'Boutique / Local';
+  const isBoutique = form.typeBien === 'Boutique';
   const isMeuble   = PEUT_ETRE_MEUBLE.includes(form.typeBien) && form.estMeuble;
   const isLocation = form.transaction === 'location';
+
+  /* ── Couplage sanitaire ↔ finition (identique à l'app mobile) ── */
+  const setSanitaire = (val: string) => {
+    if (val === 'interieur' && form.finition === 'ordinaire') {
+      setForm(prev => ({ ...prev, sanitaire: val, finition: '' }));
+    } else {
+      set('sanitaire', val);
+    }
+  };
+  const setFinition = (val: string) => {
+    if (val === 'ordinaire') {
+      setForm(prev => ({ ...prev, finition: val, sanitaire: 'cour' }));
+    } else {
+      set('finition', val);
+    }
+  };
+
+  /* ── Scroll to top ── */
+  const scrollTop = () => {
+    topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   /* ── Validation ── */
   const validate = (): boolean => {
@@ -375,8 +499,8 @@ export default function PublierBienPage() {
     return Object.keys(e).length === 0;
   };
 
-  const next = () => { if (validate()) setStep(s => s + 1); };
-  const back = () => setStep(s => s - 1);
+  const next = () => { if (validate()) { setStep(s => s + 1); scrollTop(); } };
+  const back = () => { setStep(s => s - 1); scrollTop(); };
 
   /* ── Photos ── */
   const addPhotos = (files: FileList | null) => {
@@ -408,8 +532,6 @@ export default function PublierBienPage() {
       if (raw) amenites.proprietaire_info = JSON.parse(raw);
     } catch { /* noop */ }
 
-    if (form.arrondissement.trim()) amenites.arrondissement = form.arrondissement.trim();
-
     if (isTerrain) {
       if (form.documentTerrain) amenites.document = form.documentTerrain;
       amenites.position = form.positionTerrain;
@@ -417,7 +539,7 @@ export default function PublierBienPage() {
       amenites.permission_construire = form.permissionConstruire;
       if (form.permissionConstruire && form.descriptionConstruction.trim())
         amenites.description_construction = form.descriptionConstruction.trim();
-      if (form.estLoti)     amenites.loti          = form.estLoti === 'oui';
+      if (form.estLoti)      amenites.loti          = form.estLoti === 'oui';
       if (form.titreFoncier) amenites.titre_foncier = form.titreFoncier === 'oui';
     } else {
       if (form.sanitaire === 'interieur') amenites.sanitaire = true;
@@ -446,12 +568,7 @@ export default function PublierBienPage() {
         if (form.typeBien === 'Chambre-Salon') amenites.chambre_couloir = form.chambreACouloir;
         amenites.avance_mois = form.avanceMois;
         if (form.loyerPrePayeMois > 0) amenites.loyer_prepaye_mois = form.loyerPrePayeMois;
-        if (isLocation) {
-          amenites.echeance_mois    = form.echeanceMois;
-          amenites.commission_agence = form.commission
-            ? Number(form.commission)
-            : Number(form.prix) * 0.5;
-        }
+        if (isLocation) amenites.echeance_mois = form.echeanceMois;
         if (Number(form.cautionEau)  > 0) amenites.caution_eau  = Number(form.cautionEau);
         if (Number(form.cautionElec) > 0) amenites.caution_elec = Number(form.cautionElec);
         amenites.electricite = form.electricite;
@@ -466,7 +583,7 @@ export default function PublierBienPage() {
           amenites.forage_gestion = form.forageGestion;
         if (isMeuble) {
           const tarifs: any = {};
-          if (Number(form.tarifLongSejour)   > 0) tarifs.prix_long_sejour     = Number(form.tarifLongSejour);
+          if (Number(form.tarifLongSejour)   > 0) tarifs.prix_long_sejour      = Number(form.tarifLongSejour);
           if (Number(form.tarifSejRestreint) > 0) tarifs.prix_sejour_restreint = Number(form.tarifSejRestreint);
           if (Number(form.tarifHeure)        > 0) tarifs.prix_heure            = Number(form.tarifHeure);
           if (Object.keys(tarifs).length) amenites.tarifs_meuble = tarifs;
@@ -490,9 +607,11 @@ export default function PublierBienPage() {
       ? (Number(form.tarifLongSejour) || Number(form.tarifSejRestreint) || Number(form.tarifHeure) || Number(form.prix))
       : Number(form.prix);
 
-    const payload: any = { type: backendType, transaction: form.transaction, prix, localisation, amenites };
-    if (form.description.trim())       payload.description = form.description.trim();
-    if (Number(form.prixPromo) > 0)    payload.prix_promo  = Number(form.prixPromo);
+    const payload: any = {
+      type: backendType, transaction: form.transaction, prix,
+      localisation, amenites, frais_visite: 500,
+    };
+    if (form.description.trim()) payload.description = form.description.trim();
 
     const pieces = buildPieces(form.typeBien, form.chambres, form.salons, form.cuisines, form.douches, isTerrain, isBoutique);
     if (pieces.length) payload.pieces = pieces;
@@ -534,9 +653,12 @@ export default function PublierBienPage() {
     }
   };
 
+  /* ── Arrondissements disponibles pour la ville ── */
+  const arrondissements = form.ville ? getArrondissements(form.ville) : [];
+
   /* ── Render ── */
   return (
-    <div className="pb-page">
+    <div className="pb-page" ref={topRef}>
 
       <div className="pb-page-header">
         <div>
@@ -552,7 +674,6 @@ export default function PublierBienPage() {
       {step === 1 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
 
-          {/* Type */}
           <div className="immo-card" style={{ padding: '1.5rem' }}>
             <p className="pb-section-head">Type de bien</p>
             {errors.typeBien && <div className="pb-err" style={{ marginBottom: 8 }}>{errors.typeBien}</div>}
@@ -562,12 +683,10 @@ export default function PublierBienPage() {
                   className={`pb-type-btn${form.typeBien === t.display ? ' pb-type-active' : ''}`}
                   onClick={() => { set('typeBien', t.display); set('estMeuble', false); }}>
                   <div className="pb-type-name">{t.display}</div>
-                  <div className="pb-type-desc">{t.desc}</div>
                 </button>
               ))}
             </div>
 
-            {/* Meublé toggle */}
             {PEUT_ETRE_MEUBLE.includes(form.typeBien) && (
               <div style={{ marginTop: '1.25rem', padding: '1rem', background: 'var(--c-bg)', borderRadius: 10, border: '1px solid var(--c-border)' }}>
                 <ToggleRow
@@ -580,7 +699,6 @@ export default function PublierBienPage() {
             )}
           </div>
 
-          {/* Transaction */}
           <div className="immo-card" style={{ padding: '1.5rem' }}>
             <p className="pb-section-head">Type de transaction</p>
             {errors.transaction && <div className="pb-err" style={{ marginBottom: 8 }}>{errors.transaction}</div>}
@@ -598,17 +716,13 @@ export default function PublierBienPage() {
             </div>
           </div>
 
-          {/* Prix */}
           {form.typeBien && form.transaction && (
             <div className="immo-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
               {!isMeuble ? (
-                <>
-                  <MoneyField
-                    label={isLocation ? 'Loyer mensuel *' : 'Prix de vente *'}
-                    value={form.prix} onChange={v => set('prix', v)} error={errors.prix}
-                  />
-                  <MoneyField label="Prix promotionnel (optionnel)" value={form.prixPromo} onChange={v => set('prixPromo', v)} />
-                </>
+                <MoneyField
+                  label={isLocation ? 'Loyer mensuel *' : 'Prix de vente *'}
+                  value={form.prix} onChange={v => set('prix', v)} error={errors.prix}
+                />
               ) : (
                 <>
                   <p className="pb-section-head">Tarifs</p>
@@ -625,25 +739,48 @@ export default function PublierBienPage() {
 
       {/* ══ Étape 2 — Localisation ══ */}
       {step === 2 && (
-        <div className="immo-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+        <div className="immo-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+
+          <FormField label="Ville *" error={errors.ville}>
+            <select className="immo-form-input" value={form.ville}
+              onChange={e => { set('ville', e.target.value); set('arrondissement', ''); set('quartier', ''); }}>
+              <option value="">— Choisir une ville —</option>
+              {BENIN_VILLES.map(v => <option key={v} value={v}>{v}</option>)}
+              <option value="autre">Autre ville</option>
+            </select>
+          </FormField>
+
+          {form.ville === 'autre' && (
+            <FormField label="Préciser la ville *" error={errors.ville}>
+              <input className="immo-form-input" value={form.ville === 'autre' ? '' : form.ville}
+                onChange={e => set('ville', e.target.value)} placeholder="Nom de la ville" />
+            </FormField>
+          )}
+
+          {arrondissements.length > 0 && (
+            <FormField label="Arrondissement (pour filtrer les quartiers)">
+              <select className="immo-form-input" value={form.arrondissement}
+                onChange={e => { set('arrondissement', e.target.value); set('quartier', ''); }}>
+                <option value="">— Tous les arrondissements —</option>
+                {arrondissements.map(a => <option key={a} value={a}>{a}</option>)}
+              </select>
+            </FormField>
+          )}
+
+          <FormField label="Quartier">
+            <QuartierDropdown
+              ville={BENIN_VILLES.includes(form.ville) ? form.ville : ''}
+              arrondissement={form.arrondissement}
+              value={form.quartier}
+              onChange={v => set('quartier', v)}
+            />
+          </FormField>
+
           <FormField label="Adresse *" error={errors.adresse}>
             <input className="immo-form-input" value={form.adresse} onChange={e => set('adresse', e.target.value)}
               placeholder="Ex : Lot 42, Rue des Cocotiers" />
           </FormField>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
-            <FormField label="Ville *" error={errors.ville}>
-              <input className="immo-form-input" value={form.ville} onChange={e => set('ville', e.target.value)}
-                placeholder="Ex : Cotonou" />
-            </FormField>
-            <FormField label="Arrondissement">
-              <input className="immo-form-input" value={form.arrondissement} onChange={e => set('arrondissement', e.target.value)}
-                placeholder="Ex : Cadjèhoun" />
-            </FormField>
-          </div>
-          <FormField label="Quartier">
-            <input className="immo-form-input" value={form.quartier} onChange={e => set('quartier', e.target.value)}
-              placeholder="Ex : Haie Vive" />
-          </FormField>
+
           <div className="pb-section-divider" />
           <p className="pb-section-head">Coordonnées GPS <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(pré-remplies sur Cotonou)</span></p>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
@@ -765,12 +902,12 @@ export default function PublierBienPage() {
               </div>
 
               <div className="immo-card" style={{ padding: '1.5rem' }}>
-                <p className="pb-section-head" style={{ marginBottom: '1rem' }}>Sanitaire & Finition</p>
+                <p className="pb-section-head" style={{ marginBottom: '1rem' }}>Sanitaire</p>
                 <div className="pb-choices" style={{ marginBottom: '1.25rem' }}>
                   {SANITAIRE_OPTS.map(o => (
                     <ChoiceItem key={o.value} label={o.label} sub={o.sub}
                       active={form.sanitaire === o.value}
-                      onClick={() => set('sanitaire', form.sanitaire === o.value ? '' : o.value)} />
+                      onClick={() => setSanitaire(form.sanitaire === o.value ? '' : o.value)} />
                   ))}
                 </div>
                 {form.sanitaire === 'autre' && (
@@ -783,7 +920,7 @@ export default function PublierBienPage() {
                   {FINITION_OPTS.map(o => (
                     <ChoiceItem key={o.value} label={o.label} sub={o.sub}
                       active={form.finition === o.value}
-                      onClick={() => set('finition', form.finition === o.value ? '' : o.value)} />
+                      onClick={() => setFinition(form.finition === o.value ? '' : o.value)} />
                   ))}
                 </div>
               </div>
@@ -814,14 +951,13 @@ export default function PublierBienPage() {
           {/* ── RÉSIDENTIEL ── */}
           {!isTerrain && !isBoutique && (
             <>
-              {/* Sanitaire & Finition */}
               <div className="immo-card" style={{ padding: '1.5rem' }}>
                 <p className="pb-section-head">Sanitaire</p>
                 <div className="pb-choices" style={{ margin: '1rem 0' }}>
                   {SANITAIRE_OPTS.map(o => (
                     <ChoiceItem key={o.value} label={o.label} sub={o.sub}
                       active={form.sanitaire === o.value}
-                      onClick={() => set('sanitaire', form.sanitaire === o.value ? '' : o.value)} />
+                      onClick={() => setSanitaire(form.sanitaire === o.value ? '' : o.value)} />
                   ))}
                 </div>
                 {form.sanitaire === 'autre' && (
@@ -834,7 +970,7 @@ export default function PublierBienPage() {
                   {FINITION_OPTS.map(o => (
                     <ChoiceItem key={o.value} label={o.label} sub={o.sub}
                       active={form.finition === o.value}
-                      onClick={() => set('finition', form.finition === o.value ? '' : o.value)} />
+                      onClick={() => setFinition(form.finition === o.value ? '' : o.value)} />
                   ))}
                 </div>
                 <div className="pb-section-divider" />
@@ -852,7 +988,6 @@ export default function PublierBienPage() {
                 )}
               </div>
 
-              {/* Type de cour */}
               <div className="immo-card" style={{ padding: '1.5rem' }}>
                 <p className="pb-section-head" style={{ marginBottom: '1rem' }}>Type de cour</p>
                 <div className="pb-choices" style={{ marginBottom: '1rem' }}>
@@ -896,7 +1031,6 @@ export default function PublierBienPage() {
                 )}
               </div>
 
-              {/* Pièces */}
               {form.typeBien !== 'Entrée-Coucher' && (
                 <div className="immo-card" style={{ padding: '1.5rem' }}>
                   <p className="pb-section-head" style={{ marginBottom: '1rem' }}>Composition du logement</p>
@@ -913,7 +1047,6 @@ export default function PublierBienPage() {
                 </div>
               )}
 
-              {/* Conditions financières */}
               <div className="immo-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                 <p className="pb-section-head">Conditions financières</p>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
@@ -931,16 +1064,15 @@ export default function PublierBienPage() {
                 <MoneyField label="Caution électricité" value={form.cautionElec} onChange={v => set('cautionElec', v)} />
               </div>
 
-              {/* Électricité */}
               <div className="immo-card" style={{ padding: '1.5rem' }}>
                 <p className="pb-section-head" style={{ marginBottom: '1rem' }}>Électricité</p>
                 <div className="pb-choices" style={{ marginBottom: '0.75rem' }}>
                   {[
-                    { value: 'non',        label: 'Non',          sub: 'Pas d\'électricité' },
-                    { value: 'sbee',       label: 'SBEE',         sub: 'Compteur SBEE normal' },
-                    { value: 'decompteur', label: 'Décompteur',   sub: 'Compteur partagé avec tarif' },
+                    { value: 'non',        label: 'Non',        sub: "Pas d'électricité",         icon: <IconBan /> },
+                    { value: 'sbee',       label: 'SBEE',       sub: 'Compteur SBEE normal',       icon: <IconLightning /> },
+                    { value: 'decompteur', label: 'Décompteur', sub: 'Compteur partagé avec tarif', icon: <IconMeter /> },
                   ].map(o => (
-                    <ChoiceItem key={o.value} label={o.label} sub={o.sub}
+                    <ChoiceItem key={o.value} label={o.label} sub={o.sub} icon={o.icon}
                       active={form.electricite === o.value}
                       onClick={() => set('electricite', o.value)} />
                   ))}
@@ -953,12 +1085,12 @@ export default function PublierBienPage() {
                 <p className="pb-section-head" style={{ margin: '1rem 0 1rem' }}>Eau</p>
                 <div className="pb-choices" style={{ marginBottom: '0.75rem' }}>
                   {[
-                    { value: 'non',            label: 'Non',              sub: 'Pas d\'eau courante' },
-                    { value: 'soneb',          label: 'SONEB',            sub: 'Compteur SONEB normal' },
-                    { value: 'decompteur_soneb',label: 'Décompteur SONEB', sub: 'Compteur partagé' },
-                    { value: 'forage',         label: 'Forage',           sub: 'Pompe forage' },
+                    { value: 'non',             label: 'Non',              sub: "Pas d'eau courante",  icon: <IconBan /> },
+                    { value: 'soneb',           label: 'SONEB',            sub: 'Compteur SONEB normal', icon: <IconDrop /> },
+                    { value: 'decompteur_soneb',label: 'Décompteur SONEB', sub: 'Compteur partagé',    icon: <IconMeter /> },
+                    { value: 'forage',          label: 'Forage',           sub: 'Pompe forage',         icon: <IconWell /> },
                   ].map(o => (
-                    <ChoiceItem key={o.value} label={o.label} sub={o.sub}
+                    <ChoiceItem key={o.value} label={o.label} sub={o.sub} icon={o.icon}
                       active={form.eau === o.value}
                       onClick={() => set('eau', o.value)} />
                   ))}
@@ -982,7 +1114,6 @@ export default function PublierBienPage() {
                 )}
               </div>
 
-              {/* Disponibilité */}
               <div className="immo-card" style={{ padding: '1.5rem' }}>
                 <p className="pb-section-head" style={{ marginBottom: '1rem' }}>Disponibilité</p>
                 <div className="pb-choices">
@@ -997,7 +1128,6 @@ export default function PublierBienPage() {
                 </div>
               </div>
 
-              {/* Équipements & Alentours */}
               <div className="immo-card" style={{ padding: '1.5rem' }}>
                 <p className="pb-section-head" style={{ marginBottom: '1rem' }}>Équipements</p>
                 <ChipSelect options={EQUIP_RESIDENTIEL} selected={equipements}
@@ -1012,7 +1142,7 @@ export default function PublierBienPage() {
         </div>
       )}
 
-      {/* ══ Étape 4 — Honoraires ══ */}
+      {/* ══ Étape 4 — Description ══ */}
       {step === 4 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
 
@@ -1023,13 +1153,6 @@ export default function PublierBienPage() {
                 value={form.description} onChange={e => set('description', e.target.value)}
                 placeholder="Décrivez le bien, ses atouts, l'environnement, les points forts…" />
             </FormField>
-            {isLocation && !isMeuble && (
-              <>
-                <div className="pb-section-divider" />
-                <MoneyField label="Commission agence (optionnel — par défaut 50 % du loyer)"
-                  value={form.commission} onChange={v => set('commission', v)} />
-              </>
-            )}
           </div>
 
           <div className="immo-card" style={{ padding: '1.5rem' }}>
@@ -1071,7 +1194,6 @@ export default function PublierBienPage() {
       {step === 5 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
 
-          {/* Photos */}
           <div className="immo-card" style={{ padding: '1.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
               <div>
@@ -1119,7 +1241,6 @@ export default function PublierBienPage() {
             )}
           </div>
 
-          {/* Vidéo */}
           <div className="immo-card" style={{ padding: '1.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
               <div>
@@ -1154,7 +1275,6 @@ export default function PublierBienPage() {
             )}
           </div>
 
-          {/* Récapitulatif */}
           <div className="immo-card" style={{ padding: '1.5rem' }}>
             <p className="pb-section-head" style={{ marginBottom: '1rem' }}>Récapitulatif</p>
             <div className="pb-recap-block">
@@ -1164,6 +1284,7 @@ export default function PublierBienPage() {
                 { k: 'Prix',        v: isMeuble ? (form.tarifLongSejour ? `${Number(form.tarifLongSejour).toLocaleString('fr-FR')} FCFA/nuit` : '—') : `${Number(form.prix).toLocaleString('fr-FR')} FCFA` },
                 { k: 'Ville',       v: form.ville || '—' },
                 { k: 'Quartier',    v: form.quartier || '—' },
+                { k: 'Frais visite', v: '500 FCFA (tarif promo)' },
                 { k: 'Photos',      v: `${photos.length} photo${photos.length > 1 ? 's' : ''}` },
                 ...(video ? [{ k: 'Vidéo', v: video.name }] : []),
               ].map((r, i) => (
@@ -1192,7 +1313,7 @@ export default function PublierBienPage() {
         ) : (
           <button type="button" className="pb-nav-next" style={{ minWidth: 220 }}
             onClick={handleSubmit} disabled={submitting}>
-            {submitting ? (submitStatus || 'Publication…') : 'Publier l\'annonce'}
+            {submitting ? (submitStatus || 'Publication…') : "Publier l'annonce"}
           </button>
         )}
       </div>
