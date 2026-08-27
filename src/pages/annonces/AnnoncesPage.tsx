@@ -57,10 +57,10 @@ function getBienName(b: any): string {
 }
 
 const MOD_BADGE: any = {
-  en_attente:   { label: 'EN ATTENTE',   className: 'pending'  },
-  approuve:     { label: 'APPROUVÉ',     className: 'verified' },
-  rejete:       { label: 'REJETÉ',       className: 'danger'   },
-  conditionnel: { label: 'CONDITIONNEL', className: 'pending'  },
+  en_attente:   { label: 'EN ATTENTE',   bg: '#D97706', color: '#fff', shadow: 'rgba(217,119,6,0.35)'   },
+  approuve:     { label: 'APPROUVÉ',     bg: '#16A34A', color: '#fff', shadow: 'rgba(22,163,74,0.35)'   },
+  rejete:       { label: 'REJETÉ',       bg: '#DC2626', color: '#fff', shadow: 'rgba(220,38,38,0.35)'   },
+  conditionnel: { label: 'CONDITIONNEL', bg: '#D97706', color: '#fff', shadow: 'rgba(217,119,6,0.35)'   },
 };
 
 const LIMIT = 12;
@@ -175,10 +175,19 @@ export default function AnnoncesPage() {
                     <div className="annonce-img-badges">
                       <span className="badge-type">{getBienBadge(b)}</span>
                     </div>
-                    <span className={`badge-statut badge-verif ${badge.className}`} style={{
-                      position: 'absolute', bottom: 8, right: 8, fontSize: 10,
+                    <span style={{
+                      position: 'absolute', bottom: 8, right: 8,
+                      display: 'inline-flex', alignItems: 'center',
+                      padding: '3px 9px', borderRadius: 3,
+                      background: badge.bg,
+                      boxShadow: `0 2px 8px ${badge.shadow}`,
+                      transform: 'skewX(-10deg)',
                     }}>
-                      {badge.label}
+                      <span style={{
+                        display: 'inline-block', transform: 'skewX(10deg)',
+                        fontSize: 9, fontWeight: 800, letterSpacing: '0.6px',
+                        color: badge.color, lineHeight: 1.4,
+                      }}>{badge.label}</span>
                     </span>
                   </div>
 

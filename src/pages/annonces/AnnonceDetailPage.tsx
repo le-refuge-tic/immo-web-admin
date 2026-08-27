@@ -55,10 +55,10 @@ const TYPE_LABELS: any = {
 };
 
 const MOD_BADGE: any = {
-  en_attente:   { label: 'En attente',   cls: 'pending'  },
-  approuve:     { label: 'Approuvé',     cls: 'verified' },
-  rejete:       { label: 'Rejeté',       cls: 'danger'   },
-  conditionnel: { label: 'Conditionnel', cls: 'pending'  },
+  en_attente:   { label: 'EN ATTENTE',   bg: '#D97706', color: '#fff', shadow: 'rgba(217,119,6,0.30)'   },
+  approuve:     { label: 'APPROUVÉ',     bg: '#16A34A', color: '#fff', shadow: 'rgba(22,163,74,0.30)'   },
+  rejete:       { label: 'REJETÉ',       bg: '#DC2626', color: '#fff', shadow: 'rgba(220,38,38,0.30)'   },
+  conditionnel: { label: 'CONDITIONNEL', bg: '#D97706', color: '#fff', shadow: 'rgba(217,119,6,0.30)'   },
 };
 
 const STATUT_BIEN: any = {
@@ -87,9 +87,10 @@ export default function AnnonceDetailPage() {
   const { id }   = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const isCommercial = (user?.role_principal ?? user?.role) === 'commercial';
-  const isSuperAdmin = user?.role === 'super_admin';
-  const canModerate  = user?.role === 'admin' || user?.role === 'super_admin';
+  const userRole     = user?.role_principal ?? user?.role;
+  const isCommercial = userRole === 'commercial';
+  const isSuperAdmin = userRole === 'super_admin';
+  const canModerate  = userRole === 'admin' || userRole === 'super_admin';
 
   const [bien, setBien]         = useState(null as any);
   const [loading, setLoading]   = useState(true);
@@ -232,8 +233,18 @@ export default function AnnonceDetailPage() {
           Retour aux annonces
         </button>
         <div className="immo-spacer" />
-        <span className={`badge-statut badge-verif ${badge.cls}`} style={{ fontSize: 11 }}>
-          {badge.label}
+        <span style={{
+          display: 'inline-flex', alignItems: 'center',
+          padding: '4px 12px', borderRadius: 3,
+          background: badge.bg,
+          boxShadow: `0 2px 8px ${badge.shadow}`,
+          transform: 'skewX(-10deg)',
+        }}>
+          <span style={{
+            display: 'inline-block', transform: 'skewX(10deg)',
+            fontSize: 10, fontWeight: 800, letterSpacing: '0.6px',
+            color: badge.color, lineHeight: 1.4,
+          }}>{badge.label}</span>
         </span>
         {!isCommercial && (
           <button className="detail-edit-btn" onClick={() => navigate(`/annonces/${id}/modifier`)}>
