@@ -87,6 +87,7 @@ export default function AnnonceDetailPage() {
   const { id }   = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const isCommercial = (user?.role_principal ?? user?.role) === 'commercial';
   const canModerate = user?.role === 'admin' || user?.role === 'super_admin';
 
   const [bien, setBien]         = useState(null as any);
@@ -194,10 +195,12 @@ export default function AnnonceDetailPage() {
         <span className={`badge-statut badge-verif ${badge.cls}`} style={{ fontSize: 11 }}>
           {badge.label}
         </span>
-        <button className="detail-edit-btn" onClick={() => navigate(`/annonces/${id}/modifier`)}>
-          <EditIcon size={14} />
-          Modifier
-        </button>
+        {!isCommercial && (
+          <button className="detail-edit-btn" onClick={() => navigate(`/annonces/${id}/modifier`)}>
+            <EditIcon size={14} />
+            Modifier
+          </button>
+        )}
       </div>
 
       <div className="immo-page detail-page-layout">
