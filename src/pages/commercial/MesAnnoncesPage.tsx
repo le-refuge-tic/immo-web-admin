@@ -157,39 +157,46 @@ export default function MesAnnoncesPage() {
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           {hasDraft && (
-            <button onClick={() => navigate('/publier-bien')}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 18px', borderRadius: 10, fontWeight: 700, fontSize: 13, background: 'rgba(75,107,255,0.12)', color: '#4B6BFF', border: '1px solid rgba(75,107,255,0.35)', cursor: 'pointer' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+            <button onClick={() => navigate('/publier-bien')} title="Reprendre l'annonce en cours"
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 10, fontWeight: 700, fontSize: 12, background: 'rgba(99,102,241,0.10)', color: '#6366F1', border: '1px solid rgba(99,102,241,0.30)', cursor: 'pointer' }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
                 <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
               </svg>
-              Reprendre l'annonce
+              Brouillon
             </button>
           )}
-          <button className="btn-submit" onClick={() => setShowProprietaireModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 18, lineHeight: 1 }}>＋</span>
-            Publier un bien
+          <button className="btn-submit" onClick={() => setShowProprietaireModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Nouveau bien
           </button>
         </div>
       </div>
 
-      {/* ── Stat chips ── */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
-        {[
-          { label: 'Total',       value: biens.length,                                         color: '#6366F1' },
-          { label: 'Publiés',     value: biens.filter(b => b.statut_moderation === 'approuve').length, color: '#16A34A' },
-          { label: 'En attente',  value: biens.filter(b => b.statut_moderation === 'en_attente').length, color: '#D97706' },
-          { label: 'Rejetés',     value: biens.filter(b => b.statut_moderation === 'rejete').length,    color: '#DC2626' },
-        ].map(s => (
-          <div key={s.label} style={{
-            background: 'var(--c-card)', border: '1px solid var(--c-border)',
-            borderRadius: 10, padding: '12px 18px', display: 'flex', alignItems: 'center', gap: 10,
-            minWidth: 120,
-          }}>
-            <span style={{ fontSize: 22, fontWeight: 800, color: s.color }}>{s.value}</span>
-            <span style={{ fontSize: 12, color: 'var(--c-muted)', fontWeight: 500 }}>{s.label}</span>
+      {/* ── Synthèse statuts ── */}
+      {!loading && biens.length > 0 && (() => {
+        const stats = [
+          { label: 'Publiés',    value: biens.filter(b => b.statut_moderation === 'approuve').length,   color: '#16A34A' },
+          { label: 'En attente', value: biens.filter(b => b.statut_moderation === 'en_attente').length, color: '#D97706' },
+          { label: 'Rejetés',    value: biens.filter(b => b.statut_moderation === 'rejete').length,     color: '#DC2626' },
+        ];
+        return (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '10px 16px', borderRadius: 10, background: 'var(--c-card)', border: '1px solid var(--c-border)', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--c-muted)' }}>
+              {biens.length} bien{biens.length !== 1 ? 's' : ''}
+            </span>
+            <div style={{ width: 1, height: 16, background: 'var(--c-border)' }} />
+            {stats.map(s => (
+              <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: s.color, flexShrink: 0, display: 'inline-block' }} />
+                <span style={{ fontSize: 12, fontWeight: 700, color: s.color, fontVariantNumeric: 'tabular-nums' }}>{s.value}</span>
+                <span style={{ fontSize: 12, color: 'var(--c-muted)' }}>{s.label}</span>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        );
+      })()}
 
       {/* ── Tableau ── */}
       <div className="immo-card" style={{ padding: 0 }}>

@@ -208,6 +208,7 @@ body {
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
+  scrollbar-gutter: stable;
 }
 
 /* ─── NAVBAR (sticky dans la zone scroll) ────────────────── */

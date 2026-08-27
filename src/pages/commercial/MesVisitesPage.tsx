@@ -126,42 +126,55 @@ export default function MesVisitesPage() {
         </div>
       </div>
 
-      {/* ── Stats ── */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
-        {[
-          { label: 'En attente',  value: countBy('en_attente'),      color: '#D97706' },
-          { label: 'Confirmées',  value: countBy('confirmee'),        color: '#16A34A' },
-          { label: 'Contre-prop', value: countBy('contre_proposee'),  color: '#6366F1' },
-          { label: 'Effectuées',  value: countBy('effectuee'),        color: '#0891B2' },
-        ].map(s => (
-          <div key={s.label} style={{
-            background: 'var(--c-card)', border: '1px solid var(--c-border)',
-            borderRadius: 10, padding: '12px 18px', display: 'flex', alignItems: 'center', gap: 10,
-            minWidth: 120,
-          }}>
-            <span style={{ fontSize: 22, fontWeight: 800, color: s.color }}>{s.value}</span>
-            <span style={{ fontSize: 12, color: 'var(--c-muted)', fontWeight: 500 }}>{s.label}</span>
+      {/* ── Stats + Filtres en un seul bloc ── */}
+      <div>
+        {/* Synthèse rapide */}
+        {!loading && (
+          <div style={{ display: 'flex', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
+            {[
+              { label: 'En attente',  value: countBy('en_attente'),     color: '#D97706' },
+              { label: 'Confirmées',  value: countBy('confirmee'),       color: '#16A34A' },
+              { label: 'Contre-prop', value: countBy('contre_proposee'), color: '#6366F1' },
+              { label: 'Effectuées',  value: countBy('effectuee'),       color: '#0891B2' },
+            ].map(s => (
+              <div key={s.label} style={{
+                display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px',
+                borderRadius: 8, background: 'var(--c-card)', border: '1px solid var(--c-border)',
+                borderLeft: `3px solid ${s.color}`,
+              }}>
+                <span style={{ fontSize: 18, fontWeight: 800, color: s.color, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>{s.value}</span>
+                <span style={{ fontSize: 11, color: 'var(--c-muted)', fontWeight: 500 }}>{s.label}</span>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        )}
 
-      {/* ── Filtres statut ── */}
-      <div style={{ display: 'flex', gap: 6, marginBottom: 18, flexWrap: 'wrap' }}>
-        {STATUTS.map(s => (
-          <button
-            key={s.key}
-            onClick={() => setStatut(s.key)}
-            style={{
-              padding: '5px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-              border: '1.5px solid',
-              borderColor: statut === s.key ? 'var(--c-blue)' : 'var(--c-border)',
-              background: statut === s.key ? 'var(--c-blue)' : 'var(--c-card)',
-              color: statut === s.key ? '#fff' : 'var(--c-text)',
-            }}
-          >
-            {s.label}
-          </button>
-        ))}
+        {/* Tab strip filtres */}
+        <div style={{ display: 'flex', borderBottom: '2px solid var(--c-border)', marginBottom: 0, gap: 0, overflowX: 'auto' }}>
+          {STATUTS.map(s => {
+            const count = s.key ? countBy(s.key) : visites.length;
+            const isActive = statut === s.key;
+            return (
+              <button key={s.key} onClick={() => setStatut(s.key)} style={{
+                padding: '9px 16px', fontSize: 12, fontWeight: isActive ? 700 : 500, cursor: 'pointer',
+                border: 'none', background: 'none', whiteSpace: 'nowrap',
+                color: isActive ? 'var(--c-blue)' : 'var(--c-muted)',
+                borderBottom: `2px solid ${isActive ? 'var(--c-blue)' : 'transparent'}`,
+                marginBottom: -2, transition: 'color 0.15s',
+                display: 'flex', alignItems: 'center', gap: 6,
+              }}>
+                {s.label}
+                {!loading && s.key && count > 0 && (
+                  <span style={{
+                    fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 10,
+                    background: isActive ? 'var(--c-blue)' : 'var(--c-border)',
+                    color: isActive ? '#fff' : 'var(--c-muted)',
+                  }}>{count}</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* ── Tableau ── */}

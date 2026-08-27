@@ -706,50 +706,51 @@ export default function PublierBienPage() {
     )
   }
 
-  return (
-    <div style={{ maxWidth: 688, margin: '0 auto', padding: '24px 16px 48px' }}>
+  const PW = 688
 
-      {/* Barre de navigation + étapes */}
-      <div style={{ background: '#fff', border: '1px solid var(--c-border)', borderRadius: 12, padding: '14px 16px', marginBottom: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+  return (
+    <>
+    {/* ── Sticky header : progression + proprio ── */}
+    <div style={{ position: 'sticky', top: 0, zIndex: 20, background: '#fff', borderBottom: '1px solid var(--c-border)' }}>
+      <div style={{ maxWidth: PW, width: '100%', margin: '0 auto', padding: '10px 16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
           <button onClick={() => step > 0 ? setStep(s => s - 1) : navigate('/mes-annonces')}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600, border: '1px solid var(--c-border)', background: 'var(--c-bg)', color: 'var(--c-muted)', cursor: 'pointer', flexShrink: 0 }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+            style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', borderRadius: 7, fontSize: 11, fontWeight: 600, border: '1px solid var(--c-border)', background: 'var(--c-bg)', color: 'var(--c-muted)', cursor: 'pointer', flexShrink: 0 }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
               <path d="M15 19l-7-7 7-7" />
             </svg>
             {step > 0 ? 'Retour' : 'Annuler'}
           </button>
-          <div style={{ flex: 1 }}>
-            <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-text)', lineHeight: 1.2 }}>Nouveau bien</p>
-            <p style={{ fontSize: 11, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{STEP_LABELS[step]}</p>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-text)' }}>Nouveau bien</span>
+            <span style={{ fontSize: 11, color: 'var(--c-muted)', marginLeft: 8 }}>{STEP_LABELS[step]}</span>
           </div>
-          <span style={{ fontSize: 12, fontWeight: 700, padding: '4px 10px', borderRadius: 999, border: `1px solid ${BLUE}40`, background: BLUE + '12', color: BLUE }}>
+          {proprietaireInfo && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 999, background: BLUE + '10', border: `1px solid ${BLUE}25`, flexShrink: 0 }}>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={BLUE} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+              </svg>
+              <span style={{ fontSize: 11, fontWeight: 700, color: BLUE, whiteSpace: 'nowrap' }}>
+                {proprietaireInfo.prenom} {proprietaireInfo.nom}
+              </span>
+            </div>
+          )}
+          <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 999, border: `1px solid ${BLUE}40`, background: BLUE + '12', color: BLUE, flexShrink: 0 }}>
             {step + 1}/{STEP_LABELS.length}
           </span>
         </div>
-        <div style={{ height: 4, borderRadius: 2, background: 'var(--c-border)' }}>
+        <div style={{ height: 3, borderRadius: 2, background: 'var(--c-border)' }}>
           <div style={{ height: '100%', borderRadius: 2, transition: 'width 0.4s ease', width: `${((step + 1) / STEP_LABELS.length) * 100}%`, background: BLUE }} />
         </div>
       </div>
+    </div>
 
-      {/* Bannière proprietaire */}
-      {proprietaireInfo && (
-        <div style={{ background: BLUE + '10', border: `1px solid ${BLUE}30`, borderRadius: 10, padding: '8px 14px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={BLUE} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
-          </svg>
-          <span style={{ fontSize: 12, fontWeight: 700, color: BLUE }}>
-            Proprio : {proprietaireInfo.prenom} {proprietaireInfo.nom}
-          </span>
-          {proprietaireInfo.telephone && (
-            <span style={{ fontSize: 11, color: 'var(--c-muted)', marginLeft: 4 }}>{proprietaireInfo.telephone}</span>
-          )}
-        </div>
-      )}
+    {/* ── Contenu ── */}
+    <div style={{ maxWidth: PW, width: '100%', margin: '0 auto', padding: '20px 16px 48px' }}>
 
       {error && (
         <div style={{ borderRadius: 10, padding: '12px 16px', border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.08)', marginBottom: 16 }}>
-          <p style={{ fontSize: 14, color: '#EF4444' }}>{error}</p>
+          <p style={{ fontSize: 14, color: '#EF4444', margin: 0 }}>{error}</p>
         </div>
       )}
 
@@ -1648,5 +1649,6 @@ export default function PublierBienPage() {
         </button>
       </div>
     </div>
+    </>
   )
 }
