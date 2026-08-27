@@ -144,6 +144,7 @@ export default function SupervisionPage() {
   const [unreadOnly, setUnreadOnly]     = useState(false);
   const [claims, setClaims]             = useState<Record<number, { name: string; at: number }>>({});
   const [popover, setPopover]           = useState<number | null>(null);
+  const [activeTab, setActiveTab]       = useState<'commerciaux' | 'proprietaires'>('commerciaux');
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const listPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -220,8 +221,11 @@ export default function SupervisionPage() {
     if (activeId !== null) clearClaim(activeId);
     setActiveId(id);
     setInput('');
-    setClaim(id, adminName);
-    syncClaims();
+    const conv = convs.find(c => c.id === id);
+    if (conv && !isProprioConv(conv)) {
+      setClaim(id, adminName);
+      syncClaims();
+    }
     // Marquer comme lu côté affichage
     setConvs(prev => prev.map(c => c.id === id ? { ...c, unread_count: 0 } : c));
   }
@@ -230,6 +234,7 @@ export default function SupervisionPage() {
   async function handleSend() {
     const text = input.trim();
     if (!text || activeId == null || sending) return;
+    if (activeConvIsPropio) return; // jamais d'envoi en lecture seule
     setInput('');
     setSending(true);
     try {
@@ -255,8 +260,17 @@ export default function SupervisionPage() {
   }, [activeId]);
 
   /* ── Filtrage côté client ── */
+  const isCommercialConv = (c: any) =>
+    c.gestionnaire_role === 'commercial' || c.gestionnaire_role === 'demarcheur' || !c.gestionnaire_role;
+  const isProprioConv = (c: any) => c.gestionnaire_role === 'proprietaire';
+
   const filtered = convs.filter(c => {
+    // Filtre onglet
+    if (activeTab === 'commerciaux' && !isCommercialConv(c)) return false;
+    if (activeTab === 'proprietaires' && !isProprioConv(c)) return false;
+    // Filtre non lus
     if (unreadOnly && (c.unread_count ?? 0) === 0) return false;
+    // Filtre recherche
     if (search) {
       const q = search.toLowerCase();
       const u = c.user;
@@ -270,7 +284,13 @@ export default function SupervisionPage() {
     return true;
   });
 
+  const countCommerciaux   = convs.filter(isCommercialConv).length;
+  const countProprietaires = convs.filter(isProprioConv).length;
+  const unreadCommerciaux   = convs.filter(isCommercialConv).reduce((s, c) => s + (c.unread_count ?? 0), 0);
+  const unreadProprietaires = convs.filter(isProprioConv).reduce((s, c) => s + (c.unread_count ?? 0), 0);
+
   const activeConv = convs.find(c => c.id === activeId);
+  const activeConvIsPropio = activeConv ? isProprioConv(activeConv) : false;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - var(--topbar-h))' }}>
@@ -279,10 +299,10 @@ export default function SupervisionPage() {
       <div className="immo-topbar">
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <h1 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 800, color: 'var(--c-text)' }}>
-            Supervision commerciaux
+            Suivi des échanges
           </h1>
           <p style={{ margin: 0, fontSize: 11, color: 'var(--c-muted)' }}>
-            Répondre à la place des commerciaux
+            Conversations des équipes · commerciaux &amp; propriétaires
           </p>
         </div>
         <div className="immo-spacer" />
@@ -308,6 +328,35 @@ export default function SupervisionPage() {
           width: 340, flexShrink: 0, borderRight: '1px solid var(--c-border)',
           display: 'flex', flexDirection: 'column', background: '#fff',
         }}>
+          {/* Tabs */}
+          <div style={{ display: 'flex', borderBottom: '1px solid var(--c-border)', flexShrink: 0 }}>
+            {([
+              { key: 'commerciaux',   label: 'Commerciaux',   count: countCommerciaux,   unread: unreadCommerciaux },
+              { key: 'proprietaires', label: 'Propriétaires', count: countProprietaires, unread: unreadProprietaires },
+            ] as const).map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => { setActiveTab(tab.key); setActiveId(null); }}
+                style={{
+                  flex: 1, padding: '10px 8px', background: 'none', border: 'none',
+                  cursor: 'pointer', fontSize: 12, fontWeight: 700,
+                  color: activeTab === tab.key ? 'var(--c-blue)' : 'var(--c-muted)',
+                  borderBottom: activeTab === tab.key ? '2px solid var(--c-blue)' : '2px solid transparent',
+                  transition: 'all 0.15s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                }}
+              >
+                {tab.label}
+                {tab.count > 0 && (
+                  <span style={{
+                    fontSize: 9, fontWeight: 800, padding: '1px 5px', borderRadius: 10,
+                    background: tab.unread > 0 ? '#DC2626' : '#F1F5F9',
+                    color: tab.unread > 0 ? '#fff' : 'var(--c-muted)',
+                  }}>{tab.count}</span>
+                )}
+              </button>
+            ))}
+          </div>
+
           {/* Recherche + filtre */}
           <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--c-border)', display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div style={{ position: 'relative' }}>
@@ -487,12 +536,21 @@ export default function SupervisionPage() {
                     </div>
                   </div>
                   <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{
-                      fontSize: 11, color: '#D97706', fontWeight: 600,
-                      background: '#FEF3C7', borderRadius: 6, padding: '3px 8px', border: '1px solid #FDE68A',
-                    }}>
-                      Vous répondez à la place du commercial
-                    </div>
+                    {activeConvIsPropio ? (
+                      <div style={{
+                        fontSize: 11, color: '#7C3AED', fontWeight: 600,
+                        background: '#F5F3FF', borderRadius: 6, padding: '3px 8px', border: '1px solid #DDD6FE',
+                      }}>
+                        Vue seule — conversation propriétaire-client
+                      </div>
+                    ) : (
+                      <div style={{
+                        fontSize: 11, color: '#D97706', fontWeight: 600,
+                        background: '#FEF3C7', borderRadius: 6, padding: '3px 8px', border: '1px solid #FDE68A',
+                      }}>
+                        Vous répondez à la place de {activeConv?.gestionnaire_name ?? 'commercial'}
+                      </div>
+                    )}
                     <button
                       onClick={() => loadConvs(true)}
                       title="Actualiser"
@@ -569,47 +627,61 @@ export default function SupervisionPage() {
                 <div ref={bottomRef} />
               </div>
 
-              {/* Input */}
-              <div style={{
-                padding: '12px 16px', borderTop: '1px solid var(--c-border)',
-                background: '#fff', display: 'flex', gap: 10, alignItems: 'flex-end',
-              }}>
-                <textarea
-                  value={input}
-                  onChange={e => setInput(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                  placeholder="Répondre au client (envoyé comme commercial)… · Entrée pour envoyer"
-                  rows={2}
-                  style={{
-                    flex: 1, resize: 'none', border: '1.5px solid var(--c-border)',
-                    borderRadius: 12, padding: '10px 12px', fontSize: 13, color: 'var(--c-text)',
-                    fontFamily: 'inherit', outline: 'none', lineHeight: 1.5,
-                    background: 'var(--c-bg)', transition: 'border-color 0.15s',
-                  }}
-                  onFocus={e => (e.currentTarget.style.borderColor = 'var(--c-blue)')}
-                  onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')}
-                  disabled={sending}
-                />
-                <button
-                  onClick={handleSend}
-                  disabled={!input.trim() || sending}
-                  style={{
-                    width: 40, height: 40, borderRadius: 12, flexShrink: 0,
-                    background: !input.trim() || sending ? 'var(--c-border)' : 'var(--c-blue)',
-                    color: '#fff', border: 'none', cursor: !input.trim() || sending ? 'default' : 'pointer',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    transition: 'background 0.15s',
-                  }}
-                >
-                  {sending ? (
-                    <span style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite', display: 'block' }} />
-                  ) : (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-                    </svg>
-                  )}
-                </button>
-              </div>
+              {/* Input — masqué pour les convs propriétaire (lecture seule) */}
+              {activeConvIsPropio ? (
+                <div style={{
+                  padding: '12px 16px', borderTop: '1px solid var(--c-border)',
+                  background: '#F5F3FF', display: 'flex', alignItems: 'center', gap: 10,
+                }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  </svg>
+                  <span style={{ fontSize: 12, color: '#7C3AED', fontWeight: 600 }}>
+                    Lecture seule — les admins ne peuvent pas répondre dans les conversations propriétaire-client
+                  </span>
+                </div>
+              ) : (
+                <div style={{
+                  padding: '12px 16px', borderTop: '1px solid var(--c-border)',
+                  background: '#fff', display: 'flex', gap: 10, alignItems: 'flex-end',
+                }}>
+                  <textarea
+                    value={input}
+                    onChange={e => setInput(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+                    placeholder={`Répondre en tant que ${activeConv?.gestionnaire_name ?? 'commercial'}… · Entrée pour envoyer`}
+                    rows={2}
+                    style={{
+                      flex: 1, resize: 'none', border: '1.5px solid var(--c-border)',
+                      borderRadius: 12, padding: '10px 12px', fontSize: 13, color: 'var(--c-text)',
+                      fontFamily: 'inherit', outline: 'none', lineHeight: 1.5,
+                      background: 'var(--c-bg)', transition: 'border-color 0.15s',
+                    }}
+                    onFocus={e => (e.currentTarget.style.borderColor = 'var(--c-blue)')}
+                    onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')}
+                    disabled={sending}
+                  />
+                  <button
+                    onClick={handleSend}
+                    disabled={!input.trim() || sending}
+                    style={{
+                      width: 40, height: 40, borderRadius: 12, flexShrink: 0,
+                      background: !input.trim() || sending ? 'var(--c-border)' : 'var(--c-blue)',
+                      color: '#fff', border: 'none', cursor: !input.trim() || sending ? 'default' : 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      transition: 'background 0.15s',
+                    }}
+                  >
+                    {sending ? (
+                      <span style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite', display: 'block' }} />
+                    ) : (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              )}
             </>
           )}
         </div>

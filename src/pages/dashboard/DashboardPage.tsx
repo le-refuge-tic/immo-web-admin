@@ -178,7 +178,7 @@ export default function DashboardPage() {
             </div>
             <div>
               <div style={{ fontWeight: 800, fontSize: 15, color: totalUnread > 0 ? '#DC2626' : 'var(--c-text)' }}>
-                Supervision commerciaux
+                Suivi des échanges
               </div>
               <div style={{ fontSize: 12, color: 'var(--c-muted)', marginTop: 2 }}>
                 {totalUnread > 0
