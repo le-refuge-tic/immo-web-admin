@@ -27,6 +27,7 @@ import MesVisitesPage          from './pages/commercial/MesVisitesPage';
 import PublierBienPage         from './pages/commercial/PublierBienPage';
 import CommercialDashboardPage from './pages/commercial/CommercialDashboardPage';
 import MesClientsPage          from './pages/commercial/MesClientsPage';
+import SupervisionPage         from './pages/supervision/SupervisionPage';
 
 function DefaultRedirect() {
   const { user } = useAuth();
@@ -59,6 +60,7 @@ export default function App() {
             <Route path="mes-clients"          element={<MesClientsPage />} />
             <Route path="publier-bien"         element={<PublierBienPage />} />
             <Route path="messages"     element={<MessagesPage />} />
+            <Route path="supervision"  element={<AdminRoute><SupervisionPage /></AdminRoute>} />
             <Route path="utilisateurs" element={<AdminRoute><UtilisateursPage /></AdminRoute>} />
             <Route path="loyers"       element={<AdminRoute><LoyersPage /></AdminRoute>} />
             <Route path="finances"     element={<AdminRoute><FinancesPage /></AdminRoute>} />

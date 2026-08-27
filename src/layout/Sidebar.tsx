@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   GridIcon, HomeIcon, UsersIcon, SettingsIcon, ShieldIcon,
@@ -6,6 +6,7 @@ import {
   MessageIcon, WithdrawIcon, ListingsIcon, VisitIcon, ClientsIcon,
 } from '../components/Icons';
 import { useAuth } from '../context/AuthContext';
+import { getMessages } from '../api/getMessages';
 
 export default function Sidebar({
   minimized,
@@ -24,6 +25,17 @@ export default function Sidebar({
 
   const isConfigActive = location.pathname.startsWith('/configuration');
   const [configOpen, setConfigOpen] = useState(isConfigActive);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    const load = () =>
+      getMessages.supervision().then(r => setUnreadCount(r.total_unread)).catch(() => {});
+    load();
+    pollRef.current = setInterval(load, 20_000);
+    return () => { if (pollRef.current) clearInterval(pollRef.current); };
+  }, [isAdmin]);
 
   const classes = [
     'immo-sidebar',
@@ -42,6 +54,7 @@ export default function Sidebar({
     ] : []),
     { to: '/messages',     label: 'Messages',           Icon: MessageIcon    },
     ...(isAdmin ? [
+      { to: '/supervision',  label: 'Supervision',     Icon: ShieldIcon     },
       { to: '/utilisateurs', label: 'Utilisateurs',    Icon: UsersIcon      },
       { to: '/loyers',       label: 'Loyers',          Icon: FileTextIcon   },
       { to: '/liaisons',     label: 'Liaisons gestion',Icon: KeyIcon        },
@@ -65,17 +78,40 @@ export default function Sidebar({
   return (
     <aside className={classes}>
       <nav className="immo-nav">
-        {navItems.map(({ to, label, Icon }) => (
-          <NavLink
-            key={to}
-            to={to}
-            title={minimized ? label : undefined}
-            className={({ isActive }) => `immo-nav-item${isActive ? ' active' : ''}`}
-          >
-            <Icon />
-            <span className="immo-nav-label">{label}</span>
-          </NavLink>
-        ))}
+        {navItems.map(({ to, label, Icon }) => {
+          const isSupervision = to === '/supervision';
+          const badge = isSupervision && unreadCount > 0 ? unreadCount : 0;
+          return (
+            <NavLink
+              key={to}
+              to={to}
+              title={minimized ? label : undefined}
+              className={({ isActive }) => `immo-nav-item${isActive ? ' active' : ''}`}
+            >
+              <span style={{ position: 'relative', display: 'inline-flex' }}>
+                <Icon />
+                {badge > 0 && (
+                  <span style={{
+                    position: 'absolute', top: -5, right: -6,
+                    background: '#DC2626', color: '#fff',
+                    borderRadius: '50%', minWidth: 15, height: 15,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 9, fontWeight: 800, padding: '0 3px', lineHeight: 1,
+                  }}>{badge > 99 ? '99+' : badge}</span>
+                )}
+              </span>
+              <span className="immo-nav-label">
+                {label}
+                {badge > 0 && !minimized && (
+                  <span style={{
+                    marginLeft: 6, background: '#DC2626', color: '#fff',
+                    borderRadius: 20, padding: '1px 6px', fontSize: 10, fontWeight: 800,
+                  }}>{badge}</span>
+                )}
+              </span>
+            </NavLink>
+          );
+        })}
 
         {/* Configuration collapsible */}
         <div className="config-group">
