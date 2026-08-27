@@ -117,11 +117,11 @@ const STATUS_FILTER = [
   { key: 'conditionnel',label: 'Conditionnel' },
 ];
 
-const STATUS_CARD: Record<string, { label: string; bg: string; color: string; border: string }> = {
-  approuve:     { label: 'Publié',       bg: '#DCFCE7', color: '#166534', border: '#BBF7D0' },
-  en_attente:   { label: 'En attente',   bg: '#FEF3C7', color: '#92400E', border: '#FDE68A' },
-  rejete:       { label: 'Rejeté',       bg: '#FEE2E2', color: '#991B1B', border: '#FECACA' },
-  conditionnel: { label: 'Conditionnel', bg: '#EDE9FE', color: '#4C1D95', border: '#C4B5FD' },
+const STATUS_CARD: Record<string, { label: string; bg: string; color: string; shadow: string }> = {
+  approuve:     { label: 'Publié',       bg: '#16A34A', color: '#fff', shadow: 'rgba(22,163,74,0.30)'   },
+  en_attente:   { label: 'En attente',   bg: '#D97706', color: '#fff', shadow: 'rgba(217,119,6,0.30)'   },
+  rejete:       { label: 'Rejeté',       bg: '#DC2626', color: '#fff', shadow: 'rgba(220,38,38,0.30)'   },
+  conditionnel: { label: 'Conditionnel', bg: '#7C3AED', color: '#fff', shadow: 'rgba(124,58,237,0.30)'  },
 };
 
 export default function MesAnnoncesPage() {
@@ -366,11 +366,18 @@ export default function MesAnnoncesPage() {
                       <td>
                         {sc ? (
                           <span style={{
-                            display: 'inline-block', padding: '4px 10px', borderRadius: 6,
-                            fontSize: 11, fontWeight: 700,
-                            background: sc.bg, color: sc.color,
-                            border: `1px solid ${sc.border}`,
-                          }}>{sc.label}</span>
+                            display: 'inline-flex', alignItems: 'center',
+                            padding: '3px 10px', borderRadius: 3,
+                            background: sc.bg,
+                            boxShadow: `0 2px 8px ${sc.shadow}`,
+                            transform: 'skewX(-10deg)',
+                          }}>
+                            <span style={{
+                              display: 'inline-block', transform: 'skewX(10deg)',
+                              fontSize: 10, fontWeight: 800, letterSpacing: '0.5px',
+                              color: sc.color, lineHeight: 1.5,
+                            }}>{sc.label}</span>
+                          </span>
                         ) : (
                           <span className={`immo-badge ${(mod(b)).cls}`}>{(mod(b)).label}</span>
                         )}

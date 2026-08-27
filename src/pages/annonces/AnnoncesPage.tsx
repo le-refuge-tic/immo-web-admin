@@ -3,15 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { SearchIcon, PinIcon, ChevronLeftIcon, ChevronRightIcon } from '../../components/Icons';
 import { getAdminBien } from '../../api/getAdminBien';
 
-type FilterTab = 'tous' | 'maison' | 'appart_vide' | 'appart_meuble' | 'guesthouse' | 'terrain';
-
-const FILTER_TABS: { key: FilterTab; label: string }[] = [
-  { key: 'tous',          label: 'Tous les biens' },
-  { key: 'maison',        label: 'Maisons / Villas' },
-  { key: 'appart_vide',   label: 'Apparts / Chambres' },
-  { key: 'appart_meuble', label: 'Appartements meublés' },
-  { key: 'guesthouse',    label: 'Guesthouses' },
-  { key: 'terrain',       label: 'Terrains' },
+const STATUT_FILTER = [
+  { key: '',            label: 'Tous' },
+  { key: 'en_attente',  label: 'En attente' },
+  { key: 'approuve',    label: 'Approuvés' },
+  { key: 'rejete',      label: 'Rejetés' },
+  { key: 'conditionnel',label: 'Conditionnels' },
 ];
 
 const TYPE_BADGE: Record<string, string> = {
@@ -66,13 +63,14 @@ const MOD_BADGE: any = {
 const LIMIT = 12;
 
 export default function AnnoncesPage() {
-  const navigate                       = useNavigate();
-  const [activeFilter, setActiveFilter] = useState('tous' as any);
-  const [biens, setBiens]               = useState([] as any[]);
-  const [total, setTotal]               = useState(0);
-  const [page, setPage]                 = useState(1);
-  const [search, setSearch]             = useState('');
-  const [loading, setLoading]           = useState(false);
+  const navigate                         = useNavigate();
+  const [biens, setBiens]                = useState([] as any[]);
+  const [total, setTotal]                = useState(0);
+  const [page, setPage]                  = useState(1);
+  const [search, setSearch]              = useState('');
+  const [loading, setLoading]            = useState(false);
+  const [filterStatut, setFilterStatut]  = useState('');
+  const [filterType, setFilterType]      = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -80,32 +78,38 @@ export default function AnnoncesPage() {
       const res = await getAdminBien.list({
         page,
         limit: LIMIT,
-        type:  activeFilter !== 'tous' ? activeFilter : undefined,
+        statut_moderation: filterStatut || undefined,
       });
       setBiens(res.data);
       setTotal(res.total);
     } finally {
       setLoading(false);
     }
-  }, [page, activeFilter]);
+  }, [page, filterStatut]);
 
   useEffect(() => { load(); }, [load]);
 
   const totalPages = Math.ceil(total / LIMIT);
 
-  function handleTabChange(t: FilterTab) {
-    setActiveFilter(t);
+  function handleStatutChange(s: string) {
+    setFilterStatut(s);
+    setFilterType('');
     setPage(1);
   }
 
-  const displayed = search
-    ? biens.filter(
-        (b: any) =>
-          b.localisation?.ville?.toLowerCase().includes(search.toLowerCase()) ||
-          b.localisation?.quartier?.toLowerCase().includes(search.toLowerCase()) ||
-          b.description?.toLowerCase().includes(search.toLowerCase()),
-      )
-    : biens;
+  // Types présents dans les biens chargés sur cette page
+  const typeOptions = [...new Set(
+    biens.map((b: any) => b.amenites?.sous_type ?? b.type).filter(Boolean)
+  )].map(t => ({ key: t, label: TYPE_NAME[t] ?? t }));
+
+  const displayed = biens
+    .filter((b: any) => !filterType || (b.amenites?.sous_type ?? b.type) === filterType)
+    .filter((b: any) =>
+      !search ||
+      b.localisation?.ville?.toLowerCase().includes(search.toLowerCase()) ||
+      b.localisation?.quartier?.toLowerCase().includes(search.toLowerCase()) ||
+      b.description?.toLowerCase().includes(search.toLowerCase()),
+    );
 
   return (
     <>
@@ -126,17 +130,45 @@ export default function AnnoncesPage() {
       </div>
 
       <div className="immo-page">
-        <div className="filter-pills" style={{ overflowX: 'auto', flexWrap: 'nowrap' }}>
-          <span className="filter-label">Type :</span>
-          {FILTER_TABS.map((p) => (
-            <button
-              key={p.key}
-              className={`pill ${activeFilter === p.key ? 'active-blue' : ''}`}
-              onClick={() => handleTabChange(p.key)}
-            >
-              {p.label}
-            </button>
-          ))}
+        {/* ── Filtre statut (API-level) ── */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginRight: 2 }}>Statut</span>
+            {STATUT_FILTER.map(opt => {
+              const active = filterStatut === opt.key;
+              return (
+                <button key={opt.key} onClick={() => handleStatutChange(opt.key)} style={{
+                  padding: '5px 13px', borderRadius: 20, fontSize: 12, fontWeight: active ? 700 : 500,
+                  border: `1.5px solid ${active ? 'var(--c-blue)' : 'var(--c-border)'}`,
+                  background: active ? 'var(--c-blue)' : 'transparent',
+                  color: active ? '#fff' : 'var(--c-muted)',
+                  cursor: 'pointer', transition: 'all 0.15s',
+                }}>
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+          {/* ── Filtre type (client-side, depuis les biens chargés) ── */}
+          {typeOptions.length > 1 && (
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+              <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginRight: 2 }}>Type</span>
+              {[{ key: '', label: 'Tous' }, ...typeOptions].map(opt => {
+                const active = filterType === opt.key;
+                return (
+                  <button key={opt.key} onClick={() => setFilterType(opt.key)} style={{
+                    padding: '5px 13px', borderRadius: 20, fontSize: 12, fontWeight: active ? 700 : 500,
+                    border: `1.5px solid ${active ? 'var(--c-blue)' : 'var(--c-border)'}`,
+                    background: active ? 'var(--c-blue)' : 'transparent',
+                    color: active ? '#fff' : 'var(--c-muted)',
+                    cursor: 'pointer', transition: 'all 0.15s',
+                  }}>
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {loading ? (

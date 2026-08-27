@@ -93,9 +93,9 @@ export default function PhoneRequiredModal() {
       padding: 16,
     }}>
       <div style={{
-        background: 'var(--c-card)', border: '1px solid var(--c-border)',
+        background: '#ffffff', border: '1px solid #E2E8F0',
         borderRadius: 16, padding: '36px 32px', width: '100%', maxWidth: 420,
-        boxShadow: '0 24px 64px rgba(0,0,0,0.20)',
+        boxShadow: '0 24px 64px rgba(0,0,0,0.22)',
       }}>
         {/* Icône */}
         <div style={{
@@ -129,15 +129,15 @@ export default function PhoneRequiredModal() {
 
         {step === 'phone' ? (
           <>
-            <h2 style={{ fontSize: 18, fontWeight: 800, color: 'var(--c-text)', marginBottom: 8 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 800, color: '#0F172A', marginBottom: 8 }}>
               Renseignez votre numéro
             </h2>
-            <p style={{ fontSize: 13, color: 'var(--c-muted)', lineHeight: 1.6, marginBottom: 24 }}>
+            <p style={{ fontSize: 13, color: '#374151', lineHeight: 1.6, marginBottom: 24 }}>
               Un code de vérification vous sera envoyé par SMS pour confirmer votre numéro professionnel.
             </p>
             <form onSubmit={handleSendOtp}>
               <div className="immo-form-field" style={{ marginBottom: 16 }}>
-                <label className="immo-form-label">Numéro de téléphone *</label>
+                <label className="immo-form-label" style={{ color: '#0F172A' }}>Numéro de téléphone *</label>
                 <input
                   className="immo-form-input"
                   type="tel"
@@ -147,6 +147,7 @@ export default function PhoneRequiredModal() {
                   autoFocus
                   disabled={loading}
                   required
+                  style={{ background: '#F8FAFC', color: '#0F172A' }}
                 />
               </div>
               {error && <ErrorBox message={error} />}
@@ -157,11 +158,11 @@ export default function PhoneRequiredModal() {
           </>
         ) : (
           <>
-            <h2 style={{ fontSize: 18, fontWeight: 800, color: 'var(--c-text)', marginBottom: 8 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 800, color: '#0F172A', marginBottom: 8 }}>
               Vérifiez votre numéro
             </h2>
-            <p style={{ fontSize: 13, color: 'var(--c-muted)', lineHeight: 1.6, marginBottom: 24 }}>
-              Entrez le code à 6 chiffres envoyé au <strong style={{ color: 'var(--c-text)' }}>{phone}</strong>.
+            <p style={{ fontSize: 13, color: '#374151', lineHeight: 1.6, marginBottom: 24 }}>
+              Entrez le code à 6 chiffres envoyé au <strong style={{ color: '#0F172A' }}>{phone}</strong>.
               <button
                 type="button"
                 onClick={() => { setStep('phone'); setError(''); setOtp(''); }}
@@ -172,7 +173,7 @@ export default function PhoneRequiredModal() {
             </p>
             <form onSubmit={handleVerify}>
               <div className="immo-form-field" style={{ marginBottom: 16 }}>
-                <label className="immo-form-label">Code de vérification *</label>
+                <label className="immo-form-label" style={{ color: '#0F172A' }}>Code de vérification *</label>
                 <input
                   className="immo-form-input"
                   type="text"
@@ -184,7 +185,7 @@ export default function PhoneRequiredModal() {
                   autoFocus
                   disabled={loading}
                   required
-                  style={{ letterSpacing: '0.3em', fontSize: 20, textAlign: 'center' }}
+                  style={{ letterSpacing: '0.3em', fontSize: 20, textAlign: 'center', background: '#F8FAFC', color: '#0F172A' }}
                 />
               </div>
               {error && <ErrorBox message={error} />}
