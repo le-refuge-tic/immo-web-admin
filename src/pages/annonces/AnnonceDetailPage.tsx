@@ -428,10 +428,12 @@ export default function AnnonceDetailPage() {
             </div>
           )}
 
-          {/* Auteur */}
+          {/* Commercial / Auteur */}
           {bien.user && (
             <div className="detail-card">
-              <div className="detail-section-title">Auteur</div>
+              <div className="detail-section-title">
+                {(bien.user.role_principal === 'commercial' || bien.user.role === 'commercial') ? 'Commercial ayant ajouté le bien' : 'Auteur'}
+              </div>
               <div className="detail-author-row">
                 <div className="detail-author-avatar">
                   {bien.user.prenom?.[0]}{bien.user.nom?.[0]}
@@ -440,6 +442,41 @@ export default function AnnonceDetailPage() {
                   <div className="detail-author-name">{bien.user.prenom} {bien.user.nom}</div>
                   <div className="detail-author-email">{bien.user.email}</div>
                   <div className="detail-author-role">{ROLE_LABELS[bien.user.role_principal] ?? bien.user.role_principal}</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Propriétaire du bien (renseigné par le commercial) */}
+          {bien.amenites?.proprietaire_info && (
+            <div className="detail-card">
+              <div className="detail-section-title">Propriétaire du bien</div>
+              <div className="detail-info-rows">
+                {['prenom', 'nom', 'telephone', 'email'].map(k => bien.amenites.proprietaire_info[k] ? (
+                  <div className="detail-info-row" key={k}>
+                    <span style={{ textTransform: 'capitalize' }}>{k}</span>
+                    <strong style={{ color: k === 'nom' || k === 'prenom' ? 'var(--c-text)' : undefined }}>
+                      {bien.amenites.proprietaire_info[k]}
+                    </strong>
+                  </div>
+                ) : null)}
+              </div>
+              <p style={{ fontSize: 11, color: 'var(--c-muted)', marginTop: 8 }}>Lecture seule — ne peut pas être modifié</p>
+            </div>
+          )}
+
+          {/* Admin approbateur */}
+          {bien.approved_by && (
+            <div className="detail-card">
+              <div className="detail-section-title">Approuvé par</div>
+              <div className="detail-author-row">
+                <div className="detail-author-avatar">
+                  {bien.approved_by.prenom?.[0]}{bien.approved_by.nom?.[0]}
+                </div>
+                <div>
+                  <div className="detail-author-name">{bien.approved_by.prenom} {bien.approved_by.nom}</div>
+                  <div className="detail-author-email">{bien.approved_by.email}</div>
+                  <div className="detail-author-role">{ROLE_LABELS[bien.approved_by.role_principal] ?? bien.approved_by.role_principal}</div>
                 </div>
               </div>
             </div>

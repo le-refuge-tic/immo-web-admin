@@ -1,5 +1,5 @@
 import type { ReactNode, CSSProperties } from 'react'
-import { useState } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { postBien } from '../../api/postBien'
 import { BENIN_LOCATION_DATA } from '../../data/beninLocations'
@@ -42,9 +42,9 @@ const SANITAIRE_OPTS = [
 
 const FINITION_OPTS = [
   { value: 'ordinaire',     label: 'Ordinaire',           sub: '' },
-  { value: 'semi_staffe',   label: 'Semi-Staffé',         sub: 'Salon staffé et carrelé ; chambre au plafond propre, sans carrelage.' },
   { value: 'staffe_carele', label: 'Staffé',              sub: 'Staff complet moderne et carreaux récents partout.' },
   { value: 'haut_standing', label: 'Haut Standing / VIP', sub: 'Baies vitrées, douche moderne, climatisation.' },
+  { value: 'villa',         label: 'Villa',               sub: 'Clôture, espace extérieur, standing élevé.' },
 ]
 
 const CUISINE_OPTS = [
@@ -282,6 +282,10 @@ export default function PublierBienPage() {
     try { return JSON.parse(sessionStorage.getItem('proprietaire_info') ?? 'null') } catch { return null }
   })()
 
+  const DRAFT_KEY = 'publier_bien_draft'
+  const quartierInputRef = useRef<HTMLInputElement>(null)
+  const [dropdownRect, setDropdownRect] = useState<{ top: number; left: number; width: number } | null>(null)
+
   const [isScrolled, setIsScrolled]   = useState(false)
   const [step, setStep]               = useState(0)
   const [submitting, setSubmitting]   = useState(false)
@@ -307,7 +311,9 @@ export default function PublierBienPage() {
   }
   const onSelectFinition = (v: string) => {
     setFinition(v)
-    if (v === 'ordinaire' && sanitaire === 'interieur') setSanitaire('cour')
+    if (v === 'staffe_carele') setSanitaire('interieur')
+    else if (v === 'ordinaire') setSanitaire('cour')
+    else if (v === 'haut_standing' || v === 'villa') setSanitaire(null)
   }
 
   const [prixLongSejour, setPrixLongSejour]           = useState('')
@@ -353,7 +359,9 @@ export default function PublierBienPage() {
   const [prixM3, setPrixM3]                   = useState('')
   const [prixForage, setPrixForage]           = useState('')
   const [equipementsBonus, setEquipementsBonus] = useState<string[]>([])
+  const [equipementsAutre, setEquipementsAutre] = useState('')
   const [alentours, setAlentours]             = useState<string[]>([])
+  const [alentoursAutre, setAlentoursAutre]   = useState('')
   const [disponibilite, setDisponibilite]     = useState<'immediate' | 'en_finition'>('immediate')
   const [showMoreOptions, setShowMoreOptions] = useState(false)
 
@@ -378,6 +386,104 @@ export default function PublierBienPage() {
   // Étape 3
   const [description, setDescription] = useState('')
   const [autresFrais, setAutresFrais] = useState<TarifCustom[]>([])
+
+  // ── Persistance du brouillon ──────────────────────────────────────────────
+  const draftState = {
+    step, typeBien, typeTransaction, prix, estMeuble, sanitaire, sanitaireAutre, finition,
+    prixLongSejour, prixSejourRestreint, prixHeure, tarifsAutres,
+    ville, quartier, arrondissement, indicationAdresse, quartierSearch,
+    chambres, salons, cuisines, douches, typeCuisine, cuisineAutre,
+    chambreACouloir, typeCour, nbVoisins, accesVehicule, nbVehicules,
+    avanceMois, avanceAutre, avanceAutreText, echeanceMois, echeanceAutre, echeanceAutreText,
+    loyerPrepayeMois, loyerPrepayeAutre, loyerPrepayeAutreText,
+    cautionEau, cautionElec, electricite, prixKwh, eau, forageGestion, prixM3, prixForage,
+    equipementsBonus, equipementsAutre, alentours, alentoursAutre, disponibilite,
+    titreTerrain, titreFoncier, superficieTerrain, superficieUnite, documentTerrain,
+    positionTerrain, angleRue, permissionConstruire, descriptionConstruction, estLoti, detailsSupplementaires,
+    typeVoie, visibiliteBoutique, parkingClients,
+    description, autresFrais,
+  }
+
+  const saveDraft = useCallback(() => {
+    try { sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draftState)) } catch { /* quota */ }
+  }, [JSON.stringify(draftState)]) // eslint-disable-line
+
+  useEffect(() => { saveDraft() }, [saveDraft])
+
+  // Restauration au montage
+  useEffect(() => {
+    const raw = sessionStorage.getItem(DRAFT_KEY)
+    if (!raw) return
+    try {
+      const d = JSON.parse(raw)
+      if (d.step !== undefined)        setStep(d.step)
+      if (d.typeBien)                  setTypeBien(d.typeBien)
+      if (d.typeTransaction)           setTypeTransaction(d.typeTransaction)
+      if (d.prix !== undefined)        setPrix(d.prix)
+      if (d.estMeuble !== undefined)   setEstMeuble(d.estMeuble)
+      if (d.sanitaire !== undefined)   setSanitaire(d.sanitaire)
+      if (d.sanitaireAutre)            setSanitaireAutre(d.sanitaireAutre)
+      if (d.finition !== undefined)    setFinition(d.finition)
+      if (d.prixLongSejour)            setPrixLongSejour(d.prixLongSejour)
+      if (d.prixSejourRestreint)       setPrixSejourRestreint(d.prixSejourRestreint)
+      if (d.prixHeure)                 setPrixHeure(d.prixHeure)
+      if (d.tarifsAutres)              setTarifsAutres(d.tarifsAutres)
+      if (d.ville)                     setVille(d.ville)
+      if (d.quartier)                  setQuartier(d.quartier)
+      if (d.arrondissement)            setArrondissement(d.arrondissement)
+      if (d.indicationAdresse)         setIndicationAdresse(d.indicationAdresse)
+      if (d.quartierSearch)            setQuartierSearch(d.quartierSearch)
+      if (d.chambres !== undefined)    setChambres(d.chambres)
+      if (d.salons !== undefined)      setSalons(d.salons)
+      if (d.cuisines !== undefined)    setCuisines(d.cuisines)
+      if (d.douches !== undefined)     setDouches(d.douches)
+      if (d.typeCuisine)               setTypeCuisine(d.typeCuisine)
+      if (d.cuisineAutre)              setCuisineAutre(d.cuisineAutre)
+      if (d.chambreACouloir !== undefined)  setChambreACouloir(d.chambreACouloir)
+      if (d.typeCour)                  setTypeCour(d.typeCour)
+      if (d.nbVoisins !== undefined)   setNbVoisins(d.nbVoisins)
+      if (d.accesVehicule !== undefined)   setAccesVehicule(d.accesVehicule)
+      if (d.nbVehicules !== undefined) setNbVehicules(d.nbVehicules)
+      if (d.avanceMois !== undefined)  setAvanceMois(d.avanceMois)
+      if (d.avanceAutre !== undefined) setAvanceAutre(d.avanceAutre)
+      if (d.avanceAutreText)           setAvanceAutreText(d.avanceAutreText)
+      if (d.echeanceMois !== undefined) setEcheanceMois(d.echeanceMois)
+      if (d.echeanceAutre !== undefined) setEcheanceAutre(d.echeanceAutre)
+      if (d.echeanceAutreText)         setEcheanceAutreText(d.echeanceAutreText)
+      if (d.loyerPrepayeMois !== undefined) setLoyerPrepayeMois(d.loyerPrepayeMois)
+      if (d.loyerPrepayeAutre !== undefined) setLoyerPrepayeAutre(d.loyerPrepayeAutre)
+      if (d.loyerPrepayeAutreText)     setLoyerPrepayeAutreText(d.loyerPrepayeAutreText)
+      if (d.cautionEau)                setCautionEau(d.cautionEau)
+      if (d.cautionElec)               setCautionElec(d.cautionElec)
+      if (d.electricite)               setElectricite(d.electricite)
+      if (d.prixKwh)                   setPrixKwh(d.prixKwh)
+      if (d.eau)                       setEau(d.eau)
+      if (d.forageGestion !== undefined) setForageGestion(d.forageGestion)
+      if (d.prixM3)                    setPrixM3(d.prixM3)
+      if (d.prixForage)                setPrixForage(d.prixForage)
+      if (d.equipementsBonus)          setEquipementsBonus(d.equipementsBonus)
+      if (d.equipementsAutre)          setEquipementsAutre(d.equipementsAutre)
+      if (d.alentours)                 setAlentours(d.alentours)
+      if (d.alentoursAutre)            setAlentoursAutre(d.alentoursAutre)
+      if (d.disponibilite)             setDisponibilite(d.disponibilite)
+      if (d.titreTerrain)              setTitreTerrain(d.titreTerrain)
+      if (d.titreFoncier !== undefined) setTitreFoncier(d.titreFoncier)
+      if (d.superficieTerrain)         setSuperficieTerrain(d.superficieTerrain)
+      if (d.superficieUnite)           setSuperficieUnite(d.superficieUnite)
+      if (d.documentTerrain !== undefined) setDocumentTerrain(d.documentTerrain)
+      if (d.positionTerrain)           setPositionTerrain(d.positionTerrain)
+      if (d.angleRue !== undefined)    setAngleRue(d.angleRue)
+      if (d.permissionConstruire !== undefined) setPermissionConstruire(d.permissionConstruire)
+      if (d.descriptionConstruction)   setDescriptionConstruction(d.descriptionConstruction)
+      if (d.estLoti !== undefined)     setEstLoti(d.estLoti)
+      if (d.detailsSupplementaires)    setDetailsSupplementaires(d.detailsSupplementaires)
+      if (d.typeVoie)                  setTypeVoie(d.typeVoie)
+      if (d.visibiliteBoutique)        setVisibiliteBoutique(d.visibiliteBoutique)
+      if (d.parkingClients)            setParkingClients(d.parkingClients)
+      if (d.description)               setDescription(d.description)
+      if (d.autresFrais)               setAutresFrais(d.autresFrais)
+    } catch { /* JSON corrompu */ }
+  }, []) // eslint-disable-line
 
   // Dérivés
   const isTerrain      = typeBien === 'terrain'
@@ -422,7 +528,7 @@ export default function PublierBienPage() {
   }
   const clearQuartier = () => { setQuartier(''); setArrondissement(''); setVille(''); setQuartierSearch('') }
 
-  const labelFinition  = (v: string) => ({ ordinaire: 'Ordinaire', semi_staffe: 'Semi-Staffé', staffe_carele: 'Staffé', haut_standing: 'Haut Standing / VIP' } as Record<string,string>)[v] ?? v
+  const labelFinition  = (v: string) => ({ ordinaire: 'Ordinaire', staffe_carele: 'Staffé', haut_standing: 'Haut Standing / VIP', villa: 'Villa' } as Record<string,string>)[v] ?? v
   const labelSanitaire = (v: string) => v === 'interieur' ? 'Sanitaire' : v === 'cour' ? 'Non sanitaire' : (sanitaireAutre.trim() || 'Autre à préciser')
   const labelCuisine   = (v: string) => v === 'separee_douche' ? 'Cuisine séparée de la douche' : v === 'americaine' ? 'Cuisine américaine' : (cuisineAutre.trim() || 'Autres')
   const labelCour      = (v: string) => v === 'entree_personnelle' ? 'Entrée personnelle' : 'Cour commune'
@@ -479,8 +585,8 @@ export default function PublierBienPage() {
     if (sanitaire === 'autre' && sanitaireAutre.trim()) a.sanitaire_autre = sanitaireAutre.trim()
     if (finition) a.finition = finition
     a.disponibilite = disponibilite
-    if (equipementsBonus.length) a.equipements = equipementsBonus
-    if (alentours.length) a.voisinage = alentours
+    if (equipementsBonus.length || equipementsAutre.trim()) a.equipements = [...equipementsBonus, ...(equipementsAutre.trim() ? [equipementsAutre.trim()] : [])]
+    if (alentours.length || alentoursAutre.trim()) a.voisinage = [...alentours, ...(alentoursAutre.trim() ? [alentoursAutre.trim()] : [])]
 
     if (isBoutique) {
       a.type_voie = typeVoie; a.visibilite = visibiliteBoutique; a.parking_clients = parkingClients
@@ -587,6 +693,7 @@ export default function PublierBienPage() {
       }
 
       sessionStorage.removeItem('proprietaire_info')
+      sessionStorage.removeItem(DRAFT_KEY)
       setCreated(true)
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Erreur lors de la création')
@@ -667,8 +774,23 @@ export default function PublierBienPage() {
         </nav>
       </header>
 
+      {/* Bannière proprietaire */}
+      {proprietaireInfo && (
+        <div style={{ position: 'absolute', top: '4rem', left: 0, right: 0, zIndex: 40, background: BLUE + '18', borderBottom: `1px solid ${BLUE}40`, padding: '6px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={BLUE} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+          </svg>
+          <span style={{ fontSize: 12, fontWeight: 700, color: BLUE }}>
+            Proprio : {proprietaireInfo.prenom} {proprietaireInfo.nom}
+          </span>
+          {proprietaireInfo.telephone && (
+            <span style={{ fontSize: 11, color: 'var(--p-muted)', marginLeft: 4 }}>{proprietaireInfo.telephone}</span>
+          )}
+        </div>
+      )}
+
       {/* Contenu + Footer */}
-      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', paddingTop: '4rem' }}>
+      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', paddingTop: proprietaireInfo ? '5.5rem' : '4rem' }}>
         <div style={{ flex: 1, overflowY: 'auto', padding: '20px 16px', maxWidth: 672, margin: '0 auto', width: '100%' }}
           onScroll={e => setIsScrolled(e.currentTarget.scrollTop > 40)}>
 
@@ -792,19 +914,24 @@ export default function PublierBienPage() {
                     </div>
                   ) : (
                     <div className="relative">
-                      <input type="text" value={quartierSearch}
+                      <input ref={quartierInputRef} type="text" value={quartierSearch}
                         onChange={e => setQuartierSearch(e.target.value)}
-                        onFocus={() => setQuartierInputFocused(true)}
-                        onBlur={() => setQuartierInputFocused(false)}
+                        onFocus={() => {
+                          setQuartierInputFocused(true)
+                          if (quartierInputRef.current) {
+                            const r = quartierInputRef.current.getBoundingClientRect()
+                            setDropdownRect({ top: r.bottom + 6, left: r.left, width: r.width })
+                          }
+                        }}
+                        onBlur={() => { setQuartierInputFocused(false); setDropdownRect(null) }}
                         placeholder="Rechercher un quartier…"
                         className="w-full rounded-xl pl-9 pr-4 py-3 text-sm outline-none border transition-colors"
                         style={baseInputStyle} />
                       <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} style={{ color: 'var(--p-muted)' }}>
                         <circle cx={11} cy={11} r={8} /><path strokeLinecap="round" d="M21 21l-4.35-4.35" />
                       </svg>
-                      {quartierInputFocused && (
-                        <div className="absolute top-full left-0 right-0 mt-1.5 rounded-xl border overflow-auto z-20"
-                          style={{ background: 'var(--p-card)', borderColor: 'var(--p-border)', maxHeight: 260 }}>
+                      {quartierInputFocused && dropdownRect && (
+                        <div style={{ position: 'fixed', top: dropdownRect.top, left: dropdownRect.left, width: dropdownRect.width, zIndex: 9999, background: 'var(--p-card)', borderColor: 'var(--p-border)', border: '1px solid var(--p-border)', borderRadius: 12, maxHeight: 260, overflowY: 'auto' }}>
                           {filteredQuartiers.length === 0 ? (
                             quartierSearch.trim() ? (
                               <button type="button" onMouseDown={() => selectQuartier(quartierSearch.trim(), null, null)}
@@ -838,6 +965,15 @@ export default function PublierBienPage() {
                     </div>
                   )}
                 </div>
+                {quartier && arrondissement && (
+                  <div>
+                    <label className="text-[11px] font-bold uppercase tracking-[0.14em] mb-2 block" style={{ color: 'var(--p-muted)' }}>Arrondissement</label>
+                    <div className="px-4 py-3 rounded-xl border text-sm font-semibold"
+                      style={{ background: 'var(--p-deep)', borderColor: 'var(--p-border)', color: 'var(--p-muted)' }}>
+                      {arrondissement}
+                    </div>
+                  </div>
+                )}
                 <div>
                   <label className="text-[11px] font-bold uppercase tracking-[0.14em] mb-2 block" style={{ color: 'var(--p-muted)' }}>
                     Indication précise <span style={{ textTransform: 'none', letterSpacing: 0, fontWeight: 400 }}>(optionnel)</span>
@@ -1003,6 +1139,12 @@ export default function PublierBienPage() {
                           onClick={() => setEquipementsBonus(e => e.includes(o.value) ? e.filter(x => x !== o.value) : [...e, o.value])} />
                       ))}
                     </div>
+                    <div className="mt-3">
+                      <p className="text-xs font-semibold mb-1.5" style={{ color: 'var(--p-muted)' }}>Autre (à préciser)</p>
+                      <input value={equipementsAutre} onChange={e => setEquipementsAutre(e.target.value)}
+                        placeholder="Ex: Vitrine lumineuse..." className="w-full rounded-xl px-4 py-2.5 text-sm outline-none border transition-colors"
+                        style={baseInputStyle} onFocus={e => (e.currentTarget.style.borderColor = BLUE)} onBlur={e => (e.currentTarget.style.borderColor = 'var(--p-border)')} />
+                    </div>
                   </Card>
                   <Card>
                     <Section title="À proximité" />
@@ -1011,6 +1153,12 @@ export default function PublierBienPage() {
                         <Chip key={o.value} label={o.label} active={alentours.includes(o.value)}
                           onClick={() => setAlentours(a => a.includes(o.value) ? a.filter(x => x !== o.value) : [...a, o.value])} />
                       ))}
+                    </div>
+                    <div className="mt-3">
+                      <p className="text-xs font-semibold mb-1.5" style={{ color: 'var(--p-muted)' }}>Autre lieu (à préciser)</p>
+                      <input value={alentoursAutre} onChange={e => setAlentoursAutre(e.target.value)}
+                        placeholder="Ex: Gare routière..." className="w-full rounded-xl px-4 py-2.5 text-sm outline-none border transition-colors"
+                        style={baseInputStyle} onFocus={e => (e.currentTarget.style.borderColor = BLUE)} onBlur={e => (e.currentTarget.style.borderColor = 'var(--p-border)')} />
                     </div>
                   </Card>
                 </>
@@ -1156,9 +1304,34 @@ export default function PublierBienPage() {
               </Card>
               <Card>
                 <Section title="Électricité" />
-                <ChoiceList options={[
-                  { value: 'non', label: 'Non' }, { value: 'sbee', label: 'SBEE' }, { value: 'decompteur', label: 'Décompteur' },
-                ]} value={electricite} onChange={setElectricite} />
+                <div className="space-y-2">
+                  {([
+                    { value: 'non', label: 'Non', sub: '' },
+                    { value: 'sbee', label: 'SBEE', sub: 'Branchement direct réseau national', logo: (
+                      <svg width="36" height="20" viewBox="0 0 72 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="72" height="30" rx="4" fill="#F5A623"/>
+                        <text x="36" y="21" textAnchor="middle" fontFamily="sans-serif" fontWeight="bold" fontSize="14" fill="white">SBEE</text>
+                      </svg>
+                    )},
+                    { value: 'decompteur', label: 'Décompteur', sub: 'Compteur individuel dans le logement' },
+                  ] as any[]).map(o => {
+                    const isActive = electricite === o.value
+                    return (
+                      <button key={o.value} type="button" onClick={() => setElectricite(o.value)}
+                        className="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl border-2 text-left transition-all"
+                        style={{ borderColor: isActive ? BLUE : 'var(--p-border)', background: isActive ? BLUE + '18' : 'var(--p-deep)' }}>
+                        <span>
+                          <span className="block text-sm font-semibold" style={{ color: isActive ? BLUE : 'var(--p-text)' }}>{o.label}</span>
+                          {o.sub && <span className="block text-xs mt-0.5" style={{ color: 'var(--p-muted)' }}>{o.sub}</span>}
+                        </span>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {o.logo}
+                          {isActive && <span className="font-bold" style={{ color: BLUE }}>✓</span>}
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
                 {electricite === 'decompteur' && (
                   <div className="mt-3">
                     <p className="text-xs font-semibold mb-2" style={{ color: 'var(--p-muted)' }}>Prix du kWh</p>
@@ -1168,10 +1341,35 @@ export default function PublierBienPage() {
               </Card>
               <Card>
                 <Section title="Eau" />
-                <ChoiceList options={[
-                  { value: 'non', label: 'Non' }, { value: 'soneb', label: 'SONEB' },
-                  { value: 'decompteur_soneb', label: 'Décompteur SONEB' }, { value: 'forage', label: 'Forage' },
-                ]} value={eau} onChange={setEau} />
+                <div className="space-y-2">
+                  {([
+                    { value: 'non', label: 'Non', sub: '' },
+                    { value: 'soneb', label: 'SONEB', sub: 'Branchement direct réseau SONEB', logo: (
+                      <svg width="52" height="20" viewBox="0 0 90 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="90" height="30" rx="4" fill="#0077CC"/>
+                        <text x="45" y="21" textAnchor="middle" fontFamily="sans-serif" fontWeight="bold" fontSize="14" fill="white">SONEB</text>
+                      </svg>
+                    )},
+                    { value: 'decompteur_soneb', label: 'Décompteur SONEB', sub: 'Compteur individuel SONEB' },
+                    { value: 'forage', label: 'Forage', sub: 'Forage dans la cour' },
+                  ] as any[]).map(o => {
+                    const isActive = eau === o.value
+                    return (
+                      <button key={o.value} type="button" onClick={() => setEau(o.value)}
+                        className="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl border-2 text-left transition-all"
+                        style={{ borderColor: isActive ? BLUE : 'var(--p-border)', background: isActive ? BLUE + '18' : 'var(--p-deep)' }}>
+                        <span>
+                          <span className="block text-sm font-semibold" style={{ color: isActive ? BLUE : 'var(--p-text)' }}>{o.label}</span>
+                          {o.sub && <span className="block text-xs mt-0.5" style={{ color: 'var(--p-muted)' }}>{o.sub}</span>}
+                        </span>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {o.logo}
+                          {isActive && <span className="font-bold" style={{ color: BLUE }}>✓</span>}
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
                 {eau === 'decompteur_soneb' && (
                   <div className="mt-3">
                     <p className="text-xs font-semibold mb-2" style={{ color: 'var(--p-muted)' }}>Prix du m³</p>
@@ -1235,19 +1433,35 @@ export default function PublierBienPage() {
                                 onClick={() => setEquipementsBonus(e => e.includes(o.value) ? e.filter(x => x !== o.value) : [...e, o.value])} />
                             ))}
                           </div>
-                        </Card>
-                      )}
-                      {finition === 'haut_standing' && (
-                        <Card>
-                          <Section title="À proximité du bien" />
-                          <div className="flex flex-wrap gap-2">
-                            {ALENTOURS_OPTS.map(o => (
-                              <Chip key={o.value} label={o.label} active={alentours.includes(o.value)}
-                                onClick={() => setAlentours(a => a.includes(o.value) ? a.filter(x => x !== o.value) : [...a, o.value])} />
-                            ))}
+                          <div className="mt-3">
+                            <p className="text-xs font-semibold mb-1.5" style={{ color: 'var(--p-muted)' }}>Autre équipement (à préciser)</p>
+                            <input value={equipementsAutre} onChange={e => setEquipementsAutre(e.target.value)}
+                              placeholder="Ex: Piscine, Salle de sport..."
+                              className="w-full rounded-xl px-4 py-2.5 text-sm outline-none border transition-colors"
+                              style={baseInputStyle}
+                              onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
+                              onBlur={e => (e.currentTarget.style.borderColor = 'var(--p-border)')} />
                           </div>
                         </Card>
                       )}
+                      <Card>
+                        <Section title="À proximité du bien" />
+                        <div className="flex flex-wrap gap-2">
+                          {ALENTOURS_OPTS.map(o => (
+                            <Chip key={o.value} label={o.label} active={alentours.includes(o.value)}
+                              onClick={() => setAlentours(a => a.includes(o.value) ? a.filter(x => x !== o.value) : [...a, o.value])} />
+                          ))}
+                        </div>
+                        <div className="mt-3">
+                          <p className="text-xs font-semibold mb-1.5" style={{ color: 'var(--p-muted)' }}>Autre lieu proche (à préciser)</p>
+                          <input value={alentoursAutre} onChange={e => setAlentoursAutre(e.target.value)}
+                            placeholder="Ex: Stade, Plage privée..."
+                            className="w-full rounded-xl px-4 py-2.5 text-sm outline-none border transition-colors"
+                            style={baseInputStyle}
+                            onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
+                            onBlur={e => (e.currentTarget.style.borderColor = 'var(--p-border)')} />
+                        </div>
+                      </Card>
                     </>
                   )}
                 </>
@@ -1268,7 +1482,7 @@ export default function PublierBienPage() {
               <Card>
                 <Section title="Notes / Précisions (optionnel)" />
                 <p className="text-xs mb-3" style={{ color: 'var(--p-muted)' }}>Ces informations s'afficheront dans votre annonce.</p>
-                <textarea value={description} onChange={e => setDescription(e.target.value)} rows={5}
+                <textarea value={description} onChange={e => setDescription(e.target.value)} rows={8}
                   placeholder="Points forts, accès, conditions particulières, règles de la maison..."
                   className="w-full rounded-xl px-4 py-3 text-sm outline-none resize-none border transition-colors"
                   style={baseInputStyle}
@@ -1346,22 +1560,38 @@ export default function PublierBienPage() {
                     )}
                   </>
                 )}
+                {!isTerrain && !isBoutique && showPieces && (
+                  <RecapSection title="Pièces" items={[
+                    `${chambres} chambre${chambres > 1 ? 's' : ''}`,
+                    `${salons} salon${salons > 1 ? 's' : ''}`,
+                    ...(typeBien !== 'chambre_salon' ? [`${cuisines} cuisine${cuisines > 1 ? 's' : ''}`, `${douches} douche${douches > 1 ? 's' : ''}`] : []),
+                  ]} />
+                )}
                 {!isTerrain && !isBoutique && (
                   <RecapSection title="Confort" items={[
                     `Cuisine : ${labelCuisine(typeCuisine)}`,
                     `Accès / Cour : ${labelCour(typeCour)}`,
+                    ...(typeCour === 'commune' ? [`Voisins : ${nbVoisins}`] : []),
+                    ...(typeCour === 'commune' && accesVehicule !== null ? [`Accès véhicule : ${accesVehicule ? `Oui (${nbVehicules} véhicule${nbVehicules > 1 ? 's' : ''})` : 'Non'}`] : []),
                     `Électricité : ${labelElec(electricite)}`,
                     `Eau : ${labelEau(eau)}`,
+                    ...(typeBien === 'chambre_salon' ? [`Chambre à couloir : ${chambreACouloir ? 'Oui' : 'Non'}`] : []),
                   ]} />
                 )}
-                {equipementsBonus.length > 0 && (
-                  <RecapSection title="Équipements" items={equipementsBonus.map(e =>
-                    (EQUIPEMENTS_RESIDENTIEL.find(o => o.value === e) ?? EQUIPEMENTS_BOUTIQUE.find(o => o.value === e))?.label ?? e
-                  )} />
-                )}
-                {alentours.length > 0 && (
-                  <RecapSection title="À proximité" items={alentours.map(a => ALENTOURS_OPTS.find(o => o.value === a)?.label ?? a)} />
-                )}
+                {equipementsBonus.length > 0 || equipementsAutre.trim() ? (
+                  <RecapSection title="Équipements" items={[
+                    ...equipementsBonus.map(e =>
+                      (EQUIPEMENTS_RESIDENTIEL.find(o => o.value === e) ?? EQUIPEMENTS_BOUTIQUE.find(o => o.value === e))?.label ?? e
+                    ),
+                    ...(equipementsAutre.trim() ? [equipementsAutre.trim()] : []),
+                  ]} />
+                ) : null}
+                {alentours.length > 0 || alentoursAutre.trim() ? (
+                  <RecapSection title="À proximité" items={[
+                    ...alentours.map(a => ALENTOURS_OPTS.find(o => o.value === a)?.label ?? a),
+                    ...(alentoursAutre.trim() ? [alentoursAutre.trim()] : []),
+                  ]} />
+                ) : null}
                 {!isTerrain && (
                   <RecapSection title="Disponibilité" items={[
                     disponibilite === 'immediate' ? 'Disponible immédiatement' : 'En finition — Bientôt disponible'
