@@ -117,24 +117,28 @@ const parsePrix = (t: string): number | undefined => {
 const formatFcfa = (v: number) => v > 0 ? `${Math.round(v).toLocaleString('fr-FR')} FCFA` : '0 FCFA'
 
 
-// ─── UI primitives ────────────────────────────────────────────────────────────
+// ─── UI primitives (inline styles only — pas de Tailwind dans ce projet) ──────
 
-function Card({ children, className }: { children: ReactNode; className?: string }) {
-  return (
-    <div className={`rounded-2xl border ${className ?? ''}`}
-      style={{ background: '#fff', borderColor: 'var(--c-border)', padding: '1rem' }}>
-      {children}
-    </div>
-  )
+const S: Record<string, CSSProperties> = {
+  card: { background: '#fff', border: '1px solid var(--c-border)', borderRadius: 14, padding: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', marginBottom: 0 },
+  row:  { display: 'flex', alignItems: 'center' },
+  col:  { display: 'flex', flexDirection: 'column' },
+  wrap: { display: 'flex', flexWrap: 'wrap', gap: 8 },
+  g4:   { gap: 4 }, g8: { gap: 8 }, g10: { gap: 10 }, g12: { gap: 12 }, g16: { gap: 16 },
+  grid2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 },
+  grid3: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 },
+}
+
+function Card({ children }: { children: ReactNode }) {
+  return <div style={S.card}>{children}</div>
 }
 
 function Section({ title, required }: { title: string; required?: boolean }) {
   return (
-    <div className="flex items-center gap-2 mb-3">
-      <p className="text-[11px] font-bold uppercase tracking-[0.16em]" style={{ color: 'var(--c-muted)' }}>{title}</p>
+    <div style={{ ...S.row, gap: 8, marginBottom: 12 }}>
+      <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--c-muted)', margin: 0 }}>{title}</p>
       {required && (
-        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded"
-          style={{ color: BLUE, background: BLUE + '20' }}>Obligatoire</span>
+        <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4, color: BLUE, background: BLUE + '22' }}>Obligatoire</span>
       )}
     </div>
   )
@@ -148,26 +152,25 @@ function ChoiceList({ options, value, onChange, disabledValues, onDeselect }: {
   onDeselect?: () => void
 }) {
   return (
-    <div className="space-y-2">
+    <div style={{ ...S.col, gap: 8 }}>
       {options.map(o => {
         const isDisabled = disabledValues?.includes(o.value) ?? false
         const isActive = value === o.value
         return (
           <button key={o.value} type="button" disabled={isDisabled}
             onClick={() => (isActive && onDeselect) ? onDeselect() : onChange(o.value)}
-            className="w-full flex items-start justify-between gap-2 px-4 py-3 rounded-xl border-2 text-left transition-all"
             style={{
-              borderColor: isActive ? BLUE : 'var(--c-border)',
-              background: isActive ? BLUE + '18' : 'var(--c-bg)',
-              opacity: isDisabled ? 0.4 : 1,
-              cursor: isDisabled ? 'not-allowed' : 'pointer',
+              width: '100%', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8,
+              padding: '12px 16px', borderRadius: 12, border: `2px solid ${isActive ? BLUE : 'var(--c-border)'}`,
+              background: isActive ? BLUE + '12' : 'var(--c-bg)',
+              opacity: isDisabled ? 0.4 : 1, cursor: isDisabled ? 'not-allowed' : 'pointer',
+              textAlign: 'left', transition: 'border-color 0.15s, background 0.15s',
             }}>
             <span>
-              <span className="block text-sm font-semibold"
-                style={{ color: isActive ? BLUE : 'var(--c-text)' }}>{o.label}</span>
-              {o.sub && <span className="block text-xs mt-0.5" style={{ color: 'var(--c-muted)' }}>{o.sub}</span>}
+              <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: isActive ? BLUE : 'var(--c-text)' }}>{o.label}</span>
+              {o.sub && <span style={{ display: 'block', fontSize: 12, marginTop: 2, color: 'var(--c-muted)' }}>{o.sub}</span>}
             </span>
-            {isActive && !isDisabled && <span className="font-bold shrink-0" style={{ color: BLUE }}>✓</span>}
+            {isActive && !isDisabled && <span style={{ fontWeight: 700, flexShrink: 0, color: BLUE }}>✓</span>}
           </button>
         )
       })}
@@ -178,11 +181,10 @@ function ChoiceList({ options, value, onChange, disabledValues, onDeselect }: {
 function Chip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return (
     <button type="button" onClick={onClick}
-      className="px-4 py-2.5 rounded-xl border-2 text-xs font-bold text-center transition-all"
       style={{
-        borderColor: active ? BLUE : 'var(--c-border)',
-        background: active ? BLUE + '18' : 'transparent',
-        color: active ? BLUE : 'var(--c-muted)',
+        padding: '8px 16px', borderRadius: 10, border: `2px solid ${active ? BLUE : 'var(--c-border)'}`,
+        background: active ? BLUE + '12' : 'transparent', color: active ? BLUE : 'var(--c-muted)',
+        fontSize: 12, fontWeight: 700, cursor: 'pointer', transition: 'all 0.15s',
       }}>
       {label}
     </button>
@@ -193,16 +195,14 @@ function Counter({ label, value, onChange, min = 0 }: {
   label: string; value: number; onChange: (v: number) => void; min?: number
 }) {
   return (
-    <div className="flex items-center justify-between py-2.5">
-      <span className="text-sm font-semibold" style={{ color: 'var(--c-text)' }}>{label}</span>
-      <div className="flex items-center gap-3">
+    <div style={{ ...S.row, justifyContent: 'space-between', padding: '10px 0' }}>
+      <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--c-text)' }}>{label}</span>
+      <div style={{ ...S.row, gap: 12 }}>
         <button type="button" disabled={value <= min} onClick={() => onChange(value - 1)}
-          className="w-8 h-8 rounded-lg flex items-center justify-center font-bold border disabled:opacity-40 transition-colors"
-          style={{ background: 'var(--c-bg)', borderColor: 'var(--c-border)', color: 'var(--c-text)' }}>−</button>
-        <span className="w-6 text-center font-bold" style={{ color: 'var(--c-text)' }}>{value}</span>
+          style={{ width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, border: '1px solid var(--c-border)', background: 'var(--c-bg)', color: 'var(--c-text)', cursor: value <= min ? 'not-allowed' : 'pointer', opacity: value <= min ? 0.4 : 1 }}>−</button>
+        <span style={{ width: 24, textAlign: 'center', fontWeight: 700, color: 'var(--c-text)' }}>{value}</span>
         <button type="button" onClick={() => onChange(value + 1)}
-          className="w-8 h-8 rounded-lg flex items-center justify-center font-bold transition-colors"
-          style={{ background: BLUE + '20', color: BLUE }}>+</button>
+          style={{ width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, background: BLUE + '18', color: BLUE, border: 'none', cursor: 'pointer' }}>+</button>
       </div>
     </div>
   )
@@ -214,7 +214,7 @@ function NumberPicker({ presets, unit, value, isCustom, onPick, onCustomStart, c
 }) {
   return (
     <div>
-      <div className="flex flex-wrap gap-2">
+      <div style={S.wrap}>
         {presets.map(n => (
           <Chip key={n} label={unit(n)} active={!isCustom && value === n} onClick={() => onPick(n)} />
         ))}
@@ -222,8 +222,7 @@ function NumberPicker({ presets, unit, value, isCustom, onPick, onCustomStart, c
       </div>
       {isCustom && (
         <input type="number" value={customText} onChange={e => onCustomText(e.target.value)} placeholder="Nombre"
-          className="mt-2.5 w-full rounded-xl px-4 py-2.5 text-sm outline-none border"
-          style={{ background: 'var(--c-bg)', borderColor: BLUE, color: 'var(--c-text)' }} />
+          style={{ marginTop: 10, width: '100%', borderRadius: 10, padding: '10px 16px', fontSize: 14, outline: 'none', border: `1px solid ${BLUE}`, background: 'var(--c-bg)', color: 'var(--c-text)', boxSizing: 'border-box' }} />
       )}
     </div>
   )
@@ -231,33 +230,31 @@ function NumberPicker({ presets, unit, value, isCustom, onPick, onCustomStart, c
 
 function MoneyInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
   return (
-    <div className="relative">
+    <div style={{ position: 'relative' }}>
       <input type="number" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder ?? '0'}
-        className="w-full rounded-xl pl-4 pr-16 py-3 text-sm outline-none border transition-colors"
-        style={{ background: 'var(--c-bg)', borderColor: 'var(--c-border)', color: 'var(--c-text)' }}
+        style={{ width: '100%', borderRadius: 10, padding: '12px 56px 12px 16px', fontSize: 14, outline: 'none', border: '1px solid var(--c-border)', background: 'var(--c-bg)', color: 'var(--c-text)', transition: 'border-color 0.15s', boxSizing: 'border-box' }}
         onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
         onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
-      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold"
-        style={{ color: 'var(--c-muted)' }}>FCFA</span>
+      <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 12, fontWeight: 600, color: 'var(--c-muted)', pointerEvents: 'none' }}>FCFA</span>
     </div>
   )
 }
 
-const baseInputStyle: CSSProperties = {
-  background: 'var(--c-bg)',
-  borderColor: 'var(--c-border)',
-  color: 'var(--c-text)',
+const baseInput: CSSProperties = {
+  width: '100%', borderRadius: 10, padding: '12px 16px', fontSize: 14, outline: 'none',
+  border: '1px solid var(--c-border)', background: 'var(--c-bg)', color: 'var(--c-text)',
+  boxSizing: 'border-box', transition: 'border-color 0.15s',
 }
 
 function RecapSection({ title, items }: { title: string; items: string[] }) {
   if (!items.length) return null
   return (
-    <div className="py-3 border-b last:border-b-0" style={{ borderColor: 'var(--c-border)' }}>
-      <p className="text-xs font-bold mb-2" style={{ color: BLUE }}>{title}</p>
+    <div style={{ padding: '12px 0', borderBottom: '1px solid var(--c-border)' }}>
+      <p style={{ fontSize: 12, fontWeight: 700, marginBottom: 8, color: BLUE }}>{title}</p>
       {items.map((item, i) => (
-        <div key={i} className="flex items-start gap-1.5 mb-1 last:mb-0">
-          <span className="font-bold text-xs shrink-0" style={{ color: BLUE }}>•</span>
-          <span className="text-sm leading-snug" style={{ color: 'var(--c-text)' }}>{item}</span>
+        <div key={i} style={{ ...S.row, alignItems: 'flex-start', gap: 6, marginBottom: 4 }}>
+          <span style={{ fontWeight: 700, fontSize: 12, flexShrink: 0, color: BLUE }}>•</span>
+          <span style={{ fontSize: 14, lineHeight: 1.35, color: 'var(--c-text)' }}>{item}</span>
         </div>
       ))}
     </div>
@@ -756,18 +753,18 @@ export default function PublierBienPage() {
         </div>
       )}
 
-      <div className="space-y-4">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
           {/* ═══ ÉTAPE 0 : TYPE & PRIX ═══ */}
           {step === 0 && (
-            <div className="space-y-4">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <Card>
                 <Section title="Type de bien" />
-                <div className="flex flex-wrap gap-2">
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   {TYPES_BIEN.map(t => (
                     <button key={t.key} type="button" onClick={() => setTypeBien(t.key)}
-                      className="px-3.5 py-2.5 rounded-xl border-2 text-xs font-bold transition-all"
                       style={{
+                        padding: '10px 14px', borderRadius: 12, border: `2px solid`, fontSize: 12, fontWeight: 700, transition: 'all 0.15s',
                         borderColor: typeBien === t.key ? BLUE : 'var(--c-border)',
                         background: typeBien === t.key ? BLUE : 'transparent',
                         color: typeBien === t.key ? 'white' : 'var(--c-muted)',
@@ -785,10 +782,9 @@ export default function PublierBienPage() {
                   {sanitaire === 'autre' && (
                     <input value={sanitaireAutre} onChange={e => setSanitaireAutre(e.target.value)}
                       placeholder="Précisez la configuration des sanitaires"
-                      className="mt-2 w-full rounded-xl px-4 py-2.5 text-sm outline-none border"
-                      style={baseInputStyle} />
+                      style={{ ...baseInput, marginTop: 8 }} />
                   )}
-                  <div className="mt-5">
+                  <div style={{ marginTop: 20 }}>
                     <Section title="Finition / Standing" />
                     <ChoiceList options={FINITION_OPTS} value={finition} onChange={onSelectFinition} />
                   </div>
@@ -798,7 +794,7 @@ export default function PublierBienPage() {
               {peutEtreMeuble && (
                 <Card>
                   <Section title="État du bien" />
-                  <div className="grid grid-cols-2 gap-2.5">
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                     <Chip label="Vide" active={!estMeuble} onClick={() => setEstMeuble(false)} />
                     <Chip label="Meublé / Guesthouse" active={estMeuble} onClick={() => setEstMeuble(true)} />
                   </div>
@@ -807,7 +803,7 @@ export default function PublierBienPage() {
 
               <Card>
                 <Section title="Transaction" />
-                <div className="grid grid-cols-2 gap-2.5">
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                   <Chip label="Location" active={typeTransaction === 'location'} onClick={() => setTypeTransaction('location')} />
                   <Chip label="Vente"    active={typeTransaction === 'vente'}    onClick={() => setTypeTransaction('vente')}    />
                 </div>
@@ -816,30 +812,30 @@ export default function PublierBienPage() {
               {isMeuble ? (
                 <Card>
                   <Section title="Tarification (par durée de séjour)" />
-                  <div className="space-y-3">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                     {[
                       { label: 'Court séjour (par nuit)', value: prixSejourRestreint, onChange: setPrixSejourRestreint },
                       { label: 'Long séjour (mensuel)',   value: prixLongSejour,      onChange: setPrixLongSejour      },
                       { label: "À l'heure",               value: prixHeure,           onChange: setPrixHeure           },
                     ].map(row => (
-                      <div key={row.label} className="flex items-center gap-2.5">
-                        <span className="flex-1 text-xs font-semibold" style={{ color: 'var(--c-text)' }}>{row.label}</span>
-                        <div className="w-32"><MoneyInput value={row.value} onChange={row.onChange} /></div>
+                      <div key={row.label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: 'var(--c-text)' }}>{row.label}</span>
+                        <div style={{ width: 128 }}><MoneyInput value={row.value} onChange={row.onChange} /></div>
                       </div>
                     ))}
                     {tarifsAutres.map((t, i) => (
-                      <div key={i} className="flex items-center gap-2">
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <input value={t.label}
                           onChange={e => setTarifsAutres(a => a.map((x, idx) => idx === i ? { ...x, label: e.target.value } : x))}
-                          placeholder="Libellé" className="flex-1 rounded-xl px-3 py-2.5 text-sm outline-none border" style={baseInputStyle} />
-                        <div className="w-28">
+                          placeholder="Libellé" style={{ ...baseInput, flex: 1 }} />
+                        <div style={{ width: 112 }}>
                           <MoneyInput value={t.prix} onChange={v => setTarifsAutres(a => a.map((x, idx) => idx === i ? { ...x, prix: v } : x))} />
                         </div>
                         <button type="button" onClick={() => setTarifsAutres(a => a.filter((_, idx) => idx !== i))} style={{ color: '#EF4444' }}>✕</button>
                       </div>
                     ))}
                     <button type="button" onClick={() => setTarifsAutres(a => [...a, { label: '', prix: '' }])}
-                      className="text-xs font-bold" style={{ color: BLUE }}>+ Ajouter un tarif</button>
+                      style={{ fontSize: 12, fontWeight: 700, color: BLUE, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>+ Ajouter un tarif</button>
                   </div>
                 </Card>
               ) : (
@@ -854,24 +850,22 @@ export default function PublierBienPage() {
           {/* ═══ ÉTAPE 1 : LOCALISATION ═══ */}
           {step === 1 && (
             <Card>
-              <div className="space-y-4">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 <div>
-                  <label className="text-[11px] font-bold uppercase tracking-[0.14em] mb-2 block" style={{ color: 'var(--c-muted)' }}>Quartier</label>
+                  <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 8, display: 'block', color: 'var(--c-muted)' }}>Quartier</label>
                   {quartier ? (
-                    <div className="flex items-center gap-3 px-4 py-3 rounded-xl border"
-                      style={{ background: 'rgba(72,199,116,0.09)', borderColor: 'rgba(72,199,116,0.45)' }}>
-                      <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="#48C774" strokeWidth={2.5}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 12, border: '1px solid rgba(72,199,116,0.45)', background: 'rgba(72,199,116,0.09)' }}>
+                      <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="#48C774" strokeWidth={2.5} style={{ flexShrink: 0 }}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      <span className="flex-1 text-sm font-semibold" style={{ color: '#48C774' }}>
+                      <span style={{ flex: 1, fontSize: 14, fontWeight: 600, color: '#48C774' }}>
                         {quartier}{arrondissement ? `, ${arrondissement}` : ''}{ville ? `, ${ville}` : ''}
                       </span>
                       <button type="button" onClick={clearQuartier}
-                        className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold"
-                        style={{ background: 'rgba(72,199,116,0.2)', color: '#48C774' }}>✕</button>
+                        style={{ width: 20, height: 20, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, background: 'rgba(72,199,116,0.2)', color: '#48C774', border: 'none', cursor: 'pointer' }}>✕</button>
                     </div>
                   ) : (
-                    <div className="relative">
+                    <div style={{ position: 'relative' }}>
                       <input ref={quartierInputRef} type="text" value={quartierSearch}
                         onChange={e => setQuartierSearch(e.target.value)}
                         onFocus={() => {
@@ -883,9 +877,8 @@ export default function PublierBienPage() {
                         }}
                         onBlur={() => { setQuartierInputFocused(false); setDropdownRect(null) }}
                         placeholder="Rechercher un quartier…"
-                        className="w-full rounded-xl pl-9 pr-4 py-3 text-sm outline-none border transition-colors"
-                        style={baseInputStyle} />
-                      <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} style={{ color: 'var(--c-muted)' }}>
+                        style={{ ...baseInput, paddingLeft: 36 }} />
+                      <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--c-muted)', pointerEvents: 'none' }}>
                         <circle cx={11} cy={11} r={8} /><path strokeLinecap="round" d="M21 21l-4.35-4.35" />
                       </svg>
                       {quartierInputFocused && dropdownRect && (
@@ -893,29 +886,28 @@ export default function PublierBienPage() {
                           {filteredQuartiers.length === 0 ? (
                             quartierSearch.trim() ? (
                               <button type="button" onMouseDown={() => selectQuartier(quartierSearch.trim(), null, null)}
-                                className="w-full flex items-center gap-2.5 px-4 py-3 text-left text-sm font-semibold">
-                                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke={BLUE} strokeWidth={2}>
+                                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', textAlign: 'left', fontSize: 14, fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-text)' }}>
+                                <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={BLUE} strokeWidth={2} style={{ flexShrink: 0 }}>
                                   <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                 </svg>
                                 <span style={{ color: BLUE }}>Utiliser « {quartierSearch.trim()} »</span>
                               </button>
                             ) : (
-                              <p className="px-4 py-3 text-sm" style={{ color: 'var(--c-muted)' }}>Commencez à taper…</p>
+                              <p style={{ padding: '12px 16px', fontSize: 14, color: 'var(--c-muted)', margin: 0 }}>Commencez à taper…</p>
                             )
                           ) : filteredQuartiers.map(q => (
                             <button key={q.nom + q.arrondissement} type="button"
                               onMouseDown={() => selectQuartier(q.nom, q.arrondissement, q.ville)}
-                              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-sm border-b transition-colors"
-                              style={{ borderColor: 'var(--c-border)', color: 'var(--c-text)' }}
+                              style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', textAlign: 'left', fontSize: 14, color: 'var(--c-text)', background: 'none', border: 'none', borderBottom: '1px solid var(--c-border)', cursor: 'pointer' }}
                               onMouseEnter={e => (e.currentTarget.style.background = 'var(--c-bg)')}
                               onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                              <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} style={{ color: 'var(--c-muted)' }}>
+                              <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} style={{ color: 'var(--c-muted)', flexShrink: 0 }}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                               </svg>
-                              <span className="flex-1">{q.nom}</span>
-                              <span className="text-[11px]" style={{ color: 'var(--c-muted)' }}>{q.arrondissement}</span>
+                              <span style={{ flex: 1 }}>{q.nom}</span>
+                              <span style={{ fontSize: 11, color: 'var(--c-muted)' }}>{q.arrondissement}</span>
                             </button>
                           ))}
                         </div>
@@ -925,21 +917,19 @@ export default function PublierBienPage() {
                 </div>
                 {quartier && arrondissement && (
                   <div>
-                    <label className="text-[11px] font-bold uppercase tracking-[0.14em] mb-2 block" style={{ color: 'var(--c-muted)' }}>Arrondissement</label>
-                    <div className="px-4 py-3 rounded-xl border text-sm font-semibold"
-                      style={{ background: 'var(--c-bg)', borderColor: 'var(--c-border)', color: 'var(--c-muted)' }}>
+                    <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 8, display: 'block', color: 'var(--c-muted)' }}>Arrondissement</label>
+                    <div style={{ padding: '12px 16px', borderRadius: 12, border: '1px solid var(--c-border)', fontSize: 14, fontWeight: 600, background: 'var(--c-bg)', color: 'var(--c-muted)' }}>
                       {arrondissement}
                     </div>
                   </div>
                 )}
                 <div>
-                  <label className="text-[11px] font-bold uppercase tracking-[0.14em] mb-2 block" style={{ color: 'var(--c-muted)' }}>
+                  <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 8, display: 'block', color: 'var(--c-muted)' }}>
                     Indication précise <span style={{ textTransform: 'none', letterSpacing: 0, fontWeight: 400 }}>(optionnel)</span>
                   </label>
                   <input value={indicationAdresse} onChange={e => setIndicationAdresse(e.target.value)}
                     placeholder="Ex: Derrière le CEG, à 200m du goudron..."
-                    className="w-full rounded-xl px-4 py-3 text-sm outline-none border transition-colors"
-                    style={baseInputStyle}
+                    style={baseInput}
                     onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
                     onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
                 </div>
@@ -949,26 +939,24 @@ export default function PublierBienPage() {
 
           {/* ═══ ÉTAPE 2 : TERRAIN ═══ */}
           {step === 2 && isTerrain && (
-            <div className="space-y-4">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <Card>
                 <Section title="Nom du bien" required />
                 <textarea value={titreTerrain} onChange={e => setTitreTerrain(e.target.value)} rows={2} maxLength={120}
                   placeholder="Ex: Parcelle bâtie à vendre en angle de rue à Cotonou Saint Jean"
-                  className="w-full rounded-xl px-4 py-3 text-sm outline-none resize-none border transition-colors"
-                  style={baseInputStyle}
+                  style={{ ...baseInput, resize: 'none' }}
                   onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
                   onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
               </Card>
               <Card>
                 <Section title="Superficie" required />
-                <div className="flex gap-2.5">
+                <div style={{ display: 'flex', gap: 10 }}>
                   <input type="number" value={superficieTerrain} onChange={e => setSuperficieTerrain(e.target.value)}
                     placeholder={superficieUnite === 'ha' ? 'Ex: 2.5' : 'Ex: 25000'}
-                    className="flex-1 min-w-0 rounded-xl px-4 py-3 text-sm outline-none border transition-colors"
-                    style={baseInputStyle}
+                    style={{ ...baseInput, flex: 1, minWidth: 0 }}
                     onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
                     onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
-                  <div className="flex rounded-xl border p-1 flex-shrink-0" style={{ borderColor: 'var(--c-border)', background: 'var(--c-bg)' }}>
+                  <div style={{ display: 'flex', borderRadius: 12, border: '1px solid var(--c-border)', padding: 4, flexShrink: 0, background: 'var(--c-bg)' }}>
                     {(['m2', 'ha'] as const).map(u => (
                       <button key={u} type="button"
                         onClick={() => {
@@ -977,8 +965,7 @@ export default function PublierBienPage() {
                           if (!isNaN(n)) setSuperficieTerrain(String(u === 'ha' ? n / 10000 : Math.round(n * 10000)))
                           setSuperficieUnite(u)
                         }}
-                        className="px-3.5 py-2 rounded-lg text-xs font-bold transition-all"
-                        style={{ background: superficieUnite === u ? BLUE : 'transparent', color: superficieUnite === u ? 'white' : 'var(--c-muted)' }}>
+                        style={{ padding: '8px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, transition: 'all 0.15s', border: 'none', cursor: 'pointer', background: superficieUnite === u ? BLUE : 'transparent', color: superficieUnite === u ? 'white' : 'var(--c-muted)' }}>
                         {u === 'm2' ? 'm²' : 'ha'}
                       </button>
                     ))}
@@ -996,30 +983,28 @@ export default function PublierBienPage() {
                   { value: 'ruelle', label: 'Dans la ruelle' },
                   { value: 'autre', label: 'Autre' },
                 ]} value={positionTerrain} onChange={setPositionTerrain} />
-                <label className="mt-3 flex items-center justify-between px-4 py-3 rounded-xl border cursor-pointer"
-                  style={{ borderColor: 'var(--c-border)', background: 'var(--c-bg)' }}>
-                  <span className="text-sm font-semibold" style={{ color: 'var(--c-text)' }}>Parcelle en angle de rue</span>
-                  <input type="checkbox" checked={angleRue} onChange={e => setAngleRue(e.target.checked)} className="w-5 h-5 accent-blue-500" />
+                <label style={{ marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderRadius: 12, border: '1px solid var(--c-border)', cursor: 'pointer', background: 'var(--c-bg)' }}>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--c-text)' }}>Parcelle en angle de rue</span>
+                  <input type="checkbox" checked={angleRue} onChange={e => setAngleRue(e.target.checked)} style={{ width: 20, height: 20, accentColor: BLUE }} />
                 </label>
               </Card>
               <Card>
                 <Section title="Permission de construire ?" />
-                <div className="grid grid-cols-2 gap-2.5">
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                   <Chip label="Oui" active={permissionConstruire}  onClick={() => setPermissionConstruire(true)}  />
                   <Chip label="Non" active={!permissionConstruire} onClick={() => setPermissionConstruire(false)} />
                 </div>
                 {permissionConstruire && (
                   <textarea value={descriptionConstruction} onChange={e => setDescriptionConstruction(e.target.value)} rows={3}
                     placeholder="Ex: Rez de deux chambres un salon, fondation R+5, 05 boutiques"
-                    className="mt-3 w-full rounded-xl px-4 py-3 text-sm outline-none border resize-none transition-colors"
-                    style={baseInputStyle}
+                    style={{ ...baseInput, marginTop: 12, resize: 'none' }}
                     onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
                     onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
                 )}
               </Card>
               <Card>
                 <Section title="Zone lotie ?" />
-                <div className="grid grid-cols-3 gap-2.5">
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
                   <Chip label="Lotie"     active={estLoti === 'lotie'}     onClick={() => setEstLoti('lotie')}     />
                   <Chip label="Non lotie" active={estLoti === 'non_lotie'} onClick={() => setEstLoti('non_lotie')} />
                   <Chip label="Autre"     active={estLoti === 'autre'}     onClick={() => setEstLoti('autre')}     />
@@ -1027,31 +1012,30 @@ export default function PublierBienPage() {
               </Card>
               <Card>
                 <Section title="Titre foncier ?" />
-                <div className="grid grid-cols-2 gap-2.5">
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                   <Chip label="Oui" active={titreFoncier === true}  onClick={() => setTitreFoncier(true)}  />
                   <Chip label="Non" active={titreFoncier === false} onClick={() => setTitreFoncier(false)} />
                 </div>
               </Card>
               <Card>
                 <Section title="Détails supplémentaires" />
-                <p className="text-xs mb-3" style={{ color: 'var(--c-muted)' }}>Ajoutez toute information utile non couverte ci-dessus.</p>
-                <div className="space-y-2.5">
+                <p style={{ fontSize: 12, marginBottom: 12, color: 'var(--c-muted)' }}>Ajoutez toute information utile non couverte ci-dessus.</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {detailsSupplementaires.map((d, i) => (
-                    <div key={i} className="p-3 rounded-xl border space-y-2" style={{ borderColor: 'var(--c-border)', background: 'var(--c-bg)' }}>
-                      <div className="flex items-center gap-2">
+                    <div key={i} style={{ padding: 12, borderRadius: 12, border: '1px solid var(--c-border)', display: 'flex', flexDirection: 'column', gap: 8, background: 'var(--c-bg)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <input value={d.label}
                           onChange={e => setDetailsSupplementaires(arr => arr.map((x, idx) => idx === i ? { ...x, label: e.target.value } : x))}
-                          placeholder="Ex: Distance de la route" className="flex-1 text-sm font-semibold outline-none bg-transparent" style={{ color: 'var(--c-text)' }} />
-                        <button type="button" onClick={() => setDetailsSupplementaires(arr => arr.filter((_, idx) => idx !== i))} style={{ color: '#EF4444' }}>✕</button>
+                          placeholder="Ex: Distance de la route" style={{ flex: 1, fontSize: 14, fontWeight: 600, outline: 'none', background: 'transparent', border: 'none', color: 'var(--c-text)' }} />
+                        <button type="button" onClick={() => setDetailsSupplementaires(arr => arr.filter((_, idx) => idx !== i))} style={{ color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
                       </div>
                       <input value={d.valeur}
                         onChange={e => setDetailsSupplementaires(arr => arr.map((x, idx) => idx === i ? { ...x, valeur: e.target.value } : x))}
-                        placeholder="Ex: 50 mètres" className="w-full rounded-lg px-3 py-2 text-sm outline-none"
-                        style={{ background: '#fff', color: 'var(--c-text)' }} />
+                        placeholder="Ex: 50 mètres" style={{ width: '100%', borderRadius: 8, padding: '8px 12px', fontSize: 14, outline: 'none', background: '#fff', color: 'var(--c-text)', border: '1px solid var(--c-border)', boxSizing: 'border-box' }} />
                     </div>
                   ))}
                   <button type="button" onClick={() => setDetailsSupplementaires(arr => [...arr, { label: '', valeur: '' }])}
-                    className="w-full py-2.5 rounded-xl border text-xs font-bold" style={{ borderColor: BLUE + '40', color: BLUE }}>
+                    style={{ width: '100%', padding: '10px', borderRadius: 12, border: `1px solid ${BLUE}40`, fontSize: 12, fontWeight: 700, color: BLUE, background: 'none', cursor: 'pointer' }}>
                     + Ajouter un détail
                   </button>
                 </div>
@@ -1061,7 +1045,7 @@ export default function PublierBienPage() {
 
           {/* ═══ ÉTAPE 2 : BOUTIQUE ═══ */}
           {step === 2 && isBoutique && (
-            <div className="space-y-4">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <Card>
                 <Section title="Position sur la voie" />
                 <ChoiceList options={[
@@ -1071,7 +1055,7 @@ export default function PublierBienPage() {
               </Card>
               <Card>
                 <Section title="Visibilité depuis la rue" />
-                <div className="grid grid-cols-2 gap-2.5">
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                   <Chip label="Façade directe"   active={visibiliteBoutique === 'directe'} onClick={() => setVisibiliteBoutique('directe')} />
                   <Chip label="Dans une galerie" active={visibiliteBoutique === 'galerie'} onClick={() => setVisibiliteBoutique('galerie')} />
                 </div>
@@ -1084,46 +1068,44 @@ export default function PublierBienPage() {
                   { value: 'dedie', label: 'Parking voitures dédié' },
                 ]} value={parkingClients} onChange={setParkingClients} />
               </Card>
-              <button type="button" onClick={() => setShowMoreOptions(v => !v)} className="text-sm font-bold" style={{ color: BLUE }}>
+              <button type="button" onClick={() => setShowMoreOptions(v => !v)} style={{ fontSize: 14, fontWeight: 700, color: BLUE, background: 'none', border: 'none', cursor: 'pointer', padding: 0, textAlign: 'left' }}>
                 {showMoreOptions ? "Moins d'options" : "Plus d'options (facultatif)"}
               </button>
               {showMoreOptions && (
                 <>
                   <Card>
                     <Section title="Commodités internes" />
-                    <div className="flex flex-wrap gap-2">
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                       {EQUIPEMENTS_BOUTIQUE.map(o => (
                         <Chip key={o.value} label={o.label} active={equipementsBonus.includes(o.value)}
                           onClick={() => setEquipementsBonus(e => e.includes(o.value) ? e.filter(x => x !== o.value) : [...e, o.value])} />
                       ))}
                     </div>
-                    <div className="mt-3">
-                      <p className="text-xs font-semibold mb-1.5" style={{ color: 'var(--c-muted)' }}>Autre (à préciser)</p>
+                    <div style={{ marginTop: 12 }}>
+                      <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 6, color: 'var(--c-muted)' }}>Autre (à préciser)</p>
                       <input value={equipementsAutre} onChange={e => setEquipementsAutre(e.target.value)}
-                        placeholder="Ex: Vitrine lumineuse..." className="w-full rounded-xl px-4 py-2.5 text-sm outline-none border transition-colors"
-                        style={baseInputStyle} onFocus={e => (e.currentTarget.style.borderColor = BLUE)} onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
+                        placeholder="Ex: Vitrine lumineuse..." style={baseInput} onFocus={e => (e.currentTarget.style.borderColor = BLUE)} onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
                     </div>
                   </Card>
                   <Card>
                     <Section title="À proximité" />
-                    <div className="flex flex-wrap gap-2">
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                       {ALENTOURS_OPTS.map(o => (
                         <Chip key={o.value} label={o.label} active={alentours.includes(o.value)}
                           onClick={() => setAlentours(a => a.includes(o.value) ? a.filter(x => x !== o.value) : [...a, o.value])} />
                       ))}
                     </div>
-                    <div className="mt-3">
-                      <p className="text-xs font-semibold mb-1.5" style={{ color: 'var(--c-muted)' }}>Autre lieu (à préciser)</p>
+                    <div style={{ marginTop: 12 }}>
+                      <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 6, color: 'var(--c-muted)' }}>Autre lieu (à préciser)</p>
                       <input value={alentoursAutre} onChange={e => setAlentoursAutre(e.target.value)}
-                        placeholder="Ex: Gare routière..." className="w-full rounded-xl px-4 py-2.5 text-sm outline-none border transition-colors"
-                        style={baseInputStyle} onFocus={e => (e.currentTarget.style.borderColor = BLUE)} onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
+                        placeholder="Ex: Gare routière..." style={baseInput} onFocus={e => (e.currentTarget.style.borderColor = BLUE)} onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
                     </div>
                   </Card>
                 </>
               )}
               <Card>
                 <Section title="Disponibilité" />
-                <div className="grid grid-cols-2 gap-2.5">
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                   <Chip label="Immédiate"             active={disponibilite === 'immediate'}   onClick={() => setDisponibilite('immediate')}   />
                   <Chip label="En finition / Bientôt" active={disponibilite === 'en_finition'} onClick={() => setDisponibilite('en_finition')} />
                 </div>
@@ -1133,11 +1115,11 @@ export default function PublierBienPage() {
 
           {/* ═══ ÉTAPE 2 : RÉSIDENTIEL ═══ */}
           {step === 2 && !isTerrain && !isBoutique && (
-            <div className="space-y-4">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {showPieces && (
                 <Card>
                   <Section title="Nombre de pièces" />
-                  <div className="divide-y" style={{ borderColor: 'var(--c-border)' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
                     <Counter label="Chambres" value={chambres} onChange={setChambres} min={1} />
                     <Counter label="Salons"   value={salons}   onChange={setSalons}   />
                     {typeBien !== 'chambre_salon' && (
@@ -1156,12 +1138,11 @@ export default function PublierBienPage() {
                   {sanitaire === 'autre' && (
                     <input value={sanitaireAutre} onChange={e => setSanitaireAutre(e.target.value)}
                       placeholder="Précisez la configuration des sanitaires"
-                      className="mt-2 w-full rounded-xl px-4 py-2.5 text-sm outline-none border transition-colors"
-                      style={baseInputStyle}
+                      style={{ ...baseInput, marginTop: 8 }}
                       onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
                       onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
                   )}
-                  <div className="mt-5">
+                  <div style={{ marginTop: 20 }}>
                     <Section title="Finition / Standing" />
                     <ChoiceList options={FINITION_OPTS} value={finition} onChange={onSelectFinition} />
                   </div>
@@ -1173,8 +1154,7 @@ export default function PublierBienPage() {
                 {typeCuisine === 'autre' && (
                   <input value={cuisineAutre} onChange={e => setCuisineAutre(e.target.value)}
                     placeholder="Précisez le type de cuisine"
-                    className="mt-2 w-full rounded-xl px-4 py-2.5 text-sm outline-none border transition-colors"
-                    style={baseInputStyle}
+                    style={{ ...baseInput, marginTop: 8 }}
                     onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
                     onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
                 )}
@@ -1182,7 +1162,7 @@ export default function PublierBienPage() {
               {typeBien === 'chambre_salon' && (
                 <Card>
                   <Section title="Chambre à couloir ?" />
-                  <div className="grid grid-cols-2 gap-2.5">
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                     <Chip label="Oui" active={chambreACouloir}  onClick={() => setChambreACouloir(true)}  />
                     <Chip label="Non" active={!chambreACouloir} onClick={() => setChambreACouloir(false)} />
                   </div>
@@ -1191,24 +1171,24 @@ export default function PublierBienPage() {
               <Card>
                 <Section title="Type de cour / Accès" />
                 <ChoiceList options={COUR_OPTS} value={typeCour} onChange={setTypeCour} />
-                {COUR_DESC[typeCour] && <p className="text-xs italic mt-2" style={{ color: BLUE }}>{COUR_DESC[typeCour]}</p>}
+                {COUR_DESC[typeCour] && <p style={{ fontSize: 12, fontStyle: 'italic', marginTop: 8, color: BLUE }}>{COUR_DESC[typeCour]}</p>}
                 {typeCour === 'commune' && (
-                  <div className="mt-4 space-y-4">
+                  <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
                     <div>
-                      <p className="text-xs font-semibold mb-2" style={{ color: 'var(--c-muted)' }}>Nombre de voisins dans la cour</p>
+                      <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: 'var(--c-muted)' }}>Nombre de voisins dans la cour</p>
                       <Counter label="Voisins" value={nbVoisins} onChange={setNbVoisins} />
                     </div>
                     <div>
-                      <p className="text-xs font-semibold mb-2" style={{ color: 'var(--c-muted)' }}>Accès véhicule</p>
-                      <div className="grid grid-cols-2 gap-2.5">
+                      <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: 'var(--c-muted)' }}>Accès véhicule</p>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                         <Chip label="Oui" active={accesVehicule === true}  onClick={() => setAccesVehicule(true)}  />
                         <Chip label="Non" active={accesVehicule === false} onClick={() => setAccesVehicule(false)} />
                       </div>
                     </div>
                     {accesVehicule === true && (
                       <div>
-                        <p className="text-xs font-semibold mb-2" style={{ color: 'var(--c-muted)' }}>Nombre de véhicules</p>
-                        <div className="flex flex-wrap gap-2">
+                        <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: 'var(--c-muted)' }}>Nombre de véhicules</p>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                           {[1, 2, 3, 4, 5].map(n => (
                             <Chip key={n} label={`${n}`} active={nbVehicules === n} onClick={() => setNbVehicules(n)} />
                           ))}
@@ -1228,7 +1208,7 @@ export default function PublierBienPage() {
                   onCustomText={t => { setAvanceAutreText(t); setAvanceMois(Number(t) || 0) }}
                 />
                 {(parsePrix(prix) ?? 0) > 0 && avanceMois > 0 && (
-                  <p className="text-sm font-bold mt-2" style={{ color: BLUE }}>= {formatFcfa((parsePrix(prix) ?? 0) * avanceMois)}</p>
+                  <p style={{ fontSize: 14, fontWeight: 700, marginTop: 8, color: BLUE }}>= {formatFcfa((parsePrix(prix) ?? 0) * avanceMois)}</p>
                 )}
               </Card>
               {typeTransaction === 'location' && (
@@ -1253,7 +1233,7 @@ export default function PublierBienPage() {
                   onCustomText={t => { setLoyerPrepayeAutreText(t); setLoyerPrepayeMois(Number(t) || 0) }}
                 />
                 {loyerPrepayeMois > 0 && (
-                  <p className="text-xs italic mt-2" style={{ color: BLUE }}>
+                  <p style={{ fontSize: 12, fontStyle: 'italic', marginTop: 8, color: BLUE }}>
                     {loyerPrepayeMois === 1
                       ? 'Le locataire ne paiera pas de loyer pour le 1er mois après intégration.'
                       : `Le locataire ne paiera pas de loyer pour les ${loyerPrepayeMois} premiers mois après intégration.`}
@@ -1262,7 +1242,7 @@ export default function PublierBienPage() {
               </Card>
               <Card>
                 <Section title="Électricité" />
-                <div className="space-y-2">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {([
                     { value: 'non', label: 'Non', sub: '' },
                     { value: 'sbee', label: 'SBEE', sub: 'Branchement direct réseau national', logo: (
@@ -1276,30 +1256,29 @@ export default function PublierBienPage() {
                     const isActive = electricite === o.value
                     return (
                       <button key={o.value} type="button" onClick={() => setElectricite(o.value)}
-                        className="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl border-2 text-left transition-all"
-                        style={{ borderColor: isActive ? BLUE : 'var(--c-border)', background: isActive ? BLUE + '18' : 'var(--c-bg)' }}>
+                        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '12px 16px', borderRadius: 12, border: `2px solid ${isActive ? BLUE : 'var(--c-border)'}`, textAlign: 'left', transition: 'all 0.15s', background: isActive ? BLUE + '18' : 'var(--c-bg)', cursor: 'pointer' }}>
                         <span>
-                          <span className="block text-sm font-semibold" style={{ color: isActive ? BLUE : 'var(--c-text)' }}>{o.label}</span>
-                          {o.sub && <span className="block text-xs mt-0.5" style={{ color: 'var(--c-muted)' }}>{o.sub}</span>}
+                          <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: isActive ? BLUE : 'var(--c-text)' }}>{o.label}</span>
+                          {o.sub && <span style={{ display: 'block', fontSize: 12, marginTop: 2, color: 'var(--c-muted)' }}>{o.sub}</span>}
                         </span>
-                        <div className="flex items-center gap-2 shrink-0">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                           {o.logo}
-                          {isActive && <span className="font-bold" style={{ color: BLUE }}>✓</span>}
+                          {isActive && <span style={{ fontWeight: 700, color: BLUE }}>✓</span>}
                         </div>
                       </button>
                     )
                   })}
                 </div>
                 {electricite === 'decompteur' && (
-                  <div className="mt-3">
-                    <p className="text-xs font-semibold mb-2" style={{ color: 'var(--c-muted)' }}>Prix du kWh</p>
+                  <div style={{ marginTop: 12 }}>
+                    <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: 'var(--c-muted)' }}>Prix du kWh</p>
                     <MoneyInput value={prixKwh} onChange={setPrixKwh} placeholder="Ex: 150" />
                   </div>
                 )}
               </Card>
               <Card>
                 <Section title="Eau" />
-                <div className="space-y-2">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {([
                     { value: 'non', label: 'Non', sub: '' },
                     { value: 'soneb', label: 'SONEB', sub: 'Branchement direct réseau SONEB', logo: (
@@ -1314,40 +1293,39 @@ export default function PublierBienPage() {
                     const isActive = eau === o.value
                     return (
                       <button key={o.value} type="button" onClick={() => setEau(o.value)}
-                        className="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl border-2 text-left transition-all"
-                        style={{ borderColor: isActive ? BLUE : 'var(--c-border)', background: isActive ? BLUE + '18' : 'var(--c-bg)' }}>
+                        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '12px 16px', borderRadius: 12, border: `2px solid ${isActive ? BLUE : 'var(--c-border)'}`, textAlign: 'left', transition: 'all 0.15s', background: isActive ? BLUE + '18' : 'var(--c-bg)', cursor: 'pointer' }}>
                         <span>
-                          <span className="block text-sm font-semibold" style={{ color: isActive ? BLUE : 'var(--c-text)' }}>{o.label}</span>
-                          {o.sub && <span className="block text-xs mt-0.5" style={{ color: 'var(--c-muted)' }}>{o.sub}</span>}
+                          <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: isActive ? BLUE : 'var(--c-text)' }}>{o.label}</span>
+                          {o.sub && <span style={{ display: 'block', fontSize: 12, marginTop: 2, color: 'var(--c-muted)' }}>{o.sub}</span>}
                         </span>
-                        <div className="flex items-center gap-2 shrink-0">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                           {o.logo}
-                          {isActive && <span className="font-bold" style={{ color: BLUE }}>✓</span>}
+                          {isActive && <span style={{ fontWeight: 700, color: BLUE }}>✓</span>}
                         </div>
                       </button>
                     )
                   })}
                 </div>
                 {eau === 'decompteur_soneb' && (
-                  <div className="mt-3">
-                    <p className="text-xs font-semibold mb-2" style={{ color: 'var(--c-muted)' }}>Prix du m³</p>
+                  <div style={{ marginTop: 12 }}>
+                    <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: 'var(--c-muted)' }}>Prix du m³</p>
                     <MoneyInput value={prixM3} onChange={setPrixM3} placeholder="Ex: 150" />
                   </div>
                 )}
                 {eau === 'forage' && (
-                  <div className="mt-3 space-y-3">
+                  <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
                     <div>
-                      <p className="text-xs font-semibold mb-2" style={{ color: 'var(--c-muted)' }}>Prix du forage</p>
+                      <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: 'var(--c-muted)' }}>Prix du forage</p>
                       <MoneyInput value={prixForage} onChange={setPrixForage} placeholder="Ex: 50000" />
                     </div>
                     <div>
-                      <p className="text-xs font-semibold mb-2" style={{ color: 'var(--c-muted)' }}>Comment c'est géré ?</p>
-                      <div className="grid grid-cols-2 gap-2.5">
+                      <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: 'var(--c-muted)' }}>Comment c'est géré ?</p>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                         <Chip label="Entre voisins"      active={forageGestion === 'voisins'} onClick={() => setForageGestion(g => g === 'voisins' ? null : 'voisins')} />
                         <Chip label="Abonnement mensuel" active={forageGestion === 'mensuel'} onClick={() => setForageGestion(g => g === 'mensuel' ? null : 'mensuel')} />
                       </div>
-                      {forageGestion === 'voisins' && <p className="text-xs italic mt-2" style={{ color: BLUE }}>Le coût du forage est partagé entre les voisins.</p>}
-                      {forageGestion === 'mensuel' && <p className="text-xs italic mt-2" style={{ color: BLUE }}>Chaque locataire paie un abonnement mensuel fixe.</p>}
+                      {forageGestion === 'voisins' && <p style={{ fontSize: 12, fontStyle: 'italic', marginTop: 8, color: BLUE }}>Le coût du forage est partagé entre les voisins.</p>}
+                      {forageGestion === 'mensuel' && <p style={{ fontSize: 12, fontStyle: 'italic', marginTop: 8, color: BLUE }}>Chaque locataire paie un abonnement mensuel fixe.</p>}
                     </div>
                   </div>
                 )}
@@ -1355,21 +1333,21 @@ export default function PublierBienPage() {
               {(eau === 'soneb' || eau === 'decompteur_soneb' || electricite !== 'non') && (
                 <Card>
                   <Section title="Caution" />
-                  <div className="space-y-3">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                     {(eau === 'soneb' || eau === 'decompteur_soneb') && (
                       <div>
-                        <p className="text-xs font-semibold mb-1.5" style={{ color: 'var(--c-muted)' }}>Caution eau</p>
+                        <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 6, color: 'var(--c-muted)' }}>Caution eau</p>
                         <MoneyInput value={cautionEau} onChange={setCautionEau} />
-                        <p className="text-[11px] mt-1" style={{ color: 'var(--c-muted)' }}>Saisir 0 si pas de caution eau</p>
+                        <p style={{ fontSize: 11, marginTop: 4, color: 'var(--c-muted)' }}>Saisir 0 si pas de caution eau</p>
                       </div>
                     )}
                     {electricite !== 'non' && (
                       <div>
-                        <p className="text-xs font-semibold mb-1.5" style={{ color: 'var(--c-muted)' }}>
+                        <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 6, color: 'var(--c-muted)' }}>
                           Caution électricité ({electricite === 'sbee' ? 'SBEE' : 'Décompteur'})
                         </p>
                         <MoneyInput value={cautionElec} onChange={setCautionElec} />
-                        <p className="text-[11px] mt-1" style={{ color: 'var(--c-muted)' }}>Saisir 0 si pas de caution électricité</p>
+                        <p style={{ fontSize: 11, marginTop: 4, color: 'var(--c-muted)' }}>Saisir 0 si pas de caution électricité</p>
                       </div>
                     )}
                   </div>
@@ -1377,7 +1355,7 @@ export default function PublierBienPage() {
               )}
               {(!isSmallUnit || finition === 'haut_standing') && (
                 <>
-                  <button type="button" onClick={() => setShowMoreOptions(v => !v)} className="text-sm font-bold" style={{ color: BLUE }}>
+                  <button type="button" onClick={() => setShowMoreOptions(v => !v)} style={{ fontSize: 14, fontWeight: 700, color: BLUE, background: 'none', border: 'none', cursor: 'pointer', padding: 0, textAlign: 'left' }}>
                     {showMoreOptions ? "Moins d'options" : "Plus d'options (facultatif)"}
                   </button>
                   {showMoreOptions && (
@@ -1385,18 +1363,17 @@ export default function PublierBienPage() {
                       {!isSmallUnit && (
                         <Card>
                           <Section title="Équipements & Atouts" />
-                          <div className="flex flex-wrap gap-2">
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                             {EQUIPEMENTS_RESIDENTIEL.map(o => (
                               <Chip key={o.value} label={o.label} active={equipementsBonus.includes(o.value)}
                                 onClick={() => setEquipementsBonus(e => e.includes(o.value) ? e.filter(x => x !== o.value) : [...e, o.value])} />
                             ))}
                           </div>
-                          <div className="mt-3">
-                            <p className="text-xs font-semibold mb-1.5" style={{ color: 'var(--c-muted)' }}>Autre équipement (à préciser)</p>
+                          <div style={{ marginTop: 12 }}>
+                            <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 6, color: 'var(--c-muted)' }}>Autre équipement (à préciser)</p>
                             <input value={equipementsAutre} onChange={e => setEquipementsAutre(e.target.value)}
                               placeholder="Ex: Piscine, Salle de sport..."
-                              className="w-full rounded-xl px-4 py-2.5 text-sm outline-none border transition-colors"
-                              style={baseInputStyle}
+                              style={baseInput}
                               onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
                               onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
                           </div>
@@ -1404,18 +1381,17 @@ export default function PublierBienPage() {
                       )}
                       <Card>
                         <Section title="À proximité du bien" />
-                        <div className="flex flex-wrap gap-2">
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                           {ALENTOURS_OPTS.map(o => (
                             <Chip key={o.value} label={o.label} active={alentours.includes(o.value)}
                               onClick={() => setAlentours(a => a.includes(o.value) ? a.filter(x => x !== o.value) : [...a, o.value])} />
                           ))}
                         </div>
-                        <div className="mt-3">
-                          <p className="text-xs font-semibold mb-1.5" style={{ color: 'var(--c-muted)' }}>Autre lieu proche (à préciser)</p>
+                        <div style={{ marginTop: 12 }}>
+                          <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 6, color: 'var(--c-muted)' }}>Autre lieu proche (à préciser)</p>
                           <input value={alentoursAutre} onChange={e => setAlentoursAutre(e.target.value)}
                             placeholder="Ex: Stade, Plage privée..."
-                            className="w-full rounded-xl px-4 py-2.5 text-sm outline-none border transition-colors"
-                            style={baseInputStyle}
+                            style={baseInput}
                             onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
                             onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
                         </div>
@@ -1426,7 +1402,7 @@ export default function PublierBienPage() {
               )}
               <Card>
                 <Section title="Disponibilité" />
-                <div className="grid grid-cols-2 gap-2.5">
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                   <Chip label="Immédiate"             active={disponibilite === 'immediate'}   onClick={() => setDisponibilite('immediate')}   />
                   <Chip label="En finition / Bientôt" active={disponibilite === 'en_finition'} onClick={() => setDisponibilite('en_finition')} />
                 </div>
@@ -1436,43 +1412,42 @@ export default function PublierBienPage() {
 
           {/* ═══ ÉTAPE 3 : HONORAIRES ═══ */}
           {step === 3 && (
-            <div className="space-y-4">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <Card>
                 <Section title="Notes / Précisions (optionnel)" />
-                <p className="text-xs mb-3" style={{ color: 'var(--c-muted)' }}>Ces informations s'afficheront dans votre annonce.</p>
+                <p style={{ fontSize: 12, marginBottom: 12, color: 'var(--c-muted)' }}>Ces informations s'afficheront dans votre annonce.</p>
                 <textarea value={description} onChange={e => setDescription(e.target.value)} rows={8}
                   placeholder="Points forts, accès, conditions particulières, règles de la maison..."
-                  className="w-full rounded-xl px-4 py-3 text-sm outline-none resize-none border transition-colors"
-                  style={baseInputStyle}
+                  style={{ ...baseInput, resize: 'none' }}
                   onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
                   onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
               </Card>
               {!isTerrain && (
                 <Card>
                   <Section title="Autres frais (optionnel)" />
-                  <p className="text-xs mb-3" style={{ color: 'var(--c-muted)' }}>Frais supplémentaires inclus dans le total à payer à l'intégration.</p>
-                  <div className="space-y-2.5">
+                  <p style={{ fontSize: 12, marginBottom: 12, color: 'var(--c-muted)' }}>Frais supplémentaires inclus dans le total à payer à l'intégration.</p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {autresFrais.map((f, i) => (
-                      <div key={i} className="flex items-center gap-2">
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <input value={f.label}
                           onChange={e => setAutresFrais(a => a.map((x, idx) => idx === i ? { ...x, label: e.target.value } : x))}
                           placeholder="Libellé (ex: Frais de dossier)"
-                          className="flex-1 rounded-xl px-3 py-2.5 text-sm outline-none border" style={baseInputStyle} />
-                        <div className="w-28">
+                          style={{ ...baseInput, flex: 1 }} />
+                        <div style={{ width: 112 }}>
                           <MoneyInput value={f.prix} onChange={v => setAutresFrais(a => a.map((x, idx) => idx === i ? { ...x, prix: v } : x))} />
                         </div>
-                        <button type="button" onClick={() => setAutresFrais(a => a.filter((_, idx) => idx !== i))} style={{ color: '#EF4444' }}>✕</button>
+                        <button type="button" onClick={() => setAutresFrais(a => a.filter((_, idx) => idx !== i))} style={{ color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
                       </div>
                     ))}
                     <button type="button" onClick={() => setAutresFrais(a => [...a, { label: '', prix: '' }])}
-                      className="text-xs font-bold" style={{ color: BLUE }}>+ Ajouter un frais</button>
+                      style={{ fontSize: 12, fontWeight: 700, color: BLUE, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>+ Ajouter un frais</button>
                   </div>
                 </Card>
               )}
               {!isTerrain && typeTransaction === 'location' && montantBrut > 0 && (
-                <div className="rounded-2xl border p-4" style={{ background: BLUE + '0E', borderColor: BLUE + '30' }}>
-                  <p className="text-xs font-semibold mb-1" style={{ color: 'var(--c-muted)' }}>Montant minimum à verser avant intégration</p>
-                  <p className="text-2xl font-bold" style={{ color: BLUE }}>{formatFcfa(montantBrut)}</p>
+                <div style={{ borderRadius: 16, border: `1px solid ${BLUE}30`, padding: 16, background: BLUE + '0E' }}>
+                  <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 4, color: 'var(--c-muted)' }}>Montant minimum à verser avant intégration</p>
+                  <p style={{ fontSize: 24, fontWeight: 700, color: BLUE }}>{formatFcfa(montantBrut)}</p>
                 </div>
               )}
             </div>
@@ -1480,9 +1455,9 @@ export default function PublierBienPage() {
 
           {/* ═══ ÉTAPE 4 : RÉCAP + PHOTOS + VIDÉO ═══ */}
           {step === 4 && (
-            <div className="space-y-4">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <Card>
-                <p className="text-sm font-bold mb-4" style={{ color: 'var(--c-text)' }}>Récapitulatif de votre annonce</p>
+                <p style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, color: 'var(--c-text)' }}>Récapitulatif de votre annonce</p>
                 <RecapSection title="Type de bien" items={[
                   TYPES_BIEN.find(t => t.key === typeBien)?.label ?? typeBien,
                   ...(finition ? [labelFinition(finition)] : []),
@@ -1511,9 +1486,9 @@ export default function PublierBienPage() {
                       ...((parsePrix(cautionElec) ?? 0) > 0 ? [`Caution électricité : ${formatFcfa(parsePrix(cautionElec) ?? 0)}`] : []),
                     ]} />
                     {montantBrut > 0 && (
-                      <div className="rounded-xl p-3.5 mb-2" style={{ background: BLUE + '12', border: `1px solid ${BLUE}30` }}>
-                        <p className="text-xs font-semibold mb-1" style={{ color: 'var(--c-muted)' }}>Montant minimum à verser avant intégration</p>
-                        <p className="text-xl font-bold" style={{ color: BLUE }}>{formatFcfa(montantBrut)}</p>
+                      <div style={{ borderRadius: 12, padding: '14px', marginBottom: 8, background: BLUE + '12', border: `1px solid ${BLUE}30` }}>
+                        <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 4, color: 'var(--c-muted)' }}>Montant minimum à verser avant intégration</p>
+                        <p style={{ fontSize: 20, fontWeight: 700, color: BLUE }}>{formatFcfa(montantBrut)}</p>
                       </div>
                     )}
                   </>
@@ -1572,21 +1547,20 @@ export default function PublierBienPage() {
 
               {/* Photos */}
               <Card>
-                <p className="text-sm font-bold mb-1" style={{ color: 'var(--c-text)' }}>Photos du bien</p>
-                <p className="text-xs mb-4" style={{ color: 'var(--c-muted)' }}>Maximum 5 photos (PNG, JPEG, WEBP) — les photos augmentent les visites de 3×</p>
+                <p style={{ fontSize: 14, fontWeight: 700, marginBottom: 4, color: 'var(--c-text)' }}>Photos du bien</p>
+                <p style={{ fontSize: 12, marginBottom: 16, color: 'var(--c-muted)' }}>Maximum 5 photos (PNG, JPEG, WEBP) — les photos augmentent les visites de 3×</p>
                 {photos.length < 5 && (
-                  <label className="block border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-colors"
-                    style={{ borderColor: 'var(--c-border)' }}
+                  <label style={{ display: 'block', border: '2px dashed var(--c-border)', borderRadius: 16, padding: 32, textAlign: 'center', cursor: 'pointer', transition: 'border-color 0.15s' }}
                     onMouseEnter={e => (e.currentTarget.style.borderColor = BLUE)}
                     onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--c-border)')}>
-                    <div className="flex justify-center mb-3">
-                      <svg className="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} style={{ color: 'var(--c-muted)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+                      <svg width={40} height={40} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} style={{ color: 'var(--c-muted)' }}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                     </div>
-                    <p className="text-sm font-semibold" style={{ color: 'var(--c-text)' }}>Choisir des photos</p>
-                    <p className="text-xs mt-1" style={{ color: 'var(--c-muted)' }}>JPG, PNG, WEBP (max 5 photos)</p>
-                    <input type="file" multiple accept="image/png,image/jpeg,image/webp" className="hidden"
+                    <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--c-text)' }}>Choisir des photos</p>
+                    <p style={{ fontSize: 12, marginTop: 4, color: 'var(--c-muted)' }}>JPG, PNG, WEBP (max 5 photos)</p>
+                    <input type="file" multiple accept="image/png,image/jpeg,image/webp" style={{ display: 'none' }}
                       onChange={e => {
                         const files = Array.from(e.target.files || []).slice(0, 5 - photos.length)
                         setPhotos(p => [...p, ...files].slice(0, 5))
@@ -1595,31 +1569,31 @@ export default function PublierBienPage() {
                 )}
                 {photos.length > 0 && (
                   <>
-                    <div className="grid grid-cols-3 gap-2 mt-3">
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginTop: 12 }}>
                       {photos.map((f, i) => (
-                        <div key={i} className="relative aspect-square">
-                          <img src={URL.createObjectURL(f)} alt="" className="w-full h-full object-cover rounded-xl" />
+                        <div key={i} style={{ position: 'relative', aspectRatio: '1/1' }}>
+                          <img src={URL.createObjectURL(f)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 12 }} />
                           <button type="button" onClick={() => setPhotos(p => p.filter((_, idx) => idx !== i))}
-                            className="absolute top-1 right-1 w-6 h-6 bg-black/60 rounded-full text-white flex items-center justify-center">
-                            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3}>
+                            style={{ position: 'absolute', top: 4, right: 4, width: 24, height: 24, borderRadius: '50%', background: 'rgba(0,0,0,0.6)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer' }}>
+                            <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                             </svg>
                           </button>
                         </div>
                       ))}
                     </div>
-                    <p className="text-[11px] mt-2" style={{ color: 'var(--c-muted)' }}>
+                    <p style={{ fontSize: 11, marginTop: 8, color: 'var(--c-muted)' }}>
                       {photos.length}/5 photo{photos.length > 1 ? 's' : ''} — encore {5 - photos.length} possible{5 - photos.length > 1 ? 's' : ''}
                     </p>
                   </>
                 )}
                 {submitting && uploadProgress > 0 && (
-                  <div className="mt-3">
-                    <div className="flex justify-between text-xs mb-1" style={{ color: 'var(--c-muted)' }}>
+                  <div style={{ marginTop: 12 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4, color: 'var(--c-muted)' }}>
                       <span>Upload photos…</span><span>{uploadProgress}%</span>
                     </div>
-                    <div className="h-2 rounded-full" style={{ background: 'var(--c-bg)' }}>
-                      <div className="h-full rounded-full transition-all" style={{ width: `${uploadProgress}%`, background: BLUE }} />
+                    <div style={{ height: 8, borderRadius: 4, background: 'var(--c-bg)' }}>
+                      <div style={{ height: '100%', borderRadius: 4, transition: 'width 0.3s', width: `${uploadProgress}%`, background: BLUE }} />
                     </div>
                   </div>
                 )}
@@ -1627,37 +1601,36 @@ export default function PublierBienPage() {
 
               {/* Vidéo */}
               <Card>
-                <p className="text-sm font-bold mb-1" style={{ color: 'var(--c-text)' }}>
-                  Vidéo du bien <span className="font-normal text-xs" style={{ color: 'var(--c-muted)' }}>(optionnel)</span>
+                <p style={{ fontSize: 14, fontWeight: 700, marginBottom: 4, color: 'var(--c-text)' }}>
+                  Vidéo du bien <span style={{ fontWeight: 400, fontSize: 12, color: 'var(--c-muted)' }}>(optionnel)</span>
                 </p>
-                <p className="text-xs mb-4" style={{ color: 'var(--c-muted)' }}>Maximum 1 vidéo (MP4 uniquement)</p>
+                <p style={{ fontSize: 12, marginBottom: 16, color: 'var(--c-muted)' }}>Maximum 1 vidéo (MP4 uniquement)</p>
                 {video ? (
-                  <div className="flex items-center gap-3 px-4 py-3 rounded-xl border" style={{ borderColor: 'var(--c-border)', background: 'var(--c-bg)' }}>
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: BLUE + '20' }}>
-                      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} style={{ color: BLUE }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 12, border: '1px solid var(--c-border)', background: 'var(--c-bg)' }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: BLUE + '20' }}>
+                      <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} style={{ color: BLUE }}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                       </svg>
                     </div>
-                    <span className="flex-1 text-sm font-semibold truncate" style={{ color: 'var(--c-text)' }}>{video.name}</span>
+                    <span style={{ flex: 1, fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--c-text)' }}>{video.name}</span>
                     <button type="button" onClick={() => setVideo(null)}
-                      className="w-7 h-7 rounded-full flex items-center justify-center text-white shrink-0" style={{ background: '#EF4444' }}>
-                      <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3}>
+                      style={{ width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', flexShrink: 0, background: '#EF4444', border: 'none', cursor: 'pointer' }}>
+                      <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </button>
                   </div>
                 ) : (
-                  <label className="block border-2 border-dashed rounded-2xl p-7 text-center cursor-pointer transition-colors"
-                    style={{ borderColor: 'var(--c-border)' }}
+                  <label style={{ display: 'block', border: '2px dashed var(--c-border)', borderRadius: 16, padding: 28, textAlign: 'center', cursor: 'pointer', transition: 'border-color 0.15s' }}
                     onMouseEnter={e => (e.currentTarget.style.borderColor = BLUE)}
                     onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--c-border)')}>
-                    <div className="flex justify-center mb-3">
-                      <svg className="w-9 h-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} style={{ color: 'var(--c-muted)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+                      <svg width={36} height={36} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} style={{ color: 'var(--c-muted)' }}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                       </svg>
                     </div>
-                    <p className="text-sm font-semibold" style={{ color: 'var(--c-text)' }}>Ajouter une vidéo (MP4)</p>
-                    <input type="file" accept="video/mp4" className="hidden"
+                    <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--c-text)' }}>Ajouter une vidéo (MP4)</p>
+                    <input type="file" accept="video/mp4" style={{ display: 'none' }}
                       onChange={e => { const f = e.target.files?.[0]; if (f) setVideo(f) }} />
                   </label>
                 )}
