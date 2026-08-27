@@ -1,1323 +1,1493 @@
-import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { postBien } from '../../api/postBien';
-import { BENIN_VILLES, getArrondissements, getQuartiersByVille, getQuartiersByArrondissement } from '../../data/beninLocations';
+import type { ReactNode, CSSProperties } from 'react'
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { postBien } from '../../api/postBien'
+import { BENIN_LOCATION_DATA } from '../../data/beninLocations'
 
-/* ─── Référentiels ───────────────────────────────────────── */
+// ─── Quartiers — même structure que immo-web-user ─────────────────────────────
+type Quartier = { nom: string; arrondissement: string; ville: string }
+const QUARTIERS: Quartier[] = (() => {
+  const result: Quartier[] = []
+  for (const [ville, arrs] of Object.entries(BENIN_LOCATION_DATA)) {
+    for (const [arr, qs] of Object.entries(arrs)) {
+      for (const nom of qs) result.push({ nom, arrondissement: arr, ville })
+    }
+  }
+  return result
+})()
+
+const normalizeStr = (s: string) =>
+  s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+
+const BLUE = '#4B6BFF'
+
+type TarifCustom = { label: string; prix: string }
+type DetailCustom = { label: string; valeur: string }
 
 const TYPES_BIEN = [
-  { display: 'Entrée-Coucher',     type: 'appart_vide', sousType: 'entree_coucher',      isSmall: true },
-  { display: 'Chambre-Salon',      type: 'appart_vide', sousType: 'chambre_salon',       isSmall: true },
-  { display: 'Appartement',        type: 'appart_vide', sousType: 'appartement',         isSmall: false },
-  { display: 'Villa',              type: 'maison',       sousType: 'villa',               isSmall: false },
-  { display: 'Maison',             type: 'maison',       sousType: 'maison_individuelle', isSmall: false },
-  { display: 'Terrain / Parcelle', type: 'terrain',      sousType: 'terrain',             isSmall: false },
-  { display: 'Boutique',           type: 'maison',       sousType: 'boutique',            isSmall: false },
-];
-
-const PEUT_ETRE_MEUBLE = ['Appartement', 'Villa', 'Maison'];
+  { key: 'entree_coucher', label: 'Entrée-Coucher' },
+  { key: 'chambre_salon',  label: 'Chambre-Salon'  },
+  { key: 'appartement',   label: 'Appartement'    },
+  { key: 'villa',         label: 'Villa'           },
+  { key: 'maison',        label: 'Maison'          },
+  { key: 'terrain',       label: 'Terrain / Parcelle' },
+  { key: 'boutique',      label: 'Boutique'        },
+]
 
 const SANITAIRE_OPTS = [
-  { value: 'interieur', label: 'Sanitaire',        sub: '' },
-  { value: 'cour',      label: 'Non sanitaire',    sub: '' },
-  { value: 'autre',     label: 'Autre à préciser', sub: '' },
-];
+  { value: 'interieur', label: 'Sanitaire',        sub: 'Douche intérieure au logement'    },
+  { value: 'cour',      label: 'Non sanitaire',    sub: 'Douche extérieure / commune'      },
+  { value: 'autre',     label: 'Autre à préciser', sub: ''                                 },
+]
 
 const FINITION_OPTS = [
   { value: 'ordinaire',     label: 'Ordinaire',           sub: '' },
   { value: 'semi_staffe',   label: 'Semi-Staffé',         sub: 'Salon staffé et carrelé ; chambre au plafond propre, sans carrelage.' },
   { value: 'staffe_carele', label: 'Staffé',              sub: 'Staff complet moderne et carreaux récents partout.' },
   { value: 'haut_standing', label: 'Haut Standing / VIP', sub: 'Baies vitrées, douche moderne, climatisation.' },
-];
+]
 
 const CUISINE_OPTS = [
-  { value: 'separee_douche', label: 'Cuisine séparée de la douche', sub: '' },
-  { value: 'americaine',     label: 'Cuisine américaine',           sub: 'Ouverte sur le salon' },
-  { value: 'autre',          label: 'Autres (à préciser)',          sub: '' },
-];
+  { value: 'separee_douche', label: 'Cuisine séparée de la douche' },
+  { value: 'americaine',     label: 'Cuisine américaine'           },
+  { value: 'autre',          label: 'Autres (à préciser)'          },
+]
 
-const DOC_TERRAIN_OPTS = [
-  { value: 'permis_construire',      label: 'Permis de construire' },
-  { value: 'titre_foncier',          label: 'Titre foncier' },
-  { value: 'attestation_recasement', label: 'Attestation de recasement' },
-  { value: 'convention_vente',       label: 'Convention de vente' },
-  { value: 'autre',                  label: 'Autre' },
-];
+const COUR_OPTS = [
+  { value: 'commune',            label: 'Cour commune'    },
+  { value: 'entree_personnelle', label: 'Entrée personnelle' },
+]
 
-const EQUIP_RESIDENTIEL = [
-  { value: 'garage_auto',   label: 'Garage auto' },
-  { value: 'garage_moto',   label: 'Garage moto' },
-  { value: 'gardien',       label: 'Gardien / Sécurité' },
-  { value: 'balcon',        label: 'Balcon' },
-  { value: 'climatisation', label: 'Climatisation' },
-  { value: 'chauffe_eau',   label: 'Chauffe-eau' },
-  { value: 'baie_vitree',   label: 'Baies vitrées' },
-];
+const COUR_DESC: Record<string, string> = {
+  commune:            'La cour est partagée entre plusieurs occupants du bâtiment.',
+  entree_personnelle: "Une entrée qui vous est propre, séparée des autres occupants, pour plus d'intimité.",
+}
 
-const EQUIP_BOUTIQUE = [
-  { value: 'toilette_interne', label: 'Toilette interne' },
-  { value: 'arriere_boutique', label: 'Arrière-boutique / Stock' },
-  { value: 'sol_carele',       label: 'Sol carrelé' },
-  { value: 'plafond_staffe',   label: 'Plafond staffé' },
-  { value: 'climatisation',    label: 'Climatisation' },
-];
+const DOCUMENT_TERRAIN_OPTS = [
+  { value: 'permis_construire',        label: 'Permis de construire'     },
+  { value: 'titre_foncier',            label: 'Titre foncier'            },
+  { value: 'attestation_recasement',   label: 'Attestation de recasement' },
+  { value: 'convention_vente',         label: 'Convention de vente'      },
+  { value: 'autre',                    label: 'Autre'                    },
+]
+
+const EQUIPEMENTS_RESIDENTIEL = [
+  { value: 'garage_auto',    label: 'Garage auto'      },
+  { value: 'garage_moto',    label: 'Garage moto fermé' },
+  { value: 'gardien',        label: 'Gardien / Sécurité' },
+  { value: 'balcon',         label: 'Balcon'           },
+  { value: 'climatisation',  label: 'Climatisation'    },
+  { value: 'chauffe_eau',    label: 'Chauffe-eau'      },
+  { value: 'baie_vitree',    label: 'Baies vitrées'    },
+]
+
+const EQUIPEMENTS_BOUTIQUE = [
+  { value: 'toilette_interne',  label: 'Toilette interne'        },
+  { value: 'arriere_boutique',  label: 'Arrière-boutique / Stock' },
+  { value: 'sol_carele',        label: 'Sol carrelé'              },
+  { value: 'plafond_staffe',    label: 'Plafond staffé'           },
+  { value: 'climatisation',     label: 'Climatisation'            },
+]
 
 const ALENTOURS_OPTS = [
-  { value: 'marche',      label: 'Marché' },
-  { value: 'eglise',      label: 'Église / Cathédrale' },
-  { value: 'mosquee',     label: 'Mosquée' },
-  { value: 'ecole',       label: 'École primaire' },
-  { value: 'lycee',       label: 'Collège / Lycée' },
-  { value: 'universite',  label: 'Université / Campus' },
-  { value: 'hopital',     label: 'Hôpital / Clinique' },
-  { value: 'pharmacie',   label: 'Pharmacie' },
-  { value: 'banque',      label: 'Banque / DAB' },
-  { value: 'station',     label: 'Station-service' },
-  { value: 'bar_maquis',  label: 'Bar / Maquis' },
-  { value: 'restaurant',  label: 'Restaurant' },
-  { value: 'taxi_zem',    label: 'Gare taxi / Zem' },
+  { value: 'marche',      label: 'Marché'              },
+  { value: 'eglise',      label: 'Église / Cathédrale'  },
+  { value: 'mosquee',     label: 'Mosquée'             },
+  { value: 'ecole',       label: 'École primaire'       },
+  { value: 'lycee',       label: 'Collège / Lycée'      },
+  { value: 'universite',  label: 'Université / Campus'  },
+  { value: 'hopital',     label: 'Hôpital / Clinique'   },
+  { value: 'pharmacie',   label: 'Pharmacie'           },
+  { value: 'banque',      label: 'Banque / DAB'         },
+  { value: 'station',     label: 'Station-service'      },
+  { value: 'bar_maquis',  label: 'Bar / Maquis'         },
+  { value: 'restaurant',  label: 'Restaurant'          },
+  { value: 'taxi_zem',    label: 'Gare taxi / Zem'      },
   { value: 'supermarche', label: 'Supermarché / Épicerie' },
-  { value: 'plage',       label: 'Plage / Bord de mer' },
-];
+  { value: 'plage',       label: 'Plage / Bord de mer'  },
+]
 
-const STEPS = [
-  { id: 1, label: 'Type & Prix' },
-  { id: 2, label: 'Localisation' },
-  { id: 3, label: 'Confort' },
-  { id: 4, label: 'Description' },
-  { id: 5, label: 'Photos' },
-];
-
-/* ─── Helpers ────────────────────────────────────────────── */
-
-function getTypeBackend(typeBien: string, estMeuble: boolean): string {
-  if (typeBien === 'Terrain / Parcelle') return 'terrain';
-  if (['Villa', 'Maison', 'Boutique'].includes(typeBien)) return 'maison';
-  if (typeBien === 'Appartement' && estMeuble) return 'appart_meuble';
-  return 'appart_vide';
+const parsePrix = (t: string): number | undefined => {
+  const c = t.trim().replace(/\s/g, '').replace(',', '')
+  if (!c) return undefined
+  const n = Number(c)
+  return Number.isFinite(n) ? n : undefined
 }
 
-function getSousType(typeBien: string, estMeuble: boolean): string {
-  if (typeBien === 'Terrain / Parcelle') return 'terrain';
-  if (typeBien === 'Boutique')           return 'boutique';
-  if (typeBien === 'Chambre-Salon')      return 'chambre_salon';
-  if (typeBien === 'Entrée-Coucher')     return 'entree_coucher';
-  if (typeBien === 'Appartement')        return estMeuble ? 'appart_meuble' : 'appartement';
-  if (typeBien === 'Villa')              return 'villa';
-  if (typeBien === 'Maison')             return 'maison_individuelle';
-  return typeBien.toLowerCase();
+const formatFcfa = (v: number) => v > 0 ? `${Math.round(v).toLocaleString('fr-FR')} FCFA` : '0 FCFA'
+
+// ─── Tokens CSS dark (identiques à immo-web-user proprio) ────────────────────
+const P: Record<string, string> = {
+  '--p-deep'         : '#060D1A',
+  '--p-surface'      : '#0B1C30',
+  '--p-surface-glass': 'rgba(11, 28, 48, 0.85)',
+  '--p-card'         : '#112440',
+  '--p-border'       : '#1A3355',
+  '--p-text'         : '#F0EDE8',
+  '--p-muted'        : '#8A9BB5',
 }
 
-function buildPieces(
-  typeBien: string, chambres: number, salons: number, cuisines: number, douches: number,
-  isTerrain: boolean, isBoutique: boolean,
-): { nom: string; surface: number }[] {
-  if (isTerrain || isBoutique) return [];
-  if (typeBien === 'Entrée-Coucher') {
-    return [{ nom: 'Chambre', surface: 0 }, { nom: 'Entrée', surface: 0 }];
-  }
-  const p: { nom: string; surface: number }[] = [];
-  for (let i = 0; i < chambres; i++) p.push({ nom: 'Chambre', surface: 0 });
-  for (let i = 0; i < salons; i++)   p.push({ nom: 'Salon',   surface: 0 });
-  if (typeBien !== 'Chambre-Salon') {
-    for (let i = 0; i < cuisines; i++) p.push({ nom: 'Cuisine',       surface: 0 });
-    for (let i = 0; i < douches; i++)  p.push({ nom: 'Salle de bain', surface: 0 });
-  }
-  return p;
-}
+// ─── UI primitives ────────────────────────────────────────────────────────────
 
-/* ─── Types ──────────────────────────────────────────────── */
-
-type Form = {
-  typeBien: string; estMeuble: boolean; transaction: string;
-  prix: string;
-  tarifLongSejour: string; tarifSejRestreint: string; tarifHeure: string;
-  adresse: string; ville: string; arrondissement: string; quartier: string;
-  latitude: string; longitude: string;
-  sanitaire: string; sanitaireAutre: string;
-  finition: string;
-  typeCuisine: string; cuisineAutre: string;
-  typeCour: string; nbVoisins: number; accesVehicule: string; nbVehicules: number;
-  chambreACouloir: boolean;
-  avanceMois: number; echeanceMois: number; loyerPrePayeMois: number;
-  cautionEau: string; cautionElec: string;
-  electricite: string; prixKwh: string;
-  eau: string; prixForage: string; prixM3: string; forageGestion: string;
-  disponibilite: string;
-  chambres: number; salons: number; cuisines: number; douches: number;
-  superficieTerrain: string; documentTerrain: string; positionTerrain: string;
-  angleRue: boolean; permissionConstruire: boolean; descriptionConstruction: string;
-  estLoti: string; titreFoncier: string;
-  typeVoie: string; visibiliteBoutique: string; parkingClients: string;
-  description: string;
-};
-
-const INIT: Form = {
-  typeBien: '', estMeuble: false, transaction: '',
-  prix: '', tarifLongSejour: '', tarifSejRestreint: '', tarifHeure: '',
-  adresse: '', ville: '', arrondissement: '', quartier: '',
-  latitude: '6.3654', longitude: '2.4183',
-  sanitaire: '', sanitaireAutre: '', finition: '',
-  typeCuisine: 'separee_douche', cuisineAutre: '',
-  typeCour: 'commune', nbVoisins: 0, accesVehicule: '', nbVehicules: 1,
-  chambreACouloir: false,
-  avanceMois: 0, echeanceMois: 5, loyerPrePayeMois: 0,
-  cautionEau: '', cautionElec: '',
-  electricite: 'non', prixKwh: '',
-  eau: 'non', prixForage: '', prixM3: '', forageGestion: '',
-  disponibilite: 'immediate',
-  chambres: 1, salons: 1, cuisines: 1, douches: 1,
-  superficieTerrain: '', documentTerrain: '', positionTerrain: 'bord_goudron',
-  angleRue: false, permissionConstruire: false, descriptionConstruction: '',
-  estLoti: '', titreFoncier: '',
-  typeVoie: 'goudron', visibiliteBoutique: 'directe', parkingClients: 'aucun',
-  description: '',
-};
-
-/* ─── Icônes SVG ─────────────────────────────────────────── */
-
-function IconLightning() {
+function Card({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-    </svg>
-  );
-}
-function IconMeter() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10"/>
-      <path d="M12 8v4l3 3"/>
-    </svg>
-  );
-}
-function IconDrop() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
-    </svg>
-  );
-}
-function IconWell() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="11" width="18" height="11" rx="1"/>
-      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-      <line x1="12" y1="7" x2="12" y2="11"/>
-    </svg>
-  );
-}
-function IconBan() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10"/>
-      <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
-    </svg>
-  );
-}
-
-/* ─── Composants UI ──────────────────────────────────────── */
-
-function CheckSvg() {
-  return (
-    <svg width="8" height="6" viewBox="0 0 8 6" fill="none">
-      <path d="M1 3L3 5L7 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  );
-}
-function ArrowLeft() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M19 12H5M12 5l-7 7 7 7"/>
-    </svg>
-  );
-}
-function ArrowRight() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M5 12h14M12 5l7 7-7 7"/>
-    </svg>
-  );
-}
-
-function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <div className="pb-toggle" style={{ background: checked ? '#2563EB' : '#CBD5E1', cursor: 'pointer' }}
-      onClick={() => onChange(!checked)} role="switch" aria-checked={checked}>
-      <div className="pb-toggle-knob" style={{ left: checked ? 'calc(100% - 1.3125rem)' : '3px' }} />
-    </div>
-  );
-}
-
-function ChoiceItem({ label, sub, active, onClick, icon }: { label: string; sub?: string; active: boolean; onClick: () => void; icon?: React.ReactNode }) {
-  return (
-    <button type="button" className={`pb-choice-item${active ? ' pb-choice-item--active' : ''}`} onClick={onClick}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        {icon && <span style={{ opacity: 0.7, display: 'flex', alignItems: 'center' }}>{icon}</span>}
-        <div>
-          <div className="pb-choice-label">{label}</div>
-          {sub && <div className="pb-choice-sub">{sub}</div>}
-        </div>
-      </div>
-      {active && <div className="pb-choice-check"><CheckSvg /></div>}
-    </button>
-  );
-}
-
-function FormField({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
-  return (
-    <div className="immo-form-field">
-      <label className="immo-form-label">{label}</label>
+    <div className={`rounded-2xl border ${className ?? ''}`}
+      style={{ background: 'var(--p-card)', borderColor: 'var(--p-border)', padding: '1rem' }}>
       {children}
-      {error && <div className="pb-err">{error}</div>}
     </div>
-  );
+  )
 }
 
-function MoneyField({ label, value, onChange, unit = 'FCFA', error }: {
-  label: string; value: string; onChange: (v: string) => void; unit?: string; error?: string;
-}) {
+function Section({ title, required }: { title: string; required?: boolean }) {
   return (
-    <FormField label={label} error={error}>
-      <div className="pb-input-group">
-        <input type="number" value={value} onChange={e => onChange(e.target.value)} min="0" placeholder="0" />
-        <div className="pb-input-unit">{unit}</div>
-      </div>
-    </FormField>
-  );
-}
-
-function SelectNum({ label, value, onChange, options }: {
-  label: string; value: number; onChange: (v: number) => void; options: number[];
-}) {
-  return (
-    <FormField label={label}>
-      <select className="immo-form-input" value={value} onChange={e => onChange(Number(e.target.value))}>
-        {options.map(o => <option key={o} value={o}>{o}</option>)}
-      </select>
-    </FormField>
-  );
-}
-
-function ChipSelect({ options, selected, toggle }: {
-  options: { value: string; label: string }[];
-  selected: Set<string>;
-  toggle: (v: string) => void;
-}) {
-  return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-      {options.map(o => {
-        const active = selected.has(o.value);
-        return (
-          <button key={o.value} type="button"
-            onClick={() => toggle(o.value)}
-            style={{
-              padding: '7px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-              border: `1px solid ${active ? '#2563EB' : 'var(--c-border)'}`,
-              background: active ? '#2563EB' : 'var(--c-card)',
-              color: active ? '#fff' : 'var(--c-text)',
-              transition: 'all 0.15s',
-            }}
-          >{o.label}</button>
-        );
-      })}
-    </div>
-  );
-}
-
-function ToggleRow({ label, desc, checked, onChange }: { label: string; desc: string; checked: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <div className="pb-toggle-row">
-      <div>
-        <div className="pb-toggle-row-label">{label}</div>
-        {desc && <div className="pb-toggle-row-desc">{desc}</div>}
-      </div>
-      <Toggle checked={checked} onChange={onChange} />
-    </div>
-  );
-}
-
-/* ─── Dropdown quartier avec recherche ───────────────────── */
-
-function QuartierDropdown({ ville, arrondissement, value, onChange }: {
-  ville: string; arrondissement: string; value: string; onChange: (v: string) => void;
-}) {
-  const [open, setOpen]   = useState(false);
-  const [query, setQuery] = useState('');
-  const ref = useRef<HTMLDivElement>(null);
-
-  const baseList = arrondissement
-    ? getQuartiersByArrondissement(ville, arrondissement)
-    : getQuartiersByVille(ville);
-
-  const filtered = query.trim()
-    ? baseList.filter(q => q.toLowerCase().includes(query.toLowerCase()))
-    : baseList;
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
-
-  const select = (q: string) => { onChange(q); setOpen(false); setQuery(''); };
-
-  return (
-    <div ref={ref} style={{ position: 'relative' }}>
-      <input
-        className="immo-form-input"
-        value={open ? query : value}
-        placeholder={value || 'Cliquer pour choisir un quartier…'}
-        onFocus={() => { setOpen(true); setQuery(''); }}
-        onChange={e => { setQuery(e.target.value); if (!open) setOpen(true); }}
-        autoComplete="off"
-      />
-      {open && (
-        <div style={{
-          position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 9999,
-          background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 10,
-          boxShadow: '0 8px 24px rgba(0,0,0,0.12)', maxHeight: 280, overflowY: 'auto',
-          marginTop: 4,
-        }}>
-          {filtered.length === 0 ? (
-            <div style={{ padding: '12px 16px', fontSize: 13, color: 'var(--c-muted)' }}>Aucun quartier trouvé</div>
-          ) : filtered.map(q => (
-            <div key={q}
-              onMouseDown={() => select(q)}
-              style={{
-                padding: '9px 16px', fontSize: 13, cursor: 'pointer',
-                background: value === q ? '#EFF6FF' : 'transparent',
-                color: value === q ? '#2563EB' : 'var(--c-text)',
-                fontWeight: value === q ? 600 : 400,
-              }}
-              onMouseEnter={e => { if (value !== q) (e.currentTarget as HTMLDivElement).style.background = 'var(--c-bg)'; }}
-              onMouseLeave={e => { if (value !== q) (e.currentTarget as HTMLDivElement).style.background = 'transparent'; }}
-            >{q}</div>
-          ))}
-        </div>
+    <div className="flex items-center gap-2 mb-3">
+      <p className="text-[11px] font-bold uppercase tracking-[0.16em]" style={{ color: 'var(--p-muted)' }}>{title}</p>
+      {required && (
+        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+          style={{ color: BLUE, background: BLUE + '20' }}>Obligatoire</span>
       )}
     </div>
-  );
+  )
 }
 
-/* ─── Barre d'étapes ─────────────────────────────────────── */
-
-function StepTrack({ current }: { current: number }) {
+function ChoiceList({ options, value, onChange, disabledValues, onDeselect }: {
+  options: { value: string; label: string; sub?: string }[]
+  value: string | null
+  onChange: (v: string) => void
+  disabledValues?: string[]
+  onDeselect?: () => void
+}) {
   return (
-    <div className="pb-step-track">
-      {STEPS.map((s, i) => {
-        const done = s.id < current; const active = s.id === current;
+    <div className="space-y-2">
+      {options.map(o => {
+        const isDisabled = disabledValues?.includes(o.value) ?? false
+        const isActive = value === o.value
         return (
-          <div key={s.id} style={{ display: 'flex', alignItems: 'flex-start', flex: i < STEPS.length - 1 ? '1' : 'none' }}>
-            <div className="pb-step-col">
-              <div className={`pb-step-circle ${done ? 'pb-step-circle--done' : active ? 'pb-step-circle--active' : 'pb-step-circle--future'}`}>
-                {done ? <CheckSvg /> : s.id}
-              </div>
-              <span className={`pb-step-label ${active ? 'pb-step-label--active' : done ? 'pb-step-label--done' : ''}`}>{s.label}</span>
-            </div>
-            {i < STEPS.length - 1 && <div className={`pb-step-connector${done ? ' pb-step-connector--done' : ''}`} />}
-          </div>
-        );
+          <button key={o.value} type="button" disabled={isDisabled}
+            onClick={() => (isActive && onDeselect) ? onDeselect() : onChange(o.value)}
+            className="w-full flex items-start justify-between gap-2 px-4 py-3 rounded-xl border-2 text-left transition-all"
+            style={{
+              borderColor: isActive ? BLUE : 'var(--p-border)',
+              background: isActive ? BLUE + '18' : 'var(--p-deep)',
+              opacity: isDisabled ? 0.4 : 1,
+              cursor: isDisabled ? 'not-allowed' : 'pointer',
+            }}>
+            <span>
+              <span className="block text-sm font-semibold"
+                style={{ color: isActive ? BLUE : 'var(--p-text)' }}>{o.label}</span>
+              {o.sub && <span className="block text-xs mt-0.5" style={{ color: 'var(--p-muted)' }}>{o.sub}</span>}
+            </span>
+            {isActive && !isDisabled && <span className="font-bold shrink-0" style={{ color: BLUE }}>✓</span>}
+          </button>
+        )
       })}
     </div>
-  );
+  )
 }
 
-/* ─── Page principale ────────────────────────────────────── */
+function Chip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button type="button" onClick={onClick}
+      className="px-4 py-2.5 rounded-xl border-2 text-xs font-bold text-center transition-all"
+      style={{
+        borderColor: active ? BLUE : 'var(--p-border)',
+        background: active ? BLUE + '18' : 'transparent',
+        color: active ? BLUE : 'var(--p-muted)',
+      }}>
+      {label}
+    </button>
+  )
+}
 
+function Counter({ label, value, onChange, min = 0 }: {
+  label: string; value: number; onChange: (v: number) => void; min?: number
+}) {
+  return (
+    <div className="flex items-center justify-between py-2.5">
+      <span className="text-sm font-semibold" style={{ color: 'var(--p-text)' }}>{label}</span>
+      <div className="flex items-center gap-3">
+        <button type="button" disabled={value <= min} onClick={() => onChange(value - 1)}
+          className="w-8 h-8 rounded-lg flex items-center justify-center font-bold border disabled:opacity-40 transition-colors"
+          style={{ background: 'var(--p-deep)', borderColor: 'var(--p-border)', color: 'var(--p-text)' }}>−</button>
+        <span className="w-6 text-center font-bold" style={{ color: 'var(--p-text)' }}>{value}</span>
+        <button type="button" onClick={() => onChange(value + 1)}
+          className="w-8 h-8 rounded-lg flex items-center justify-center font-bold transition-colors"
+          style={{ background: BLUE + '20', color: BLUE }}>+</button>
+      </div>
+    </div>
+  )
+}
+
+function NumberPicker({ presets, unit, value, isCustom, onPick, onCustomStart, customText, onCustomText }: {
+  presets: number[]; unit: (n: number) => string; value: number; isCustom: boolean
+  onPick: (n: number) => void; onCustomStart: () => void; customText: string; onCustomText: (t: string) => void
+}) {
+  return (
+    <div>
+      <div className="flex flex-wrap gap-2">
+        {presets.map(n => (
+          <Chip key={n} label={unit(n)} active={!isCustom && value === n} onClick={() => onPick(n)} />
+        ))}
+        <Chip label="Saisir" active={isCustom} onClick={onCustomStart} />
+      </div>
+      {isCustom && (
+        <input type="number" value={customText} onChange={e => onCustomText(e.target.value)} placeholder="Nombre"
+          className="mt-2.5 w-full rounded-xl px-4 py-2.5 text-sm outline-none border"
+          style={{ background: 'var(--p-deep)', borderColor: BLUE, color: 'var(--p-text)' }} />
+      )}
+    </div>
+  )
+}
+
+function MoneyInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+  return (
+    <div className="relative">
+      <input type="number" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder ?? '0'}
+        className="w-full rounded-xl pl-4 pr-16 py-3 text-sm outline-none border transition-colors"
+        style={{ background: 'var(--p-deep)', borderColor: 'var(--p-border)', color: 'var(--p-text)' }}
+        onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
+        onBlur={e => (e.currentTarget.style.borderColor = 'var(--p-border)')} />
+      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold"
+        style={{ color: 'var(--p-muted)' }}>FCFA</span>
+    </div>
+  )
+}
+
+const baseInputStyle: CSSProperties = {
+  background: 'var(--p-deep)',
+  borderColor: 'var(--p-border)',
+  color: 'var(--p-text)',
+}
+
+function RecapSection({ title, items }: { title: string; items: string[] }) {
+  if (!items.length) return null
+  return (
+    <div className="py-3 border-b last:border-b-0" style={{ borderColor: 'var(--p-border)' }}>
+      <p className="text-xs font-bold mb-2" style={{ color: BLUE }}>{title}</p>
+      {items.map((item, i) => (
+        <div key={i} className="flex items-start gap-1.5 mb-1 last:mb-0">
+          <span className="font-bold text-xs shrink-0" style={{ color: BLUE }}>•</span>
+          <span className="text-sm leading-snug" style={{ color: 'var(--p-text)' }}>{item}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ─── Page principale ──────────────────────────────────────────────────────────
 export default function PublierBienPage() {
-  const navigate = useNavigate();
-  const topRef = useRef<HTMLDivElement>(null);
-  const [step, setStep]           = useState(1);
-  const [form, setForm]           = useState<Form>(INIT);
-  const [errors, setErrors]       = useState<Record<string, string>>({});
-  const [submitting, setSubmitting] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState('');
+  const navigate = useNavigate()
 
-  const [equipements, setEquipements] = useState<Set<string>>(new Set());
-  const [alentours, setAlentours]     = useState<Set<string>>(new Set());
-  const [autresFrais, setAutresFrais] = useState<{ label: string; montant: string }[]>([]);
+  const proprietaireInfo = (() => {
+    try { return JSON.parse(sessionStorage.getItem('proprietaire_info') ?? 'null') } catch { return null }
+  })()
 
-  const [photos, setPhotos]           = useState<File[]>([]);
-  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
-  const [video, setVideo]             = useState<File | null>(null);
-  const photoInputRef = useRef<HTMLInputElement>(null);
-  const videoInputRef = useRef<HTMLInputElement>(null);
+  const [isScrolled, setIsScrolled]   = useState(false)
+  const [step, setStep]               = useState(0)
+  const [submitting, setSubmitting]   = useState(false)
+  const [error, setError]             = useState('')
+  const [createdId, setCreatedId]     = useState<number | null>(null)
+  const [created, setCreated]         = useState(false)
+  const [photos, setPhotos]           = useState<File[]>([])
+  const [video, setVideo]             = useState<File | null>(null)
+  const [uploadProgress, setUploadProgress] = useState(0)
 
-  const set = (key: keyof Form, val: any) => {
-    setForm(prev => ({ ...prev, [key]: val }));
-    setErrors(prev => { const n = { ...prev }; delete n[key]; return n; });
-  };
+  // Étape 0
+  const [typeBien, setTypeBien]               = useState('chambre_salon')
+  const [typeTransaction, setTypeTransaction] = useState<'location' | 'vente'>('location')
+  const [prix, setPrix]                       = useState('')
+  const [estMeuble, setEstMeuble]             = useState(false)
+  const [sanitaire, setSanitaire]             = useState<string | null>(null)
+  const [sanitaireAutre, setSanitaireAutre]   = useState('')
+  const [finition, setFinition]               = useState<string | null>(null)
 
-  const isTerrain  = form.typeBien === 'Terrain / Parcelle';
-  const isBoutique = form.typeBien === 'Boutique';
-  const isMeuble   = PEUT_ETRE_MEUBLE.includes(form.typeBien) && form.estMeuble;
-  const isLocation = form.transaction === 'location';
+  const onSelectSanitaire = (v: string) => {
+    setSanitaire(v)
+    if (v === 'interieur' && finition === 'ordinaire') setFinition(null)
+  }
+  const onSelectFinition = (v: string) => {
+    setFinition(v)
+    if (v === 'ordinaire' && sanitaire === 'interieur') setSanitaire('cour')
+  }
 
-  /* ── Couplage sanitaire ↔ finition (identique à l'app mobile) ── */
-  const setSanitaire = (val: string) => {
-    if (val === 'interieur' && form.finition === 'ordinaire') {
-      setForm(prev => ({ ...prev, sanitaire: val, finition: '' }));
-    } else {
-      set('sanitaire', val);
+  const [prixLongSejour, setPrixLongSejour]           = useState('')
+  const [prixSejourRestreint, setPrixSejourRestreint] = useState('')
+  const [prixHeure, setPrixHeure]                     = useState('')
+  const [tarifsAutres, setTarifsAutres]               = useState<TarifCustom[]>([])
+
+  // Étape 1
+  const [ville, setVille]                         = useState('')
+  const [quartier, setQuartier]                   = useState('')
+  const [arrondissement, setArrondissement]       = useState('')
+  const [indicationAdresse, setIndicationAdresse] = useState('')
+  const [quartierSearch, setQuartierSearch]       = useState('')
+  const [quartierInputFocused, setQuartierInputFocused] = useState(false)
+
+  // Étape 2
+  const [chambres, setChambres]               = useState(1)
+  const [salons, setSalons]                   = useState(1)
+  const [cuisines, setCuisines]               = useState(1)
+  const [douches, setDouches]                 = useState(1)
+  const [typeCuisine, setTypeCuisine]         = useState('separee_douche')
+  const [cuisineAutre, setCuisineAutre]       = useState('')
+  const [chambreACouloir, setChambreACouloir] = useState(false)
+  const [typeCour, setTypeCour]               = useState('commune')
+  const [nbVoisins, setNbVoisins]             = useState(0)
+  const [accesVehicule, setAccesVehicule]     = useState<boolean | null>(null)
+  const [nbVehicules, setNbVehicules]         = useState(1)
+  const [avanceMois, setAvanceMois]           = useState(0)
+  const [avanceAutre, setAvanceAutre]         = useState(false)
+  const [avanceAutreText, setAvanceAutreText] = useState('')
+  const [echeanceMois, setEcheanceMois]       = useState(5)
+  const [echeanceAutre, setEcheanceAutre]     = useState(false)
+  const [echeanceAutreText, setEcheanceAutreText]     = useState('')
+  const [loyerPrepayeMois, setLoyerPrepayeMois]       = useState(0)
+  const [loyerPrepayeAutre, setLoyerPrepayeAutre]     = useState(false)
+  const [loyerPrepayeAutreText, setLoyerPrepayeAutreText] = useState('')
+  const [cautionEau, setCautionEau]           = useState('')
+  const [cautionElec, setCautionElec]         = useState('')
+  const [electricite, setElectricite]         = useState('non')
+  const [prixKwh, setPrixKwh]                 = useState('')
+  const [eau, setEau]                         = useState('non')
+  const [forageGestion, setForageGestion]     = useState<string | null>(null)
+  const [prixM3, setPrixM3]                   = useState('')
+  const [prixForage, setPrixForage]           = useState('')
+  const [equipementsBonus, setEquipementsBonus] = useState<string[]>([])
+  const [alentours, setAlentours]             = useState<string[]>([])
+  const [disponibilite, setDisponibilite]     = useState<'immediate' | 'en_finition'>('immediate')
+  const [showMoreOptions, setShowMoreOptions] = useState(false)
+
+  // Terrain
+  const [titreTerrain, setTitreTerrain]                     = useState('')
+  const [titreFoncier, setTitreFoncier]                     = useState<boolean | null>(null)
+  const [superficieTerrain, setSuperficieTerrain]           = useState('')
+  const [superficieUnite, setSuperficieUnite]               = useState<'m2' | 'ha'>('m2')
+  const [documentTerrain, setDocumentTerrain]               = useState<string | null>(null)
+  const [positionTerrain, setPositionTerrain]               = useState('bord_goudron')
+  const [angleRue, setAngleRue]                             = useState(false)
+  const [permissionConstruire, setPermissionConstruire]     = useState(false)
+  const [descriptionConstruction, setDescriptionConstruction] = useState('')
+  const [estLoti, setEstLoti]                               = useState<'lotie' | 'non_lotie' | 'autre' | null>(null)
+  const [detailsSupplementaires, setDetailsSupplementaires] = useState<DetailCustom[]>([])
+
+  // Boutique
+  const [typeVoie, setTypeVoie]                     = useState('goudron')
+  const [visibiliteBoutique, setVisibiliteBoutique] = useState('directe')
+  const [parkingClients, setParkingClients]         = useState('aucun')
+
+  // Étape 3
+  const [description, setDescription] = useState('')
+  const [autresFrais, setAutresFrais] = useState<TarifCustom[]>([])
+
+  // Dérivés
+  const isTerrain      = typeBien === 'terrain'
+  const isBoutique     = typeBien === 'boutique'
+  const isSmallUnit    = typeBien === 'entree_coucher' || typeBien === 'chambre_salon'
+  const peutEtreMeuble = typeBien === 'appartement' || typeBien === 'villa' || typeBien === 'maison'
+  const isMeuble       = peutEtreMeuble && estMeuble
+  const showPieces     = ['appartement', 'villa', 'maison', 'chambre_salon'].includes(typeBien)
+  const hasAtLeastOneTarif = !!(parsePrix(prixLongSejour) || parsePrix(prixSejourRestreint) || parsePrix(prixHeure) || tarifsAutres.some(t => parsePrix(t.prix)))
+
+  const superficieM2 = (() => {
+    const n = parseFloat(superficieTerrain.replace(',', '.'))
+    if (isNaN(n)) return undefined
+    return Math.round(superficieUnite === 'ha' ? n * 10000 : n)
+  })()
+
+  const typeBackend = isTerrain ? 'terrain'
+    : (typeBien === 'villa' || typeBien === 'maison' || isBoutique) ? 'maison'
+    : isMeuble ? 'appart_meuble' : 'appart_vide'
+
+  const sousType = typeBien === 'appartement' ? (isMeuble ? 'appart_meuble' : 'appartement')
+    : typeBien === 'maison' ? 'maison_individuelle'
+    : typeBien
+
+  const montantBrut = (() => {
+    const loyer  = parsePrix(prix) ?? 0
+    const cEau   = parsePrix(cautionEau) ?? 0
+    const cElec  = parsePrix(cautionElec) ?? 0
+    const autres = autresFrais.reduce((a, f) => a + (parsePrix(f.prix) ?? 0), 0)
+    return loyer * (avanceMois + loyerPrepayeMois) + cEau + cElec + autres
+  })()
+
+  const STEP_LABELS = ['Type & Prix', 'Localisation', isTerrain ? 'Terrain' : isBoutique ? 'Boutique' : 'Confort', 'Honoraires', 'Photos']
+
+  const filteredQuartiers = quartierSearch.trim()
+    ? QUARTIERS.filter(q => normalizeStr(q.nom).includes(normalizeStr(quartierSearch))).slice(0, 60)
+    : QUARTIERS.slice(0, 40)
+
+  const selectQuartier = (name: string, arr: string | null, vi: string | null) => {
+    setQuartier(name); setArrondissement(arr ?? ''); setVille(vi ?? '')
+    setQuartierSearch(name); setQuartierInputFocused(false)
+  }
+  const clearQuartier = () => { setQuartier(''); setArrondissement(''); setVille(''); setQuartierSearch('') }
+
+  const labelFinition  = (v: string) => ({ ordinaire: 'Ordinaire', semi_staffe: 'Semi-Staffé', staffe_carele: 'Staffé', haut_standing: 'Haut Standing / VIP' } as Record<string,string>)[v] ?? v
+  const labelSanitaire = (v: string) => v === 'interieur' ? 'Sanitaire' : v === 'cour' ? 'Non sanitaire' : (sanitaireAutre.trim() || 'Autre à préciser')
+  const labelCuisine   = (v: string) => v === 'separee_douche' ? 'Cuisine séparée de la douche' : v === 'americaine' ? 'Cuisine américaine' : (cuisineAutre.trim() || 'Autres')
+  const labelCour      = (v: string) => v === 'entree_personnelle' ? 'Entrée personnelle' : 'Cour commune'
+  const labelElec      = (v: string) => { const p = parsePrix(prixKwh); return v === 'sbee' ? 'SBEE' : v === 'decompteur' ? `Décompteur${p !== undefined ? ` (${Math.round(p)} FCFA/kWh)` : ''}` : 'Non' }
+  const labelEau       = (v: string) => {
+    const p = parsePrix(prixForage); const pm3 = parsePrix(prixM3)
+    if (v === 'soneb')            return 'SONEB'
+    if (v === 'decompteur_soneb') return `Décompteur SONEB${pm3 !== undefined ? ` (${Math.round(pm3)} FCFA/m³)` : ''}`
+    if (v === 'forage') { const suf = forageGestion === 'voisins' ? ' (entre voisins)' : forageGestion === 'mensuel' ? ' (abonnement mensuel)' : ''; return `Forage${suf}${p !== undefined ? ` · ${Math.round(p)} FCFA` : ''}` }
+    return 'Non'
+  }
+
+  const goNext = () => {
+    if (step === 0) {
+      if (!isMeuble && !parsePrix(prix)) { setError('Veuillez entrer le prix'); return }
+      if (isMeuble && !hasAtLeastOneTarif) { setError('Renseignez au moins un tarif'); return }
     }
-  };
-  const setFinition = (val: string) => {
-    if (val === 'ordinaire') {
-      setForm(prev => ({ ...prev, finition: val, sanitaire: 'cour' }));
-    } else {
-      set('finition', val);
-    }
-  };
+    if (step === 1 && !quartier.trim()) { setError('Veuillez sélectionner un quartier'); return }
+    if (step === 2 && isTerrain && !titreTerrain.trim()) { setError('Veuillez donner un nom à ce bien'); return }
+    if (step === 2 && isTerrain && !superficieM2) { setError('Veuillez indiquer la superficie du terrain'); return }
+    setError('')
+    if (step === 4) { handleCreate(); return }
+    setStep(s => s + 1)
+    window.scrollTo(0, 0)
+  }
 
-  /* ── Scroll to top ── */
-  const scrollTop = () => {
-    topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  const buildTarifsMeuble = () => {
+    const t: any = {}
+    if (parsePrix(prixLongSejour) !== undefined)      t.prix_long_sejour      = parsePrix(prixLongSejour)
+    if (parsePrix(prixSejourRestreint) !== undefined)  t.prix_sejour_restreint = parsePrix(prixSejourRestreint)
+    if (parsePrix(prixHeure) !== undefined)            t.prix_heure            = parsePrix(prixHeure)
+    const autres = tarifsAutres.filter(x => parsePrix(x.prix) !== undefined)
+    if (autres.length) t.autres = autres.map(x => ({ label: x.label.trim() || 'Autre', prix: parsePrix(x.prix) }))
+    return t
+  }
 
-  /* ── Validation ── */
-  const validate = (): boolean => {
-    const e: Record<string, string> = {};
-    if (step === 1) {
-      if (!form.typeBien)    e.typeBien    = 'Choisissez un type de bien';
-      if (!form.transaction) e.transaction = 'Choisissez une transaction';
-      if (!isMeuble && (!form.prix || Number(form.prix) <= 0)) e.prix = 'Le prix est obligatoire';
-      if (isMeuble && !form.tarifLongSejour && !form.tarifSejRestreint && !form.tarifHeure)
-        e.tarifs = 'Renseignez au moins un tarif';
-    }
-    if (step === 2) {
-      if (!form.adresse.trim()) e.adresse = "L'adresse est obligatoire";
-      if (!form.ville.trim())   e.ville   = 'La ville est obligatoire';
-    }
-    if (step === 3 && isTerrain) {
-      if (!form.superficieTerrain || Number(form.superficieTerrain) <= 0) e.superficieTerrain = 'La superficie est obligatoire';
-    }
-    setErrors(e);
-    return Object.keys(e).length === 0;
-  };
-
-  const next = () => { if (validate()) { setStep(s => s + 1); scrollTop(); } };
-  const back = () => { setStep(s => s - 1); scrollTop(); };
-
-  /* ── Photos ── */
-  const addPhotos = (files: FileList | null) => {
-    if (!files) return;
-    const arr = Array.from(files);
-    const remaining = 5 - photos.length;
-    const toAdd = arr.slice(0, remaining);
-    setPhotos(prev => [...prev, ...toAdd]);
-    toAdd.forEach(f => {
-      const reader = new FileReader();
-      reader.onload = e => setPhotoPreviews(prev => [...prev, e.target?.result as string]);
-      reader.readAsDataURL(f);
-    });
-  };
-  const removePhoto = (idx: number) => {
-    setPhotos(prev => prev.filter((_, i) => i !== idx));
-    setPhotoPreviews(prev => prev.filter((_, i) => i !== idx));
-  };
-
-  /* ── Payload ── */
-  const buildPayload = () => {
-    const backendType = getTypeBackend(form.typeBien, form.estMeuble);
-    const sousType    = getSousType(form.typeBien, form.estMeuble);
-
-    const amenites: any = { sous_type: sousType };
-
-    try {
-      const raw = sessionStorage.getItem('proprietaire_info');
-      if (raw) amenites.proprietaire_info = JSON.parse(raw);
-    } catch { /* noop */ }
+  const buildAmenites = () => {
+    const a: any = { sous_type: sousType }
+    if (proprietaireInfo) a.proprietaire_info = proprietaireInfo
 
     if (isTerrain) {
-      if (form.documentTerrain) amenites.document = form.documentTerrain;
-      amenites.position = form.positionTerrain;
-      amenites.angle_rue = form.angleRue;
-      amenites.permission_construire = form.permissionConstruire;
-      if (form.permissionConstruire && form.descriptionConstruction.trim())
-        amenites.description_construction = form.descriptionConstruction.trim();
-      if (form.estLoti)      amenites.loti          = form.estLoti === 'oui';
-      if (form.titreFoncier) amenites.titre_foncier = form.titreFoncier === 'oui';
+      if (documentTerrain) a.document = documentTerrain
+      a.position = positionTerrain; a.angle_rue = angleRue; a.permission_construire = permissionConstruire
+      if (permissionConstruire && descriptionConstruction.trim()) a.description_construction = descriptionConstruction.trim()
+      if (estLoti !== null) a.loti = estLoti
+      if (titreFoncier !== null) a.titre_foncier = titreFoncier
+      const details = detailsSupplementaires.filter(d => d.label.trim() && d.valeur.trim())
+      if (details.length) a.details_supplementaires = details.map(d => ({ label: d.label.trim(), valeur: d.valeur.trim() }))
+      return a
+    }
+
+    if (sanitaire === 'interieur') a.sanitaire = true
+    if (sanitaire === 'cour')      a.sanitaire = false
+    if (sanitaire === 'autre' && sanitaireAutre.trim()) a.sanitaire_autre = sanitaireAutre.trim()
+    if (finition) a.finition = finition
+    a.disponibilite = disponibilite
+    if (equipementsBonus.length) a.equipements = equipementsBonus
+    if (alentours.length) a.voisinage = alentours
+
+    if (isBoutique) {
+      a.type_voie = typeVoie; a.visibilite = visibiliteBoutique; a.parking_clients = parkingClients
     } else {
-      if (form.sanitaire === 'interieur') amenites.sanitaire = true;
-      else if (form.sanitaire === 'cour') amenites.sanitaire = false;
-      else if (form.sanitaire === 'autre' && form.sanitaireAutre.trim())
-        amenites.sanitaire_autre = form.sanitaireAutre.trim();
-      if (form.finition) amenites.finition = form.finition;
-      amenites.disponibilite = form.disponibilite;
-      if (equipements.size) amenites.equipements = [...equipements];
-      if (alentours.size)   amenites.voisinage    = [...alentours];
-
-      if (isBoutique) {
-        amenites.type_voie       = form.typeVoie;
-        amenites.visibilite      = form.visibiliteBoutique;
-        amenites.parking_clients = form.parkingClients;
-      } else {
-        amenites.type_cuisine = form.typeCuisine;
-        if (form.typeCuisine === 'autre' && form.cuisineAutre.trim())
-          amenites.cuisine_autre_detail = form.cuisineAutre.trim();
-        amenites.type_cour = form.typeCour;
-        if (form.typeCour === 'commune') {
-          amenites.nb_voisins = form.nbVoisins;
-          if (form.accesVehicule) amenites.acces_vehicule = form.accesVehicule === 'oui';
-          if (form.accesVehicule === 'oui') amenites.nb_vehicules = form.nbVehicules;
-        }
-        if (form.typeBien === 'Chambre-Salon') amenites.chambre_couloir = form.chambreACouloir;
-        amenites.avance_mois = form.avanceMois;
-        if (form.loyerPrePayeMois > 0) amenites.loyer_prepaye_mois = form.loyerPrePayeMois;
-        if (isLocation) amenites.echeance_mois = form.echeanceMois;
-        if (Number(form.cautionEau)  > 0) amenites.caution_eau  = Number(form.cautionEau);
-        if (Number(form.cautionElec) > 0) amenites.caution_elec = Number(form.cautionElec);
-        amenites.electricite = form.electricite;
-        if (form.electricite === 'decompteur' && Number(form.prixKwh) > 0)
-          amenites.prix_kwh = Number(form.prixKwh);
-        amenites.eau = form.eau;
-        if (form.eau === 'forage' && Number(form.prixForage) > 0)
-          amenites.prix_forage = Number(form.prixForage);
-        if (form.eau === 'decompteur_soneb' && Number(form.prixM3) > 0)
-          amenites.prix_m3 = Number(form.prixM3);
-        if (form.eau === 'forage' && form.forageGestion)
-          amenites.forage_gestion = form.forageGestion;
-        if (isMeuble) {
-          const tarifs: any = {};
-          if (Number(form.tarifLongSejour)   > 0) tarifs.prix_long_sejour      = Number(form.tarifLongSejour);
-          if (Number(form.tarifSejRestreint) > 0) tarifs.prix_sejour_restreint = Number(form.tarifSejRestreint);
-          if (Number(form.tarifHeure)        > 0) tarifs.prix_heure            = Number(form.tarifHeure);
-          if (Object.keys(tarifs).length) amenites.tarifs_meuble = tarifs;
-        }
-      }
+      const cEau = parsePrix(cautionEau) ?? 0; const cElec = parsePrix(cautionElec) ?? 0
+      a.type_cuisine = typeCuisine
+      if (typeCuisine === 'autre' && cuisineAutre.trim()) a.cuisine_autre_detail = cuisineAutre.trim()
+      a.type_cour = typeCour
+      if (typeCour === 'commune') a.nb_voisins = nbVoisins
+      if (typeCour === 'commune' && accesVehicule !== null) a.acces_vehicule = accesVehicule
+      if (typeCour === 'commune' && accesVehicule === true) a.nb_vehicules = nbVehicules
+      if (typeBien === 'chambre_salon') a.chambre_couloir = chambreACouloir
+      a.avance_mois = avanceMois
+      if (loyerPrepayeMois > 0) a.loyer_prepaye_mois = loyerPrepayeMois
+      if (typeTransaction === 'location') a.echeance_mois = echeanceMois
+      if (cEau  > 0) a.caution_eau  = cEau
+      if (cElec > 0) a.caution_elec = cElec
+      a.electricite = electricite
+      if (electricite === 'decompteur' && parsePrix(prixKwh) !== undefined) a.prix_kwh = parsePrix(prixKwh)
+      a.eau = eau
+      if (eau === 'decompteur_soneb' && parsePrix(prixM3) !== undefined) a.prix_m3 = parsePrix(prixM3)
+      if (eau === 'forage' && parsePrix(prixForage) !== undefined) a.prix_forage = parsePrix(prixForage)
+      if (eau === 'forage' && forageGestion) a.forage_gestion = forageGestion
+      if (isMeuble) a.tarifs_meuble = buildTarifsMeuble()
     }
 
-    const validFrais = autresFrais.filter(f => Number(f.montant) > 0);
-    if (validFrais.length)
-      amenites.autres_frais = validFrais.map(f => ({ label: f.label.trim() || 'Autre frais', montant: Number(f.montant) }));
+    const validAutres = autresFrais.filter(f => parsePrix(f.prix) !== undefined)
+    if (validAutres.length) a.autres_frais = validAutres.map(f => ({ label: f.label.trim() || 'Autre frais', montant: parsePrix(f.prix) }))
+    return a
+  }
 
-    const localisation: any = {
-      adresse:   form.adresse.trim(),
-      ville:     form.ville.trim(),
-      latitude:  Number(form.latitude)  || 6.3654,
-      longitude: Number(form.longitude) || 2.4183,
-    };
-    if (form.quartier.trim()) localisation.quartier = form.quartier.trim();
+  const buildPieces = () => {
+    if (isTerrain || isBoutique) return []
+    if (typeBien === 'entree_coucher') return [{ nom: 'Chambre', surface: 0 }, { nom: 'Entrée', surface: 0 }]
+    if (typeBien === 'chambre_salon') {
+      const p: any[] = []
+      for (let i = 0; i < chambres; i++) p.push({ nom: 'Chambre', surface: 0 })
+      for (let i = 0; i < salons;   i++) p.push({ nom: 'Salon',   surface: 0 })
+      return p
+    }
+    const p: any[] = []
+    for (let i = 0; i < chambres; i++) p.push({ nom: 'Chambre',       surface: 0 })
+    for (let i = 0; i < salons;   i++) p.push({ nom: 'Salon',         surface: 0 })
+    for (let i = 0; i < cuisines; i++) p.push({ nom: 'Cuisine',       surface: 0 })
+    for (let i = 0; i < douches;  i++) p.push({ nom: 'Salle de bain', surface: 0 })
+    return p
+  }
 
-    const prix = isMeuble
-      ? (Number(form.tarifLongSejour) || Number(form.tarifSejRestreint) || Number(form.tarifHeure) || Number(form.prix))
-      : Number(form.prix);
-
-    const payload: any = {
-      type: backendType, transaction: form.transaction, prix,
-      localisation, amenites, frais_visite: 500,
-    };
-    if (form.description.trim()) payload.description = form.description.trim();
-
-    const pieces = buildPieces(form.typeBien, form.chambres, form.salons, form.cuisines, form.douches, isTerrain, isBoutique);
-    if (pieces.length) payload.pieces = pieces;
-
-    if (isTerrain && Number(form.superficieTerrain) > 0)
-      payload.details_terrain = { superficie: Number(form.superficieTerrain), cloture: false };
-    else if (backendType === 'appart_vide' || backendType === 'appart_meuble')
-      payload.details_appart = { entree_personnelle: form.typeCour === 'entree_personnelle' };
-
-    return payload;
-  };
-
-  /* ── Submit ── */
-  const handleSubmit = async () => {
-    setSubmitting(true);
+  const handleCreate = async () => {
+    if (submitting) return
+    setSubmitting(true); setError('')
     try {
-      setSubmitStatus('Publication du bien…');
-      const bien = await postBien.create(buildPayload());
-      const bienId = bien?.id ?? bien?.data?.id ?? bien?.bien?.id;
-
-      if (bienId) {
-        for (let i = 0; i < photos.length; i++) {
-          setSubmitStatus(`Envoi des photos (${i + 1}/${photos.length})…`);
-          try { await postBien.uploadPhoto(bienId, photos[i]); } catch { /* non-bloquant */ }
-        }
-        if (video) {
-          setSubmitStatus('Envoi de la vidéo…');
-          try { await postBien.uploadVideo(bienId, video); } catch { /* non-bloquant */ }
-        }
+      let prixFinal: number
+      if (isMeuble) {
+        prixFinal = parsePrix(prixLongSejour) ?? parsePrix(prixSejourRestreint) ?? parsePrix(prixHeure)
+          ?? (tarifsAutres.length ? parsePrix(tarifsAutres[0].prix) : undefined) ?? 0
+      } else {
+        prixFinal = parsePrix(prix) ?? 0
       }
 
-      sessionStorage.removeItem('proprietaire_info');
-      navigate('/mes-annonces');
+      const notes = description.trim()
+      const titre = isTerrain ? titreTerrain.trim() : ''
+      const descFull = titre ? (notes ? `${titre}\n\n${notes}` : titre) : notes
+
+      const body: any = {
+        type: typeBackend,
+        transaction: typeTransaction,
+        prix: prixFinal,
+        frais_visite: 500,
+        description: descFull || undefined,
+        localisation: {
+          adresse: indicationAdresse.trim() || [quartier, arrondissement].filter(Boolean).join(', ') || quartier,
+          ville: ville || quartier || undefined,
+          quartier: quartier || undefined,
+          latitude: 6.3654,
+          longitude: 2.4183,
+        },
+        amenites: buildAmenites(),
+      }
+
+      if (isTerrain && superficieM2 !== undefined) {
+        body.details_terrain = { superficie: superficieM2, cloture: false }
+      } else if (typeBackend === 'appart_vide' || typeBackend === 'appart_meuble') {
+        body.details_appart = { entree_personnelle: typeCour === 'entree_personnelle' }
+      }
+
+      const pieces = buildPieces()
+      if (pieces.length) body.pieces = pieces
+
+      const data = await postBien.create(body)
+      const bien = data.data || data.bien || data
+      setCreatedId(bien.id)
+
+      if (photos.length > 0 && bien.id) {
+        for (let i = 0; i < photos.length; i++) {
+          try {
+            await postBien.uploadPhoto(bien.id, photos[i])
+            setUploadProgress(Math.round(((i + 1) / photos.length) * 100))
+          } catch (_) {}
+        }
+      }
+      if (video && bien.id) {
+        try { await postBien.uploadVideo(bien.id, video) } catch (_) {}
+      }
+
+      sessionStorage.removeItem('proprietaire_info')
+      setCreated(true)
     } catch (err: any) {
-      const msg = err?.response?.data?.message;
-      alert(Array.isArray(msg) ? msg.join('\n') : (msg ?? 'Erreur lors de la publication.'));
-      setSubmitting(false);
-      setSubmitStatus('');
+      setError(err?.response?.data?.message || 'Erreur lors de la création')
     }
-  };
+    setSubmitting(false)
+  }
 
-  /* ── Arrondissements disponibles pour la ville ── */
-  const arrondissements = form.ville ? getArrondissements(form.ville) : [];
+  const navStyle: CSSProperties = {
+    background: isScrolled ? 'var(--p-surface-glass)' : 'var(--p-surface)',
+    borderColor: 'var(--p-border)', borderStyle: 'solid',
+    borderBottomWidth: '1px',
+    borderTopWidth: isScrolled ? '1px' : '0px', borderLeftWidth: isScrolled ? '1px' : '0px', borderRightWidth: isScrolled ? '1px' : '0px',
+    borderRadius: isScrolled ? '1rem' : '0px', marginTop: isScrolled ? '8px' : '0px',
+    maxWidth: isScrolled ? '72rem' : '100%', paddingLeft: isScrolled ? '1rem' : '0.75rem', paddingRight: isScrolled ? '1rem' : '0.75rem',
+    boxShadow: isScrolled ? '0 8px 32px rgba(0,0,0,0.18)' : '0 1px 0 rgba(75,107,255,0.08)',
+  }
 
-  /* ── Render ── */
-  return (
-    <div className="pb-page" ref={topRef}>
-
-      <div className="pb-page-header">
-        <div>
-          <h1 className="pb-page-title">Publier un bien</h1>
-          <p className="pb-page-sub">Renseignez toutes les informations de l'annonce</p>
+  // Écran succès
+  if (created) {
+    return (
+      <div style={{ ...P, position: 'fixed', inset: 0, zIndex: 999, background: 'var(--p-deep)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1.5rem', textAlign: 'center' } as CSSProperties}>
+        <div style={{ width: 80, height: 80, borderRadius: '50%', background: BLUE + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={BLUE} strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
         </div>
-        <button className="pb-cancel-btn" onClick={() => navigate('/mes-annonces')}>Annuler</button>
+        <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--p-text)', marginBottom: 8 }}>Bien soumis !</h2>
+        <p style={{ fontSize: 13, color: 'var(--p-muted)', maxWidth: 320, marginBottom: 24 }}>
+          En attente de validation par l'administrateur. Vous serez notifié une fois approuvé.
+        </p>
+        <button onClick={() => navigate('/mes-annonces')}
+          style={{ padding: '14px 32px', borderRadius: 12, fontWeight: 700, background: BLUE, color: 'white', border: 'none', cursor: 'pointer', boxShadow: `0 4px 24px ${BLUE}44`, fontSize: 15, marginBottom: 12 }}>
+          Voir mes annonces
+        </button>
+        <button onClick={() => navigate('/mes-annonces')}
+          style={{ padding: '10px 24px', borderRadius: 12, fontSize: 13, fontWeight: 600, color: 'var(--p-muted)', background: 'transparent', border: 'none', cursor: 'pointer' }}>
+          Retour
+        </button>
       </div>
+    )
+  }
 
-      <StepTrack current={step} />
+  return (
+    <div style={{ ...P, position: 'fixed', inset: 0, zIndex: 999, background: 'var(--p-deep)', display: 'flex', flexDirection: 'column', overflow: 'hidden' } as CSSProperties}>
 
-      {/* ══ Étape 1 — Type & Prix ══ */}
-      {step === 1 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-
-          <div className="immo-card" style={{ padding: '1.5rem' }}>
-            <p className="pb-section-head">Type de bien</p>
-            {errors.typeBien && <div className="pb-err" style={{ marginBottom: 8 }}>{errors.typeBien}</div>}
-            <div className="pb-type-grid">
-              {TYPES_BIEN.map(t => (
-                <button key={t.display} type="button"
-                  className={`pb-type-btn${form.typeBien === t.display ? ' pb-type-active' : ''}`}
-                  onClick={() => { set('typeBien', t.display); set('estMeuble', false); }}>
-                  <div className="pb-type-name">{t.display}</div>
-                </button>
-              ))}
+      {/* Navbar */}
+      <header style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 50, pointerEvents: 'none', padding: isScrolled ? '0 8px' : '0', transition: 'padding 0.3s' }}>
+        <nav style={{ ...navStyle, margin: '0 auto', pointerEvents: 'auto', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', transition: 'all 0.3s' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 0' }}>
+            <div style={{ width: 28, height: 28, borderRadius: 8, background: BLUE + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={BLUE} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+              </svg>
             </div>
 
-            {PEUT_ETRE_MEUBLE.includes(form.typeBien) && (
-              <div style={{ marginTop: '1.25rem', padding: '1rem', background: 'var(--c-bg)', borderRadius: 10, border: '1px solid var(--c-border)' }}>
-                <ToggleRow
-                  label="Bien meublé"
-                  desc="Logement fourni avec mobilier et équipements"
-                  checked={form.estMeuble}
-                  onChange={v => set('estMeuble', v)}
-                />
-              </div>
-            )}
-          </div>
+            <button onClick={() => step > 0 ? setStep(s => s - 1) : navigate('/mes-annonces')}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 999, fontSize: 12, fontWeight: 600, border: '1px solid var(--p-border)', background: 'var(--p-card)', color: 'var(--p-muted)', cursor: 'pointer', flexShrink: 0 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 19l-7-7 7-7" />
+              </svg>
+              {step > 0 ? 'Retour' : 'Annuler'}
+            </button>
 
-          <div className="immo-card" style={{ padding: '1.5rem' }}>
-            <p className="pb-section-head">Type de transaction</p>
-            {errors.transaction && <div className="pb-err" style={{ marginBottom: 8 }}>{errors.transaction}</div>}
-            <div className="pb-trans-row">
-              <button type="button" className={`pb-trans-btn${form.transaction === 'location' ? ' pb-trans-active' : ''}`}
-                onClick={() => set('transaction', 'location')}>
-                <div className="pb-trans-title">Location</div>
-                <div className="pb-trans-sub">Mise en location mensuelle avec loyer</div>
-              </button>
-              <button type="button" className={`pb-trans-btn${form.transaction === 'vente' ? ' pb-trans-active' : ''}`}
-                onClick={() => set('transaction', 'vente')}>
-                <div className="pb-trans-title">Vente</div>
-                <div className="pb-trans-sub">Cession définitive du bien à l'acheteur</div>
-              </button>
+            <div style={{ flex: 1, textAlign: 'center', minWidth: 0 }}>
+              <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--p-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Nouveau bien</p>
+              <p style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--p-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {STEP_LABELS[step]}
+              </p>
+            </div>
+
+            <div style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 999, fontSize: 11, fontWeight: 700, border: `1px solid ${BLUE}40`, background: BLUE + '15', color: BLUE }}>
+              {step + 1}/{STEP_LABELS.length}
             </div>
           </div>
+          <div style={{ height: 2, background: 'var(--p-border)' }}>
+            <div style={{ height: '100%', transition: 'width 0.5s ease-out', width: `${((step + 1) / STEP_LABELS.length) * 100}%`, background: BLUE }} />
+          </div>
+        </nav>
+      </header>
 
-          {form.typeBien && form.transaction && (
-            <div className="immo-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-              {!isMeuble ? (
-                <MoneyField
-                  label={isLocation ? 'Loyer mensuel *' : 'Prix de vente *'}
-                  value={form.prix} onChange={v => set('prix', v)} error={errors.prix}
-                />
+      {/* Contenu + Footer */}
+      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', paddingTop: '4rem' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 16px', maxWidth: 672, margin: '0 auto', width: '100%' }}
+          onScroll={e => setIsScrolled(e.currentTarget.scrollTop > 40)}>
+
+          {error && (
+            <div style={{ borderRadius: 12, padding: '12px 16px', border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.1)', marginBottom: 16 }}>
+              <p style={{ fontSize: 14, color: '#EF4444' }}>{error}</p>
+            </div>
+          )}
+
+          {/* ═══ ÉTAPE 0 : TYPE & PRIX ═══ */}
+          {step === 0 && (
+            <div className="space-y-4">
+              <Card>
+                <Section title="Type de bien" />
+                <div className="flex flex-wrap gap-2">
+                  {TYPES_BIEN.map(t => (
+                    <button key={t.key} type="button" onClick={() => setTypeBien(t.key)}
+                      className="px-3.5 py-2.5 rounded-xl border-2 text-xs font-bold transition-all"
+                      style={{
+                        borderColor: typeBien === t.key ? BLUE : 'var(--p-border)',
+                        background: typeBien === t.key ? BLUE : 'transparent',
+                        color: typeBien === t.key ? 'white' : 'var(--p-muted)',
+                      }}>
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              </Card>
+
+              {isSmallUnit && (
+                <Card>
+                  <Section title="Sanitaires" />
+                  <ChoiceList options={SANITAIRE_OPTS} value={sanitaire} onChange={onSelectSanitaire} onDeselect={() => setSanitaire(null)} />
+                  {sanitaire === 'autre' && (
+                    <input value={sanitaireAutre} onChange={e => setSanitaireAutre(e.target.value)}
+                      placeholder="Précisez la configuration des sanitaires"
+                      className="mt-2 w-full rounded-xl px-4 py-2.5 text-sm outline-none border"
+                      style={baseInputStyle} />
+                  )}
+                  <div className="mt-5">
+                    <Section title="Finition / Standing" />
+                    <ChoiceList options={FINITION_OPTS} value={finition} onChange={onSelectFinition} />
+                  </div>
+                </Card>
+              )}
+
+              {peutEtreMeuble && (
+                <Card>
+                  <Section title="État du bien" />
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <Chip label="Vide" active={!estMeuble} onClick={() => setEstMeuble(false)} />
+                    <Chip label="Meublé / Guesthouse" active={estMeuble} onClick={() => setEstMeuble(true)} />
+                  </div>
+                </Card>
+              )}
+
+              <Card>
+                <Section title="Transaction" />
+                <div className="grid grid-cols-2 gap-2.5">
+                  <Chip label="Location" active={typeTransaction === 'location'} onClick={() => setTypeTransaction('location')} />
+                  <Chip label="Vente"    active={typeTransaction === 'vente'}    onClick={() => setTypeTransaction('vente')}    />
+                </div>
+              </Card>
+
+              {isMeuble ? (
+                <Card>
+                  <Section title="Tarification (par durée de séjour)" />
+                  <div className="space-y-3">
+                    {[
+                      { label: 'Court séjour (par nuit)', value: prixSejourRestreint, onChange: setPrixSejourRestreint },
+                      { label: 'Long séjour (mensuel)',   value: prixLongSejour,      onChange: setPrixLongSejour      },
+                      { label: "À l'heure",               value: prixHeure,           onChange: setPrixHeure           },
+                    ].map(row => (
+                      <div key={row.label} className="flex items-center gap-2.5">
+                        <span className="flex-1 text-xs font-semibold" style={{ color: 'var(--p-text)' }}>{row.label}</span>
+                        <div className="w-32"><MoneyInput value={row.value} onChange={row.onChange} /></div>
+                      </div>
+                    ))}
+                    {tarifsAutres.map((t, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <input value={t.label}
+                          onChange={e => setTarifsAutres(a => a.map((x, idx) => idx === i ? { ...x, label: e.target.value } : x))}
+                          placeholder="Libellé" className="flex-1 rounded-xl px-3 py-2.5 text-sm outline-none border" style={baseInputStyle} />
+                        <div className="w-28">
+                          <MoneyInput value={t.prix} onChange={v => setTarifsAutres(a => a.map((x, idx) => idx === i ? { ...x, prix: v } : x))} />
+                        </div>
+                        <button type="button" onClick={() => setTarifsAutres(a => a.filter((_, idx) => idx !== i))} style={{ color: '#EF4444' }}>✕</button>
+                      </div>
+                    ))}
+                    <button type="button" onClick={() => setTarifsAutres(a => [...a, { label: '', prix: '' }])}
+                      className="text-xs font-bold" style={{ color: BLUE }}>+ Ajouter un tarif</button>
+                  </div>
+                </Card>
               ) : (
-                <>
-                  <p className="pb-section-head">Tarifs</p>
-                  {errors.tarifs && <div className="pb-err" style={{ marginBottom: 8 }}>{errors.tarifs}</div>}
-                  <MoneyField label="Prix long séjour / nuit" value={form.tarifLongSejour} onChange={v => set('tarifLongSejour', v)} />
-                  <MoneyField label="Prix court séjour / nuit" value={form.tarifSejRestreint} onChange={v => set('tarifSejRestreint', v)} />
-                  <MoneyField label="Prix à l'heure" value={form.tarifHeure} onChange={v => set('tarifHeure', v)} />
-                </>
+                <Card>
+                  <Section title={typeTransaction === 'location' ? 'Loyer mensuel (FCFA)' : 'Prix de vente (FCFA)'} />
+                  <MoneyInput value={prix} onChange={setPrix} />
+                </Card>
               )}
             </div>
           )}
-        </div>
-      )}
 
-      {/* ══ Étape 2 — Localisation ══ */}
-      {step === 2 && (
-        <div className="immo-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
-
-          <FormField label="Ville *" error={errors.ville}>
-            <select className="immo-form-input" value={form.ville}
-              onChange={e => { set('ville', e.target.value); set('arrondissement', ''); set('quartier', ''); }}>
-              <option value="">— Choisir une ville —</option>
-              {BENIN_VILLES.map(v => <option key={v} value={v}>{v}</option>)}
-              <option value="autre">Autre ville</option>
-            </select>
-          </FormField>
-
-          {form.ville === 'autre' && (
-            <FormField label="Préciser la ville *" error={errors.ville}>
-              <input className="immo-form-input" value={form.ville === 'autre' ? '' : form.ville}
-                onChange={e => set('ville', e.target.value)} placeholder="Nom de la ville" />
-            </FormField>
-          )}
-
-          {arrondissements.length > 0 && (
-            <FormField label="Arrondissement (pour filtrer les quartiers)">
-              <select className="immo-form-input" value={form.arrondissement}
-                onChange={e => { set('arrondissement', e.target.value); set('quartier', ''); }}>
-                <option value="">— Tous les arrondissements —</option>
-                {arrondissements.map(a => <option key={a} value={a}>{a}</option>)}
-              </select>
-            </FormField>
-          )}
-
-          <FormField label="Quartier">
-            <QuartierDropdown
-              ville={BENIN_VILLES.includes(form.ville) ? form.ville : ''}
-              arrondissement={form.arrondissement}
-              value={form.quartier}
-              onChange={v => set('quartier', v)}
-            />
-          </FormField>
-
-          <FormField label="Adresse *" error={errors.adresse}>
-            <input className="immo-form-input" value={form.adresse} onChange={e => set('adresse', e.target.value)}
-              placeholder="Ex : Lot 42, Rue des Cocotiers" />
-          </FormField>
-
-          <div className="pb-section-divider" />
-          <p className="pb-section-head">Coordonnées GPS <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(pré-remplies sur Cotonou)</span></p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
-            <FormField label="Latitude">
-              <input className="immo-form-input" type="number" value={form.latitude} onChange={e => set('latitude', e.target.value)} />
-            </FormField>
-            <FormField label="Longitude">
-              <input className="immo-form-input" type="number" value={form.longitude} onChange={e => set('longitude', e.target.value)} />
-            </FormField>
-          </div>
-        </div>
-      )}
-
-      {/* ══ Étape 3 — Confort ══ */}
-      {step === 3 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-
-          {/* ── TERRAIN ── */}
-          {isTerrain && (
-            <>
-              <div className="immo-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                <p className="pb-section-head">Superficie & Document</p>
-                <MoneyField label="Superficie *" value={form.superficieTerrain}
-                  onChange={v => set('superficieTerrain', v)} unit="m²" error={errors.superficieTerrain} />
-                <FormField label="Document disponible">
-                  <select className="immo-form-input" value={form.documentTerrain} onChange={e => set('documentTerrain', e.target.value)}>
-                    <option value="">— Choisir —</option>
-                    {DOC_TERRAIN_OPTS.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
-                  </select>
-                </FormField>
+          {/* ═══ ÉTAPE 1 : LOCALISATION ═══ */}
+          {step === 1 && (
+            <Card>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-[11px] font-bold uppercase tracking-[0.14em] mb-2 block" style={{ color: 'var(--p-muted)' }}>Quartier</label>
+                  {quartier ? (
+                    <div className="flex items-center gap-3 px-4 py-3 rounded-xl border"
+                      style={{ background: 'rgba(72,199,116,0.09)', borderColor: 'rgba(72,199,116,0.45)' }}>
+                      <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="#48C774" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="flex-1 text-sm font-semibold" style={{ color: '#48C774' }}>
+                        {quartier}{arrondissement ? `, ${arrondissement}` : ''}{ville ? `, ${ville}` : ''}
+                      </span>
+                      <button type="button" onClick={clearQuartier}
+                        className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold"
+                        style={{ background: 'rgba(72,199,116,0.2)', color: '#48C774' }}>✕</button>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <input type="text" value={quartierSearch}
+                        onChange={e => setQuartierSearch(e.target.value)}
+                        onFocus={() => setQuartierInputFocused(true)}
+                        onBlur={() => setQuartierInputFocused(false)}
+                        placeholder="Rechercher un quartier…"
+                        className="w-full rounded-xl pl-9 pr-4 py-3 text-sm outline-none border transition-colors"
+                        style={baseInputStyle} />
+                      <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} style={{ color: 'var(--p-muted)' }}>
+                        <circle cx={11} cy={11} r={8} /><path strokeLinecap="round" d="M21 21l-4.35-4.35" />
+                      </svg>
+                      {quartierInputFocused && (
+                        <div className="absolute top-full left-0 right-0 mt-1.5 rounded-xl border overflow-auto z-20"
+                          style={{ background: 'var(--p-card)', borderColor: 'var(--p-border)', maxHeight: 260 }}>
+                          {filteredQuartiers.length === 0 ? (
+                            quartierSearch.trim() ? (
+                              <button type="button" onMouseDown={() => selectQuartier(quartierSearch.trim(), null, null)}
+                                className="w-full flex items-center gap-2.5 px-4 py-3 text-left text-sm font-semibold">
+                                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke={BLUE} strokeWidth={2}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                <span style={{ color: BLUE }}>Utiliser « {quartierSearch.trim()} »</span>
+                              </button>
+                            ) : (
+                              <p className="px-4 py-3 text-sm" style={{ color: 'var(--p-muted)' }}>Commencez à taper…</p>
+                            )
+                          ) : filteredQuartiers.map(q => (
+                            <button key={q.nom + q.arrondissement} type="button"
+                              onMouseDown={() => selectQuartier(q.nom, q.arrondissement, q.ville)}
+                              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-sm border-b transition-colors"
+                              style={{ borderColor: 'var(--p-border)', color: 'var(--p-text)' }}
+                              onMouseEnter={e => (e.currentTarget.style.background = 'var(--p-deep)')}
+                              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                              <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} style={{ color: 'var(--p-muted)' }}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                              </svg>
+                              <span className="flex-1">{q.nom}</span>
+                              <span className="text-[11px]" style={{ color: 'var(--p-muted)' }}>{q.arrondissement}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label className="text-[11px] font-bold uppercase tracking-[0.14em] mb-2 block" style={{ color: 'var(--p-muted)' }}>
+                    Indication précise <span style={{ textTransform: 'none', letterSpacing: 0, fontWeight: 400 }}>(optionnel)</span>
+                  </label>
+                  <input value={indicationAdresse} onChange={e => setIndicationAdresse(e.target.value)}
+                    placeholder="Ex: Derrière le CEG, à 200m du goudron..."
+                    className="w-full rounded-xl px-4 py-3 text-sm outline-none border transition-colors"
+                    style={baseInputStyle}
+                    onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
+                    onBlur={e => (e.currentTarget.style.borderColor = 'var(--p-border)')} />
+                </div>
               </div>
+            </Card>
+          )}
 
-              <div className="immo-card" style={{ padding: '1.5rem' }}>
-                <p className="pb-section-head" style={{ marginBottom: '1rem' }}>Position & Caractéristiques</p>
-                <p className="pb-section-head" style={{ fontSize: 11, marginBottom: 8 }}>Position</p>
-                <div className="pb-choices" style={{ marginBottom: '1rem' }}>
-                  {[
-                    { value: 'bord_goudron', label: 'Bord goudron', sub: 'Accès direct sur route goudronnée' },
-                    { value: 'ruelle',       label: 'Ruelle',       sub: 'Accès par voie secondaire' },
-                  ].map(o => (
-                    <ChoiceItem key={o.value} label={o.label} sub={o.sub}
-                      active={form.positionTerrain === o.value}
-                      onClick={() => set('positionTerrain', o.value)} />
-                  ))}
-                </div>
-                <div className="pb-toggle-list">
-                  <ToggleRow label="Angle de rue" desc="Parcelle en angle, double façade"
-                    checked={form.angleRue} onChange={v => set('angleRue', v)} />
-                  <ToggleRow label="Permission de construire" desc="Document de permis disponible"
-                    checked={form.permissionConstruire} onChange={v => set('permissionConstruire', v)} />
-                </div>
-                {form.permissionConstruire && (
-                  <div style={{ marginTop: '1rem' }}>
-                    <FormField label="Description de la construction autorisée">
-                      <textarea className="immo-form-input" rows={2} style={{ resize: 'vertical' }}
-                        value={form.descriptionConstruction}
-                        onChange={e => set('descriptionConstruction', e.target.value)}
-                        placeholder="Ex : R+2, usage mixte…" />
-                    </FormField>
+          {/* ═══ ÉTAPE 2 : TERRAIN ═══ */}
+          {step === 2 && isTerrain && (
+            <div className="space-y-4">
+              <Card>
+                <Section title="Nom du bien" required />
+                <textarea value={titreTerrain} onChange={e => setTitreTerrain(e.target.value)} rows={2} maxLength={120}
+                  placeholder="Ex: Parcelle bâtie à vendre en angle de rue à Cotonou Saint Jean"
+                  className="w-full rounded-xl px-4 py-3 text-sm outline-none resize-none border transition-colors"
+                  style={baseInputStyle}
+                  onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
+                  onBlur={e => (e.currentTarget.style.borderColor = 'var(--p-border)')} />
+              </Card>
+              <Card>
+                <Section title="Superficie" required />
+                <div className="flex gap-2.5">
+                  <input type="number" value={superficieTerrain} onChange={e => setSuperficieTerrain(e.target.value)}
+                    placeholder={superficieUnite === 'ha' ? 'Ex: 2.5' : 'Ex: 25000'}
+                    className="flex-1 min-w-0 rounded-xl px-4 py-3 text-sm outline-none border transition-colors"
+                    style={baseInputStyle}
+                    onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
+                    onBlur={e => (e.currentTarget.style.borderColor = 'var(--p-border)')} />
+                  <div className="flex rounded-xl border p-1 flex-shrink-0" style={{ borderColor: 'var(--p-border)', background: 'var(--p-deep)' }}>
+                    {(['m2', 'ha'] as const).map(u => (
+                      <button key={u} type="button"
+                        onClick={() => {
+                          if (u === superficieUnite) return
+                          const n = parseFloat(superficieTerrain.replace(',', '.'))
+                          if (!isNaN(n)) setSuperficieTerrain(String(u === 'ha' ? n / 10000 : Math.round(n * 10000)))
+                          setSuperficieUnite(u)
+                        }}
+                        className="px-3.5 py-2 rounded-lg text-xs font-bold transition-all"
+                        style={{ background: superficieUnite === u ? BLUE : 'transparent', color: superficieUnite === u ? 'white' : 'var(--p-muted)' }}>
+                        {u === 'm2' ? 'm²' : 'ha'}
+                      </button>
+                    ))}
                   </div>
+                </div>
+              </Card>
+              <Card>
+                <Section title="Document" />
+                <ChoiceList options={DOCUMENT_TERRAIN_OPTS} value={documentTerrain} onChange={setDocumentTerrain} onDeselect={() => setDocumentTerrain(null)} />
+              </Card>
+              <Card>
+                <Section title="Position" />
+                <ChoiceList options={[
+                  { value: 'bord_goudron', label: 'Au bord du goudron' },
+                  { value: 'ruelle', label: 'Dans la ruelle' },
+                  { value: 'autre', label: 'Autre' },
+                ]} value={positionTerrain} onChange={setPositionTerrain} />
+                <label className="mt-3 flex items-center justify-between px-4 py-3 rounded-xl border cursor-pointer"
+                  style={{ borderColor: 'var(--p-border)', background: 'var(--p-deep)' }}>
+                  <span className="text-sm font-semibold" style={{ color: 'var(--p-text)' }}>Parcelle en angle de rue</span>
+                  <input type="checkbox" checked={angleRue} onChange={e => setAngleRue(e.target.checked)} className="w-5 h-5 accent-blue-500" />
+                </label>
+              </Card>
+              <Card>
+                <Section title="Permission de construire ?" />
+                <div className="grid grid-cols-2 gap-2.5">
+                  <Chip label="Oui" active={permissionConstruire}  onClick={() => setPermissionConstruire(true)}  />
+                  <Chip label="Non" active={!permissionConstruire} onClick={() => setPermissionConstruire(false)} />
+                </div>
+                {permissionConstruire && (
+                  <textarea value={descriptionConstruction} onChange={e => setDescriptionConstruction(e.target.value)} rows={3}
+                    placeholder="Ex: Rez de deux chambres un salon, fondation R+5, 05 boutiques"
+                    className="mt-3 w-full rounded-xl px-4 py-3 text-sm outline-none border resize-none transition-colors"
+                    style={baseInputStyle}
+                    onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
+                    onBlur={e => (e.currentTarget.style.borderColor = 'var(--p-border)')} />
                 )}
-                <div className="pb-section-divider" />
-                <p className="pb-section-head" style={{ margin: '1rem 0 0.75rem' }}>Statut foncier</p>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  {[
-                    { key: 'estLoti',      label: 'Terrain loti' },
-                    { key: 'titreFoncier', label: 'Titre foncier' },
-                  ].map(({ key, label }) => (
-                    <div key={key}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--c-text)', marginBottom: 6 }}>{label}</div>
-                      <div className="pb-choices">
-                        {[{ value: 'oui', label: 'Oui' }, { value: 'non', label: 'Non' }].map(o => (
-                          <ChoiceItem key={o.value} label={o.label}
-                            active={(form as any)[key] === o.value}
-                            onClick={() => set(key as keyof Form, (form as any)[key] === o.value ? '' : o.value)} />
-                        ))}
+              </Card>
+              <Card>
+                <Section title="Zone lotie ?" />
+                <div className="grid grid-cols-3 gap-2.5">
+                  <Chip label="Lotie"     active={estLoti === 'lotie'}     onClick={() => setEstLoti('lotie')}     />
+                  <Chip label="Non lotie" active={estLoti === 'non_lotie'} onClick={() => setEstLoti('non_lotie')} />
+                  <Chip label="Autre"     active={estLoti === 'autre'}     onClick={() => setEstLoti('autre')}     />
+                </div>
+              </Card>
+              <Card>
+                <Section title="Titre foncier ?" />
+                <div className="grid grid-cols-2 gap-2.5">
+                  <Chip label="Oui" active={titreFoncier === true}  onClick={() => setTitreFoncier(true)}  />
+                  <Chip label="Non" active={titreFoncier === false} onClick={() => setTitreFoncier(false)} />
+                </div>
+              </Card>
+              <Card>
+                <Section title="Détails supplémentaires" />
+                <p className="text-xs mb-3" style={{ color: 'var(--p-muted)' }}>Ajoutez toute information utile non couverte ci-dessus.</p>
+                <div className="space-y-2.5">
+                  {detailsSupplementaires.map((d, i) => (
+                    <div key={i} className="p-3 rounded-xl border space-y-2" style={{ borderColor: 'var(--p-border)', background: 'var(--p-deep)' }}>
+                      <div className="flex items-center gap-2">
+                        <input value={d.label}
+                          onChange={e => setDetailsSupplementaires(arr => arr.map((x, idx) => idx === i ? { ...x, label: e.target.value } : x))}
+                          placeholder="Ex: Distance de la route" className="flex-1 text-sm font-semibold outline-none bg-transparent" style={{ color: 'var(--p-text)' }} />
+                        <button type="button" onClick={() => setDetailsSupplementaires(arr => arr.filter((_, idx) => idx !== i))} style={{ color: '#EF4444' }}>✕</button>
                       </div>
+                      <input value={d.valeur}
+                        onChange={e => setDetailsSupplementaires(arr => arr.map((x, idx) => idx === i ? { ...x, valeur: e.target.value } : x))}
+                        placeholder="Ex: 50 mètres" className="w-full rounded-lg px-3 py-2 text-sm outline-none"
+                        style={{ background: 'var(--p-card)', color: 'var(--p-text)' }} />
                     </div>
                   ))}
+                  <button type="button" onClick={() => setDetailsSupplementaires(arr => [...arr, { label: '', valeur: '' }])}
+                    className="w-full py-2.5 rounded-xl border text-xs font-bold" style={{ borderColor: BLUE + '40', color: BLUE }}>
+                    + Ajouter un détail
+                  </button>
                 </div>
-              </div>
-
-              <div className="immo-card" style={{ padding: '1.5rem' }}>
-                <p className="pb-section-head" style={{ marginBottom: '1rem' }}>Alentours</p>
-                <ChipSelect options={ALENTOURS_OPTS} selected={alentours}
-                  toggle={v => setAlentours(prev => { const n = new Set(prev); n.has(v) ? n.delete(v) : n.add(v); return n; })} />
-              </div>
-            </>
+              </Card>
+            </div>
           )}
 
-          {/* ── BOUTIQUE ── */}
-          {isBoutique && (
-            <>
-              <div className="immo-card" style={{ padding: '1.5rem' }}>
-                <p className="pb-section-head" style={{ marginBottom: '1rem' }}>Caractéristiques du local</p>
-                <FormField label="Type de voie">
-                  <select className="immo-form-input" value={form.typeVoie} onChange={e => set('typeVoie', e.target.value)}>
-                    <option value="goudron">Bord goudron</option>
-                    <option value="ruelle">Ruelle / voie secondaire</option>
-                    <option value="voie_pavee">Voie pavée</option>
-                  </select>
-                </FormField>
-                <div style={{ height: 12 }} />
-                <FormField label="Visibilité">
-                  <select className="immo-form-input" value={form.visibiliteBoutique} onChange={e => set('visibiliteBoutique', e.target.value)}>
-                    <option value="directe">Directe — bien exposée</option>
-                    <option value="partiellement">Partiellement visible</option>
-                    <option value="peu_visible">Peu visible</option>
-                  </select>
-                </FormField>
-                <div style={{ height: 12 }} />
-                <FormField label="Parking clients">
-                  <select className="immo-form-input" value={form.parkingClients} onChange={e => set('parkingClients', e.target.value)}>
-                    <option value="aucun">Aucun</option>
-                    <option value="espace_devant">Espace devant la boutique</option>
-                    <option value="parking_propre">Parking propre au local</option>
-                  </select>
-                </FormField>
-              </div>
-
-              <div className="immo-card" style={{ padding: '1.5rem' }}>
-                <p className="pb-section-head" style={{ marginBottom: '1rem' }}>Sanitaire</p>
-                <div className="pb-choices" style={{ marginBottom: '1.25rem' }}>
-                  {SANITAIRE_OPTS.map(o => (
-                    <ChoiceItem key={o.value} label={o.label} sub={o.sub}
-                      active={form.sanitaire === o.value}
-                      onClick={() => setSanitaire(form.sanitaire === o.value ? '' : o.value)} />
-                  ))}
+          {/* ═══ ÉTAPE 2 : BOUTIQUE ═══ */}
+          {step === 2 && isBoutique && (
+            <div className="space-y-4">
+              <Card>
+                <Section title="Position sur la voie" />
+                <ChoiceList options={[
+                  { value: 'goudron', label: 'Au bord du goudron (Premier choix)' },
+                  { value: 'ruelle',  label: 'Dans la ruelle'                     },
+                ]} value={typeVoie} onChange={setTypeVoie} />
+              </Card>
+              <Card>
+                <Section title="Visibilité depuis la rue" />
+                <div className="grid grid-cols-2 gap-2.5">
+                  <Chip label="Façade directe"   active={visibiliteBoutique === 'directe'} onClick={() => setVisibiliteBoutique('directe')} />
+                  <Chip label="Dans une galerie" active={visibiliteBoutique === 'galerie'} onClick={() => setVisibiliteBoutique('galerie')} />
                 </div>
-                {form.sanitaire === 'autre' && (
-                  <input className="immo-form-input" style={{ marginBottom: '1rem' }} value={form.sanitaireAutre}
-                    onChange={e => set('sanitaireAutre', e.target.value)} placeholder="Précisez le sanitaire" />
-                )}
-                <div className="pb-section-divider" />
-                <p className="pb-section-head" style={{ margin: '1rem 0 1rem' }}>Finition</p>
-                <div className="pb-choices">
-                  {FINITION_OPTS.map(o => (
-                    <ChoiceItem key={o.value} label={o.label} sub={o.sub}
-                      active={form.finition === o.value}
-                      onClick={() => setFinition(form.finition === o.value ? '' : o.value)} />
-                  ))}
-                </div>
-              </div>
-
-              <div className="immo-card" style={{ padding: '1.5rem' }}>
-                <p className="pb-section-head" style={{ marginBottom: '1rem' }}>Disponibilité</p>
-                <div className="pb-choices">
-                  {[{ value: 'immediate', label: 'Immédiate', sub: 'Disponible dès maintenant' }, { value: 'a_convenir', label: 'À convenir', sub: 'Date à fixer avec le propriétaire' }].map(o => (
-                    <ChoiceItem key={o.value} label={o.label} sub={o.sub}
-                      active={form.disponibilite === o.value}
-                      onClick={() => set('disponibilite', o.value)} />
-                  ))}
-                </div>
-              </div>
-
-              <div className="immo-card" style={{ padding: '1.5rem' }}>
-                <p className="pb-section-head" style={{ marginBottom: '1rem' }}>Équipements</p>
-                <ChipSelect options={EQUIP_BOUTIQUE} selected={equipements}
-                  toggle={v => setEquipements(prev => { const n = new Set(prev); n.has(v) ? n.delete(v) : n.add(v); return n; })} />
-                <div className="pb-section-divider" />
-                <p className="pb-section-head" style={{ margin: '1rem 0 1rem' }}>Alentours</p>
-                <ChipSelect options={ALENTOURS_OPTS} selected={alentours}
-                  toggle={v => setAlentours(prev => { const n = new Set(prev); n.has(v) ? n.delete(v) : n.add(v); return n; })} />
-              </div>
-            </>
-          )}
-
-          {/* ── RÉSIDENTIEL ── */}
-          {!isTerrain && !isBoutique && (
-            <>
-              <div className="immo-card" style={{ padding: '1.5rem' }}>
-                <p className="pb-section-head">Sanitaire</p>
-                <div className="pb-choices" style={{ margin: '1rem 0' }}>
-                  {SANITAIRE_OPTS.map(o => (
-                    <ChoiceItem key={o.value} label={o.label} sub={o.sub}
-                      active={form.sanitaire === o.value}
-                      onClick={() => setSanitaire(form.sanitaire === o.value ? '' : o.value)} />
-                  ))}
-                </div>
-                {form.sanitaire === 'autre' && (
-                  <input className="immo-form-input" style={{ marginBottom: '1rem' }} value={form.sanitaireAutre}
-                    onChange={e => set('sanitaireAutre', e.target.value)} placeholder="Précisez le sanitaire" />
-                )}
-                <div className="pb-section-divider" />
-                <p className="pb-section-head" style={{ margin: '1rem 0 1rem' }}>Finition</p>
-                <div className="pb-choices">
-                  {FINITION_OPTS.map(o => (
-                    <ChoiceItem key={o.value} label={o.label} sub={o.sub}
-                      active={form.finition === o.value}
-                      onClick={() => setFinition(form.finition === o.value ? '' : o.value)} />
-                  ))}
-                </div>
-                <div className="pb-section-divider" />
-                <p className="pb-section-head" style={{ margin: '1rem 0 1rem' }}>Type de cuisine</p>
-                <div className="pb-choices">
-                  {CUISINE_OPTS.map(o => (
-                    <ChoiceItem key={o.value} label={o.label} sub={o.sub}
-                      active={form.typeCuisine === o.value}
-                      onClick={() => set('typeCuisine', o.value)} />
-                  ))}
-                </div>
-                {form.typeCuisine === 'autre' && (
-                  <input className="immo-form-input" style={{ marginTop: '0.75rem' }} value={form.cuisineAutre}
-                    onChange={e => set('cuisineAutre', e.target.value)} placeholder="Précisez le type de cuisine" />
-                )}
-              </div>
-
-              <div className="immo-card" style={{ padding: '1.5rem' }}>
-                <p className="pb-section-head" style={{ marginBottom: '1rem' }}>Type de cour</p>
-                <div className="pb-choices" style={{ marginBottom: '1rem' }}>
-                  {[
-                    { value: 'commune',            label: 'Cour commune',      sub: 'Partagée entre plusieurs occupants' },
-                    { value: 'entree_personnelle', label: 'Entrée personnelle', sub: 'Entrée propre, séparée des voisins' },
-                  ].map(o => (
-                    <ChoiceItem key={o.value} label={o.label} sub={o.sub}
-                      active={form.typeCour === o.value}
-                      onClick={() => set('typeCour', o.value)} />
-                  ))}
-                </div>
-                {form.typeCour === 'commune' && (
-                  <>
-                    <SelectNum label="Nombre de voisins" value={form.nbVoisins}
-                      onChange={v => set('nbVoisins', v)}
-                      options={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]} />
-                    <div style={{ height: 12 }} />
-                    <p className="pb-section-head" style={{ fontSize: 11, marginBottom: 8 }}>Accès véhicule</p>
-                    <div className="pb-choices" style={{ marginBottom: '1rem' }}>
-                      {[{ value: 'oui', label: 'Oui' }, { value: 'non', label: 'Non' }].map(o => (
-                        <ChoiceItem key={o.value} label={o.label}
-                          active={form.accesVehicule === o.value}
-                          onClick={() => set('accesVehicule', form.accesVehicule === o.value ? '' : o.value)} />
+              </Card>
+              <Card>
+                <Section title="Parking clients" />
+                <ChoiceList options={[
+                  { value: 'aucun', label: 'Aucun parking'          },
+                  { value: 'motos', label: 'Trottoir pour motos'    },
+                  { value: 'dedie', label: 'Parking voitures dédié' },
+                ]} value={parkingClients} onChange={setParkingClients} />
+              </Card>
+              <button type="button" onClick={() => setShowMoreOptions(v => !v)} className="text-sm font-bold" style={{ color: BLUE }}>
+                {showMoreOptions ? "Moins d'options" : "Plus d'options (facultatif)"}
+              </button>
+              {showMoreOptions && (
+                <>
+                  <Card>
+                    <Section title="Commodités internes" />
+                    <div className="flex flex-wrap gap-2">
+                      {EQUIPEMENTS_BOUTIQUE.map(o => (
+                        <Chip key={o.value} label={o.label} active={equipementsBonus.includes(o.value)}
+                          onClick={() => setEquipementsBonus(e => e.includes(o.value) ? e.filter(x => x !== o.value) : [...e, o.value])} />
                       ))}
                     </div>
-                    {form.accesVehicule === 'oui' && (
-                      <SelectNum label="Nombre de places" value={form.nbVehicules}
-                        onChange={v => set('nbVehicules', v)} options={[1, 2, 3, 4, 5]} />
-                    )}
-                  </>
-                )}
-                {form.typeBien === 'Chambre-Salon' && (
-                  <>
-                    <div className="pb-section-divider" />
-                    <div style={{ marginTop: '1rem' }}>
-                      <ToggleRow label="Chambre à couloir" desc="Chambre avec couloir d'accès indépendant"
-                        checked={form.chambreACouloir} onChange={v => set('chambreACouloir', v)} />
+                  </Card>
+                  <Card>
+                    <Section title="À proximité" />
+                    <div className="flex flex-wrap gap-2">
+                      {ALENTOURS_OPTS.map(o => (
+                        <Chip key={o.value} label={o.label} active={alentours.includes(o.value)}
+                          onClick={() => setAlentours(a => a.includes(o.value) ? a.filter(x => x !== o.value) : [...a, o.value])} />
+                      ))}
                     </div>
-                  </>
-                )}
-              </div>
+                  </Card>
+                </>
+              )}
+              <Card>
+                <Section title="Disponibilité" />
+                <div className="grid grid-cols-2 gap-2.5">
+                  <Chip label="Immédiate"             active={disponibilite === 'immediate'}   onClick={() => setDisponibilite('immediate')}   />
+                  <Chip label="En finition / Bientôt" active={disponibilite === 'en_finition'} onClick={() => setDisponibilite('en_finition')} />
+                </div>
+              </Card>
+            </div>
+          )}
 
-              {form.typeBien !== 'Entrée-Coucher' && (
-                <div className="immo-card" style={{ padding: '1.5rem' }}>
-                  <p className="pb-section-head" style={{ marginBottom: '1rem' }}>Composition du logement</p>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <SelectNum label="Chambres" value={form.chambres} onChange={v => set('chambres', v)} options={[1, 2, 3, 4, 5, 6]} />
-                    <SelectNum label="Salons" value={form.salons} onChange={v => set('salons', v)} options={[0, 1, 2, 3]} />
-                    {form.typeBien !== 'Chambre-Salon' && (
+          {/* ═══ ÉTAPE 2 : RÉSIDENTIEL ═══ */}
+          {step === 2 && !isTerrain && !isBoutique && (
+            <div className="space-y-4">
+              {showPieces && (
+                <Card>
+                  <Section title="Nombre de pièces" />
+                  <div className="divide-y" style={{ borderColor: 'var(--p-border)' }}>
+                    <Counter label="Chambres" value={chambres} onChange={setChambres} min={1} />
+                    <Counter label="Salons"   value={salons}   onChange={setSalons}   />
+                    {typeBien !== 'chambre_salon' && (
                       <>
-                        <SelectNum label="Cuisines" value={form.cuisines} onChange={v => set('cuisines', v)} options={[0, 1, 2]} />
-                        <SelectNum label="Salles de bain" value={form.douches} onChange={v => set('douches', v)} options={[0, 1, 2, 3]} />
+                        <Counter label="Cuisines" value={cuisines} onChange={setCuisines} />
+                        <Counter label="Douches"  value={douches}  onChange={setDouches}  />
                       </>
                     )}
                   </div>
-                </div>
+                </Card>
               )}
-
-              <div className="immo-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                <p className="pb-section-head">Conditions financières</p>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
-                  <SelectNum label="Avance (mois)" value={form.avanceMois}
-                    onChange={v => set('avanceMois', v)} options={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]} />
-                  <SelectNum label="Loyer prépayé (mois)" value={form.loyerPrePayeMois}
-                    onChange={v => set('loyerPrePayeMois', v)} options={[0, 1, 2, 3, 4, 5, 6]} />
-                  {isLocation && (
-                    <SelectNum label="Échéance (mois)" value={form.echeanceMois}
-                      onChange={v => set('echeanceMois', v)} options={[1, 2, 3, 4, 5, 6, 12]} />
+              {!isSmallUnit && (
+                <Card>
+                  <Section title="Sanitaires" />
+                  <ChoiceList options={SANITAIRE_OPTS} value={sanitaire} onChange={onSelectSanitaire} onDeselect={() => setSanitaire(null)} />
+                  {sanitaire === 'autre' && (
+                    <input value={sanitaireAutre} onChange={e => setSanitaireAutre(e.target.value)}
+                      placeholder="Précisez la configuration des sanitaires"
+                      className="mt-2 w-full rounded-xl px-4 py-2.5 text-sm outline-none border transition-colors"
+                      style={baseInputStyle}
+                      onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
+                      onBlur={e => (e.currentTarget.style.borderColor = 'var(--p-border)')} />
                   )}
-                </div>
-                <div style={{ height: 4 }} />
-                <MoneyField label="Caution eau" value={form.cautionEau} onChange={v => set('cautionEau', v)} />
-                <MoneyField label="Caution électricité" value={form.cautionElec} onChange={v => set('cautionElec', v)} />
-              </div>
-
-              <div className="immo-card" style={{ padding: '1.5rem' }}>
-                <p className="pb-section-head" style={{ marginBottom: '1rem' }}>Électricité</p>
-                <div className="pb-choices" style={{ marginBottom: '0.75rem' }}>
-                  {[
-                    { value: 'non',        label: 'Non',        sub: "Pas d'électricité",         icon: <IconBan /> },
-                    { value: 'sbee',       label: 'SBEE',       sub: 'Compteur SBEE normal',       icon: <IconLightning /> },
-                    { value: 'decompteur', label: 'Décompteur', sub: 'Compteur partagé avec tarif', icon: <IconMeter /> },
-                  ].map(o => (
-                    <ChoiceItem key={o.value} label={o.label} sub={o.sub} icon={o.icon}
-                      active={form.electricite === o.value}
-                      onClick={() => set('electricite', o.value)} />
-                  ))}
-                </div>
-                {form.electricite === 'decompteur' && (
-                  <MoneyField label="Prix du kWh" value={form.prixKwh} onChange={v => set('prixKwh', v)} unit="FCFA/kWh" />
-                )}
-
-                <div className="pb-section-divider" />
-                <p className="pb-section-head" style={{ margin: '1rem 0 1rem' }}>Eau</p>
-                <div className="pb-choices" style={{ marginBottom: '0.75rem' }}>
-                  {[
-                    { value: 'non',             label: 'Non',              sub: "Pas d'eau courante",  icon: <IconBan /> },
-                    { value: 'soneb',           label: 'SONEB',            sub: 'Compteur SONEB normal', icon: <IconDrop /> },
-                    { value: 'decompteur_soneb',label: 'Décompteur SONEB', sub: 'Compteur partagé',    icon: <IconMeter /> },
-                    { value: 'forage',          label: 'Forage',           sub: 'Pompe forage',         icon: <IconWell /> },
-                  ].map(o => (
-                    <ChoiceItem key={o.value} label={o.label} sub={o.sub} icon={o.icon}
-                      active={form.eau === o.value}
-                      onClick={() => set('eau', o.value)} />
-                  ))}
-                </div>
-                {form.eau === 'decompteur_soneb' && (
-                  <MoneyField label="Prix au m³" value={form.prixM3} onChange={v => set('prixM3', v)} unit="FCFA/m³" />
-                )}
-                {form.eau === 'forage' && (
-                  <>
-                    <MoneyField label="Prix forage / mois" value={form.prixForage} onChange={v => set('prixForage', v)} />
-                    <div style={{ height: 8 }} />
-                    <p className="pb-section-head" style={{ fontSize: 11, marginBottom: 8 }}>Gestion du forage</p>
-                    <div className="pb-choices">
-                      {[{ value: 'voisins', label: 'Entre voisins' }, { value: 'mensuel', label: 'Mensuel fixe' }].map(o => (
-                        <ChoiceItem key={o.value} label={o.label}
-                          active={form.forageGestion === o.value}
-                          onClick={() => set('forageGestion', form.forageGestion === o.value ? '' : o.value)} />
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
-
-              <div className="immo-card" style={{ padding: '1.5rem' }}>
-                <p className="pb-section-head" style={{ marginBottom: '1rem' }}>Disponibilité</p>
-                <div className="pb-choices">
-                  {[
-                    { value: 'immediate',  label: 'Immédiate',  sub: 'Disponible dès maintenant' },
-                    { value: 'a_convenir', label: 'À convenir', sub: 'Date à fixer avec le propriétaire' },
-                  ].map(o => (
-                    <ChoiceItem key={o.value} label={o.label} sub={o.sub}
-                      active={form.disponibilite === o.value}
-                      onClick={() => set('disponibilite', o.value)} />
-                  ))}
-                </div>
-              </div>
-
-              <div className="immo-card" style={{ padding: '1.5rem' }}>
-                <p className="pb-section-head" style={{ marginBottom: '1rem' }}>Équipements</p>
-                <ChipSelect options={EQUIP_RESIDENTIEL} selected={equipements}
-                  toggle={v => setEquipements(prev => { const n = new Set(prev); n.has(v) ? n.delete(v) : n.add(v); return n; })} />
-                <div className="pb-section-divider" />
-                <p className="pb-section-head" style={{ margin: '1rem 0 1rem' }}>Alentours</p>
-                <ChipSelect options={ALENTOURS_OPTS} selected={alentours}
-                  toggle={v => setAlentours(prev => { const n = new Set(prev); n.has(v) ? n.delete(v) : n.add(v); return n; })} />
-              </div>
-            </>
-          )}
-        </div>
-      )}
-
-      {/* ══ Étape 4 — Description ══ */}
-      {step === 4 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-
-          <div className="immo-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-            <p className="pb-section-head">Description générale</p>
-            <FormField label="Description du bien (optionnel)">
-              <textarea className="immo-form-input" rows={4} style={{ resize: 'vertical', marginTop: 4 }}
-                value={form.description} onChange={e => set('description', e.target.value)}
-                placeholder="Décrivez le bien, ses atouts, l'environnement, les points forts…" />
-            </FormField>
-          </div>
-
-          <div className="immo-card" style={{ padding: '1.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-              <p className="pb-section-head" style={{ marginBottom: 0 }}>Autres frais</p>
-              <button type="button" onClick={() => setAutresFrais(prev => [...prev, { label: '', montant: '' }])}
-                style={{ fontSize: 12, fontWeight: 600, color: '#2563EB', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px' }}>
-                + Ajouter un frais
-              </button>
-            </div>
-            {autresFrais.length === 0 && (
-              <div style={{ fontSize: 13, color: 'var(--c-muted)', textAlign: 'center', padding: '1rem 0' }}>Aucun frais supplémentaire</div>
-            )}
-            {autresFrais.map((f, i) => (
-              <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 10, marginBottom: 10, alignItems: 'end' }}>
-                <div className="immo-form-field">
-                  <label className="immo-form-label">Libellé</label>
-                  <input className="immo-form-input" placeholder="Ex : Frais de dossier"
-                    value={f.label} onChange={e => setAutresFrais(prev => prev.map((x, j) => j === i ? { ...x, label: e.target.value } : x))} />
-                </div>
-                <div className="pb-input-group">
-                  <input type="number" placeholder="0" value={f.montant}
-                    onChange={e => setAutresFrais(prev => prev.map((x, j) => j === i ? { ...x, montant: e.target.value } : x))} />
-                  <div className="pb-input-unit">FCFA</div>
-                </div>
-                <button type="button" onClick={() => setAutresFrais(prev => prev.filter((_, j) => j !== i))}
-                  style={{ height: 38, width: 38, borderRadius: 8, border: '1px solid var(--c-border)', background: '#FEF2F2', color: '#DC2626', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                  </svg>
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ══ Étape 5 — Photos & Vidéo ══ */}
-      {step === 5 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-
-          <div className="immo-card" style={{ padding: '1.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-              <div>
-                <p className="pb-section-head" style={{ marginBottom: 2 }}>Photos</p>
-                <div style={{ fontSize: 12, color: 'var(--c-muted)' }}>{photos.length}/5 photo{photos.length > 1 ? 's' : ''} — JPG, PNG, WEBP</div>
-              </div>
-              {photos.length < 5 && (
-                <button type="button" onClick={() => photoInputRef.current?.click()}
-                  style={{ fontSize: 12, fontWeight: 600, color: '#2563EB', background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 8, padding: '6px 14px', cursor: 'pointer' }}>
-                  + Ajouter des photos
-                </button>
+                  <div className="mt-5">
+                    <Section title="Finition / Standing" />
+                    <ChoiceList options={FINITION_OPTS} value={finition} onChange={onSelectFinition} />
+                  </div>
+                </Card>
               )}
-            </div>
-            <input ref={photoInputRef} type="file" multiple accept="image/jpeg,image/jpg,image/png,image/webp"
-              style={{ display: 'none' }} onChange={e => addPhotos(e.target.files)} />
-            {photoPreviews.length > 0 ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 10 }}>
-                {photoPreviews.map((src, i) => (
-                  <div key={i} style={{ position: 'relative', borderRadius: 10, overflow: 'hidden', aspectRatio: '4/3' }}>
-                    <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    <button type="button" onClick={() => removePhoto(i)}
-                      style={{ position: 'absolute', top: 4, right: 4, width: 22, height: 22, borderRadius: '50%', background: 'rgba(0,0,0,0.6)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                      </svg>
-                    </button>
-                    {i === 0 && (
-                      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(37,99,235,0.85)', color: '#fff', fontSize: 10, fontWeight: 700, textAlign: 'center', padding: '3px 0' }}>
-                        Photo principale
+              <Card>
+                <Section title="Type de cuisine" />
+                <ChoiceList options={CUISINE_OPTS} value={typeCuisine} onChange={setTypeCuisine} />
+                {typeCuisine === 'autre' && (
+                  <input value={cuisineAutre} onChange={e => setCuisineAutre(e.target.value)}
+                    placeholder="Précisez le type de cuisine"
+                    className="mt-2 w-full rounded-xl px-4 py-2.5 text-sm outline-none border transition-colors"
+                    style={baseInputStyle}
+                    onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
+                    onBlur={e => (e.currentTarget.style.borderColor = 'var(--p-border)')} />
+                )}
+              </Card>
+              {typeBien === 'chambre_salon' && (
+                <Card>
+                  <Section title="Chambre à couloir ?" />
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <Chip label="Oui" active={chambreACouloir}  onClick={() => setChambreACouloir(true)}  />
+                    <Chip label="Non" active={!chambreACouloir} onClick={() => setChambreACouloir(false)} />
+                  </div>
+                </Card>
+              )}
+              <Card>
+                <Section title="Type de cour / Accès" />
+                <ChoiceList options={COUR_OPTS} value={typeCour} onChange={setTypeCour} />
+                {COUR_DESC[typeCour] && <p className="text-xs italic mt-2" style={{ color: BLUE }}>{COUR_DESC[typeCour]}</p>}
+                {typeCour === 'commune' && (
+                  <div className="mt-4 space-y-4">
+                    <div>
+                      <p className="text-xs font-semibold mb-2" style={{ color: 'var(--p-muted)' }}>Nombre de voisins dans la cour</p>
+                      <Counter label="Voisins" value={nbVoisins} onChange={setNbVoisins} />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold mb-2" style={{ color: 'var(--p-muted)' }}>Accès véhicule</p>
+                      <div className="grid grid-cols-2 gap-2.5">
+                        <Chip label="Oui" active={accesVehicule === true}  onClick={() => setAccesVehicule(true)}  />
+                        <Chip label="Non" active={accesVehicule === false} onClick={() => setAccesVehicule(false)} />
+                      </div>
+                    </div>
+                    {accesVehicule === true && (
+                      <div>
+                        <p className="text-xs font-semibold mb-2" style={{ color: 'var(--p-muted)' }}>Nombre de véhicules</p>
+                        <div className="flex flex-wrap gap-2">
+                          {[1, 2, 3, 4, 5].map(n => (
+                            <Chip key={n} label={`${n}`} active={nbVehicules === n} onClick={() => setNbVehicules(n)} />
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div onClick={() => photoInputRef.current?.click()}
-                style={{ border: '2px dashed var(--c-border)', borderRadius: 12, padding: '2.5rem', textAlign: 'center', cursor: 'pointer', color: 'var(--c-muted)' }}>
-                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: 8 }}>
-                  <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
-                  <polyline points="21 15 16 10 5 21"/>
-                </svg>
-                <div style={{ fontSize: 13, fontWeight: 600 }}>Cliquez pour ajouter des photos</div>
-                <div style={{ fontSize: 11, marginTop: 4 }}>Maximum 5 photos</div>
-              </div>
-            )}
-          </div>
+                )}
+              </Card>
+              <Card>
+                <Section title="Avance (mois de loyer)" />
+                <NumberPicker presets={[0, 1, 2, 3, 4, 5]} unit={n => n === 0 ? 'Aucun' : `${n} mois`}
+                  value={avanceMois} isCustom={avanceAutre}
+                  onPick={n => { setAvanceMois(n); setAvanceAutre(false) }}
+                  onCustomStart={() => setAvanceAutre(true)}
+                  customText={avanceAutreText}
+                  onCustomText={t => { setAvanceAutreText(t); setAvanceMois(Number(t) || 0) }}
+                />
+                {(parsePrix(prix) ?? 0) > 0 && avanceMois > 0 && (
+                  <p className="text-sm font-bold mt-2" style={{ color: BLUE }}>= {formatFcfa((parsePrix(prix) ?? 0) * avanceMois)}</p>
+                )}
+              </Card>
+              {typeTransaction === 'location' && (
+                <Card>
+                  <Section title="Échéance du mois" />
+                  <NumberPicker presets={[5, 10, 15, 20, 25, 30]} unit={n => `${n}`}
+                    value={echeanceMois} isCustom={echeanceAutre}
+                    onPick={n => { setEcheanceMois(n); setEcheanceAutre(false) }}
+                    onCustomStart={() => setEcheanceAutre(true)}
+                    customText={echeanceAutreText}
+                    onCustomText={t => { setEcheanceAutreText(t); setEcheanceMois(Number(t) || 5) }}
+                  />
+                </Card>
+              )}
+              <Card>
+                <Section title="Loyer prépayé (optionnel)" />
+                <NumberPicker presets={[0, 1, 2, 3]} unit={n => n === 0 ? 'Aucun' : `${n} mois`}
+                  value={loyerPrepayeMois} isCustom={loyerPrepayeAutre}
+                  onPick={n => { setLoyerPrepayeMois(n); setLoyerPrepayeAutre(false) }}
+                  onCustomStart={() => setLoyerPrepayeAutre(true)}
+                  customText={loyerPrepayeAutreText}
+                  onCustomText={t => { setLoyerPrepayeAutreText(t); setLoyerPrepayeMois(Number(t) || 0) }}
+                />
+                {loyerPrepayeMois > 0 && (
+                  <p className="text-xs italic mt-2" style={{ color: BLUE }}>
+                    {loyerPrepayeMois === 1
+                      ? 'Le locataire ne paiera pas de loyer pour le 1er mois après intégration.'
+                      : `Le locataire ne paiera pas de loyer pour les ${loyerPrepayeMois} premiers mois après intégration.`}
+                  </p>
+                )}
+              </Card>
+              <Card>
+                <Section title="Électricité" />
+                <ChoiceList options={[
+                  { value: 'non', label: 'Non' }, { value: 'sbee', label: 'SBEE' }, { value: 'decompteur', label: 'Décompteur' },
+                ]} value={electricite} onChange={setElectricite} />
+                {electricite === 'decompteur' && (
+                  <div className="mt-3">
+                    <p className="text-xs font-semibold mb-2" style={{ color: 'var(--p-muted)' }}>Prix du kWh</p>
+                    <MoneyInput value={prixKwh} onChange={setPrixKwh} placeholder="Ex: 150" />
+                  </div>
+                )}
+              </Card>
+              <Card>
+                <Section title="Eau" />
+                <ChoiceList options={[
+                  { value: 'non', label: 'Non' }, { value: 'soneb', label: 'SONEB' },
+                  { value: 'decompteur_soneb', label: 'Décompteur SONEB' }, { value: 'forage', label: 'Forage' },
+                ]} value={eau} onChange={setEau} />
+                {eau === 'decompteur_soneb' && (
+                  <div className="mt-3">
+                    <p className="text-xs font-semibold mb-2" style={{ color: 'var(--p-muted)' }}>Prix du m³</p>
+                    <MoneyInput value={prixM3} onChange={setPrixM3} placeholder="Ex: 150" />
+                  </div>
+                )}
+                {eau === 'forage' && (
+                  <div className="mt-3 space-y-3">
+                    <div>
+                      <p className="text-xs font-semibold mb-2" style={{ color: 'var(--p-muted)' }}>Prix du forage</p>
+                      <MoneyInput value={prixForage} onChange={setPrixForage} placeholder="Ex: 50000" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold mb-2" style={{ color: 'var(--p-muted)' }}>Comment c'est géré ?</p>
+                      <div className="grid grid-cols-2 gap-2.5">
+                        <Chip label="Entre voisins"      active={forageGestion === 'voisins'} onClick={() => setForageGestion(g => g === 'voisins' ? null : 'voisins')} />
+                        <Chip label="Abonnement mensuel" active={forageGestion === 'mensuel'} onClick={() => setForageGestion(g => g === 'mensuel' ? null : 'mensuel')} />
+                      </div>
+                      {forageGestion === 'voisins' && <p className="text-xs italic mt-2" style={{ color: BLUE }}>Le coût du forage est partagé entre les voisins.</p>}
+                      {forageGestion === 'mensuel' && <p className="text-xs italic mt-2" style={{ color: BLUE }}>Chaque locataire paie un abonnement mensuel fixe.</p>}
+                    </div>
+                  </div>
+                )}
+              </Card>
+              {(eau === 'soneb' || eau === 'decompteur_soneb' || electricite !== 'non') && (
+                <Card>
+                  <Section title="Caution" />
+                  <div className="space-y-3">
+                    {(eau === 'soneb' || eau === 'decompteur_soneb') && (
+                      <div>
+                        <p className="text-xs font-semibold mb-1.5" style={{ color: 'var(--p-muted)' }}>Caution eau</p>
+                        <MoneyInput value={cautionEau} onChange={setCautionEau} />
+                        <p className="text-[11px] mt-1" style={{ color: 'var(--p-muted)' }}>Saisir 0 si pas de caution eau</p>
+                      </div>
+                    )}
+                    {electricite !== 'non' && (
+                      <div>
+                        <p className="text-xs font-semibold mb-1.5" style={{ color: 'var(--p-muted)' }}>
+                          Caution électricité ({electricite === 'sbee' ? 'SBEE' : 'Décompteur'})
+                        </p>
+                        <MoneyInput value={cautionElec} onChange={setCautionElec} />
+                        <p className="text-[11px] mt-1" style={{ color: 'var(--p-muted)' }}>Saisir 0 si pas de caution électricité</p>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              )}
+              {(!isSmallUnit || finition === 'haut_standing') && (
+                <>
+                  <button type="button" onClick={() => setShowMoreOptions(v => !v)} className="text-sm font-bold" style={{ color: BLUE }}>
+                    {showMoreOptions ? "Moins d'options" : "Plus d'options (facultatif)"}
+                  </button>
+                  {showMoreOptions && (
+                    <>
+                      {!isSmallUnit && (
+                        <Card>
+                          <Section title="Équipements & Atouts" />
+                          <div className="flex flex-wrap gap-2">
+                            {EQUIPEMENTS_RESIDENTIEL.map(o => (
+                              <Chip key={o.value} label={o.label} active={equipementsBonus.includes(o.value)}
+                                onClick={() => setEquipementsBonus(e => e.includes(o.value) ? e.filter(x => x !== o.value) : [...e, o.value])} />
+                            ))}
+                          </div>
+                        </Card>
+                      )}
+                      {finition === 'haut_standing' && (
+                        <Card>
+                          <Section title="À proximité du bien" />
+                          <div className="flex flex-wrap gap-2">
+                            {ALENTOURS_OPTS.map(o => (
+                              <Chip key={o.value} label={o.label} active={alentours.includes(o.value)}
+                                onClick={() => setAlentours(a => a.includes(o.value) ? a.filter(x => x !== o.value) : [...a, o.value])} />
+                            ))}
+                          </div>
+                        </Card>
+                      )}
+                    </>
+                  )}
+                </>
+              )}
+              <Card>
+                <Section title="Disponibilité" />
+                <div className="grid grid-cols-2 gap-2.5">
+                  <Chip label="Immédiate"             active={disponibilite === 'immediate'}   onClick={() => setDisponibilite('immediate')}   />
+                  <Chip label="En finition / Bientôt" active={disponibilite === 'en_finition'} onClick={() => setDisponibilite('en_finition')} />
+                </div>
+              </Card>
+            </div>
+          )}
 
-          <div className="immo-card" style={{ padding: '1.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-              <div>
-                <p className="pb-section-head" style={{ marginBottom: 2 }}>Vidéo (optionnel)</p>
-                <div style={{ fontSize: 12, color: 'var(--c-muted)' }}>1 vidéo maximum — MP4</div>
-              </div>
-              {!video && (
-                <button type="button" onClick={() => videoInputRef.current?.click()}
-                  style={{ fontSize: 12, fontWeight: 600, color: '#7C3AED', background: '#F5F3FF', border: '1px solid #DDD6FE', borderRadius: 8, padding: '6px 14px', cursor: 'pointer' }}>
-                  + Ajouter une vidéo
-                </button>
+          {/* ═══ ÉTAPE 3 : HONORAIRES ═══ */}
+          {step === 3 && (
+            <div className="space-y-4">
+              <Card>
+                <Section title="Notes / Précisions (optionnel)" />
+                <p className="text-xs mb-3" style={{ color: 'var(--p-muted)' }}>Ces informations s'afficheront dans votre annonce.</p>
+                <textarea value={description} onChange={e => setDescription(e.target.value)} rows={5}
+                  placeholder="Points forts, accès, conditions particulières, règles de la maison..."
+                  className="w-full rounded-xl px-4 py-3 text-sm outline-none resize-none border transition-colors"
+                  style={baseInputStyle}
+                  onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
+                  onBlur={e => (e.currentTarget.style.borderColor = 'var(--p-border)')} />
+              </Card>
+              {!isTerrain && (
+                <Card>
+                  <Section title="Autres frais (optionnel)" />
+                  <p className="text-xs mb-3" style={{ color: 'var(--p-muted)' }}>Frais supplémentaires inclus dans le total à payer à l'intégration.</p>
+                  <div className="space-y-2.5">
+                    {autresFrais.map((f, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <input value={f.label}
+                          onChange={e => setAutresFrais(a => a.map((x, idx) => idx === i ? { ...x, label: e.target.value } : x))}
+                          placeholder="Libellé (ex: Frais de dossier)"
+                          className="flex-1 rounded-xl px-3 py-2.5 text-sm outline-none border" style={baseInputStyle} />
+                        <div className="w-28">
+                          <MoneyInput value={f.prix} onChange={v => setAutresFrais(a => a.map((x, idx) => idx === i ? { ...x, prix: v } : x))} />
+                        </div>
+                        <button type="button" onClick={() => setAutresFrais(a => a.filter((_, idx) => idx !== i))} style={{ color: '#EF4444' }}>✕</button>
+                      </div>
+                    ))}
+                    <button type="button" onClick={() => setAutresFrais(a => [...a, { label: '', prix: '' }])}
+                      className="text-xs font-bold" style={{ color: BLUE }}>+ Ajouter un frais</button>
+                  </div>
+                </Card>
+              )}
+              {!isTerrain && typeTransaction === 'location' && montantBrut > 0 && (
+                <div className="rounded-2xl border p-4" style={{ background: BLUE + '0E', borderColor: BLUE + '30' }}>
+                  <p className="text-xs font-semibold mb-1" style={{ color: 'var(--p-muted)' }}>Montant minimum à verser avant intégration</p>
+                  <p className="text-2xl font-bold" style={{ color: BLUE }}>{formatFcfa(montantBrut)}</p>
+                </div>
               )}
             </div>
-            <input ref={videoInputRef} type="file" accept="video/mp4,video/*" style={{ display: 'none' }}
-              onChange={e => setVideo(e.target.files?.[0] ?? null)} />
-            {video ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'var(--c-bg)', borderRadius: 10, border: '1px solid var(--c-border)' }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/>
-                </svg>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--c-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{video.name}</div>
-                  <div style={{ fontSize: 11, color: 'var(--c-muted)' }}>{(video.size / 1024 / 1024).toFixed(1)} Mo</div>
-                </div>
-                <button type="button" onClick={() => setVideo(null)}
-                  style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid #FECACA', background: '#FEF2F2', color: '#DC2626', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
-                  Retirer
-                </button>
-              </div>
-            ) : (
-              <div style={{ fontSize: 13, color: 'var(--c-muted)', textAlign: 'center', padding: '1rem 0' }}>Aucune vidéo sélectionnée</div>
-            )}
-          </div>
+          )}
 
-          <div className="immo-card" style={{ padding: '1.5rem' }}>
-            <p className="pb-section-head" style={{ marginBottom: '1rem' }}>Récapitulatif</p>
-            <div className="pb-recap-block">
-              {[
-                { k: 'Type',        v: form.typeBien + (isMeuble ? ' meublé' : '') },
-                { k: 'Transaction', v: form.transaction === 'location' ? 'Location' : 'Vente' },
-                { k: 'Prix',        v: isMeuble ? (form.tarifLongSejour ? `${Number(form.tarifLongSejour).toLocaleString('fr-FR')} FCFA/nuit` : '—') : `${Number(form.prix).toLocaleString('fr-FR')} FCFA` },
-                { k: 'Ville',       v: form.ville || '—' },
-                { k: 'Quartier',    v: form.quartier || '—' },
-                { k: 'Frais visite', v: '500 FCFA (tarif promo)' },
-                { k: 'Photos',      v: `${photos.length} photo${photos.length > 1 ? 's' : ''}` },
-                ...(video ? [{ k: 'Vidéo', v: video.name }] : []),
-              ].map((r, i) => (
-                <div key={i} className="pb-recap-row">
-                  <span className="pb-recap-key">{r.k}</span>
-                  <span className="pb-recap-val">{r.v}</span>
-                </div>
-              ))}
+          {/* ═══ ÉTAPE 4 : RÉCAP + PHOTOS + VIDÉO ═══ */}
+          {step === 4 && (
+            <div className="space-y-4">
+              <Card>
+                <p className="text-sm font-bold mb-4" style={{ color: 'var(--p-text)' }}>Récapitulatif de votre annonce</p>
+                <RecapSection title="Type de bien" items={[
+                  TYPES_BIEN.find(t => t.key === typeBien)?.label ?? typeBien,
+                  ...(finition ? [labelFinition(finition)] : []),
+                  ...(sanitaire ? [labelSanitaire(sanitaire)] : []),
+                  ...(isMeuble ? ['Meublé / Guesthouse'] : []),
+                ]} />
+                <RecapSection title="Localisation" items={[
+                  ...(quartier       ? [`Quartier : ${quartier}`]            : []),
+                  ...(arrondissement ? [`Arrondissement : ${arrondissement}`] : []),
+                  ...(ville          ? [`Ville : ${ville}`]                   : []),
+                  ...(indicationAdresse.trim() ? [`Adresse : ${indicationAdresse.trim()}`] : []),
+                ]} />
+                {!isTerrain && (parsePrix(prix) ?? 0) > 0 && (
+                  <RecapSection title="Prix" items={[
+                    `${typeTransaction === 'location' ? 'Loyer mensuel' : 'Prix de vente'} : ${formatFcfa(parsePrix(prix) ?? 0)}`
+                  ]} />
+                )}
+                {!isTerrain && !isBoutique && typeTransaction === 'location' && (
+                  <>
+                    <RecapSection title="Conditions d'entrée" items={[
+                      avanceMois > 0
+                        ? `Avance : ${avanceMois} mois × ${formatFcfa(parsePrix(prix) ?? 0)} = ${formatFcfa((parsePrix(prix) ?? 0) * avanceMois)}`
+                        : 'Avance : Aucune',
+                      ...(loyerPrepayeMois > 0 ? [`Loyer prépayé : ${loyerPrepayeMois} mois`] : []),
+                      ...((parsePrix(cautionEau)  ?? 0) > 0 ? [`Caution eau : ${formatFcfa(parsePrix(cautionEau)  ?? 0)}`] : []),
+                      ...((parsePrix(cautionElec) ?? 0) > 0 ? [`Caution électricité : ${formatFcfa(parsePrix(cautionElec) ?? 0)}`] : []),
+                    ]} />
+                    {montantBrut > 0 && (
+                      <div className="rounded-xl p-3.5 mb-2" style={{ background: BLUE + '12', border: `1px solid ${BLUE}30` }}>
+                        <p className="text-xs font-semibold mb-1" style={{ color: 'var(--p-muted)' }}>Montant minimum à verser avant intégration</p>
+                        <p className="text-xl font-bold" style={{ color: BLUE }}>{formatFcfa(montantBrut)}</p>
+                      </div>
+                    )}
+                  </>
+                )}
+                {!isTerrain && !isBoutique && (
+                  <RecapSection title="Confort" items={[
+                    `Cuisine : ${labelCuisine(typeCuisine)}`,
+                    `Accès / Cour : ${labelCour(typeCour)}`,
+                    `Électricité : ${labelElec(electricite)}`,
+                    `Eau : ${labelEau(eau)}`,
+                  ]} />
+                )}
+                {equipementsBonus.length > 0 && (
+                  <RecapSection title="Équipements" items={equipementsBonus.map(e =>
+                    (EQUIPEMENTS_RESIDENTIEL.find(o => o.value === e) ?? EQUIPEMENTS_BOUTIQUE.find(o => o.value === e))?.label ?? e
+                  )} />
+                )}
+                {alentours.length > 0 && (
+                  <RecapSection title="À proximité" items={alentours.map(a => ALENTOURS_OPTS.find(o => o.value === a)?.label ?? a)} />
+                )}
+                {!isTerrain && (
+                  <RecapSection title="Disponibilité" items={[
+                    disponibilite === 'immediate' ? 'Disponible immédiatement' : 'En finition — Bientôt disponible'
+                  ]} />
+                )}
+                {autresFrais.filter(f => parsePrix(f.prix) !== undefined).length > 0 && (
+                  <RecapSection title="Autres frais" items={autresFrais
+                    .filter(f => parsePrix(f.prix) !== undefined)
+                    .map(f => `${f.label.trim() || 'Autre frais'} : ${formatFcfa(parsePrix(f.prix)!)}`)} />
+                )}
+                {description.trim() && <RecapSection title="Notes" items={[description.trim()]} />}
+                {proprietaireInfo && (
+                  <RecapSection title="Propriétaire" items={[
+                    `${proprietaireInfo.prenom} ${proprietaireInfo.nom}`,
+                    proprietaireInfo.telephone,
+                    ...(proprietaireInfo.email ? [proprietaireInfo.email] : []),
+                  ]} />
+                )}
+              </Card>
+
+              {/* Photos */}
+              <Card>
+                <p className="text-sm font-bold mb-1" style={{ color: 'var(--p-text)' }}>Photos du bien</p>
+                <p className="text-xs mb-4" style={{ color: 'var(--p-muted)' }}>Maximum 5 photos (PNG, JPEG, WEBP) — les photos augmentent les visites de 3×</p>
+                {photos.length < 5 && (
+                  <label className="block border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-colors"
+                    style={{ borderColor: 'var(--p-border)' }}
+                    onMouseEnter={e => (e.currentTarget.style.borderColor = BLUE)}
+                    onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--p-border)')}>
+                    <div className="flex justify-center mb-3">
+                      <svg className="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} style={{ color: 'var(--p-muted)' }}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <p className="text-sm font-semibold" style={{ color: 'var(--p-text)' }}>Choisir des photos</p>
+                    <p className="text-xs mt-1" style={{ color: 'var(--p-muted)' }}>JPG, PNG, WEBP (max 5 photos)</p>
+                    <input type="file" multiple accept="image/png,image/jpeg,image/webp" className="hidden"
+                      onChange={e => {
+                        const files = Array.from(e.target.files || []).slice(0, 5 - photos.length)
+                        setPhotos(p => [...p, ...files].slice(0, 5))
+                      }} />
+                  </label>
+                )}
+                {photos.length > 0 && (
+                  <>
+                    <div className="grid grid-cols-3 gap-2 mt-3">
+                      {photos.map((f, i) => (
+                        <div key={i} className="relative aspect-square">
+                          <img src={URL.createObjectURL(f)} alt="" className="w-full h-full object-cover rounded-xl" />
+                          <button type="button" onClick={() => setPhotos(p => p.filter((_, idx) => idx !== i))}
+                            className="absolute top-1 right-1 w-6 h-6 bg-black/60 rounded-full text-white flex items-center justify-center">
+                            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-[11px] mt-2" style={{ color: 'var(--p-muted)' }}>
+                      {photos.length}/5 photo{photos.length > 1 ? 's' : ''} — encore {5 - photos.length} possible{5 - photos.length > 1 ? 's' : ''}
+                    </p>
+                  </>
+                )}
+                {submitting && uploadProgress > 0 && (
+                  <div className="mt-3">
+                    <div className="flex justify-between text-xs mb-1" style={{ color: 'var(--p-muted)' }}>
+                      <span>Upload photos…</span><span>{uploadProgress}%</span>
+                    </div>
+                    <div className="h-2 rounded-full" style={{ background: 'var(--p-deep)' }}>
+                      <div className="h-full rounded-full transition-all" style={{ width: `${uploadProgress}%`, background: BLUE }} />
+                    </div>
+                  </div>
+                )}
+              </Card>
+
+              {/* Vidéo */}
+              <Card>
+                <p className="text-sm font-bold mb-1" style={{ color: 'var(--p-text)' }}>
+                  Vidéo du bien <span className="font-normal text-xs" style={{ color: 'var(--p-muted)' }}>(optionnel)</span>
+                </p>
+                <p className="text-xs mb-4" style={{ color: 'var(--p-muted)' }}>Maximum 1 vidéo (MP4 uniquement)</p>
+                {video ? (
+                  <div className="flex items-center gap-3 px-4 py-3 rounded-xl border" style={{ borderColor: 'var(--p-border)', background: 'var(--p-deep)' }}>
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: BLUE + '20' }}>
+                      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} style={{ color: BLUE }}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <span className="flex-1 text-sm font-semibold truncate" style={{ color: 'var(--p-text)' }}>{video.name}</span>
+                    <button type="button" onClick={() => setVideo(null)}
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-white shrink-0" style={{ background: '#EF4444' }}>
+                      <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ) : (
+                  <label className="block border-2 border-dashed rounded-2xl p-7 text-center cursor-pointer transition-colors"
+                    style={{ borderColor: 'var(--p-border)' }}
+                    onMouseEnter={e => (e.currentTarget.style.borderColor = BLUE)}
+                    onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--p-border)')}>
+                    <div className="flex justify-center mb-3">
+                      <svg className="w-9 h-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} style={{ color: 'var(--p-muted)' }}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <p className="text-sm font-semibold" style={{ color: 'var(--p-text)' }}>Ajouter une vidéo (MP4)</p>
+                    <input type="file" accept="video/mp4" className="hidden"
+                      onChange={e => { const f = e.target.files?.[0]; if (f) setVideo(f) }} />
+                  </label>
+                )}
+              </Card>
             </div>
-          </div>
+          )}
+
+          <div className="h-4" />
         </div>
-      )}
 
-      {/* ── Navigation ── */}
-      <div className="pb-nav">
-        {step > 1 ? (
-          <button type="button" className="pb-nav-back" onClick={back} disabled={submitting}>
-            <ArrowLeft /> Précédent
+        {/* Footer CTA */}
+        <div style={{ flexShrink: 0, padding: '10px 16px', borderTop: '1px solid var(--p-border)', background: 'var(--p-surface)' }}>
+          <button onClick={goNext} disabled={submitting}
+            style={{ display: 'block', margin: '0 auto', padding: '10px 40px', borderRadius: 12, fontSize: 14, fontWeight: 700, background: BLUE, color: 'white', border: 'none', cursor: submitting ? 'not-allowed' : 'pointer', boxShadow: `0 2px 16px ${BLUE}38`, opacity: submitting ? 0.6 : 1 }}>
+            {submitting ? 'Publication…' : step < 4 ? 'Continuer →' : 'Publier le bien'}
           </button>
-        ) : <div />}
-
-        {step < STEPS.length ? (
-          <button type="button" className="pb-nav-next" onClick={next}>
-            Suivant <ArrowRight />
-          </button>
-        ) : (
-          <button type="button" className="pb-nav-next" style={{ minWidth: 220 }}
-            onClick={handleSubmit} disabled={submitting}>
-            {submitting ? (submitStatus || 'Publication…') : "Publier l'annonce"}
-          </button>
-        )}
+        </div>
       </div>
-
     </div>
-  );
+  )
 }
