@@ -145,15 +145,63 @@ export default function MesAnnoncesPage() {
   const mod   = (b: any) => MOD[b.statut_moderation] ?? { label: b.statut_moderation, cls: 'badge-pending' };
   const trans = (b: any) => TRANS[b.transaction] ?? b.transaction;
 
+  const totalBiens  = biens.length;
+  const publies     = biens.filter(b => b.statut_moderation === 'approuve').length;
+  const enAttente   = biens.filter(b => b.statut_moderation === 'en_attente').length;
+  const rejetes     = biens.filter(b => b.statut_moderation === 'rejete').length;
+
+  const statCards = [
+    {
+      label: 'Total', value: totalBiens,
+      iconBg: '#EFF6FF', iconColor: '#2563EB',
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/>
+        </svg>
+      ),
+    },
+    {
+      label: 'Publiés', value: publies,
+      iconBg: '#DCFCE7', iconColor: '#16A34A',
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      ),
+    },
+    {
+      label: 'En attente', value: enAttente,
+      iconBg: '#FEF3C7', iconColor: '#D97706',
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+      ),
+    },
+    {
+      label: 'Rejetés', value: rejetes,
+      iconBg: '#FEE2E2', iconColor: '#DC2626',
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+        </svg>
+      ),
+    },
+  ];
+
   return (
     <>
     <div className="immo-page">
 
-      {/* ── En-tête ── */}
-      <div className="immo-page-header">
+      {/* ── Titre ── */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
         <div>
-          <h1 className="immo-page-title">Mes annonces</h1>
-          <p className="immo-page-sub">Vos biens publiés sur la plateforme</p>
+          <h2 style={{ fontSize: '1.375rem', fontWeight: 800, color: 'var(--c-text)', margin: 0, lineHeight: 1.2 }}>
+            Mes annonces
+          </h2>
+          <p style={{ fontSize: '0.8125rem', color: 'var(--c-muted)', margin: '0.25rem 0 0' }}>
+            Vos biens publiés sur la plateforme
+          </p>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           {hasDraft && (
@@ -174,29 +222,22 @@ export default function MesAnnoncesPage() {
         </div>
       </div>
 
-      {/* ── Synthèse statuts ── */}
-      {!loading && biens.length > 0 && (() => {
-        const stats = [
-          { label: 'Publiés',    value: biens.filter(b => b.statut_moderation === 'approuve').length,   color: '#16A34A' },
-          { label: 'En attente', value: biens.filter(b => b.statut_moderation === 'en_attente').length, color: '#D97706' },
-          { label: 'Rejetés',    value: biens.filter(b => b.statut_moderation === 'rejete').length,     color: '#DC2626' },
-        ];
-        return (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '10px 16px', borderRadius: 10, background: 'var(--c-card)', border: '1px solid var(--c-border)', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--c-muted)' }}>
-              {biens.length} bien{biens.length !== 1 ? 's' : ''}
-            </span>
-            <div style={{ width: 1, height: 16, background: 'var(--c-border)' }} />
-            {stats.map(s => (
-              <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: s.color, flexShrink: 0, display: 'inline-block' }} />
-                <span style={{ fontSize: 12, fontWeight: 700, color: s.color, fontVariantNumeric: 'tabular-nums' }}>{s.value}</span>
-                <span style={{ fontSize: 12, color: 'var(--c-muted)' }}>{s.label}</span>
+      {/* ── KPI cards ── */}
+      <div className="stat-grid">
+        {statCards.map(s => (
+          <div className="stat-card" key={s.label}>
+            <div className="stat-card-top">
+              <div className="stat-icon-wrap" style={{ background: s.iconBg, color: s.iconColor }}>
+                {s.icon}
               </div>
-            ))}
+            </div>
+            <div>
+              <div className="stat-label">{s.label}</div>
+              <div className="stat-value">{loading ? '—' : s.value}</div>
+            </div>
           </div>
-        );
-      })()}
+        ))}
+      </div>
 
       {/* ── Tableau ── */}
       <div className="immo-card" style={{ padding: 0 }}>

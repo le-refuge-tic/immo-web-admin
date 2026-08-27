@@ -115,66 +115,100 @@ export default function MesVisitesPage() {
 
   const countBy = (s: string) => visites.filter(v => v.statut === s).length;
 
+  const statCards = [
+    {
+      label: 'En attente', value: countBy('en_attente'),
+      iconBg: '#FEF3C7', iconColor: '#D97706',
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+      ),
+    },
+    {
+      label: 'Confirmées', value: countBy('confirmee'),
+      iconBg: '#DCFCE7', iconColor: '#16A34A',
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+      ),
+    },
+    {
+      label: 'Contre-proposées', value: countBy('contre_proposee'),
+      iconBg: '#EDE9FE', iconColor: '#6366F1',
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+      ),
+    },
+    {
+      label: 'Effectuées', value: countBy('effectuee'),
+      iconBg: '#E0F2FE', iconColor: '#0891B2',
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      ),
+    },
+  ];
+
   return (
     <div className="immo-page">
 
-      {/* ── En-tête ── */}
-      <div className="immo-page-header">
-        <div>
-          <h1 className="immo-page-title">Mes visites</h1>
-          <p className="immo-page-sub">Demandes de visites liées à vos biens</p>
-        </div>
+      {/* ── Titre ── */}
+      <div>
+        <h2 style={{ fontSize: '1.375rem', fontWeight: 800, color: 'var(--c-text)', margin: 0, lineHeight: 1.2 }}>
+          Mes visites
+        </h2>
+        <p style={{ fontSize: '0.8125rem', color: 'var(--c-muted)', margin: '0.25rem 0 0' }}>
+          Demandes de visites liées à vos biens
+        </p>
       </div>
 
-      {/* ── Stats + Filtres en un seul bloc ── */}
-      <div>
-        {/* Synthèse rapide */}
-        {!loading && (
-          <div style={{ display: 'flex', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
-            {[
-              { label: 'En attente',  value: countBy('en_attente'),     color: '#D97706' },
-              { label: 'Confirmées',  value: countBy('confirmee'),       color: '#16A34A' },
-              { label: 'Contre-prop', value: countBy('contre_proposee'), color: '#6366F1' },
-              { label: 'Effectuées',  value: countBy('effectuee'),       color: '#0891B2' },
-            ].map(s => (
-              <div key={s.label} style={{
-                display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px',
-                borderRadius: 8, background: 'var(--c-card)', border: '1px solid var(--c-border)',
-                borderLeft: `3px solid ${s.color}`,
-              }}>
-                <span style={{ fontSize: 18, fontWeight: 800, color: s.color, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>{s.value}</span>
-                <span style={{ fontSize: 11, color: 'var(--c-muted)', fontWeight: 500 }}>{s.label}</span>
+      {/* ── KPI cards ── */}
+      <div className="stat-grid">
+        {statCards.map(s => (
+          <div className="stat-card" key={s.label}>
+            <div className="stat-card-top">
+              <div className="stat-icon-wrap" style={{ background: s.iconBg, color: s.iconColor }}>
+                {s.icon}
               </div>
-            ))}
+            </div>
+            <div>
+              <div className="stat-label">{s.label}</div>
+              <div className="stat-value">{loading ? '—' : s.value}</div>
+            </div>
           </div>
-        )}
+        ))}
+      </div>
 
-        {/* Tab strip filtres */}
-        <div style={{ display: 'flex', borderBottom: '2px solid var(--c-border)', marginBottom: 0, gap: 0, overflowX: 'auto' }}>
-          {STATUTS.map(s => {
-            const count = s.key ? countBy(s.key) : visites.length;
-            const isActive = statut === s.key;
-            return (
-              <button key={s.key} onClick={() => setStatut(s.key)} style={{
-                padding: '9px 16px', fontSize: 12, fontWeight: isActive ? 700 : 500, cursor: 'pointer',
-                border: 'none', background: 'none', whiteSpace: 'nowrap',
-                color: isActive ? 'var(--c-blue)' : 'var(--c-muted)',
-                borderBottom: `2px solid ${isActive ? 'var(--c-blue)' : 'transparent'}`,
-                marginBottom: -2, transition: 'color 0.15s',
-                display: 'flex', alignItems: 'center', gap: 6,
-              }}>
-                {s.label}
-                {!loading && s.key && count > 0 && (
-                  <span style={{
-                    fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 10,
-                    background: isActive ? 'var(--c-blue)' : 'var(--c-border)',
-                    color: isActive ? '#fff' : 'var(--c-muted)',
-                  }}>{count}</span>
-                )}
-              </button>
-            );
-          })}
-        </div>
+      {/* ── Filtres ── */}
+      <div style={{ display: 'flex', borderBottom: '2px solid var(--c-border)', gap: 0, overflowX: 'auto' }}>
+        {STATUTS.map(s => {
+          const count = s.key ? countBy(s.key) : visites.length;
+          const isActive = statut === s.key;
+          return (
+            <button key={s.key} onClick={() => setStatut(s.key)} style={{
+              padding: '9px 16px', fontSize: 12, fontWeight: isActive ? 700 : 500, cursor: 'pointer',
+              border: 'none', background: 'none', whiteSpace: 'nowrap',
+              color: isActive ? 'var(--c-blue)' : 'var(--c-muted)',
+              borderBottom: `2px solid ${isActive ? 'var(--c-blue)' : 'transparent'}`,
+              marginBottom: -2, transition: 'color 0.15s',
+              display: 'flex', alignItems: 'center', gap: 6,
+            }}>
+              {s.label}
+              {!loading && s.key && count > 0 && (
+                <span style={{
+                  fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 10,
+                  background: isActive ? 'var(--c-blue)' : 'var(--c-border)',
+                  color: isActive ? '#fff' : 'var(--c-muted)',
+                }}>{count}</span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* ── Tableau ── */}
