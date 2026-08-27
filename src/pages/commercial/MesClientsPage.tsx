@@ -22,6 +22,7 @@ export default function MesClientsPage() {
   const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState('');
   const [search, setSearch]       = useState('');
+  const [filterRole, setFilterRole] = useState('');
 
   const load = useCallback(async () => {
     if (!me?.id) return;
@@ -44,57 +45,86 @@ export default function MesClientsPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  const rolesPresents = [...new Set(clients.map(c => c.role_principal ?? c.role ?? '').filter(Boolean))];
+
   const filtered = clients.filter(c => {
-    if (!search.trim()) return true;
-    const q = search.toLowerCase();
-    return (
+    const q = search.toLowerCase().trim();
+    if (q && !(
       c.prenom?.toLowerCase().includes(q) ||
       c.nom?.toLowerCase().includes(q) ||
       c.email?.toLowerCase().includes(q) ||
       c.telephone?.includes(q)
-    );
+    )) return false;
+    if (filterRole && (c.role_principal ?? c.role) !== filterRole) return false;
+    return true;
   });
 
   return (
     <div className="immo-page">
 
-      {/* ── En-tête ── */}
-      <div className="immo-page-header">
+      {/* ── Titre ── */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
         <div>
-          <h1 className="immo-page-title">Mes clients</h1>
-          <p className="immo-page-sub">Clients qui vous ont été assignés</p>
+          <h2 style={{ fontSize: '1.375rem', fontWeight: 800, color: 'var(--c-text)', margin: 0, lineHeight: 1.2 }}>
+            Mes clients
+          </h2>
+          <p style={{ fontSize: '0.8125rem', color: 'var(--c-muted)', margin: '0.25rem 0 0' }}>
+            Clients qui vous ont été assignés
+          </p>
         </div>
         <span style={{
           background: 'var(--c-card)', border: '1px solid var(--c-border)',
           borderRadius: 20, padding: '6px 14px', fontSize: 13, fontWeight: 700, color: 'var(--c-text)',
+          flexShrink: 0,
         }}>
           {clients.length} client{clients.length > 1 ? 's' : ''}
         </span>
       </div>
 
-      {/* ── Recherche ── */}
-      <div style={{ marginBottom: 20, position: 'relative', maxWidth: 360 }}>
-        <svg style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--c-muted)' }}
-          width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-        <input
-          className="immo-form-input"
-          style={{ paddingLeft: 36 }}
-          placeholder="Rechercher un client…"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
+      {/* ── Recherche + filtre rôle ── */}
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ position: 'relative', flex: '1 1 240px', maxWidth: 380 }}>
+          <svg style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--c-muted)' }}
+            width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input
+            className="immo-form-input"
+            style={{ paddingLeft: 36 }}
+            placeholder="Rechercher un client…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </div>
+        {rolesPresents.length > 1 && (
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {[{ key: '', label: 'Tous' }, ...rolesPresents.map(r => ({ key: r, label: ROLE_LABELS[r] ?? r }))].map(opt => {
+              const active = filterRole === opt.key;
+              return (
+                <button key={opt.key} onClick={() => setFilterRole(opt.key)} style={{
+                  padding: '5px 13px', borderRadius: 20, fontSize: 12, fontWeight: active ? 700 : 500,
+                  border: `1.5px solid ${active ? 'var(--c-blue)' : 'var(--c-border)'}`,
+                  background: active ? 'var(--c-blue)' : 'transparent',
+                  color: active ? '#fff' : 'var(--c-muted)',
+                  cursor: 'pointer', transition: 'all 0.15s',
+                }}>
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* ── Erreur ── */}
       {error && (
-        <div style={{ marginBottom: 16, padding: '10px 16px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, fontSize: 13, color: '#DC2626' }}>
+        <div style={{ padding: '10px 16px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, fontSize: 13, color: '#DC2626' }}>
           {error}
         </div>
       )}
 
-      {/* ── Liste ── */}
+      {/* ── Liste (contrainte de largeur sur grand écran) ── */}
+      <div style={{ maxWidth: '52rem' }}>
       <div className="immo-card" style={{ padding: 0, overflow: 'hidden' }}>
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: '48px 0' }}>
@@ -185,6 +215,7 @@ export default function MesClientsPage() {
             })}
           </div>
         )}
+      </div>
       </div>
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>

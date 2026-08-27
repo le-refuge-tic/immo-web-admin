@@ -35,9 +35,10 @@ const TYPES_BIEN = [
 ]
 
 const SANITAIRE_OPTS = [
-  { value: 'interieur', label: 'Sanitaire',        sub: 'Douche intérieure au logement'    },
-  { value: 'cour',      label: 'Non sanitaire',    sub: 'Douche extérieure / commune'      },
-  { value: 'autre',     label: 'Autre à préciser', sub: ''                                 },
+  { value: 'interieur',      label: 'Sanitaire',        sub: 'Douche intérieure au logement'              },
+  { value: 'semi_interieur', label: 'Semi sanitaire',   sub: 'Douche partiellement intérieure / partagée' },
+  { value: 'cour',           label: 'Non sanitaire',    sub: 'Douche extérieure / commune'                },
+  { value: 'autre',          label: 'Autre à préciser', sub: ''                                           },
 ]
 
 const FINITION_OPTS = [
@@ -514,7 +515,11 @@ export default function PublierBienPage() {
   const clearQuartier = () => { setQuartier(''); setArrondissement(''); setVille(''); setQuartierSearch('') }
 
   const labelFinition  = (v: string) => ({ ordinaire: 'Ordinaire', staffe_carele: 'Staffé', haut_standing: 'Haut Standing / VIP', villa: 'Villa' } as Record<string,string>)[v] ?? v
-  const labelSanitaire = (v: string) => v === 'interieur' ? 'Sanitaire' : v === 'cour' ? 'Non sanitaire' : (sanitaireAutre.trim() || 'Autre à préciser')
+  const labelSanitaire = (v: string) =>
+    v === 'interieur'      ? 'Sanitaire' :
+    v === 'semi_interieur' ? 'Semi sanitaire' :
+    v === 'cour'           ? 'Non sanitaire' :
+    (sanitaireAutre.trim() || 'Autre à préciser')
   const labelCuisine   = (v: string) => v === 'separee_douche' ? 'Cuisine séparée de la douche' : v === 'americaine' ? 'Cuisine américaine' : (cuisineAutre.trim() || 'Autres')
   const labelCour      = (v: string) => v === 'entree_personnelle' ? 'Entrée personnelle' : 'Cour commune'
   const labelElec      = (v: string) => { const p = parsePrix(prixKwh); return v === 'sbee' ? 'SBEE' : v === 'decompteur' ? `Décompteur${p !== undefined ? ` (${Math.round(p)} FCFA/kWh)` : ''}` : 'Non' }
@@ -565,8 +570,9 @@ export default function PublierBienPage() {
       return a
     }
 
-    if (sanitaire === 'interieur') a.sanitaire = true
-    if (sanitaire === 'cour')      a.sanitaire = false
+    if (sanitaire === 'interieur')      a.sanitaire = true
+    if (sanitaire === 'semi_interieur') a.sanitaire_autre = 'Semi sanitaire'
+    if (sanitaire === 'cour')           a.sanitaire = false
     if (sanitaire === 'autre' && sanitaireAutre.trim()) a.sanitaire_autre = sanitaireAutre.trim()
     if (finition) a.finition = finition
     a.disponibilite = disponibilite
@@ -681,8 +687,8 @@ export default function PublierBienPage() {
       setCreated(true)
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Erreur lors de la création')
+      setSubmitting(false)
     }
-    setSubmitting(false)
   }
 
   // Écran succès

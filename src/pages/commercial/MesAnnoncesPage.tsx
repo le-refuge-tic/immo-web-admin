@@ -109,12 +109,29 @@ function ProprietaireInfoModal({ onConfirm, onClose }: {
 
 const DRAFT_KEY = 'publier_bien_draft';
 
+const STATUS_FILTER = [
+  { key: '',            label: 'Tous' },
+  { key: 'approuve',    label: 'Publiés' },
+  { key: 'en_attente',  label: 'En attente' },
+  { key: 'rejete',      label: 'Rejetés' },
+  { key: 'conditionnel',label: 'Conditionnel' },
+];
+
+const STATUS_CARD: Record<string, { label: string; bg: string; color: string; border: string }> = {
+  approuve:     { label: 'Publié',       bg: '#DCFCE7', color: '#166534', border: '#BBF7D0' },
+  en_attente:   { label: 'En attente',   bg: '#FEF3C7', color: '#92400E', border: '#FDE68A' },
+  rejete:       { label: 'Rejeté',       bg: '#FEE2E2', color: '#991B1B', border: '#FECACA' },
+  conditionnel: { label: 'Conditionnel', bg: '#EDE9FE', color: '#4C1D95', border: '#C4B5FD' },
+};
+
 export default function MesAnnoncesPage() {
   const navigate = useNavigate();
   const [biens, setBiens]       = useState<any[]>([]);
   const [loading, setLoading]   = useState(true);
   const [showProprietaireModal, setShowProprietaireModal] = useState(false);
   const [hasDraft, setHasDraft] = useState(false);
+  const [filterType, setFilterType]     = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
 
   useEffect(() => {
     try {
@@ -144,6 +161,14 @@ export default function MesAnnoncesPage() {
 
   const mod   = (b: any) => MOD[b.statut_moderation] ?? { label: b.statut_moderation, cls: 'badge-pending' };
   const trans = (b: any) => TRANS[b.transaction] ?? b.transaction;
+
+  // Types présents dans les biens chargés
+  const typeOptions = [...new Set(biens.map(b => b.amenites?.sous_type ?? b.type).filter(Boolean))]
+    .map(t => ({ key: t, label: TYPE_LABEL[t] ?? t }));
+
+  const biensFiltered = biens
+    .filter(b => !filterType   || (b.amenites?.sous_type ?? b.type) === filterType)
+    .filter(b => !filterStatus || b.statut_moderation === filterStatus);
 
   const totalBiens  = biens.length;
   const publies     = biens.filter(b => b.statut_moderation === 'approuve').length;
@@ -239,6 +264,50 @@ export default function MesAnnoncesPage() {
         ))}
       </div>
 
+      {/* ── Filtres type de bien ── */}
+      {!loading && (typeOptions.length > 0 || biens.length > 0) && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {/* Filtre par type */}
+          {typeOptions.length > 0 && (
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+              <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginRight: 2 }}>Type</span>
+              {[{ key: '', label: 'Tous' }, ...typeOptions].map(opt => {
+                const active = filterType === opt.key;
+                return (
+                  <button key={opt.key} onClick={() => setFilterType(opt.key)} style={{
+                    padding: '5px 13px', borderRadius: 20, fontSize: 12, fontWeight: active ? 700 : 500,
+                    border: `1.5px solid ${active ? 'var(--c-blue)' : 'var(--c-border)'}`,
+                    background: active ? 'var(--c-blue)' : 'transparent',
+                    color: active ? '#fff' : 'var(--c-muted)',
+                    cursor: 'pointer', transition: 'all 0.15s',
+                  }}>
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          {/* Filtre par statut */}
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginRight: 2 }}>Statut</span>
+            {STATUS_FILTER.map(opt => {
+              const active = filterStatus === opt.key;
+              return (
+                <button key={opt.key} onClick={() => setFilterStatus(opt.key)} style={{
+                  padding: '5px 13px', borderRadius: 20, fontSize: 12, fontWeight: active ? 700 : 500,
+                  border: `1.5px solid ${active ? 'var(--c-blue)' : 'var(--c-border)'}`,
+                  background: active ? 'var(--c-blue)' : 'transparent',
+                  color: active ? '#fff' : 'var(--c-muted)',
+                  cursor: 'pointer', transition: 'all 0.15s',
+                }}>
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* ── Tableau ── */}
       <div className="immo-card" style={{ padding: 0 }}>
         {loading ? (
@@ -257,6 +326,10 @@ export default function MesAnnoncesPage() {
             </div>
             <button className="btn-submit" onClick={() => setShowProprietaireModal(true)}>Publier un bien</button>
           </div>
+        ) : biensFiltered.length === 0 ? (
+          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--c-muted)', fontSize: 13 }}>
+            Aucun bien ne correspond aux filtres sélectionnés.
+          </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table className="immo-table">
@@ -273,8 +346,8 @@ export default function MesAnnoncesPage() {
                 </tr>
               </thead>
               <tbody>
-                {biens.map((b: any) => {
-                  const m = mod(b);
+                {biensFiltered.map((b: any) => {
+                  const sc = STATUS_CARD[b.statut_moderation];
                   return (
                     <tr key={b.id}>
                       <td style={{ color: 'var(--c-muted)', fontSize: 12 }}>{b.id}</td>
@@ -291,7 +364,16 @@ export default function MesAnnoncesPage() {
                         )}
                       </td>
                       <td>
-                        <span className={`immo-badge ${m.cls}`}>{m.label}</span>
+                        {sc ? (
+                          <span style={{
+                            display: 'inline-block', padding: '4px 10px', borderRadius: 6,
+                            fontSize: 11, fontWeight: 700,
+                            background: sc.bg, color: sc.color,
+                            border: `1px solid ${sc.border}`,
+                          }}>{sc.label}</span>
+                        ) : (
+                          <span className={`immo-badge ${(mod(b)).cls}`}>{(mod(b)).label}</span>
+                        )}
                       </td>
                       <td style={{ fontSize: 12, color: 'var(--c-muted)' }}>
                         {b.created_at ? formatDate(b.created_at) : '—'}
