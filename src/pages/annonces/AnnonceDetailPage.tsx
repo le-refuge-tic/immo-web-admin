@@ -88,7 +88,8 @@ export default function AnnonceDetailPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const isCommercial = (user?.role_principal ?? user?.role) === 'commercial';
-  const canModerate = user?.role === 'admin' || user?.role === 'super_admin';
+  const isSuperAdmin = user?.role === 'super_admin';
+  const canModerate  = user?.role === 'admin' || user?.role === 'super_admin';
 
   const [bien, setBien]         = useState(null as any);
   const [loading, setLoading]   = useState(true);
@@ -100,12 +101,29 @@ export default function AnnonceDetailPage() {
   const [conditions, setConditions] = useState('');
   const [fraisVisite, setFraisVisite] = useState('0');
 
+  // Édition proprietaire_info (super admin uniquement)
+  const [editProprietaire, setEditProprietaire] = useState(false);
+  const [propPrenom, setPropPrenom]   = useState('');
+  const [propNom, setPropNom]         = useState('');
+  const [propTel, setPropTel]         = useState('');
+  const [propEmail, setPropEmail]     = useState('');
+
   useEffect(() => {
     if (!id) return;
     setLoading(true);
     setError('');
     getAdminBien.byId(Number(id))
-      .then(data => { setBien(data); setFraisVisite(String(data.frais_visite ?? 0)); })
+      .then(data => {
+        setBien(data);
+        setFraisVisite(String(data.frais_visite ?? 0));
+        const pi = data.amenites?.proprietaire_info;
+        if (pi) {
+          setPropPrenom(pi.prenom ?? '');
+          setPropNom(pi.nom ?? '');
+          setPropTel(pi.telephone ?? '');
+          setPropEmail(pi.email ?? '');
+        }
+      })
       .catch(() => setError('Impossible de charger ce bien. Vérifie que le backend est bien déployé.'))
       .finally(() => setLoading(false));
   }, [id]);
@@ -127,6 +145,28 @@ export default function AnnonceDetailPage() {
       setAction(null);
       setMotif('');
       setConditions('');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleSaveProprietaire() {
+    if (!propNom.trim() || !propPrenom.trim() || !propTel.trim()) return;
+    setSaving(true);
+    try {
+      const updated = await patchAdminBien.update(bien.id, {
+        amenites: {
+          ...bien.amenites,
+          proprietaire_info: {
+            prenom: propPrenom.trim(),
+            nom: propNom.trim(),
+            telephone: propTel.trim(),
+            email: propEmail.trim() || undefined,
+          },
+        },
+      });
+      setBien((prev: any) => ({ ...prev, ...updated }));
+      setEditProprietaire(false);
     } finally {
       setSaving(false);
     }
@@ -344,17 +384,7 @@ export default function AnnonceDetailPage() {
               </div>
               <div className="detail-info-row">
                 <span>Frais de visite</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <input
-                    className="detail-edit-input detail-edit-input--sm"
-                    type="number"
-                    min="0"
-                    value={fraisVisite}
-                    onChange={e => setFraisVisite(e.target.value)}
-                    placeholder="0"
-                  />
-                  <span style={{ fontSize: 12, color: 'var(--c-muted)', whiteSpace: 'nowrap' }}>FCFA</span>
-                </div>
+                <strong>{fraisVisite} FCFA</strong>
               </div>
               {bien.details_maison && (
                 <>
@@ -450,18 +480,63 @@ export default function AnnonceDetailPage() {
           {/* Propriétaire du bien (renseigné par le commercial) */}
           {bien.amenites?.proprietaire_info && (
             <div className="detail-card">
-              <div className="detail-section-title">Propriétaire du bien</div>
-              <div className="detail-info-rows">
-                {['prenom', 'nom', 'telephone', 'email'].map(k => bien.amenites.proprietaire_info[k] ? (
-                  <div className="detail-info-row" key={k}>
-                    <span style={{ textTransform: 'capitalize' }}>{k}</span>
-                    <strong style={{ color: k === 'nom' || k === 'prenom' ? 'var(--c-text)' : undefined }}>
-                      {bien.amenites.proprietaire_info[k]}
-                    </strong>
-                  </div>
-                ) : null)}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <div className="detail-section-title" style={{ margin: 0 }}>Propriétaire du bien</div>
+                {isSuperAdmin && !editProprietaire && (
+                  <button onClick={() => setEditProprietaire(true)} style={{
+                    fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 6,
+                    border: '1.5px solid var(--c-border)', background: 'transparent',
+                    color: 'var(--c-blue)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
+                  }}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                    Modifier
+                  </button>
+                )}
               </div>
-              <p style={{ fontSize: 11, color: 'var(--c-muted)', marginTop: 8 }}>Lecture seule — ne peut pas être modifié</p>
+              {editProprietaire && isSuperAdmin ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                    <div>
+                      <label className="detail-form-label">Prénom *</label>
+                      <input className="immo-form-input" value={propPrenom} onChange={e => setPropPrenom(e.target.value)} placeholder="Prénom" />
+                    </div>
+                    <div>
+                      <label className="detail-form-label">Nom *</label>
+                      <input className="immo-form-input" value={propNom} onChange={e => setPropNom(e.target.value)} placeholder="Nom" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="detail-form-label">Téléphone *</label>
+                    <input className="immo-form-input" type="tel" value={propTel} onChange={e => setPropTel(e.target.value)} placeholder="+229 XX XX XX XX" />
+                  </div>
+                  <div>
+                    <label className="detail-form-label">Email (optionnel)</label>
+                    <input className="immo-form-input" type="email" value={propEmail} onChange={e => setPropEmail(e.target.value)} placeholder="email@example.com" />
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 4 }}>
+                    <button className="btn-cancel" onClick={() => { setEditProprietaire(false); const pi = bien.amenites?.proprietaire_info; if (pi) { setPropPrenom(pi.prenom ?? ''); setPropNom(pi.nom ?? ''); setPropTel(pi.telephone ?? ''); setPropEmail(pi.email ?? ''); } }}>
+                      Annuler
+                    </button>
+                    <button className="btn-submit" onClick={handleSaveProprietaire}
+                      disabled={saving || !propNom.trim() || !propPrenom.trim() || !propTel.trim()}>
+                      {saving ? 'Enregistrement…' : 'Enregistrer'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="detail-info-rows">
+                  {['prenom', 'nom', 'telephone', 'email'].map(k => bien.amenites.proprietaire_info[k] ? (
+                    <div className="detail-info-row" key={k}>
+                      <span style={{ textTransform: 'capitalize' }}>{k}</span>
+                      <strong style={{ color: k === 'nom' || k === 'prenom' ? 'var(--c-text)' : undefined }}>
+                        {bien.amenites.proprietaire_info[k]}
+                      </strong>
+                    </div>
+                  ) : null)}
+                </div>
+              )}
             </div>
           )}
 

@@ -1253,10 +1253,7 @@ export default function PublierBienPage() {
                   {([
                     { value: 'non', label: 'Non', sub: '' },
                     { value: 'sbee', label: 'SBEE', sub: 'Branchement direct réseau national', logo: (
-                      <svg width="36" height="20" viewBox="0 0 72 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect width="72" height="30" rx="4" fill="#F5A623"/>
-                        <text x="36" y="21" textAnchor="middle" fontFamily="sans-serif" fontWeight="bold" fontSize="14" fill="white">SBEE</text>
-                      </svg>
+                      <img src="/logo-SBEE.png" alt="SBEE" style={{ height: 28, width: 'auto', objectFit: 'contain', borderRadius: 4 }} />
                     )},
                     { value: 'decompteur', label: 'Décompteur', sub: 'Compteur individuel dans le logement' },
                   ] as any[]).map(o => {
@@ -1289,10 +1286,7 @@ export default function PublierBienPage() {
                   {([
                     { value: 'non', label: 'Non', sub: '' },
                     { value: 'soneb', label: 'SONEB', sub: 'Branchement direct réseau SONEB', logo: (
-                      <svg width="52" height="20" viewBox="0 0 90 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect width="90" height="30" rx="4" fill="#0077CC"/>
-                        <text x="45" y="21" textAnchor="middle" fontFamily="sans-serif" fontWeight="bold" fontSize="14" fill="white">SONEB</text>
-                      </svg>
+                      <img src="/logo_soneb.png" alt="SONEB" style={{ height: 28, width: 'auto', objectFit: 'contain', borderRadius: 4 }} />
                     )},
                     { value: 'decompteur_soneb', label: 'Décompteur SONEB', sub: 'Compteur individuel SONEB' },
                     { value: 'forage', label: 'Forage', sub: 'Forage dans la cour' },
