@@ -290,7 +290,6 @@ export default function PublierBienPage() {
   const [step, setStep]               = useState(0)
   const [submitting, setSubmitting]   = useState(false)
   const [error, setError]             = useState('')
-  const [createdId, setCreatedId]     = useState<number | null>(null)
   const [created, setCreated]         = useState(false)
   const [photos, setPhotos]           = useState<File[]>([])
   const [video, setVideo]             = useState<File | null>(null)
@@ -678,7 +677,6 @@ export default function PublierBienPage() {
 
       const data = await postBien.create(body)
       const bien = data.data || data.bien || data
-      setCreatedId(bien.id)
 
       if (photos.length > 0 && bien.id) {
         for (let i = 0; i < photos.length; i++) {
