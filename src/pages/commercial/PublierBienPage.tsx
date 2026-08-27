@@ -116,23 +116,13 @@ const parsePrix = (t: string): number | undefined => {
 
 const formatFcfa = (v: number) => v > 0 ? `${Math.round(v).toLocaleString('fr-FR')} FCFA` : '0 FCFA'
 
-// ─── Tokens CSS dark (identiques à immo-web-user proprio) ────────────────────
-const P: Record<string, string> = {
-  '--p-deep'         : '#060D1A',
-  '--p-surface'      : '#0B1C30',
-  '--p-surface-glass': 'rgba(11, 28, 48, 0.85)',
-  '--p-card'         : '#112440',
-  '--p-border'       : '#1A3355',
-  '--p-text'         : '#F0EDE8',
-  '--p-muted'        : '#8A9BB5',
-}
 
 // ─── UI primitives ────────────────────────────────────────────────────────────
 
 function Card({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <div className={`rounded-2xl border ${className ?? ''}`}
-      style={{ background: 'var(--p-card)', borderColor: 'var(--p-border)', padding: '1rem' }}>
+      style={{ background: '#fff', borderColor: 'var(--c-border)', padding: '1rem' }}>
       {children}
     </div>
   )
@@ -141,7 +131,7 @@ function Card({ children, className }: { children: ReactNode; className?: string
 function Section({ title, required }: { title: string; required?: boolean }) {
   return (
     <div className="flex items-center gap-2 mb-3">
-      <p className="text-[11px] font-bold uppercase tracking-[0.16em]" style={{ color: 'var(--p-muted)' }}>{title}</p>
+      <p className="text-[11px] font-bold uppercase tracking-[0.16em]" style={{ color: 'var(--c-muted)' }}>{title}</p>
       {required && (
         <span className="text-[10px] font-bold px-1.5 py-0.5 rounded"
           style={{ color: BLUE, background: BLUE + '20' }}>Obligatoire</span>
@@ -167,15 +157,15 @@ function ChoiceList({ options, value, onChange, disabledValues, onDeselect }: {
             onClick={() => (isActive && onDeselect) ? onDeselect() : onChange(o.value)}
             className="w-full flex items-start justify-between gap-2 px-4 py-3 rounded-xl border-2 text-left transition-all"
             style={{
-              borderColor: isActive ? BLUE : 'var(--p-border)',
-              background: isActive ? BLUE + '18' : 'var(--p-deep)',
+              borderColor: isActive ? BLUE : 'var(--c-border)',
+              background: isActive ? BLUE + '18' : 'var(--c-bg)',
               opacity: isDisabled ? 0.4 : 1,
               cursor: isDisabled ? 'not-allowed' : 'pointer',
             }}>
             <span>
               <span className="block text-sm font-semibold"
-                style={{ color: isActive ? BLUE : 'var(--p-text)' }}>{o.label}</span>
-              {o.sub && <span className="block text-xs mt-0.5" style={{ color: 'var(--p-muted)' }}>{o.sub}</span>}
+                style={{ color: isActive ? BLUE : 'var(--c-text)' }}>{o.label}</span>
+              {o.sub && <span className="block text-xs mt-0.5" style={{ color: 'var(--c-muted)' }}>{o.sub}</span>}
             </span>
             {isActive && !isDisabled && <span className="font-bold shrink-0" style={{ color: BLUE }}>✓</span>}
           </button>
@@ -190,9 +180,9 @@ function Chip({ label, active, onClick }: { label: string; active: boolean; onCl
     <button type="button" onClick={onClick}
       className="px-4 py-2.5 rounded-xl border-2 text-xs font-bold text-center transition-all"
       style={{
-        borderColor: active ? BLUE : 'var(--p-border)',
+        borderColor: active ? BLUE : 'var(--c-border)',
         background: active ? BLUE + '18' : 'transparent',
-        color: active ? BLUE : 'var(--p-muted)',
+        color: active ? BLUE : 'var(--c-muted)',
       }}>
       {label}
     </button>
@@ -204,12 +194,12 @@ function Counter({ label, value, onChange, min = 0 }: {
 }) {
   return (
     <div className="flex items-center justify-between py-2.5">
-      <span className="text-sm font-semibold" style={{ color: 'var(--p-text)' }}>{label}</span>
+      <span className="text-sm font-semibold" style={{ color: 'var(--c-text)' }}>{label}</span>
       <div className="flex items-center gap-3">
         <button type="button" disabled={value <= min} onClick={() => onChange(value - 1)}
           className="w-8 h-8 rounded-lg flex items-center justify-center font-bold border disabled:opacity-40 transition-colors"
-          style={{ background: 'var(--p-deep)', borderColor: 'var(--p-border)', color: 'var(--p-text)' }}>−</button>
-        <span className="w-6 text-center font-bold" style={{ color: 'var(--p-text)' }}>{value}</span>
+          style={{ background: 'var(--c-bg)', borderColor: 'var(--c-border)', color: 'var(--c-text)' }}>−</button>
+        <span className="w-6 text-center font-bold" style={{ color: 'var(--c-text)' }}>{value}</span>
         <button type="button" onClick={() => onChange(value + 1)}
           className="w-8 h-8 rounded-lg flex items-center justify-center font-bold transition-colors"
           style={{ background: BLUE + '20', color: BLUE }}>+</button>
@@ -233,7 +223,7 @@ function NumberPicker({ presets, unit, value, isCustom, onPick, onCustomStart, c
       {isCustom && (
         <input type="number" value={customText} onChange={e => onCustomText(e.target.value)} placeholder="Nombre"
           className="mt-2.5 w-full rounded-xl px-4 py-2.5 text-sm outline-none border"
-          style={{ background: 'var(--p-deep)', borderColor: BLUE, color: 'var(--p-text)' }} />
+          style={{ background: 'var(--c-bg)', borderColor: BLUE, color: 'var(--c-text)' }} />
       )}
     </div>
   )
@@ -244,30 +234,30 @@ function MoneyInput({ value, onChange, placeholder }: { value: string; onChange:
     <div className="relative">
       <input type="number" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder ?? '0'}
         className="w-full rounded-xl pl-4 pr-16 py-3 text-sm outline-none border transition-colors"
-        style={{ background: 'var(--p-deep)', borderColor: 'var(--p-border)', color: 'var(--p-text)' }}
+        style={{ background: 'var(--c-bg)', borderColor: 'var(--c-border)', color: 'var(--c-text)' }}
         onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
-        onBlur={e => (e.currentTarget.style.borderColor = 'var(--p-border)')} />
+        onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
       <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold"
-        style={{ color: 'var(--p-muted)' }}>FCFA</span>
+        style={{ color: 'var(--c-muted)' }}>FCFA</span>
     </div>
   )
 }
 
 const baseInputStyle: CSSProperties = {
-  background: 'var(--p-deep)',
-  borderColor: 'var(--p-border)',
-  color: 'var(--p-text)',
+  background: 'var(--c-bg)',
+  borderColor: 'var(--c-border)',
+  color: 'var(--c-text)',
 }
 
 function RecapSection({ title, items }: { title: string; items: string[] }) {
   if (!items.length) return null
   return (
-    <div className="py-3 border-b last:border-b-0" style={{ borderColor: 'var(--p-border)' }}>
+    <div className="py-3 border-b last:border-b-0" style={{ borderColor: 'var(--c-border)' }}>
       <p className="text-xs font-bold mb-2" style={{ color: BLUE }}>{title}</p>
       {items.map((item, i) => (
         <div key={i} className="flex items-start gap-1.5 mb-1 last:mb-0">
           <span className="font-bold text-xs shrink-0" style={{ color: BLUE }}>•</span>
-          <span className="text-sm leading-snug" style={{ color: 'var(--p-text)' }}>{item}</span>
+          <span className="text-sm leading-snug" style={{ color: 'var(--c-text)' }}>{item}</span>
         </div>
       ))}
     </div>
@@ -286,7 +276,6 @@ export default function PublierBienPage() {
   const quartierInputRef = useRef<HTMLInputElement>(null)
   const [dropdownRect, setDropdownRect] = useState<{ top: number; left: number; width: number } | null>(null)
 
-  const [isScrolled, setIsScrolled]   = useState(false)
   const [step, setStep]               = useState(0)
   const [submitting, setSubmitting]   = useState(false)
   const [error, setError]             = useState('')
@@ -699,82 +688,56 @@ export default function PublierBienPage() {
     setSubmitting(false)
   }
 
-  const navStyle: CSSProperties = {
-    background: isScrolled ? 'var(--p-surface-glass)' : 'var(--p-surface)',
-    borderColor: 'var(--p-border)', borderStyle: 'solid',
-    borderBottomWidth: '1px',
-    borderTopWidth: isScrolled ? '1px' : '0px', borderLeftWidth: isScrolled ? '1px' : '0px', borderRightWidth: isScrolled ? '1px' : '0px',
-    borderRadius: isScrolled ? '1rem' : '0px', marginTop: isScrolled ? '8px' : '0px',
-    maxWidth: isScrolled ? '72rem' : '100%', paddingLeft: isScrolled ? '1rem' : '0.75rem', paddingRight: isScrolled ? '1rem' : '0.75rem',
-    boxShadow: isScrolled ? '0 8px 32px rgba(0,0,0,0.18)' : '0 1px 0 rgba(75,107,255,0.08)',
-  }
-
   // Écran succès
   if (created) {
     return (
-      <div style={{ ...P, position: 'fixed', inset: 0, zIndex: 999, background: 'var(--p-deep)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1.5rem', textAlign: 'center' } as CSSProperties}>
-        <div style={{ width: 80, height: 80, borderRadius: '50%', background: BLUE + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={BLUE} strokeWidth={2}>
+      <div style={{ maxWidth: 480, margin: '64px auto', padding: '32px 24px', textAlign: 'center' }}>
+        <div style={{ width: 72, height: 72, borderRadius: '50%', background: BLUE + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={BLUE} strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
-        <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--p-text)', marginBottom: 8 }}>Bien soumis !</h2>
-        <p style={{ fontSize: 13, color: 'var(--p-muted)', maxWidth: 320, marginBottom: 24 }}>
-          En attente de validation par l'administrateur. Vous serez notifié une fois approuvé.
+        <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--c-text)', marginBottom: 8 }}>Bien soumis avec succes</h2>
+        <p style={{ fontSize: 13, color: 'var(--c-muted)', maxWidth: 320, margin: '0 auto 24px' }}>
+          En attente de validation par l'administrateur. Vous serez notifie une fois approuve.
         </p>
         <button onClick={() => navigate('/mes-annonces')}
-          style={{ padding: '14px 32px', borderRadius: 12, fontWeight: 700, background: BLUE, color: 'white', border: 'none', cursor: 'pointer', boxShadow: `0 4px 24px ${BLUE}44`, fontSize: 15, marginBottom: 12 }}>
+          style={{ padding: '12px 32px', borderRadius: 10, fontWeight: 700, background: BLUE, color: 'white', border: 'none', cursor: 'pointer', fontSize: 14 }}>
           Voir mes annonces
-        </button>
-        <button onClick={() => navigate('/mes-annonces')}
-          style={{ padding: '10px 24px', borderRadius: 12, fontSize: 13, fontWeight: 600, color: 'var(--p-muted)', background: 'transparent', border: 'none', cursor: 'pointer' }}>
-          Retour
         </button>
       </div>
     )
   }
 
   return (
-    <div style={{ ...P, position: 'fixed', inset: 0, zIndex: 999, background: 'var(--p-deep)', display: 'flex', flexDirection: 'column', overflow: 'hidden' } as CSSProperties}>
+    <div style={{ maxWidth: 688, margin: '0 auto', padding: '24px 16px 48px' }}>
 
-      {/* Navbar */}
-      <header style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 50, pointerEvents: 'none', padding: isScrolled ? '0 8px' : '0', transition: 'padding 0.3s' }}>
-        <nav style={{ ...navStyle, margin: '0 auto', pointerEvents: 'auto', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', transition: 'all 0.3s' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 0' }}>
-            <div style={{ width: 28, height: 28, borderRadius: 8, background: BLUE + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={BLUE} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
-              </svg>
-            </div>
-
-            <button onClick={() => step > 0 ? setStep(s => s - 1) : navigate('/mes-annonces')}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 999, fontSize: 12, fontWeight: 600, border: '1px solid var(--p-border)', background: 'var(--p-card)', color: 'var(--p-muted)', cursor: 'pointer', flexShrink: 0 }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
-                <path d="M15 19l-7-7 7-7" />
-              </svg>
-              {step > 0 ? 'Retour' : 'Annuler'}
-            </button>
-
-            <div style={{ flex: 1, textAlign: 'center', minWidth: 0 }}>
-              <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--p-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Nouveau bien</p>
-              <p style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--p-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {STEP_LABELS[step]}
-              </p>
-            </div>
-
-            <div style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 999, fontSize: 11, fontWeight: 700, border: `1px solid ${BLUE}40`, background: BLUE + '15', color: BLUE }}>
-              {step + 1}/{STEP_LABELS.length}
-            </div>
+      {/* Barre de navigation + étapes */}
+      <div style={{ background: '#fff', border: '1px solid var(--c-border)', borderRadius: 12, padding: '14px 16px', marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+          <button onClick={() => step > 0 ? setStep(s => s - 1) : navigate('/mes-annonces')}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600, border: '1px solid var(--c-border)', background: 'var(--c-bg)', color: 'var(--c-muted)', cursor: 'pointer', flexShrink: 0 }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 19l-7-7 7-7" />
+            </svg>
+            {step > 0 ? 'Retour' : 'Annuler'}
+          </button>
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-text)', lineHeight: 1.2 }}>Nouveau bien</p>
+            <p style={{ fontSize: 11, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{STEP_LABELS[step]}</p>
           </div>
-          <div style={{ height: 2, background: 'var(--p-border)' }}>
-            <div style={{ height: '100%', transition: 'width 0.5s ease-out', width: `${((step + 1) / STEP_LABELS.length) * 100}%`, background: BLUE }} />
-          </div>
-        </nav>
-      </header>
+          <span style={{ fontSize: 12, fontWeight: 700, padding: '4px 10px', borderRadius: 999, border: `1px solid ${BLUE}40`, background: BLUE + '12', color: BLUE }}>
+            {step + 1}/{STEP_LABELS.length}
+          </span>
+        </div>
+        <div style={{ height: 4, borderRadius: 2, background: 'var(--c-border)' }}>
+          <div style={{ height: '100%', borderRadius: 2, transition: 'width 0.4s ease', width: `${((step + 1) / STEP_LABELS.length) * 100}%`, background: BLUE }} />
+        </div>
+      </div>
 
       {/* Bannière proprietaire */}
       {proprietaireInfo && (
-        <div style={{ position: 'absolute', top: '4rem', left: 0, right: 0, zIndex: 40, background: BLUE + '18', borderBottom: `1px solid ${BLUE}40`, padding: '6px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ background: BLUE + '10', border: `1px solid ${BLUE}30`, borderRadius: 10, padding: '8px 14px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={BLUE} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
             <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
           </svg>
@@ -782,21 +745,18 @@ export default function PublierBienPage() {
             Proprio : {proprietaireInfo.prenom} {proprietaireInfo.nom}
           </span>
           {proprietaireInfo.telephone && (
-            <span style={{ fontSize: 11, color: 'var(--p-muted)', marginLeft: 4 }}>{proprietaireInfo.telephone}</span>
+            <span style={{ fontSize: 11, color: 'var(--c-muted)', marginLeft: 4 }}>{proprietaireInfo.telephone}</span>
           )}
         </div>
       )}
 
-      {/* Contenu + Footer */}
-      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', paddingTop: proprietaireInfo ? '5.5rem' : '4rem' }}>
-        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 16px', maxWidth: 672, margin: '0 auto', width: '100%' }}
-          onScroll={e => setIsScrolled(e.currentTarget.scrollTop > 40)}>
+      {error && (
+        <div style={{ borderRadius: 10, padding: '12px 16px', border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.08)', marginBottom: 16 }}>
+          <p style={{ fontSize: 14, color: '#EF4444' }}>{error}</p>
+        </div>
+      )}
 
-          {error && (
-            <div style={{ borderRadius: 12, padding: '12px 16px', border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.1)', marginBottom: 16 }}>
-              <p style={{ fontSize: 14, color: '#EF4444' }}>{error}</p>
-            </div>
-          )}
+      <div className="space-y-4">
 
           {/* ═══ ÉTAPE 0 : TYPE & PRIX ═══ */}
           {step === 0 && (
@@ -808,9 +768,9 @@ export default function PublierBienPage() {
                     <button key={t.key} type="button" onClick={() => setTypeBien(t.key)}
                       className="px-3.5 py-2.5 rounded-xl border-2 text-xs font-bold transition-all"
                       style={{
-                        borderColor: typeBien === t.key ? BLUE : 'var(--p-border)',
+                        borderColor: typeBien === t.key ? BLUE : 'var(--c-border)',
                         background: typeBien === t.key ? BLUE : 'transparent',
-                        color: typeBien === t.key ? 'white' : 'var(--p-muted)',
+                        color: typeBien === t.key ? 'white' : 'var(--c-muted)',
                       }}>
                       {t.label}
                     </button>
@@ -863,7 +823,7 @@ export default function PublierBienPage() {
                       { label: "À l'heure",               value: prixHeure,           onChange: setPrixHeure           },
                     ].map(row => (
                       <div key={row.label} className="flex items-center gap-2.5">
-                        <span className="flex-1 text-xs font-semibold" style={{ color: 'var(--p-text)' }}>{row.label}</span>
+                        <span className="flex-1 text-xs font-semibold" style={{ color: 'var(--c-text)' }}>{row.label}</span>
                         <div className="w-32"><MoneyInput value={row.value} onChange={row.onChange} /></div>
                       </div>
                     ))}
@@ -896,7 +856,7 @@ export default function PublierBienPage() {
             <Card>
               <div className="space-y-4">
                 <div>
-                  <label className="text-[11px] font-bold uppercase tracking-[0.14em] mb-2 block" style={{ color: 'var(--p-muted)' }}>Quartier</label>
+                  <label className="text-[11px] font-bold uppercase tracking-[0.14em] mb-2 block" style={{ color: 'var(--c-muted)' }}>Quartier</label>
                   {quartier ? (
                     <div className="flex items-center gap-3 px-4 py-3 rounded-xl border"
                       style={{ background: 'rgba(72,199,116,0.09)', borderColor: 'rgba(72,199,116,0.45)' }}>
@@ -925,11 +885,11 @@ export default function PublierBienPage() {
                         placeholder="Rechercher un quartier…"
                         className="w-full rounded-xl pl-9 pr-4 py-3 text-sm outline-none border transition-colors"
                         style={baseInputStyle} />
-                      <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} style={{ color: 'var(--p-muted)' }}>
+                      <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} style={{ color: 'var(--c-muted)' }}>
                         <circle cx={11} cy={11} r={8} /><path strokeLinecap="round" d="M21 21l-4.35-4.35" />
                       </svg>
                       {quartierInputFocused && dropdownRect && (
-                        <div style={{ position: 'fixed', top: dropdownRect.top, left: dropdownRect.left, width: dropdownRect.width, zIndex: 9999, background: 'var(--p-card)', borderColor: 'var(--p-border)', border: '1px solid var(--p-border)', borderRadius: 12, maxHeight: 260, overflowY: 'auto' }}>
+                        <div style={{ position: 'fixed', top: dropdownRect.top, left: dropdownRect.left, width: dropdownRect.width, zIndex: 9999, background: '#fff', borderColor: 'var(--c-border)', border: '1px solid var(--c-border)', borderRadius: 12, maxHeight: 260, overflowY: 'auto' }}>
                           {filteredQuartiers.length === 0 ? (
                             quartierSearch.trim() ? (
                               <button type="button" onMouseDown={() => selectQuartier(quartierSearch.trim(), null, null)}
@@ -941,21 +901,21 @@ export default function PublierBienPage() {
                                 <span style={{ color: BLUE }}>Utiliser « {quartierSearch.trim()} »</span>
                               </button>
                             ) : (
-                              <p className="px-4 py-3 text-sm" style={{ color: 'var(--p-muted)' }}>Commencez à taper…</p>
+                              <p className="px-4 py-3 text-sm" style={{ color: 'var(--c-muted)' }}>Commencez à taper…</p>
                             )
                           ) : filteredQuartiers.map(q => (
                             <button key={q.nom + q.arrondissement} type="button"
                               onMouseDown={() => selectQuartier(q.nom, q.arrondissement, q.ville)}
                               className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-sm border-b transition-colors"
-                              style={{ borderColor: 'var(--p-border)', color: 'var(--p-text)' }}
-                              onMouseEnter={e => (e.currentTarget.style.background = 'var(--p-deep)')}
+                              style={{ borderColor: 'var(--c-border)', color: 'var(--c-text)' }}
+                              onMouseEnter={e => (e.currentTarget.style.background = 'var(--c-bg)')}
                               onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                              <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} style={{ color: 'var(--p-muted)' }}>
+                              <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} style={{ color: 'var(--c-muted)' }}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                               </svg>
                               <span className="flex-1">{q.nom}</span>
-                              <span className="text-[11px]" style={{ color: 'var(--p-muted)' }}>{q.arrondissement}</span>
+                              <span className="text-[11px]" style={{ color: 'var(--c-muted)' }}>{q.arrondissement}</span>
                             </button>
                           ))}
                         </div>
@@ -965,15 +925,15 @@ export default function PublierBienPage() {
                 </div>
                 {quartier && arrondissement && (
                   <div>
-                    <label className="text-[11px] font-bold uppercase tracking-[0.14em] mb-2 block" style={{ color: 'var(--p-muted)' }}>Arrondissement</label>
+                    <label className="text-[11px] font-bold uppercase tracking-[0.14em] mb-2 block" style={{ color: 'var(--c-muted)' }}>Arrondissement</label>
                     <div className="px-4 py-3 rounded-xl border text-sm font-semibold"
-                      style={{ background: 'var(--p-deep)', borderColor: 'var(--p-border)', color: 'var(--p-muted)' }}>
+                      style={{ background: 'var(--c-bg)', borderColor: 'var(--c-border)', color: 'var(--c-muted)' }}>
                       {arrondissement}
                     </div>
                   </div>
                 )}
                 <div>
-                  <label className="text-[11px] font-bold uppercase tracking-[0.14em] mb-2 block" style={{ color: 'var(--p-muted)' }}>
+                  <label className="text-[11px] font-bold uppercase tracking-[0.14em] mb-2 block" style={{ color: 'var(--c-muted)' }}>
                     Indication précise <span style={{ textTransform: 'none', letterSpacing: 0, fontWeight: 400 }}>(optionnel)</span>
                   </label>
                   <input value={indicationAdresse} onChange={e => setIndicationAdresse(e.target.value)}
@@ -981,7 +941,7 @@ export default function PublierBienPage() {
                     className="w-full rounded-xl px-4 py-3 text-sm outline-none border transition-colors"
                     style={baseInputStyle}
                     onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
-                    onBlur={e => (e.currentTarget.style.borderColor = 'var(--p-border)')} />
+                    onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
                 </div>
               </div>
             </Card>
@@ -997,7 +957,7 @@ export default function PublierBienPage() {
                   className="w-full rounded-xl px-4 py-3 text-sm outline-none resize-none border transition-colors"
                   style={baseInputStyle}
                   onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
-                  onBlur={e => (e.currentTarget.style.borderColor = 'var(--p-border)')} />
+                  onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
               </Card>
               <Card>
                 <Section title="Superficie" required />
@@ -1007,8 +967,8 @@ export default function PublierBienPage() {
                     className="flex-1 min-w-0 rounded-xl px-4 py-3 text-sm outline-none border transition-colors"
                     style={baseInputStyle}
                     onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
-                    onBlur={e => (e.currentTarget.style.borderColor = 'var(--p-border)')} />
-                  <div className="flex rounded-xl border p-1 flex-shrink-0" style={{ borderColor: 'var(--p-border)', background: 'var(--p-deep)' }}>
+                    onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
+                  <div className="flex rounded-xl border p-1 flex-shrink-0" style={{ borderColor: 'var(--c-border)', background: 'var(--c-bg)' }}>
                     {(['m2', 'ha'] as const).map(u => (
                       <button key={u} type="button"
                         onClick={() => {
@@ -1018,7 +978,7 @@ export default function PublierBienPage() {
                           setSuperficieUnite(u)
                         }}
                         className="px-3.5 py-2 rounded-lg text-xs font-bold transition-all"
-                        style={{ background: superficieUnite === u ? BLUE : 'transparent', color: superficieUnite === u ? 'white' : 'var(--p-muted)' }}>
+                        style={{ background: superficieUnite === u ? BLUE : 'transparent', color: superficieUnite === u ? 'white' : 'var(--c-muted)' }}>
                         {u === 'm2' ? 'm²' : 'ha'}
                       </button>
                     ))}
@@ -1037,8 +997,8 @@ export default function PublierBienPage() {
                   { value: 'autre', label: 'Autre' },
                 ]} value={positionTerrain} onChange={setPositionTerrain} />
                 <label className="mt-3 flex items-center justify-between px-4 py-3 rounded-xl border cursor-pointer"
-                  style={{ borderColor: 'var(--p-border)', background: 'var(--p-deep)' }}>
-                  <span className="text-sm font-semibold" style={{ color: 'var(--p-text)' }}>Parcelle en angle de rue</span>
+                  style={{ borderColor: 'var(--c-border)', background: 'var(--c-bg)' }}>
+                  <span className="text-sm font-semibold" style={{ color: 'var(--c-text)' }}>Parcelle en angle de rue</span>
                   <input type="checkbox" checked={angleRue} onChange={e => setAngleRue(e.target.checked)} className="w-5 h-5 accent-blue-500" />
                 </label>
               </Card>
@@ -1054,7 +1014,7 @@ export default function PublierBienPage() {
                     className="mt-3 w-full rounded-xl px-4 py-3 text-sm outline-none border resize-none transition-colors"
                     style={baseInputStyle}
                     onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
-                    onBlur={e => (e.currentTarget.style.borderColor = 'var(--p-border)')} />
+                    onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
                 )}
               </Card>
               <Card>
@@ -1074,20 +1034,20 @@ export default function PublierBienPage() {
               </Card>
               <Card>
                 <Section title="Détails supplémentaires" />
-                <p className="text-xs mb-3" style={{ color: 'var(--p-muted)' }}>Ajoutez toute information utile non couverte ci-dessus.</p>
+                <p className="text-xs mb-3" style={{ color: 'var(--c-muted)' }}>Ajoutez toute information utile non couverte ci-dessus.</p>
                 <div className="space-y-2.5">
                   {detailsSupplementaires.map((d, i) => (
-                    <div key={i} className="p-3 rounded-xl border space-y-2" style={{ borderColor: 'var(--p-border)', background: 'var(--p-deep)' }}>
+                    <div key={i} className="p-3 rounded-xl border space-y-2" style={{ borderColor: 'var(--c-border)', background: 'var(--c-bg)' }}>
                       <div className="flex items-center gap-2">
                         <input value={d.label}
                           onChange={e => setDetailsSupplementaires(arr => arr.map((x, idx) => idx === i ? { ...x, label: e.target.value } : x))}
-                          placeholder="Ex: Distance de la route" className="flex-1 text-sm font-semibold outline-none bg-transparent" style={{ color: 'var(--p-text)' }} />
+                          placeholder="Ex: Distance de la route" className="flex-1 text-sm font-semibold outline-none bg-transparent" style={{ color: 'var(--c-text)' }} />
                         <button type="button" onClick={() => setDetailsSupplementaires(arr => arr.filter((_, idx) => idx !== i))} style={{ color: '#EF4444' }}>✕</button>
                       </div>
                       <input value={d.valeur}
                         onChange={e => setDetailsSupplementaires(arr => arr.map((x, idx) => idx === i ? { ...x, valeur: e.target.value } : x))}
                         placeholder="Ex: 50 mètres" className="w-full rounded-lg px-3 py-2 text-sm outline-none"
-                        style={{ background: 'var(--p-card)', color: 'var(--p-text)' }} />
+                        style={{ background: '#fff', color: 'var(--c-text)' }} />
                     </div>
                   ))}
                   <button type="button" onClick={() => setDetailsSupplementaires(arr => [...arr, { label: '', valeur: '' }])}
@@ -1138,10 +1098,10 @@ export default function PublierBienPage() {
                       ))}
                     </div>
                     <div className="mt-3">
-                      <p className="text-xs font-semibold mb-1.5" style={{ color: 'var(--p-muted)' }}>Autre (à préciser)</p>
+                      <p className="text-xs font-semibold mb-1.5" style={{ color: 'var(--c-muted)' }}>Autre (à préciser)</p>
                       <input value={equipementsAutre} onChange={e => setEquipementsAutre(e.target.value)}
                         placeholder="Ex: Vitrine lumineuse..." className="w-full rounded-xl px-4 py-2.5 text-sm outline-none border transition-colors"
-                        style={baseInputStyle} onFocus={e => (e.currentTarget.style.borderColor = BLUE)} onBlur={e => (e.currentTarget.style.borderColor = 'var(--p-border)')} />
+                        style={baseInputStyle} onFocus={e => (e.currentTarget.style.borderColor = BLUE)} onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
                     </div>
                   </Card>
                   <Card>
@@ -1153,10 +1113,10 @@ export default function PublierBienPage() {
                       ))}
                     </div>
                     <div className="mt-3">
-                      <p className="text-xs font-semibold mb-1.5" style={{ color: 'var(--p-muted)' }}>Autre lieu (à préciser)</p>
+                      <p className="text-xs font-semibold mb-1.5" style={{ color: 'var(--c-muted)' }}>Autre lieu (à préciser)</p>
                       <input value={alentoursAutre} onChange={e => setAlentoursAutre(e.target.value)}
                         placeholder="Ex: Gare routière..." className="w-full rounded-xl px-4 py-2.5 text-sm outline-none border transition-colors"
-                        style={baseInputStyle} onFocus={e => (e.currentTarget.style.borderColor = BLUE)} onBlur={e => (e.currentTarget.style.borderColor = 'var(--p-border)')} />
+                        style={baseInputStyle} onFocus={e => (e.currentTarget.style.borderColor = BLUE)} onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
                     </div>
                   </Card>
                 </>
@@ -1177,7 +1137,7 @@ export default function PublierBienPage() {
               {showPieces && (
                 <Card>
                   <Section title="Nombre de pièces" />
-                  <div className="divide-y" style={{ borderColor: 'var(--p-border)' }}>
+                  <div className="divide-y" style={{ borderColor: 'var(--c-border)' }}>
                     <Counter label="Chambres" value={chambres} onChange={setChambres} min={1} />
                     <Counter label="Salons"   value={salons}   onChange={setSalons}   />
                     {typeBien !== 'chambre_salon' && (
@@ -1199,7 +1159,7 @@ export default function PublierBienPage() {
                       className="mt-2 w-full rounded-xl px-4 py-2.5 text-sm outline-none border transition-colors"
                       style={baseInputStyle}
                       onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
-                      onBlur={e => (e.currentTarget.style.borderColor = 'var(--p-border)')} />
+                      onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
                   )}
                   <div className="mt-5">
                     <Section title="Finition / Standing" />
@@ -1216,7 +1176,7 @@ export default function PublierBienPage() {
                     className="mt-2 w-full rounded-xl px-4 py-2.5 text-sm outline-none border transition-colors"
                     style={baseInputStyle}
                     onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
-                    onBlur={e => (e.currentTarget.style.borderColor = 'var(--p-border)')} />
+                    onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
                 )}
               </Card>
               {typeBien === 'chambre_salon' && (
@@ -1235,11 +1195,11 @@ export default function PublierBienPage() {
                 {typeCour === 'commune' && (
                   <div className="mt-4 space-y-4">
                     <div>
-                      <p className="text-xs font-semibold mb-2" style={{ color: 'var(--p-muted)' }}>Nombre de voisins dans la cour</p>
+                      <p className="text-xs font-semibold mb-2" style={{ color: 'var(--c-muted)' }}>Nombre de voisins dans la cour</p>
                       <Counter label="Voisins" value={nbVoisins} onChange={setNbVoisins} />
                     </div>
                     <div>
-                      <p className="text-xs font-semibold mb-2" style={{ color: 'var(--p-muted)' }}>Accès véhicule</p>
+                      <p className="text-xs font-semibold mb-2" style={{ color: 'var(--c-muted)' }}>Accès véhicule</p>
                       <div className="grid grid-cols-2 gap-2.5">
                         <Chip label="Oui" active={accesVehicule === true}  onClick={() => setAccesVehicule(true)}  />
                         <Chip label="Non" active={accesVehicule === false} onClick={() => setAccesVehicule(false)} />
@@ -1247,7 +1207,7 @@ export default function PublierBienPage() {
                     </div>
                     {accesVehicule === true && (
                       <div>
-                        <p className="text-xs font-semibold mb-2" style={{ color: 'var(--p-muted)' }}>Nombre de véhicules</p>
+                        <p className="text-xs font-semibold mb-2" style={{ color: 'var(--c-muted)' }}>Nombre de véhicules</p>
                         <div className="flex flex-wrap gap-2">
                           {[1, 2, 3, 4, 5].map(n => (
                             <Chip key={n} label={`${n}`} active={nbVehicules === n} onClick={() => setNbVehicules(n)} />
@@ -1317,10 +1277,10 @@ export default function PublierBienPage() {
                     return (
                       <button key={o.value} type="button" onClick={() => setElectricite(o.value)}
                         className="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl border-2 text-left transition-all"
-                        style={{ borderColor: isActive ? BLUE : 'var(--p-border)', background: isActive ? BLUE + '18' : 'var(--p-deep)' }}>
+                        style={{ borderColor: isActive ? BLUE : 'var(--c-border)', background: isActive ? BLUE + '18' : 'var(--c-bg)' }}>
                         <span>
-                          <span className="block text-sm font-semibold" style={{ color: isActive ? BLUE : 'var(--p-text)' }}>{o.label}</span>
-                          {o.sub && <span className="block text-xs mt-0.5" style={{ color: 'var(--p-muted)' }}>{o.sub}</span>}
+                          <span className="block text-sm font-semibold" style={{ color: isActive ? BLUE : 'var(--c-text)' }}>{o.label}</span>
+                          {o.sub && <span className="block text-xs mt-0.5" style={{ color: 'var(--c-muted)' }}>{o.sub}</span>}
                         </span>
                         <div className="flex items-center gap-2 shrink-0">
                           {o.logo}
@@ -1332,7 +1292,7 @@ export default function PublierBienPage() {
                 </div>
                 {electricite === 'decompteur' && (
                   <div className="mt-3">
-                    <p className="text-xs font-semibold mb-2" style={{ color: 'var(--p-muted)' }}>Prix du kWh</p>
+                    <p className="text-xs font-semibold mb-2" style={{ color: 'var(--c-muted)' }}>Prix du kWh</p>
                     <MoneyInput value={prixKwh} onChange={setPrixKwh} placeholder="Ex: 150" />
                   </div>
                 )}
@@ -1355,10 +1315,10 @@ export default function PublierBienPage() {
                     return (
                       <button key={o.value} type="button" onClick={() => setEau(o.value)}
                         className="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl border-2 text-left transition-all"
-                        style={{ borderColor: isActive ? BLUE : 'var(--p-border)', background: isActive ? BLUE + '18' : 'var(--p-deep)' }}>
+                        style={{ borderColor: isActive ? BLUE : 'var(--c-border)', background: isActive ? BLUE + '18' : 'var(--c-bg)' }}>
                         <span>
-                          <span className="block text-sm font-semibold" style={{ color: isActive ? BLUE : 'var(--p-text)' }}>{o.label}</span>
-                          {o.sub && <span className="block text-xs mt-0.5" style={{ color: 'var(--p-muted)' }}>{o.sub}</span>}
+                          <span className="block text-sm font-semibold" style={{ color: isActive ? BLUE : 'var(--c-text)' }}>{o.label}</span>
+                          {o.sub && <span className="block text-xs mt-0.5" style={{ color: 'var(--c-muted)' }}>{o.sub}</span>}
                         </span>
                         <div className="flex items-center gap-2 shrink-0">
                           {o.logo}
@@ -1370,18 +1330,18 @@ export default function PublierBienPage() {
                 </div>
                 {eau === 'decompteur_soneb' && (
                   <div className="mt-3">
-                    <p className="text-xs font-semibold mb-2" style={{ color: 'var(--p-muted)' }}>Prix du m³</p>
+                    <p className="text-xs font-semibold mb-2" style={{ color: 'var(--c-muted)' }}>Prix du m³</p>
                     <MoneyInput value={prixM3} onChange={setPrixM3} placeholder="Ex: 150" />
                   </div>
                 )}
                 {eau === 'forage' && (
                   <div className="mt-3 space-y-3">
                     <div>
-                      <p className="text-xs font-semibold mb-2" style={{ color: 'var(--p-muted)' }}>Prix du forage</p>
+                      <p className="text-xs font-semibold mb-2" style={{ color: 'var(--c-muted)' }}>Prix du forage</p>
                       <MoneyInput value={prixForage} onChange={setPrixForage} placeholder="Ex: 50000" />
                     </div>
                     <div>
-                      <p className="text-xs font-semibold mb-2" style={{ color: 'var(--p-muted)' }}>Comment c'est géré ?</p>
+                      <p className="text-xs font-semibold mb-2" style={{ color: 'var(--c-muted)' }}>Comment c'est géré ?</p>
                       <div className="grid grid-cols-2 gap-2.5">
                         <Chip label="Entre voisins"      active={forageGestion === 'voisins'} onClick={() => setForageGestion(g => g === 'voisins' ? null : 'voisins')} />
                         <Chip label="Abonnement mensuel" active={forageGestion === 'mensuel'} onClick={() => setForageGestion(g => g === 'mensuel' ? null : 'mensuel')} />
@@ -1398,18 +1358,18 @@ export default function PublierBienPage() {
                   <div className="space-y-3">
                     {(eau === 'soneb' || eau === 'decompteur_soneb') && (
                       <div>
-                        <p className="text-xs font-semibold mb-1.5" style={{ color: 'var(--p-muted)' }}>Caution eau</p>
+                        <p className="text-xs font-semibold mb-1.5" style={{ color: 'var(--c-muted)' }}>Caution eau</p>
                         <MoneyInput value={cautionEau} onChange={setCautionEau} />
-                        <p className="text-[11px] mt-1" style={{ color: 'var(--p-muted)' }}>Saisir 0 si pas de caution eau</p>
+                        <p className="text-[11px] mt-1" style={{ color: 'var(--c-muted)' }}>Saisir 0 si pas de caution eau</p>
                       </div>
                     )}
                     {electricite !== 'non' && (
                       <div>
-                        <p className="text-xs font-semibold mb-1.5" style={{ color: 'var(--p-muted)' }}>
+                        <p className="text-xs font-semibold mb-1.5" style={{ color: 'var(--c-muted)' }}>
                           Caution électricité ({electricite === 'sbee' ? 'SBEE' : 'Décompteur'})
                         </p>
                         <MoneyInput value={cautionElec} onChange={setCautionElec} />
-                        <p className="text-[11px] mt-1" style={{ color: 'var(--p-muted)' }}>Saisir 0 si pas de caution électricité</p>
+                        <p className="text-[11px] mt-1" style={{ color: 'var(--c-muted)' }}>Saisir 0 si pas de caution électricité</p>
                       </div>
                     )}
                   </div>
@@ -1432,13 +1392,13 @@ export default function PublierBienPage() {
                             ))}
                           </div>
                           <div className="mt-3">
-                            <p className="text-xs font-semibold mb-1.5" style={{ color: 'var(--p-muted)' }}>Autre équipement (à préciser)</p>
+                            <p className="text-xs font-semibold mb-1.5" style={{ color: 'var(--c-muted)' }}>Autre équipement (à préciser)</p>
                             <input value={equipementsAutre} onChange={e => setEquipementsAutre(e.target.value)}
                               placeholder="Ex: Piscine, Salle de sport..."
                               className="w-full rounded-xl px-4 py-2.5 text-sm outline-none border transition-colors"
                               style={baseInputStyle}
                               onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
-                              onBlur={e => (e.currentTarget.style.borderColor = 'var(--p-border)')} />
+                              onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
                           </div>
                         </Card>
                       )}
@@ -1451,13 +1411,13 @@ export default function PublierBienPage() {
                           ))}
                         </div>
                         <div className="mt-3">
-                          <p className="text-xs font-semibold mb-1.5" style={{ color: 'var(--p-muted)' }}>Autre lieu proche (à préciser)</p>
+                          <p className="text-xs font-semibold mb-1.5" style={{ color: 'var(--c-muted)' }}>Autre lieu proche (à préciser)</p>
                           <input value={alentoursAutre} onChange={e => setAlentoursAutre(e.target.value)}
                             placeholder="Ex: Stade, Plage privée..."
                             className="w-full rounded-xl px-4 py-2.5 text-sm outline-none border transition-colors"
                             style={baseInputStyle}
                             onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
-                            onBlur={e => (e.currentTarget.style.borderColor = 'var(--p-border)')} />
+                            onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
                         </div>
                       </Card>
                     </>
@@ -1479,18 +1439,18 @@ export default function PublierBienPage() {
             <div className="space-y-4">
               <Card>
                 <Section title="Notes / Précisions (optionnel)" />
-                <p className="text-xs mb-3" style={{ color: 'var(--p-muted)' }}>Ces informations s'afficheront dans votre annonce.</p>
+                <p className="text-xs mb-3" style={{ color: 'var(--c-muted)' }}>Ces informations s'afficheront dans votre annonce.</p>
                 <textarea value={description} onChange={e => setDescription(e.target.value)} rows={8}
                   placeholder="Points forts, accès, conditions particulières, règles de la maison..."
                   className="w-full rounded-xl px-4 py-3 text-sm outline-none resize-none border transition-colors"
                   style={baseInputStyle}
                   onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
-                  onBlur={e => (e.currentTarget.style.borderColor = 'var(--p-border)')} />
+                  onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
               </Card>
               {!isTerrain && (
                 <Card>
                   <Section title="Autres frais (optionnel)" />
-                  <p className="text-xs mb-3" style={{ color: 'var(--p-muted)' }}>Frais supplémentaires inclus dans le total à payer à l'intégration.</p>
+                  <p className="text-xs mb-3" style={{ color: 'var(--c-muted)' }}>Frais supplémentaires inclus dans le total à payer à l'intégration.</p>
                   <div className="space-y-2.5">
                     {autresFrais.map((f, i) => (
                       <div key={i} className="flex items-center gap-2">
@@ -1511,7 +1471,7 @@ export default function PublierBienPage() {
               )}
               {!isTerrain && typeTransaction === 'location' && montantBrut > 0 && (
                 <div className="rounded-2xl border p-4" style={{ background: BLUE + '0E', borderColor: BLUE + '30' }}>
-                  <p className="text-xs font-semibold mb-1" style={{ color: 'var(--p-muted)' }}>Montant minimum à verser avant intégration</p>
+                  <p className="text-xs font-semibold mb-1" style={{ color: 'var(--c-muted)' }}>Montant minimum à verser avant intégration</p>
                   <p className="text-2xl font-bold" style={{ color: BLUE }}>{formatFcfa(montantBrut)}</p>
                 </div>
               )}
@@ -1522,7 +1482,7 @@ export default function PublierBienPage() {
           {step === 4 && (
             <div className="space-y-4">
               <Card>
-                <p className="text-sm font-bold mb-4" style={{ color: 'var(--p-text)' }}>Récapitulatif de votre annonce</p>
+                <p className="text-sm font-bold mb-4" style={{ color: 'var(--c-text)' }}>Récapitulatif de votre annonce</p>
                 <RecapSection title="Type de bien" items={[
                   TYPES_BIEN.find(t => t.key === typeBien)?.label ?? typeBien,
                   ...(finition ? [labelFinition(finition)] : []),
@@ -1552,7 +1512,7 @@ export default function PublierBienPage() {
                     ]} />
                     {montantBrut > 0 && (
                       <div className="rounded-xl p-3.5 mb-2" style={{ background: BLUE + '12', border: `1px solid ${BLUE}30` }}>
-                        <p className="text-xs font-semibold mb-1" style={{ color: 'var(--p-muted)' }}>Montant minimum à verser avant intégration</p>
+                        <p className="text-xs font-semibold mb-1" style={{ color: 'var(--c-muted)' }}>Montant minimum à verser avant intégration</p>
                         <p className="text-xl font-bold" style={{ color: BLUE }}>{formatFcfa(montantBrut)}</p>
                       </div>
                     )}
@@ -1612,20 +1572,20 @@ export default function PublierBienPage() {
 
               {/* Photos */}
               <Card>
-                <p className="text-sm font-bold mb-1" style={{ color: 'var(--p-text)' }}>Photos du bien</p>
-                <p className="text-xs mb-4" style={{ color: 'var(--p-muted)' }}>Maximum 5 photos (PNG, JPEG, WEBP) — les photos augmentent les visites de 3×</p>
+                <p className="text-sm font-bold mb-1" style={{ color: 'var(--c-text)' }}>Photos du bien</p>
+                <p className="text-xs mb-4" style={{ color: 'var(--c-muted)' }}>Maximum 5 photos (PNG, JPEG, WEBP) — les photos augmentent les visites de 3×</p>
                 {photos.length < 5 && (
                   <label className="block border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-colors"
-                    style={{ borderColor: 'var(--p-border)' }}
+                    style={{ borderColor: 'var(--c-border)' }}
                     onMouseEnter={e => (e.currentTarget.style.borderColor = BLUE)}
-                    onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--p-border)')}>
+                    onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--c-border)')}>
                     <div className="flex justify-center mb-3">
-                      <svg className="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} style={{ color: 'var(--p-muted)' }}>
+                      <svg className="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} style={{ color: 'var(--c-muted)' }}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                     </div>
-                    <p className="text-sm font-semibold" style={{ color: 'var(--p-text)' }}>Choisir des photos</p>
-                    <p className="text-xs mt-1" style={{ color: 'var(--p-muted)' }}>JPG, PNG, WEBP (max 5 photos)</p>
+                    <p className="text-sm font-semibold" style={{ color: 'var(--c-text)' }}>Choisir des photos</p>
+                    <p className="text-xs mt-1" style={{ color: 'var(--c-muted)' }}>JPG, PNG, WEBP (max 5 photos)</p>
                     <input type="file" multiple accept="image/png,image/jpeg,image/webp" className="hidden"
                       onChange={e => {
                         const files = Array.from(e.target.files || []).slice(0, 5 - photos.length)
@@ -1648,17 +1608,17 @@ export default function PublierBienPage() {
                         </div>
                       ))}
                     </div>
-                    <p className="text-[11px] mt-2" style={{ color: 'var(--p-muted)' }}>
+                    <p className="text-[11px] mt-2" style={{ color: 'var(--c-muted)' }}>
                       {photos.length}/5 photo{photos.length > 1 ? 's' : ''} — encore {5 - photos.length} possible{5 - photos.length > 1 ? 's' : ''}
                     </p>
                   </>
                 )}
                 {submitting && uploadProgress > 0 && (
                   <div className="mt-3">
-                    <div className="flex justify-between text-xs mb-1" style={{ color: 'var(--p-muted)' }}>
+                    <div className="flex justify-between text-xs mb-1" style={{ color: 'var(--c-muted)' }}>
                       <span>Upload photos…</span><span>{uploadProgress}%</span>
                     </div>
-                    <div className="h-2 rounded-full" style={{ background: 'var(--p-deep)' }}>
+                    <div className="h-2 rounded-full" style={{ background: 'var(--c-bg)' }}>
                       <div className="h-full rounded-full transition-all" style={{ width: `${uploadProgress}%`, background: BLUE }} />
                     </div>
                   </div>
@@ -1667,18 +1627,18 @@ export default function PublierBienPage() {
 
               {/* Vidéo */}
               <Card>
-                <p className="text-sm font-bold mb-1" style={{ color: 'var(--p-text)' }}>
-                  Vidéo du bien <span className="font-normal text-xs" style={{ color: 'var(--p-muted)' }}>(optionnel)</span>
+                <p className="text-sm font-bold mb-1" style={{ color: 'var(--c-text)' }}>
+                  Vidéo du bien <span className="font-normal text-xs" style={{ color: 'var(--c-muted)' }}>(optionnel)</span>
                 </p>
-                <p className="text-xs mb-4" style={{ color: 'var(--p-muted)' }}>Maximum 1 vidéo (MP4 uniquement)</p>
+                <p className="text-xs mb-4" style={{ color: 'var(--c-muted)' }}>Maximum 1 vidéo (MP4 uniquement)</p>
                 {video ? (
-                  <div className="flex items-center gap-3 px-4 py-3 rounded-xl border" style={{ borderColor: 'var(--p-border)', background: 'var(--p-deep)' }}>
+                  <div className="flex items-center gap-3 px-4 py-3 rounded-xl border" style={{ borderColor: 'var(--c-border)', background: 'var(--c-bg)' }}>
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: BLUE + '20' }}>
                       <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} style={{ color: BLUE }}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                       </svg>
                     </div>
-                    <span className="flex-1 text-sm font-semibold truncate" style={{ color: 'var(--p-text)' }}>{video.name}</span>
+                    <span className="flex-1 text-sm font-semibold truncate" style={{ color: 'var(--c-text)' }}>{video.name}</span>
                     <button type="button" onClick={() => setVideo(null)}
                       className="w-7 h-7 rounded-full flex items-center justify-center text-white shrink-0" style={{ background: '#EF4444' }}>
                       <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3}>
@@ -1688,15 +1648,15 @@ export default function PublierBienPage() {
                   </div>
                 ) : (
                   <label className="block border-2 border-dashed rounded-2xl p-7 text-center cursor-pointer transition-colors"
-                    style={{ borderColor: 'var(--p-border)' }}
+                    style={{ borderColor: 'var(--c-border)' }}
                     onMouseEnter={e => (e.currentTarget.style.borderColor = BLUE)}
-                    onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--p-border)')}>
+                    onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--c-border)')}>
                     <div className="flex justify-center mb-3">
-                      <svg className="w-9 h-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} style={{ color: 'var(--p-muted)' }}>
+                      <svg className="w-9 h-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} style={{ color: 'var(--c-muted)' }}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                       </svg>
                     </div>
-                    <p className="text-sm font-semibold" style={{ color: 'var(--p-text)' }}>Ajouter une vidéo (MP4)</p>
+                    <p className="text-sm font-semibold" style={{ color: 'var(--c-text)' }}>Ajouter une vidéo (MP4)</p>
                     <input type="file" accept="video/mp4" className="hidden"
                       onChange={e => { const f = e.target.files?.[0]; if (f) setVideo(f) }} />
                   </label>
@@ -1705,16 +1665,14 @@ export default function PublierBienPage() {
             </div>
           )}
 
-          <div className="h-4" />
-        </div>
+      </div>
 
-        {/* Footer CTA */}
-        <div style={{ flexShrink: 0, padding: '10px 16px', borderTop: '1px solid var(--p-border)', background: 'var(--p-surface)' }}>
-          <button onClick={goNext} disabled={submitting}
-            style={{ display: 'block', margin: '0 auto', padding: '10px 40px', borderRadius: 12, fontSize: 14, fontWeight: 700, background: BLUE, color: 'white', border: 'none', cursor: submitting ? 'not-allowed' : 'pointer', boxShadow: `0 2px 16px ${BLUE}38`, opacity: submitting ? 0.6 : 1 }}>
-            {submitting ? 'Publication…' : step < 4 ? 'Continuer →' : 'Publier le bien'}
-          </button>
-        </div>
+      {/* CTA fixé en bas */}
+      <div style={{ position: 'sticky', bottom: 0, marginTop: 24, padding: '12px 0', background: 'var(--c-bg)', borderTop: '1px solid var(--c-border)' }}>
+        <button onClick={goNext} disabled={submitting}
+          style={{ display: 'block', width: '100%', maxWidth: 400, margin: '0 auto', padding: '12px 32px', borderRadius: 10, fontSize: 14, fontWeight: 700, background: BLUE, color: 'white', border: 'none', cursor: submitting ? 'not-allowed' : 'pointer', opacity: submitting ? 0.6 : 1 }}>
+          {submitting ? 'Publication...' : step < 4 ? 'Continuer' : 'Publier le bien'}
+        </button>
       </div>
     </div>
   )
