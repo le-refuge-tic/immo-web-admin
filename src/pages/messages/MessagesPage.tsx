@@ -147,11 +147,15 @@ export default function MessagesPage() {
 
   const activeConv = convs.find((c: any) => c.id === activeId);
 
+  // Retourne l'interlocuteur : si je suis le client, l'autre est le gestionnaire, sinon l'autre est le client
+  const otherUser = (c: any) => c.client_id === me?.id ? (c.gestionnaire_user ?? c.user) : c.user;
+
   const filtered = search
-    ? convs.filter((c: any) =>
-        `${c.user?.nom ?? ''} ${c.user?.prenom ?? ''}`.toLowerCase().includes(search.toLowerCase()) ||
-        (c.user?.email ?? '').toLowerCase().includes(search.toLowerCase())
-      )
+    ? convs.filter((c: any) => {
+        const other = otherUser(c);
+        return `${other?.nom ?? ''} ${other?.prenom ?? ''}`.toLowerCase().includes(search.toLowerCase()) ||
+          (other?.email ?? '').toLowerCase().includes(search.toLowerCase());
+      })
     : convs;
 
   /* ─── Rendu ─────────────────────────────────────────────────── */
@@ -195,10 +199,11 @@ export default function MessagesPage() {
             <div style={{ padding: 32, textAlign: 'center', color: 'var(--c-muted)', fontSize: 13 }}>Chargement…</div>
           ) : filtered.length === 0 ? (
             <div style={{ padding: 32, textAlign: 'center', color: 'var(--c-muted)', fontSize: 13 }}>Aucune conversation.</div>
-          ) : filtered.map((c: any) => {
+          } : filtered.map((c: any) => {
             const isActive = activeId === c.id;
             const unread = c.unread_count ?? 0;
-            const role = c.user?.role_principal ?? c.user?.role ?? '';
+            const other = otherUser(c);
+            const role = other?.role_principal ?? other?.role ?? '';
             return (
               <div key={c.id} onClick={() => setActiveId(c.id)}
                 style={{
@@ -209,13 +214,13 @@ export default function MessagesPage() {
                 }}
               >
                 <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                  <div style={{ width: 38, height: 38, borderRadius: '50%', flexShrink: 0, background: c.user ? avatarColor(c.user.id) : '#CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff' }}>
-                    {c.user ? initials(c.user) : '?'}
+                  <div style={{ width: 38, height: 38, borderRadius: '50%', flexShrink: 0, background: other ? avatarColor(other.id) : '#CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff' }}>
+                    {other ? initials(other) : '?'}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 4 }}>
                       <span style={{ fontWeight: unread > 0 ? 700 : 600, fontSize: 13, color: 'var(--c-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
-                        {c.user ? `${c.user.prenom} ${c.user.nom}` : `Conv. #${c.id}`}
+                        {other ? displayName(other) : `Conv. #${c.id}`}
                       </span>
                       <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}>
                         {unread > 0 && <span style={{ background: '#DC2626', color: '#fff', borderRadius: '50%', minWidth: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, padding: '0 4px' }}>{unread}</span>}
@@ -276,26 +281,28 @@ export default function MessagesPage() {
 
           {/* Header thread */}
           <div style={{ padding: '12px 18px', borderBottom: '1px solid var(--c-border)', background: '#fff', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+            {(() => { const other = otherUser(activeConv); return (<>
             <div style={{ position: 'relative' }}>
               <div
-                style={{ width: 40, height: 40, borderRadius: '50%', background: avatarColor(activeConv.user?.id ?? activeConv.id), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', flexShrink: 0 }}
-                onClick={e => { e.stopPropagation(); setPopover(p => p?.user?.id === activeConv.user?.id ? null : { user: activeConv.user }); }}
+                style={{ width: 40, height: 40, borderRadius: '50%', background: avatarColor(other?.id ?? activeConv.id), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', flexShrink: 0 }}
+                onClick={e => { e.stopPropagation(); setPopover(p => p?.user?.id === other?.id ? null : { user: other }); }}
               >
-                {activeConv.user ? initials(activeConv.user) : '?'}
+                {other ? initials(other) : '?'}
               </div>
-              {popover && popover.user?.id === activeConv.user?.id && (
+              {popover && popover.user?.id === other?.id && (
                 <UserPopover user={popover.user} onClose={() => setPopover(null)} />
               )}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--c-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {activeConv.user ? displayName(activeConv.user) : `Conv. #${activeConv.id}`}
+                {other ? displayName(other) : `Conv. #${activeConv.id}`}
               </div>
               <div style={{ fontSize: 11, color: 'var(--c-muted)', marginTop: 1 }}>
-                {ROLE_LABELS[activeConv.user?.role_principal ?? activeConv.user?.role] ?? ''}
-                {activeConv.user?.email ? ` · ${activeConv.user.email}` : ''}
+                {ROLE_LABELS[other?.role_principal ?? other?.role] ?? ''}
+                {other?.email ? ` · ${other.email}` : ''}
               </div>
             </div>
+            </>); })()}
             <button
               onClick={loadConvs}
               title="Actualiser"
