@@ -62,7 +62,7 @@ export default function PlaintesPage() {
           {(['', 'en_attente', 'traitee', 'rejetee'] as const).map(s => (
             <button key={s} onClick={() => { setFilterStatut(s); load(s); }}
               style={{
-                padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer',
+                padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer',
                 background: filterStatut === s ? 'var(--c-blue)' : 'var(--c-card)',
                 color: filterStatut === s ? '#fff' : 'var(--c-muted)',
                 border: `1px solid ${filterStatut === s ? 'var(--c-blue)' : 'var(--c-border)'}`,
