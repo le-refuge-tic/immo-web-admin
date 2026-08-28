@@ -158,6 +158,8 @@ export default function MessagesPage() {
       })
     : convs;
 
+  const activeOther = activeConv ? otherUser(activeConv) : null;
+
   /* ─── Rendu ─────────────────────────────────────────────────── */
 
   return (
@@ -199,7 +201,7 @@ export default function MessagesPage() {
             <div style={{ padding: 32, textAlign: 'center', color: 'var(--c-muted)', fontSize: 13 }}>Chargement…</div>
           ) : filtered.length === 0 ? (
             <div style={{ padding: 32, textAlign: 'center', color: 'var(--c-muted)', fontSize: 13 }}>Aucune conversation.</div>
-          } : filtered.map((c: any) => {
+          ) : filtered.map((c: any) => {
             const isActive = activeId === c.id;
             const unread = c.unread_count ?? 0;
             const other = otherUser(c);
@@ -281,28 +283,26 @@ export default function MessagesPage() {
 
           {/* Header thread */}
           <div style={{ padding: '12px 18px', borderBottom: '1px solid var(--c-border)', background: '#fff', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-            {(() => { const other = otherUser(activeConv); return (<>
             <div style={{ position: 'relative' }}>
               <div
-                style={{ width: 40, height: 40, borderRadius: '50%', background: avatarColor(other?.id ?? activeConv.id), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', flexShrink: 0 }}
-                onClick={e => { e.stopPropagation(); setPopover(p => p?.user?.id === other?.id ? null : { user: other }); }}
+                style={{ width: 40, height: 40, borderRadius: '50%', background: avatarColor(activeOther?.id ?? activeConv.id), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', flexShrink: 0 }}
+                onClick={e => { e.stopPropagation(); setPopover(p => p?.user?.id === activeOther?.id ? null : { user: activeOther }); }}
               >
-                {other ? initials(other) : '?'}
+                {activeOther ? initials(activeOther) : '?'}
               </div>
-              {popover && popover.user?.id === other?.id && (
+              {popover && popover.user?.id === activeOther?.id && (
                 <UserPopover user={popover.user} onClose={() => setPopover(null)} />
               )}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--c-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {other ? displayName(other) : `Conv. #${activeConv.id}`}
+                {activeOther ? displayName(activeOther) : `Conv. #${activeConv.id}`}
               </div>
               <div style={{ fontSize: 11, color: 'var(--c-muted)', marginTop: 1 }}>
-                {ROLE_LABELS[other?.role_principal ?? other?.role] ?? ''}
-                {other?.email ? ` · ${other.email}` : ''}
+                {ROLE_LABELS[activeOther?.role_principal ?? activeOther?.role] ?? ''}
+                {activeOther?.email ? ` · ${activeOther.email}` : ''}
               </div>
             </div>
-            </>); })()}
             <button
               onClick={loadConvs}
               title="Actualiser"
