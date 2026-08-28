@@ -5,6 +5,9 @@ import { deleteCommerciaux } from '../../api/deleteCommerciaux';
 import { getAdminUser } from '../../api/getAdminUser';
 import { commerciauxApi } from '../../api/getClientsCommercial';
 import { supervisionApi } from '../../api/commercialSupervisionApi';
+import { postConversation } from '../../api/postConversation';
+import { getMessages } from '../../api/getMessages';
+import { postMessage } from '../../api/postMessage';
 import GestionCommercialModal from './GestionCommercialModal';
 
 /* ─── Helpers ─────────────────────────────────────────────── */
@@ -257,6 +260,151 @@ function AttribuerClientModal({
 
         <div style={{ marginTop: 20, display: 'flex', justifyContent: 'flex-end' }}>
           <button className="btn-cancel" onClick={onClose}>Fermer</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Modal : chat direct admin ↔ commercial ─────────────── */
+
+function DirectChatModal({ commercial, me, onClose }: { commercial: any; me: any; onClose: () => void }) {
+  const [convId, setConvId]     = useState<number | null>(null);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [input, setInput]       = useState('');
+  const [loading, setLoading]   = useState(true);
+  const [sending, setSending]   = useState(false);
+  const bottomRef               = useRef<HTMLDivElement>(null);
+
+  function fmtTime(iso: string) { return new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }); }
+  function fmtDateSep(iso: string) { return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }); }
+  function sameDay(a: string, b: string) { return new Date(a).toDateString() === new Date(b).toDateString(); }
+
+  useEffect(() => {
+    setLoading(true);
+    postConversation.create(commercial.id)
+      .then(conv => {
+        setConvId(conv.id);
+        return getMessages.thread(conv.id);
+      })
+      .then(res => setMessages(res.data ?? res))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [commercial.id]);
+
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+
+  async function handleSend() {
+    if (!convId || !input.trim() || sending) return;
+    const text = input.trim();
+    setInput('');
+    setSending(true);
+    try {
+      const msg = await postMessage.send(convId, { contenu: text });
+      setMessages(prev => [...prev, msg]);
+    } catch { setInput(text); }
+    finally { setSending(false); }
+  }
+
+  const adminLabel = (me?.role_principal ?? me?.role) === 'super_admin' ? 'Super Admin' : 'Admin';
+
+  return (
+    <div className="immo-modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="immo-modal" style={{ maxWidth: 520, padding: 0, display: 'flex', flexDirection: 'column', height: 520, overflow: 'hidden' }}>
+        {/* Header */}
+        <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--c-border)', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+          <div style={{ display: 'flex', flex: 1, flexDirection: 'column' }}>
+            <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--c-text)' }}>
+              {commercial.prenom} {commercial.nom}
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--c-muted)' }}>
+              Discussion directe · {commercial.email ?? ''}
+            </div>
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--c-blue)', fontWeight: 600, background: '#EFF6FF', borderRadius: 6, padding: '3px 8px', border: '1px solid #BFDBFE' }}>
+            Vous : {me?.prenom ?? ''} {me?.nom ?? ''} — {adminLabel}
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-muted)', padding: 4 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        {/* Messages */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 4, background: 'var(--c-bg)' }}>
+          {loading ? (
+            <div style={{ textAlign: 'center', color: 'var(--c-muted)', fontSize: 13, paddingTop: 40 }}>Chargement…</div>
+          ) : messages.length === 0 ? (
+            <div style={{ textAlign: 'center', color: 'var(--c-muted)', fontSize: 13, paddingTop: 40 }}>
+              Aucun message. Commencez la discussion.
+            </div>
+          ) : messages.map((m: any, i: number) => {
+            const isMine = m.expediteur_id != null && m.expediteur_id === me?.id;
+            const isSystem = m.sender_role === 'systeme';
+            const showDate = i === 0 || !sameDay(messages[i - 1].created_at, m.created_at);
+            return (
+              <div key={m.id ?? i}>
+                {showDate && (
+                  <div style={{ textAlign: 'center', margin: '8px 0 4px', fontSize: 11, color: 'var(--c-muted)', fontWeight: 600 }}>
+                    {fmtDateSep(m.created_at)}
+                  </div>
+                )}
+                {isSystem ? (
+                  <div style={{ textAlign: 'center', fontSize: 11, color: 'var(--c-muted)', fontStyle: 'italic' }}>{m.contenu}</div>
+                ) : (
+                  <div style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start', marginBottom: 2 }}>
+                    <div style={{ maxWidth: '70%' }}>
+                      {!isMine && (
+                        <div style={{ fontSize: 10, color: 'var(--c-muted)', marginBottom: 2, paddingLeft: 4, fontWeight: 600 }}>
+                          {commercial.prenom} · Commercial
+                        </div>
+                      )}
+                      <div style={{
+                        background: isMine ? 'var(--c-blue)' : '#fff',
+                        color: isMine ? '#fff' : 'var(--c-text)',
+                        border: isMine ? 'none' : '1px solid var(--c-border)',
+                        borderRadius: isMine ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                        padding: '8px 12px', fontSize: 13, lineHeight: 1.5,
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+                      }}>
+                        {m.contenu}
+                      </div>
+                      <div style={{ fontSize: 10, color: 'var(--c-muted)', marginTop: 2, textAlign: isMine ? 'right' : 'left', paddingLeft: isMine ? 0 : 4, paddingRight: isMine ? 4 : 0 }}>
+                        {fmtTime(m.created_at)}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          <div ref={bottomRef} />
+        </div>
+
+        {/* Input */}
+        <div style={{ padding: '10px 14px', borderTop: '1px solid var(--c-border)', background: '#fff', display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
+          <input
+            className="immo-form-input"
+            style={{ flex: 1 }}
+            placeholder={`Message pour ${commercial.prenom}…`}
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleSend(); } }}
+            disabled={sending || loading}
+            autoFocus
+          />
+          <button
+            onClick={handleSend}
+            disabled={!input.trim() || sending || loading}
+            style={{
+              padding: '0 16px', height: 38, borderRadius: 8, border: 'none',
+              background: !input.trim() || sending ? 'var(--c-border)' : 'var(--c-blue)',
+              color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer', flexShrink: 0,
+            }}
+          >
+            {sending ? '…' : 'Envoyer'}
+          </button>
         </div>
       </div>
     </div>
@@ -539,9 +687,10 @@ export default function GestionCommercialPage() {
   const [loading, setLoading]          = useState(true);
   const [showModal, setShowModal]      = useState(false);
   const [deletingId, setDeletingId]    = useState(null as any);
-  const [clientsModal, setClientsModal]       = useState<any | null>(null);
-  const [attribuerModal, setAttribuerModal]   = useState<any | null>(null);
+  const [clientsModal, setClientsModal]         = useState<any | null>(null);
+  const [attribuerModal, setAttribuerModal]     = useState<any | null>(null);
   const [supervisionModal, setSupervisionModal] = useState<any | null>(null);
+  const [chatModal, setChatModal]               = useState<any | null>(null);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -745,6 +894,16 @@ export default function GestionCommercialPage() {
                             <circle cx="12" cy="12" r="3"/><path d="M2.05 12A9.95 9.95 0 0 1 12 2.05M12 21.95A9.95 9.95 0 0 1 2.05 12M21.95 12A9.95 9.95 0 0 1 12 21.95M12 2.05A9.95 9.95 0 0 1 21.95 12"/>
                           </svg>
                         </button>
+                        <button
+                          className="btn-icon-sm"
+                          title="Chat direct avec ce commercial"
+                          onClick={() => setChatModal(c)}
+                          style={{ background: '#EFF6FF', color: '#2563EB', border: '1px solid #BFDBFE' }}
+                        >
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                          </svg>
+                        </button>
                         {!isMe && (
                           <button className="btn-icon-sm danger" onClick={() => handleDelete(c)} disabled={deletingId === c.id} title="Supprimer ce commercial">
                             {deletingId === c.id ? (
@@ -803,6 +962,9 @@ export default function GestionCommercialPage() {
       )}
       {supervisionModal && (
         <SupervisionModal commercial={supervisionModal} onClose={() => setSupervisionModal(null)} />
+      )}
+      {chatModal && (
+        <DirectChatModal commercial={chatModal} me={me} onClose={() => setChatModal(null)} />
       )}
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
