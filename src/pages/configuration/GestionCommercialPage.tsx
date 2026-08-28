@@ -317,9 +317,6 @@ function DirectChatModal({ commercial, me, onClose }: { commercial: any; me: any
             <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--c-text)' }}>
               {commercial.prenom} {commercial.nom}
             </div>
-            <div style={{ fontSize: 11, color: 'var(--c-muted)' }}>
-              Discussion directe · {commercial.email ?? ''}
-            </div>
           </div>
           <div style={{ fontSize: 11, color: 'var(--c-blue)', fontWeight: 600, background: '#EFF6FF', borderRadius: 6, padding: '3px 8px', border: '1px solid #BFDBFE' }}>
             Vous : {me?.prenom ?? ''} {me?.nom ?? ''} — {adminLabel}
@@ -340,7 +337,7 @@ function DirectChatModal({ commercial, me, onClose }: { commercial: any; me: any
               Aucun message. Commencez la discussion.
             </div>
           ) : messages.map((m: any, i: number) => {
-            const isMine = m.expediteur_id != null && m.expediteur_id === me?.id;
+            const isMine = m.sender_role === 'gestionnaire' || (m.expediteur_id != null && m.expediteur_id === me?.id);
             const isSystem = m.sender_role === 'systeme';
             const showDate = i === 0 || !sameDay(messages[i - 1].created_at, m.created_at);
             return (

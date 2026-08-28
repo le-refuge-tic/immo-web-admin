@@ -28,6 +28,7 @@ import PublierBienPage         from './pages/commercial/PublierBienPage';
 import CommercialDashboardPage from './pages/commercial/CommercialDashboardPage';
 import MesClientsPage          from './pages/commercial/MesClientsPage';
 import SupervisionPage         from './pages/supervision/SupervisionPage';
+import PlaintesPage            from './pages/plaintes/PlaintesPage';
 
 function DefaultRedirect() {
   const { user } = useAuth();
@@ -65,6 +66,7 @@ export default function App() {
             <Route path="loyers"       element={<AdminRoute><LoyersPage /></AdminRoute>} />
             <Route path="finances"     element={<AdminRoute><FinancesPage /></AdminRoute>} />
             <Route path="feedbacks"    element={<AdminRoute><FeedbacksPage /></AdminRoute>} />
+            <Route path="reclamations" element={<AdminRoute><PlaintesPage /></AdminRoute>} />
             <Route path="liaisons"     element={<AdminRoute><GestionLiaisonsPage /></AdminRoute>} />
             <Route path="retraits"     element={<SuperAdminRoute><RetraitsPage /></SuperAdminRoute>} />
 

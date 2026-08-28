@@ -15,4 +15,7 @@ export const supervisionApi = {
 
   replyAsCommercial: (convId: number, contenu: string) =>
     axios.post(`${BASE}/admin/conversations/${convId}/messages`, { contenu }, auth()).then(r => r.data),
+
+  deleteMessage: (convId: number, msgId: number) =>
+    axios.delete(`${BASE}/admin/conversations/${convId}/messages/${msgId}`, auth()).then(r => r.data),
 };

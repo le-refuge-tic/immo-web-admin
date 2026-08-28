@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { getMessages } from '../../api/getMessages';
 import { supervisionApi } from '../../api/commercialSupervisionApi';
 import { getCommerciaux } from '../../api/getCommerciaux';
+import { getAdminUser } from '../../api/getAdminUser';
 import { useAuth } from '../../context/AuthContext';
 
 /* ─── Constants ─────────────────────────────────────────────── */
@@ -114,12 +115,14 @@ export default function SupervisionPage() {
   const adminName = me ? displayName(me) : 'Admin';
 
   /* — état gauche — */
-  const [tab, setTab]                   = useState<'commerciaux' | 'proprietaires'>('commerciaux');
-  const [commerciaux, setCommerciaux]   = useState<any[]>([]);
-  const [allConvs, setAllConvs]         = useState<any[]>([]);
-  const [totalUnread, setTotalUnread]   = useState(0);
-  const [loadingLeft, setLoadingLeft]   = useState(true);
-  const [search, setSearch]             = useState('');
+  const [tab, setTab]                     = useState<'commerciaux' | 'proprietaires'>('commerciaux');
+  const [commerciaux, setCommerciaux]     = useState<any[]>([]);
+  const [proprietairesFromApi, setProprietairesFromApi] = useState<any[]>([]);
+  const [loadingProprios, setLoadingProprios] = useState(false);
+  const [allConvs, setAllConvs]           = useState<any[]>([]);
+  const [totalUnread, setTotalUnread]     = useState(0);
+  const [loadingLeft, setLoadingLeft]     = useState(true);
+  const [search, setSearch]               = useState('');
 
   /* — état personne sélectionnée — */
   const [selectedPerson, setSelectedPerson]           = useState<{ type: 'commercial' | 'proprietaire'; data: any } | null>(null);
@@ -130,13 +133,15 @@ export default function SupervisionPage() {
   const [loadingPersonBiens, setLoadingPersonBiens]   = useState(false);
 
   /* — état conversation — */
-  const [openConv, setOpenConv]     = useState<any | null>(null);
-  const [thread, setThread]         = useState<any[]>([]);
+  const [openConv, setOpenConv]         = useState<any | null>(null);
+  const [thread, setThread]             = useState<any[]>([]);
   const [loadingThread, setLoadingThread] = useState(false);
-  const [input, setInput]           = useState('');
-  const [sending, setSending]       = useState(false);
-  const [claims, setClaims]         = useState<Record<number, { name: string; at: number }>>({});
-  const [popover, setPopover]       = useState<number | null>(null);
+  const [input, setInput]               = useState('');
+  const [sending, setSending]           = useState(false);
+  const [deletingMsg, setDeletingMsg]   = useState<number | null>(null);
+  const [hoveredMsg, setHoveredMsg]     = useState<number | null>(null);
+  const [claims, setClaims]             = useState<Record<number, { name: string; at: number }>>({});
+  const [popover, setPopover]           = useState<number | null>(null);
 
   const bottomRef     = useRef<HTMLDivElement>(null);
   const listPollRef   = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -149,6 +154,16 @@ export default function SupervisionPage() {
       .catch(() => {})
       .finally(() => setLoadingLeft(false));
   }, []);
+
+  /* ── Load propriétaires depuis l'API quand onglet actif ── */
+  useEffect(() => {
+    if (tab !== 'proprietaires') return;
+    setLoadingProprios(true);
+    getAdminUser.list({ role: 'proprietaire', limit: 200 })
+      .then(res => setProprietairesFromApi(Array.isArray(res) ? res : (res?.data ?? [])))
+      .catch(() => setProprietairesFromApi([]))
+      .finally(() => setLoadingProprios(false));
+  }, [tab]);
 
   /* ── Load all convs (unread + propriétaires) ── */
   const loadAllConvs = useCallback(async (quiet = false) => {
@@ -181,8 +196,8 @@ export default function SupervisionPage() {
         .catch(() => setPersonConvs([]))
         .finally(() => setLoadingPersonConvs(false));
     } else {
-      // propriétaire : filtrer depuis allConvs
-      setPersonConvs(allConvs.filter(c => c.gestionnaire_id === selectedPerson.data.gestionnaire_id));
+      // propriétaire : conversations où le proprio est le client
+      setPersonConvs(allConvs.filter(c => c.user?.id === selectedPerson.data.id));
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPerson?.type, selectedPerson?.data?.id]);
@@ -261,23 +276,21 @@ export default function SupervisionPage() {
     finally { setSending(false); }
   }
 
-  /* ── Données dérivées ── */
+  async function handleDeleteMessage(msgId: number) {
+    if (!openConv) return;
+    if (!window.confirm('Supprimer ce message ? L\'utilisateur sera informé que son message a été supprimé par l\'administrateur.')) return;
+    setDeletingMsg(msgId);
+    try {
+      await supervisionApi.deleteMessage(openConv.id, msgId);
+      setThread(prev => prev.map(m => m.id === msgId ? { ...m, supprime_pour_tous: true } : m));
+    } catch { /**/ } finally { setDeletingMsg(null); }
+  }
 
-  // Propriétaires uniques depuis allConvs
-  const proprietaireMap = new Map<number, any>();
-  allConvs.filter(c => c.gestionnaire_role === 'proprietaire' && c.gestionnaire_id).forEach(c => {
-    if (!proprietaireMap.has(c.gestionnaire_id)) {
-      proprietaireMap.set(c.gestionnaire_id, { gestionnaire_id: c.gestionnaire_id, name: c.gestionnaire_name ?? '—', convCount: 0, unreadCount: 0 });
-    }
-    const p = proprietaireMap.get(c.gestionnaire_id)!;
-    p.convCount++;
-    p.unreadCount += c.unread_count ?? 0;
-  });
-  const proprietaires = Array.from(proprietaireMap.values()).sort((a, b) => b.unreadCount - a.unreadCount);
+  /* ── Données dérivées ── */
 
   // Unread par commercial
   const commercialUnread: Record<number, number> = {};
-  allConvs.filter(c => c.gestionnaire_role !== 'proprietaire').forEach(c => {
+  allConvs.forEach(c => {
     if (c.gestionnaire_id) commercialUnread[c.gestionnaire_id] = (commercialUnread[c.gestionnaire_id] ?? 0) + (c.unread_count ?? 0);
   });
 
@@ -286,8 +299,8 @@ export default function SupervisionPage() {
     ? commerciaux.filter(c => displayName(c).toLowerCase().includes(q) || c.email?.toLowerCase().includes(q))
     : commerciaux;
   const filteredProprietaires = q
-    ? proprietaires.filter(p => (p.name ?? '').toLowerCase().includes(q))
-    : proprietaires;
+    ? proprietairesFromApi.filter(p => displayName(p).toLowerCase().includes(q) || (p.email ?? '').toLowerCase().includes(q))
+    : proprietairesFromApi;
 
   const isProprioView = selectedPerson?.type === 'proprietaire';
 
@@ -322,8 +335,8 @@ export default function SupervisionPage() {
           {/* Tabs commerciaux / propriétaires */}
           <div style={{ display: 'flex', borderBottom: '1px solid var(--c-border)' }}>
             {([
-              { key: 'commerciaux',   label: 'Commerciaux',   count: commerciaux.length,   unread: Object.values(commercialUnread).reduce((s, v) => s + v, 0) },
-              { key: 'proprietaires', label: 'Propriétaires', count: proprietaires.length, unread: proprietaires.reduce((s, p) => s + p.unreadCount, 0) },
+              { key: 'commerciaux',   label: 'Commerciaux',   count: commerciaux.length,          unread: Object.values(commercialUnread).reduce((s, v) => s + v, 0) },
+              { key: 'proprietaires', label: 'Propriétaires', count: proprietairesFromApi.length,  unread: 0 },
             ] as const).map(t => (
               <button key={t.key} onClick={() => { setTab(t.key); setSelectedPerson(null); setOpenConv(null); setSearch(''); }}
                 style={{
@@ -413,14 +426,17 @@ export default function SupervisionPage() {
                 );
               })
             ) : (
-              filteredProprietaires.length === 0 ? (
+              loadingProprios ? (
+                <div style={{ padding: 32, textAlign: 'center', color: 'var(--c-muted)', fontSize: 13 }}>Chargement…</div>
+              ) : filteredProprietaires.length === 0 ? (
                 <div style={{ padding: 32, textAlign: 'center', color: 'var(--c-muted)', fontSize: 13 }}>
-                  {allConvs.length === 0 ? 'Chargement…' : 'Aucun propriétaire avec des conversations.'}
+                  Aucun propriétaire enregistré.
                 </div>
               ) : filteredProprietaires.map(p => {
-                const isActive = selectedPerson?.type === 'proprietaire' && selectedPerson.data.gestionnaire_id === p.gestionnaire_id;
+                const isActive = selectedPerson?.type === 'proprietaire' && selectedPerson.data.id === p.id;
+                const convCount = allConvs.filter(c => c.user?.id === p.id).length;
                 return (
-                  <div key={p.gestionnaire_id} onClick={() => setSelectedPerson({ type: 'proprietaire', data: p })}
+                  <div key={p.id} onClick={() => setSelectedPerson({ type: 'proprietaire', data: p })}
                     style={{
                       padding: '11px 14px', borderBottom: '1px solid var(--c-border)', cursor: 'pointer',
                       background: isActive ? '#F5F3FF' : 'transparent',
@@ -429,19 +445,16 @@ export default function SupervisionPage() {
                     }}
                   >
                     <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                      <div style={{ width: 36, height: 36, borderRadius: '50%', flexShrink: 0, background: avatarColor(p.gestionnaire_id), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff' }}>
-                        {(p.name?.[0] ?? '?').toUpperCase()}
+                      <div style={{ width: 36, height: 36, borderRadius: '50%', flexShrink: 0, background: avatarColor(p.id), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff' }}>
+                        {initials(p)}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--c-text)' }}>{p.name}</span>
-                          {p.unreadCount > 0 && (
-                            <span style={{ background: '#DC2626', color: '#fff', borderRadius: '50%', minWidth: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, padding: '0 4px', flexShrink: 0 }}>
-                              {p.unreadCount}
-                            </span>
-                          )}
+                        <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--c-text)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {displayName(p)}
+                        </span>
+                        <div style={{ fontSize: 11, color: 'var(--c-muted)', marginTop: 2 }}>
+                          {p.email ?? '—'}{convCount > 0 ? ` · ${convCount} conv.` : ''}
                         </div>
-                        <div style={{ fontSize: 11, color: 'var(--c-muted)', marginTop: 2 }}>Propriétaire · {p.convCount} conversation{p.convCount > 1 ? 's' : ''}</div>
                       </div>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--c-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="9 18 15 12 9 6"/>
@@ -521,10 +534,15 @@ export default function SupervisionPage() {
                   thread.map((msg: any, idx: number) => {
                     const isStaff = msg.sender_role === 'staff' || msg.sender_role === 'gestionnaire';
                     const isSystem = msg.type === 'systeme' || msg.sender_role === 'systeme';
+                    const isSuppressed = msg.supprime_pour_tous === true;
                     const prevMsg = thread[idx - 1];
                     const showDate = !prevMsg || !sameDay(prevMsg.created_at, msg.created_at);
+                    const showTrash = isProprioView && !isSuppressed && hoveredMsg === msg.id;
                     return (
-                      <div key={msg.id ?? idx}>
+                      <div key={msg.id ?? idx}
+                        onMouseEnter={() => isProprioView && msg.id && setHoveredMsg(msg.id)}
+                        onMouseLeave={() => setHoveredMsg(null)}
+                      >
                         {showDate && (
                           <div style={{ textAlign: 'center', margin: '10px 0 6px', fontSize: 11, color: 'var(--c-muted)', fontWeight: 600 }}>
                             {fmtDateSep(msg.created_at)}
@@ -533,22 +551,49 @@ export default function SupervisionPage() {
                         {isSystem ? (
                           <div style={{ textAlign: 'center', margin: '4px 0', fontSize: 11, color: 'var(--c-muted)', fontStyle: 'italic' }}>{msg.contenu}</div>
                         ) : (
-                          <div style={{ display: 'flex', justifyContent: isStaff ? 'flex-end' : 'flex-start', marginBottom: 2 }}>
+                          <div style={{ display: 'flex', justifyContent: isStaff ? 'flex-end' : 'flex-start', alignItems: 'flex-end', gap: 4, marginBottom: 2 }}>
+                            {/* Bouton supprimer à gauche des bulles droites (staff) */}
+                            {showTrash && isStaff && (
+                              <button
+                                onClick={() => handleDeleteMessage(msg.id)}
+                                disabled={deletingMsg === msg.id}
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#DC2626', opacity: 0.7, flexShrink: 0 }}
+                                title="Supprimer ce message"
+                              >
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+                                </svg>
+                              </button>
+                            )}
                             <div style={{ maxWidth: '70%' }}>
                               <div style={{
-                                background: isStaff ? 'var(--c-blue)' : '#fff',
-                                color: isStaff ? '#fff' : 'var(--c-text)',
-                                border: isStaff ? 'none' : '1px solid var(--c-border)',
+                                background: isSuppressed ? 'var(--c-bg)' : (isStaff ? 'var(--c-blue)' : '#fff'),
+                                color: isSuppressed ? 'var(--c-muted)' : (isStaff ? '#fff' : 'var(--c-text)'),
+                                border: isSuppressed ? '1px dashed var(--c-border)' : (isStaff ? 'none' : '1px solid var(--c-border)'),
                                 borderRadius: isStaff ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                                padding: '8px 12px', fontSize: 13, lineHeight: 1.5,
-                                boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+                                padding: '8px 12px', fontSize: isSuppressed ? 12 : 13, lineHeight: 1.5,
+                                boxShadow: isSuppressed ? 'none' : '0 1px 3px rgba(0,0,0,0.06)',
+                                fontStyle: isSuppressed ? 'italic' : 'normal',
                               }}>
-                                {msg.contenu}
+                                {isSuppressed ? 'Message supprimé par l\'administrateur' : msg.contenu}
                               </div>
                               <div style={{ fontSize: 10, color: 'var(--c-muted)', marginTop: 2, textAlign: isStaff ? 'right' : 'left', paddingLeft: isStaff ? 0 : 4, paddingRight: isStaff ? 4 : 0 }}>
                                 {fmtDateTime(msg.created_at)}
                               </div>
                             </div>
+                            {/* Bouton supprimer à droite des bulles gauches (client) */}
+                            {showTrash && !isStaff && (
+                              <button
+                                onClick={() => handleDeleteMessage(msg.id)}
+                                disabled={deletingMsg === msg.id}
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#DC2626', opacity: 0.7, flexShrink: 0 }}
+                                title="Supprimer ce message"
+                              >
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+                                </svg>
+                              </button>
+                            )}
                           </div>
                         )}
                       </div>
@@ -564,7 +609,7 @@ export default function SupervisionPage() {
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                   </svg>
                   <span style={{ fontSize: 12, color: '#7C3AED', fontWeight: 600 }}>
-                    Lecture seule — impossible de répondre aux conversations propriétaire-client
+                    Lecture seule · survolez un message pour le supprimer
                   </span>
                 </div>
               ) : (
@@ -602,18 +647,16 @@ export default function SupervisionPage() {
                 <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
                   <div style={{
                     width: 52, height: 52, borderRadius: '50%', flexShrink: 0,
-                    background: isProprioView ? avatarColor(selectedPerson.data.gestionnaire_id) : 'linear-gradient(135deg,#16A34A,#15803D)',
+                    background: isProprioView ? avatarColor(selectedPerson.data.id) : 'linear-gradient(135deg,#16A34A,#15803D)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 18, fontWeight: 800, color: '#fff',
                   }}>
-                    {isProprioView
-                      ? (selectedPerson.data.name?.[0] ?? '?').toUpperCase()
-                      : initials(selectedPerson.data)}
+                    {initials(selectedPerson.data)}
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                       <span style={{ fontWeight: 800, fontSize: 16, color: 'var(--c-text)' }}>
-                        {isProprioView ? selectedPerson.data.name : displayName(selectedPerson.data)}
+                        {displayName(selectedPerson.data)}
                       </span>
                       <span style={{
                         fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20,
@@ -625,7 +668,7 @@ export default function SupervisionPage() {
                         {isProprioView ? 'Propriétaire' : 'Commercial'}
                       </span>
                     </div>
-                    {!isProprioView && selectedPerson.data.email && (
+                    {selectedPerson.data.email && (
                       <div style={{ fontSize: 12, color: 'var(--c-muted)', marginTop: 3 }}>{selectedPerson.data.email}</div>
                     )}
                     {!isProprioView && (
@@ -638,11 +681,14 @@ export default function SupervisionPage() {
                         </span>
                       </div>
                     )}
-                    {isProprioView && (
-                      <div style={{ fontSize: 12, color: 'var(--c-muted)', marginTop: 3 }}>
-                        {selectedPerson.data.convCount} conversation{selectedPerson.data.convCount > 1 ? 's' : ''} avec des clients
-                      </div>
-                    )}
+                    {isProprioView && (() => {
+                      const cc = allConvs.filter(c => c.user?.id === selectedPerson.data.id).length;
+                      return cc > 0 ? (
+                        <div style={{ fontSize: 12, color: 'var(--c-muted)', marginTop: 3 }}>
+                          {cc} conversation{cc > 1 ? 's' : ''} avec des commerciaux
+                        </div>
+                      ) : null;
+                    })()}
                   </div>
                 </div>
               </div>

@@ -3,7 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import {
   GridIcon, HomeIcon, UsersIcon, SettingsIcon, ShieldIcon,
   ChevronDownIcon, UserIcon, BuildingIcon, KeyIcon, FileTextIcon, TrendingUpIcon, StarIcon,
-  MessageIcon, WithdrawIcon, ListingsIcon, VisitIcon, ClientsIcon,
+  MessageIcon, WithdrawIcon, ListingsIcon, VisitIcon, ClientsIcon, FlagIcon,
 } from '../components/Icons';
 import { useAuth } from '../context/AuthContext';
 import { getMessages } from '../api/getMessages';
@@ -60,6 +60,7 @@ export default function Sidebar({
       { to: '/liaisons',     label: 'Liaisons gestion',Icon: KeyIcon        },
       { to: '/finances',     label: 'Finances',        Icon: TrendingUpIcon },
       { to: '/feedbacks',    label: 'Feedbacks',       Icon: StarIcon       },
+      { to: '/reclamations', label: 'Réclamations',    Icon: FlagIcon       },
     ] : []),
     ...(isSuperAdmin ? [{ to: '/retraits', label: 'Retraits MoMo', Icon: WithdrawIcon }] : []),
   ];
