@@ -490,25 +490,34 @@ export default function SupervisionPage() {
                     <polyline points="15 18 9 12 15 6"/>
                   </svg>
                 </button>
-                <div style={{ position: 'relative' }}>
-                  <div
-                    style={{ width: 36, height: 36, borderRadius: '50%', background: avatarColor(openConv.user?.id ?? 0), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff', cursor: 'pointer' }}
-                    onClick={() => setPopover(p => p === openConv.id ? null : openConv.id)}
-                  >
-                    {initials(openConv.user)}
-                  </div>
-                  {popover === openConv.id && openConv.user && (
-                    <ClientPopover user={openConv.user} onClose={() => setPopover(null)} />
-                  )}
-                </div>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--c-text)' }}>
-                    {displayName(openConv.user)}
-                  </div>
-                  <div style={{ fontSize: 11, color: 'var(--c-muted)' }}>
-                    {openConv.user?.email ?? ''}
-                  </div>
-                </div>
+                {(() => {
+                  const convOther = isProprioView
+                    ? (openConv.gestionnaire_id === selectedPerson?.data?.id ? openConv.user : (openConv.gestionnaire_user ?? openConv.user))
+                    : openConv.user;
+                  return (
+                    <>
+                      <div style={{ position: 'relative' }}>
+                        <div
+                          style={{ width: 36, height: 36, borderRadius: '50%', background: avatarColor(convOther?.id ?? 0), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff', cursor: 'pointer' }}
+                          onClick={() => setPopover(p => p === openConv.id ? null : openConv.id)}
+                        >
+                          {initials(convOther)}
+                        </div>
+                        {popover === openConv.id && convOther && (
+                          <ClientPopover user={convOther} onClose={() => setPopover(null)} />
+                        )}
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--c-text)' }}>
+                          {displayName(convOther)}
+                        </div>
+                        <div style={{ fontSize: 11, color: 'var(--c-muted)' }}>
+                          {convOther?.email ?? ''}
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
                 <div style={{ marginLeft: 'auto' }}>
                   {isProprioView ? (
                     <span style={{ fontSize: 11, color: '#7C3AED', fontWeight: 600, background: '#F5F3FF', borderRadius: 6, padding: '3px 8px', border: '1px solid #DDD6FE' }}>
@@ -718,7 +727,11 @@ export default function SupervisionPage() {
                   ) : personConvs.length === 0 ? (
                     <div style={{ padding: 32, textAlign: 'center', color: 'var(--c-muted)', fontSize: 13 }}>Aucune conversation.</div>
                   ) : personConvs.map((conv: any) => {
-                    const u = conv.user;
+                    // Pour un proprio, l'interlocuteur est le client si le proprio est gestionnaire,
+                    // ou le gestionnaire si le proprio est le client
+                    const u = isProprioView
+                      ? (conv.gestionnaire_id === selectedPerson?.data?.id ? conv.user : (conv.gestionnaire_user ?? conv.user))
+                      : conv.user;
                     const unread = conv.unread_count ?? 0;
                     const claim = claims[conv.id];
                     const claimOther = claim && claim.name !== adminName;
