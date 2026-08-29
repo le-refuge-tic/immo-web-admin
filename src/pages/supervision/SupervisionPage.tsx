@@ -189,16 +189,14 @@ export default function SupervisionPage() {
     setPersonBiens([]);
     setOpenConv(null);
     setInnerTab('conversations');
-    if (selectedPerson.type === 'commercial') {
-      setLoadingPersonConvs(true);
-      supervisionApi.getConversations(selectedPerson.data.id)
-        .then(data => setPersonConvs(Array.isArray(data) ? data : (data?.data ?? [])))
-        .catch(() => setPersonConvs([]))
-        .finally(() => setLoadingPersonConvs(false));
-    } else {
-      // propriétaire : conversations où le proprio est le client
-      setPersonConvs(allConvs.filter(c => c.user?.id === selectedPerson.data.id));
-    }
+    setLoadingPersonConvs(true);
+    const apiCall = selectedPerson.type === 'commercial'
+      ? supervisionApi.getConversations(selectedPerson.data.id)
+      : supervisionApi.getProprietaireConversations(selectedPerson.data.id);
+    apiCall
+      .then(data => setPersonConvs(Array.isArray(data) ? data : (data?.data ?? [])))
+      .catch(() => setPersonConvs([]))
+      .finally(() => setLoadingPersonConvs(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPerson?.type, selectedPerson?.data?.id]);
 
@@ -434,7 +432,6 @@ export default function SupervisionPage() {
                 </div>
               ) : filteredProprietaires.map(p => {
                 const isActive = selectedPerson?.type === 'proprietaire' && selectedPerson.data.id === p.id;
-                const convCount = allConvs.filter(c => c.user?.id === p.id).length;
                 return (
                   <div key={p.id} onClick={() => setSelectedPerson({ type: 'proprietaire', data: p })}
                     style={{
@@ -453,7 +450,7 @@ export default function SupervisionPage() {
                           {displayName(p)}
                         </span>
                         <div style={{ fontSize: 11, color: 'var(--c-muted)', marginTop: 2 }}>
-                          {p.email ?? '—'}{convCount > 0 ? ` · ${convCount} conv.` : ''}
+                          {p.email ?? '—'}
                         </div>
                       </div>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--c-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -681,14 +678,11 @@ export default function SupervisionPage() {
                         </span>
                       </div>
                     )}
-                    {isProprioView && (() => {
-                      const cc = allConvs.filter(c => c.user?.id === selectedPerson.data.id).length;
-                      return cc > 0 ? (
-                        <div style={{ fontSize: 12, color: 'var(--c-muted)', marginTop: 3 }}>
-                          {cc} conversation{cc > 1 ? 's' : ''} avec des commerciaux
-                        </div>
-                      ) : null;
-                    })()}
+                    {isProprioView && personConvs.length > 0 && (
+                      <div style={{ fontSize: 12, color: 'var(--c-muted)', marginTop: 3 }}>
+                        {personConvs.length} conversation{personConvs.length > 1 ? 's' : ''} avec des commerciaux
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

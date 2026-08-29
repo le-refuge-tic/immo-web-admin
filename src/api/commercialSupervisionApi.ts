@@ -10,6 +10,9 @@ export const supervisionApi = {
   getConversations: (commercialId: number) =>
     axios.get(`${BASE}/admin/commerciaux/${commercialId}/conversations`, auth()).then(r => r.data),
 
+  getProprietaireConversations: (proprietaireId: number) =>
+    axios.get(`${BASE}/admin/proprietaires/${proprietaireId}/conversations`, auth()).then(r => r.data),
+
   getMessages: (convId: number, params?: { page?: number; limit?: number }) =>
     axios.get(`${BASE}/admin/conversations/${convId}/messages`, { ...auth(), params }).then(r => r.data),
 

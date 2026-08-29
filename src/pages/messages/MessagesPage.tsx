@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { getMessages } from '../../api/getMessages';
 import { postMessage } from '../../api/postMessage';
 import { useAuth } from '../../context/AuthContext';
+import { useChatSocket } from '../../hooks/useChatSocket';
 import NewConversationModal from './NewConversationModal';
 
 /* ─── Helpers ─────────────────────────────────────────────────── */
@@ -96,6 +97,18 @@ export default function MessagesPage() {
   const [showNewModal, setShowNewModal] = useState(false);
   const [popover, setPopover]           = useState<{ user: any } | null>(null);
   const bottomRef                       = useRef<HTMLDivElement>(null);
+  const sendingRef                      = useRef(false);
+
+  useChatSocket(activeId, (msg) => {
+    if (msg.conversation_id === activeId) {
+      setMessages(prev => prev.some(m => m.id === msg.id) ? prev : [...prev, msg]);
+    }
+    setConvs(prev => prev.map((c: any) =>
+      c.id === msg.conversation_id
+        ? { ...c, last_message: msg.contenu, last_message_at: msg.created_at }
+        : c
+    ));
+  });
 
   const loadConvs = useCallback(async () => {
     setLoadingConvs(true);
@@ -126,17 +139,18 @@ export default function MessagesPage() {
 
   const handleSend = async () => {
     const text = input.trim();
-    if (!text || activeId == null || sending) return;
-    setInput('');
+    if (sendingRef.current || !text || activeId == null) return;
+    sendingRef.current = true;
     setSending(true);
+    setInput('');
     try {
       const msg = await postMessage.send(activeId, { contenu: text });
-      setMessages(prev => [...prev, msg]);
+      setMessages(prev => prev.some(m => m.id === msg.id) ? prev : [...prev, msg]);
       setConvs(prev => prev.map((c: any) =>
         c.id === activeId ? { ...c, last_message: text, last_message_at: new Date().toISOString() } : c
       ));
     } catch { setInput(text); }
-    finally { setSending(false); }
+    finally { sendingRef.current = false; setSending(false); }
   };
 
   const handleConvCreated = (conv: any) => {

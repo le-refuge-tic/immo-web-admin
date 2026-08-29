@@ -8,6 +8,7 @@ import { supervisionApi } from '../../api/commercialSupervisionApi';
 import { postConversation } from '../../api/postConversation';
 import { getMessages } from '../../api/getMessages';
 import { postMessage } from '../../api/postMessage';
+import { useChatSocket } from '../../hooks/useChatSocket';
 import GestionCommercialModal from './GestionCommercialModal';
 
 /* ─── Helpers ─────────────────────────────────────────────── */
@@ -276,6 +277,11 @@ function DirectChatModal({ commercial, me, onClose }: { commercial: any; me: any
   const [loading, setLoading]                 = useState(true);
   const [sending, setSending]                 = useState(false);
   const bottomRef                             = useRef<HTMLDivElement>(null);
+  const sendingRef                            = useRef(false);
+
+  useChatSocket(convId, (msg) => {
+    setMessages(prev => prev.some(m => m.id === msg.id) ? prev : [...prev, msg]);
+  });
 
   function fmtTime(iso: string) { return new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }); }
   function fmtDateSep(iso: string) { return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }); }
@@ -297,15 +303,16 @@ function DirectChatModal({ commercial, me, onClose }: { commercial: any; me: any
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
   async function handleSend() {
-    if (!convId || !input.trim() || sending) return;
+    if (sendingRef.current || !convId || !input.trim()) return;
+    sendingRef.current = true;
+    setSending(true);
     const text = input.trim();
     setInput('');
-    setSending(true);
     try {
       const msg = await postMessage.send(convId, { contenu: text });
-      setMessages(prev => [...prev, msg]);
+      setMessages(prev => prev.some(m => m.id === msg.id) ? prev : [...prev, msg]);
     } catch { setInput(text); }
-    finally { setSending(false); }
+    finally { sendingRef.current = false; setSending(false); }
   }
 
   const adminLabel = (me?.role_principal ?? me?.role) === 'super_admin' ? 'Super Admin' : 'Admin';
