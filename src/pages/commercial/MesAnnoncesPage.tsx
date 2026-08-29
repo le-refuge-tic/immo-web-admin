@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getMesBiens } from '../../api/getMesBiens';
-import { EyeIcon } from '../../components/Icons';
 
 /* ─── Helpers ─────────────────────────────────────────────── */
 

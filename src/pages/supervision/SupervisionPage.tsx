@@ -544,8 +544,6 @@ export default function SupervisionPage() {
                     const prevMsg = thread[idx - 1];
                     const showDate = !prevMsg || !sameDay(prevMsg.created_at, msg.created_at);
                     const showTrash = isProprioView && !isSuppressed && hoveredMsg === msg.id;
-                    const prevIsStaff = prevMsg ? (prevMsg.sender_role === 'staff' || prevMsg.sender_role === 'gestionnaire') : null;
-                    const senderChanged = prevMsg === undefined || isStaff !== prevIsStaff;
                     const senderName = isStaff
                       ? displayName(openConv.gestionnaire_user ?? selectedPerson?.data)
                       : displayName(openConv.user);
@@ -577,7 +575,7 @@ export default function SupervisionPage() {
                               </button>
                             )}
                             <div style={{ maxWidth: '70%' }}>
-                              {!isSystem && senderChanged && (
+                              {!isSystem && (
                                 <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--c-muted)', marginBottom: 2, textAlign: isStaff ? 'right' : 'left', paddingLeft: isStaff ? 0 : 4, paddingRight: isStaff ? 4 : 0 }}>
                                   {senderName}
                                 </div>
