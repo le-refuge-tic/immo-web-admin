@@ -269,12 +269,13 @@ function AttribuerClientModal({
 /* ─── Modal : chat direct admin ↔ commercial ─────────────── */
 
 function DirectChatModal({ commercial, me, onClose }: { commercial: any; me: any; onClose: () => void }) {
-  const [convId, setConvId]     = useState<number | null>(null);
-  const [messages, setMessages] = useState<any[]>([]);
-  const [input, setInput]       = useState('');
-  const [loading, setLoading]   = useState(true);
-  const [sending, setSending]   = useState(false);
-  const bottomRef               = useRef<HTMLDivElement>(null);
+  const [convId, setConvId]                   = useState<number | null>(null);
+  const [convGestionnaireId, setConvGestId]   = useState<number | null>(null);
+  const [messages, setMessages]               = useState<any[]>([]);
+  const [input, setInput]                     = useState('');
+  const [loading, setLoading]                 = useState(true);
+  const [sending, setSending]                 = useState(false);
+  const bottomRef                             = useRef<HTMLDivElement>(null);
 
   function fmtTime(iso: string) { return new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }); }
   function fmtDateSep(iso: string) { return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }); }
@@ -285,6 +286,7 @@ function DirectChatModal({ commercial, me, onClose }: { commercial: any; me: any
     postConversation.create(commercial.id)
       .then(conv => {
         setConvId(conv.id);
+        setConvGestId(conv.gestionnaire_id ?? null);
         return getMessages.thread(conv.id);
       })
       .then(res => setMessages(res.data ?? res))
@@ -337,7 +339,9 @@ function DirectChatModal({ commercial, me, onClose }: { commercial: any; me: any
               Aucun message. Commencez la discussion.
             </div>
           ) : messages.map((m: any, i: number) => {
-            const isMine = m.sender_role === 'gestionnaire' || (m.expediteur_id != null && m.expediteur_id === me?.id);
+            const gestId = convGestionnaireId ?? me?.id;
+            const isMine = m.sender_role === 'gestionnaire'
+              || (m.expediteur_id != null && gestId != null && Number(m.expediteur_id) === Number(gestId));
             const isSystem = m.sender_role === 'systeme';
             const showDate = i === 0 || !sameDay(messages[i - 1].created_at, m.created_at);
             return (
