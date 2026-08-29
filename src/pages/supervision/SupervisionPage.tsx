@@ -544,9 +544,14 @@ export default function SupervisionPage() {
                     const prevMsg = thread[idx - 1];
                     const showDate = !prevMsg || !sameDay(prevMsg.created_at, msg.created_at);
                     const showTrash = isProprioView && !isSuppressed && hoveredMsg === msg.id;
-                    const senderName = isStaff
-                      ? displayName(openConv.gestionnaire_user ?? selectedPerson?.data)
-                      : displayName(openConv.user);
+                    // Résolution du nom par expediteur_id plutôt que par sender_role
+                    const expId = msg.expediteur_id ?? msg.sender_id;
+                    const senderUser = expId === openConv.user?.id
+                      ? openConv.user
+                      : expId === openConv.gestionnaire_user?.id
+                        ? openConv.gestionnaire_user
+                        : isStaff ? (openConv.gestionnaire_user ?? selectedPerson?.data) : openConv.user;
+                    const senderName = displayName(senderUser);
                     return (
                       <div key={msg.id ?? idx}
                         onMouseEnter={() => isProprioView && msg.id && setHoveredMsg(msg.id)}
