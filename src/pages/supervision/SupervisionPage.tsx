@@ -544,6 +544,11 @@ export default function SupervisionPage() {
                     const prevMsg = thread[idx - 1];
                     const showDate = !prevMsg || !sameDay(prevMsg.created_at, msg.created_at);
                     const showTrash = isProprioView && !isSuppressed && hoveredMsg === msg.id;
+                    const prevIsStaff = prevMsg ? (prevMsg.sender_role === 'staff' || prevMsg.sender_role === 'gestionnaire') : null;
+                    const senderChanged = prevMsg === undefined || isStaff !== prevIsStaff;
+                    const senderName = isStaff
+                      ? displayName(openConv.gestionnaire_user ?? selectedPerson?.data)
+                      : displayName(openConv.user);
                     return (
                       <div key={msg.id ?? idx}
                         onMouseEnter={() => isProprioView && msg.id && setHoveredMsg(msg.id)}
@@ -572,6 +577,11 @@ export default function SupervisionPage() {
                               </button>
                             )}
                             <div style={{ maxWidth: '70%' }}>
+                              {!isSystem && senderChanged && (
+                                <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--c-muted)', marginBottom: 2, textAlign: isStaff ? 'right' : 'left', paddingLeft: isStaff ? 0 : 4, paddingRight: isStaff ? 4 : 0 }}>
+                                  {senderName}
+                                </div>
+                              )}
                               <div style={{
                                 background: isSuppressed ? 'var(--c-bg)' : (isStaff ? 'var(--c-blue)' : '#fff'),
                                 color: isSuppressed ? 'var(--c-muted)' : (isStaff ? '#fff' : 'var(--c-text)'),

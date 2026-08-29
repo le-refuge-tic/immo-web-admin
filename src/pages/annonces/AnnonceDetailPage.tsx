@@ -557,12 +557,25 @@ export default function AnnonceDetailPage() {
               <div className="detail-section-title">Approuvé par</div>
               <div className="detail-author-row">
                 <div className="detail-author-avatar">
-                  {bien.approved_by.prenom?.[0]}{bien.approved_by.nom?.[0]}
+                  {bien.approved_by.role_principal === 'super_admin'
+                    ? 'SA'
+                    : `${bien.approved_by.prenom?.[0] ?? ''}${bien.approved_by.nom?.[0] ?? ''}`}
                 </div>
                 <div>
-                  <div className="detail-author-name">{bien.approved_by.prenom} {bien.approved_by.nom}</div>
-                  <div className="detail-author-email">{bien.approved_by.email}</div>
+                  <div className="detail-author-name">
+                    {bien.approved_by.role_principal === 'super_admin'
+                      ? 'Super Admin'
+                      : `${bien.approved_by.prenom ?? ''} ${bien.approved_by.nom ?? ''}`.trim()}
+                  </div>
+                  {bien.approved_by.role_principal !== 'super_admin' && (
+                    <div className="detail-author-email">{bien.approved_by.email}</div>
+                  )}
                   <div className="detail-author-role">{ROLE_LABELS[bien.approved_by.role_principal] ?? bien.approved_by.role_principal}</div>
+                  {bien.approved_at && (
+                    <div style={{ fontSize: 11, color: 'var(--c-muted)', marginTop: 2 }}>
+                      {new Date(bien.approved_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

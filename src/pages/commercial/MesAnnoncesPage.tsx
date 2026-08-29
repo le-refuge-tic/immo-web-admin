@@ -331,76 +331,57 @@ export default function MesAnnoncesPage() {
             Aucun bien ne correspond aux filtres sélectionnés.
           </div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table className="immo-table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Bien</th>
-                  <th>Transaction</th>
-                  <th>Prix</th>
-                  <th>Localisation</th>
-                  <th>Statut</th>
-                  <th>Publié le</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {biensFiltered.map((b: any) => {
-                  const sc = STATUS_CARD[b.statut_moderation];
-                  return (
-                    <tr key={b.id}>
-                      <td style={{ color: 'var(--c-muted)', fontSize: 12 }}>{b.id}</td>
-                      <td>
-                        <div style={{ fontWeight: 600, fontSize: 13 }}>{getBienLabel(b)}</div>
-                        <div style={{ fontSize: 11, color: 'var(--c-muted)' }}>{b.nb_consultations ?? 0} vue(s)</div>
-                      </td>
-                      <td style={{ fontSize: 12 }}>{trans(b)}</td>
-                      <td style={{ fontWeight: 700, fontSize: 13 }}>{formatFcfa(b.prix)}</td>
-                      <td style={{ fontSize: 12 }}>
-                        <div>{b.localisation?.ville ?? '—'}</div>
-                        {b.localisation?.quartier && (
-                          <div style={{ color: 'var(--c-muted)', fontSize: 11 }}>{b.localisation.quartier}</div>
-                        )}
-                      </td>
-                      <td>
-                        {sc ? (
-                          <span style={{
-                            display: 'inline-flex', alignItems: 'center',
-                            padding: '3px 10px', borderRadius: 3,
-                            background: sc.bg,
-                            boxShadow: `0 2px 8px ${sc.shadow}`,
-                            transform: 'skewX(-10deg)',
-                          }}>
-                            <span style={{
-                              display: 'inline-block', transform: 'skewX(10deg)',
-                              fontSize: 10, fontWeight: 800, letterSpacing: '0.5px',
-                              color: sc.color, lineHeight: 1.5,
-                            }}>{sc.label}</span>
-                          </span>
-                        ) : (
-                          <span className={`immo-badge ${(mod(b)).cls}`}>{(mod(b)).label}</span>
-                        )}
-                      </td>
-                      <td style={{ fontSize: 12, color: 'var(--c-muted)' }}>
-                        {b.created_at ? formatDate(b.created_at) : '—'}
-                      </td>
-                      <td>
-                        <div style={{ display: 'flex', gap: 6 }}>
-                          <button
-                            className="btn-table-action"
-                            onClick={() => navigate(`/annonces/${b.id}`)}
-                            title="Voir le détail"
-                          >
-                            <EyeIcon size={14} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(270px, 1fr))', gap: 16, padding: 16 }}>
+            {biensFiltered.map((b: any) => {
+              const cover = b.photos?.find((p: any) => p.is_cover) ?? b.photos?.[0];
+              const sc = STATUS_CARD[b.statut_moderation];
+              return (
+                <div key={b.id} style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid var(--c-border)', background: 'var(--c-card)', display: 'flex', flexDirection: 'column', transition: 'box-shadow 0.15s', cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}
+                  onClick={() => navigate(`/annonces/${b.id}`)}>
+                  {/* Photo */}
+                  <div style={{ position: 'relative', height: 160, background: 'var(--c-border)', flexShrink: 0 }}>
+                    {cover ? (
+                      <img src={cover.url} alt={getBienLabel(b)} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                    ) : (
+                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--c-muted)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+                        </svg>
+                      </div>
+                    )}
+                    {/* Badge statut */}
+                    <div style={{ position: 'absolute', top: 8, left: 8 }}>
+                      {sc ? (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', padding: '3px 10px', borderRadius: 3, background: sc.bg, boxShadow: `0 2px 8px ${sc.shadow}`, transform: 'skewX(-10deg)' }}>
+                          <span style={{ display: 'inline-block', transform: 'skewX(10deg)', fontSize: 9, fontWeight: 800, letterSpacing: '0.5px', color: sc.color, lineHeight: 1.5 }}>{sc.label}</span>
+                        </span>
+                      ) : (
+                        <span className={`immo-badge ${(mod(b)).cls}`} style={{ fontSize: 9 }}>{(mod(b)).label}</span>
+                      )}
+                    </div>
+                    {/* Transaction */}
+                    <div style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.55)', color: '#fff', borderRadius: 6, padding: '2px 8px', fontSize: 10, fontWeight: 700 }}>
+                      {trans(b)}
+                    </div>
+                  </div>
+                  {/* Infos */}
+                  <div style={{ padding: '12px 14px', flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--c-text)' }}>{getBienLabel(b)}</div>
+                    <div style={{ fontSize: 12, color: 'var(--c-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+                      </svg>
+                      {[b.localisation?.quartier, b.localisation?.ville].filter(Boolean).join(', ') || '—'}
+                    </div>
+                    <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--c-text)', marginTop: 4 }}>{formatFcfa(b.prix)}</div>
+                    <div style={{ marginTop: 'auto', paddingTop: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: 10, color: 'var(--c-muted)' }}>{b.nb_consultations ?? 0} vue(s)</span>
+                      <span style={{ fontSize: 10, color: 'var(--c-muted)' }}>{b.created_at ? formatDate(b.created_at) : '—'}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

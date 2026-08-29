@@ -250,8 +250,8 @@ export default function MessagesPage() {
                         </span>
                       )}
                       {c.last_message && (
-                        <span style={{ fontSize: 11, color: 'var(--c-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {c.last_message}
+                        <span style={{ fontSize: 11, color: c.last_message === '__supprime__' ? 'var(--c-muted)' : 'var(--c-muted)', fontStyle: c.last_message === '__supprime__' ? 'italic' : 'normal', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {c.last_message === '__supprime__' ? 'Message supprimé par l\'admin' : c.last_message}
                         </span>
                       )}
                     </div>
