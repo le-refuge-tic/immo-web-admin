@@ -4,6 +4,7 @@ import { supervisionApi } from '../../api/commercialSupervisionApi';
 import { getCommerciaux } from '../../api/getCommerciaux';
 import { getAdminUser } from '../../api/getAdminUser';
 import { useAuth } from '../../context/AuthContext';
+import PerformanceHebdoModal from './PerformanceHebdoModal';
 
 /* ─── Constants ─────────────────────────────────────────────── */
 
@@ -116,6 +117,7 @@ export default function SupervisionPage() {
 
   /* — état gauche — */
   const [tab, setTab]                     = useState<'commerciaux' | 'proprietaires'>('commerciaux');
+  const [showPerformance, setShowPerformance] = useState(false);
   const [commerciaux, setCommerciaux]     = useState<any[]>([]);
   const [proprietairesFromApi, setProprietairesFromApi] = useState<any[]>([]);
   const [loadingProprios, setLoadingProprios] = useState(false);
@@ -314,6 +316,19 @@ export default function SupervisionPage() {
           <p style={{ margin: 0, fontSize: 11, color: 'var(--c-muted)' }}>Conversations des équipes · commerciaux &amp; propriétaires</p>
         </div>
         <div className="immo-spacer" />
+        <button
+          onClick={() => setShowPerformance(true)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8,
+            border: '1px solid var(--c-border)', background: '#fff', color: 'var(--c-text)',
+            fontSize: 12, fontWeight: 600, cursor: 'pointer', marginRight: totalUnread > 0 ? 10 : 0,
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-4"/>
+          </svg>
+          Performance hebdomadaire
+        </button>
         {totalUnread > 0 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#FEE2E2', borderRadius: 20, padding: '6px 14px', border: '1px solid #FECACA' }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#DC2626', animation: 'sup-pulse 1.5s ease-in-out infinite' }} />
@@ -828,6 +843,8 @@ export default function SupervisionPage() {
           )}
         </div>
       </div>
+
+      {showPerformance && <PerformanceHebdoModal onClose={() => setShowPerformance(false)} />}
 
       <style>{`
         @keyframes sup-pulse { 0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)} }

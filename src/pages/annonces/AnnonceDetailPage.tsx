@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getAdminBien } from '../../api/getAdminBien';
 import { patchAdminBien } from '../../api/patchAdminBien';
+import { getGeocoding } from '../../api/getGeocoding';
 import { deleteAdminBien } from '../../api/deleteAdminBien';
 import { ChevronLeftIcon, PinIcon, TrashIcon, EditIcon } from '../../components/Icons';
 import { useAuth } from '../../context/AuthContext';
@@ -93,6 +94,7 @@ export default function AnnonceDetailPage() {
   const canModerate  = userRole === 'admin' || userRole === 'super_admin';
 
   const [bien, setBien]         = useState(null as any);
+  const [adresseGps, setAdresseGps] = useState('');
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState('');
   const [saving, setSaving]     = useState(false);
@@ -128,6 +130,15 @@ export default function AnnonceDetailPage() {
       .catch(() => setError('Impossible de charger ce bien. Vérifie que le backend est bien déployé.'))
       .finally(() => setLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    const lat = bien?.localisation?.latitude;
+    const lng = bien?.localisation?.longitude;
+    if (lat == null || lng == null) { setAdresseGps(''); return; }
+    getGeocoding.reverse(Number(lat), Number(lng))
+      .then(res => setAdresseGps(res.adresse))
+      .catch(() => setAdresseGps(''));
+  }, [bien?.localisation?.latitude, bien?.localisation?.longitude]);
 
   const allPhotos: any[] = bien
     ? [
@@ -465,6 +476,12 @@ export default function AnnonceDetailPage() {
                   <span>GPS</span>
                   <strong>{Number(bien.localisation.latitude).toFixed(5)}, {Number(bien.localisation.longitude).toFixed(5)}</strong>
                 </div>
+                {adresseGps && (
+                  <div className="detail-info-row">
+                    <span>Adresse (GPS)</span>
+                    <strong style={{ textAlign: 'right', maxWidth: '60%' }}>{adresseGps}</strong>
+                  </div>
+                )}
               </div>
             </div>
           )}

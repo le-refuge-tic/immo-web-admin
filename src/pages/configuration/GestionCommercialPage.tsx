@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, type FormEvent } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { getCommerciaux } from '../../api/getCommerciaux';
 import { deleteCommerciaux } from '../../api/deleteCommerciaux';
+import { postCommercialBonus } from '../../api/postCommercialBonus';
 import { getAdminUser } from '../../api/getAdminUser';
 import { commerciauxApi } from '../../api/getClientsCommercial';
 import { supervisionApi } from '../../api/commercialSupervisionApi';
@@ -104,6 +105,95 @@ function ClientsListModal({ commercial, onClose }: { commercial: any; onClose: (
 }
 
 /* ─── Modal : attribuer un client ────────────────────────── */
+
+/* ─── Modal : accorder un bonus ──────────────────────────── */
+
+function BonusCommercialModal({ commercial, onClose }: { commercial: any; onClose: () => void }) {
+  const [montant, setMontant] = useState('');
+  const [motif, setMotif]     = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState('');
+  const [success, setSuccess] = useState(false);
+
+  const canSubmit = Number(montant) > 0 && motif.trim().length >= 3;
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!canSubmit) return;
+    setLoading(true);
+    setError('');
+    try {
+      await postCommercialBonus.accorder(commercial.id, Number(montant), motif.trim());
+      setSuccess(true);
+    } catch (err: any) {
+      setError(err?.response?.data?.message ?? 'Erreur lors de l\'attribution du bonus.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="immo-modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="immo-modal" style={{ maxWidth: 420 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+          <div>
+            <div className="immo-modal-title" style={{ marginBottom: 2 }}>Ajouter un bonus</div>
+            <div style={{ fontSize: 12, color: 'var(--c-muted)' }}>à {commercial.prenom} {commercial.nom}</div>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-muted)', padding: 4 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        {success ? (
+          <div style={{ textAlign: 'center', padding: '20px 0' }}>
+            <div style={{ color: '#16A34A', marginBottom: 10 }}>
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 auto' }}>
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <div style={{ fontWeight: 700, color: 'var(--c-text)', marginBottom: 16 }}>Bonus crédité avec succès</div>
+            <button className="btn-cancel" onClick={onClose}>Fermer</button>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit}>
+            <div className="immo-form-field" style={{ marginBottom: 14 }}>
+              <label className="immo-form-label">Montant (FCFA) *</label>
+              <input
+                className="immo-form-input" type="number" min={1} step={100}
+                value={montant} onChange={e => setMontant(e.target.value)}
+                placeholder="Ex: 5000" autoFocus disabled={loading} required
+              />
+            </div>
+            <div className="immo-form-field" style={{ marginBottom: 14 }}>
+              <label className="immo-form-label">Motif *</label>
+              <input
+                className="immo-form-input" type="text"
+                value={motif} onChange={e => setMotif(e.target.value)}
+                placeholder="Ex: Excellente performance ce mois-ci" disabled={loading} required
+              />
+            </div>
+
+            {error && (
+              <div style={{ marginBottom: 14, padding: '8px 12px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8, fontSize: 12, color: '#DC2626' }}>
+                {error}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button type="button" className="btn-cancel" onClick={onClose} disabled={loading}>Annuler</button>
+              <button type="submit" className="btn-submit" disabled={loading || !canSubmit}>
+                {loading ? 'Envoi…' : 'Créditer le bonus'}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function AttribuerClientModal({
   commercial,
@@ -699,6 +789,7 @@ export default function GestionCommercialPage() {
   const [attribuerModal, setAttribuerModal]     = useState<any | null>(null);
   const [supervisionModal, setSupervisionModal] = useState<any | null>(null);
   const [chatModal, setChatModal]               = useState<any | null>(null);
+  const [bonusModal, setBonusModal]             = useState<any | null>(null);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -912,6 +1003,17 @@ export default function GestionCommercialPage() {
                             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                           </svg>
                         </button>
+                        <button
+                          className="btn-icon-sm"
+                          title="Ajouter un bonus"
+                          onClick={() => setBonusModal(c)}
+                          style={{ background: '#FFF7ED', color: '#EA580C', border: '1px solid #FED7AA' }}
+                        >
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/>
+                            <line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C9 2 12 7 12 7z"/>
+                          </svg>
+                        </button>
                         {!isMe && (
                           <button className="btn-icon-sm danger" onClick={() => handleDelete(c)} disabled={deletingId === c.id} title="Supprimer ce commercial">
                             {deletingId === c.id ? (
@@ -973,6 +1075,9 @@ export default function GestionCommercialPage() {
       )}
       {chatModal && (
         <DirectChatModal commercial={chatModal} me={me} onClose={() => setChatModal(null)} />
+      )}
+      {bonusModal && (
+        <BonusCommercialModal commercial={bonusModal} onClose={() => setBonusModal(null)} />
       )}
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>

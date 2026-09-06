@@ -16,6 +16,7 @@ export type User = {
   telephone: string | null;
   email: string | null;
   profil_complet: boolean;
+  doit_changer_mot_de_passe: boolean;
   actif: boolean;
   score_credibilite: number;
   nb_etoiles: number;

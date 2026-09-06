@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import ProfilEditModal from './ProfilEditModal';
 import ProfilInfoCard from './ProfilInfoCard';
+import ChangePasswordModal from './ChangePasswordModal';
 
 const ROLE_LABELS: any = {
   super_admin:  'Super Administrateur',
@@ -30,6 +31,7 @@ function formatDate(iso: string) {
 export default function ProfilPage() {
   const { user, refreshUser } = useAuth();
   const [showEdit, setShowEdit] = useState(false);
+  const [showPwd, setShowPwd] = useState(false);
 
   if (!user) return null;
 
@@ -87,11 +89,21 @@ export default function ProfilPage() {
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
             </svg>
           </div>
-          <div>
+          <div style={{ flex: 1 }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-text)', marginBottom: 3 }}>Sécurité du compte</div>
-            <div style={{ fontSize: 12, color: 'var(--c-muted)', lineHeight: 1.5 }}>
-              Pour modifier votre mot de passe, contactez un autre super administrateur ou utilisez la procédure de réinitialisation par email.
+            <div style={{ fontSize: 12, color: 'var(--c-muted)', lineHeight: 1.5, marginBottom: 10 }}>
+              Changez régulièrement votre mot de passe pour sécuriser votre compte.
             </div>
+            <button
+              onClick={() => setShowPwd(true)}
+              style={{
+                background: 'none', border: '1px solid var(--c-border)', borderRadius: 8,
+                padding: '6px 12px', fontSize: 12, fontWeight: 600, color: 'var(--c-blue)',
+                cursor: 'pointer',
+              }}
+            >
+              Changer le mot de passe
+            </button>
           </div>
         </div>
       </div>
@@ -103,6 +115,8 @@ export default function ProfilPage() {
           onSaved={async () => { await refreshUser(); }}
         />
       )}
+
+      {showPwd && <ChangePasswordModal onClose={() => setShowPwd(false)} />}
     </>
   );
 }

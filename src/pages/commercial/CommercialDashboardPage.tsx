@@ -2,6 +2,12 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getMesBiens } from '../../api/getMesBiens';
 import { getMesVisites } from '../../api/getMesVisites';
+import { getPortefeuille, type Portefeuille } from '../../api/getPortefeuille';
+import PortefeuilleCard from './PortefeuilleCard';
+import SommesDisponiblesCard from './SommesDisponiblesCard';
+import HistoriquePortefeuilleCard from './HistoriquePortefeuilleCard';
+import BiensMap from './BiensMap';
+import Skeleton from '../../components/Skeleton';
 
 const TYPE_LABEL: Record<string, string> = {
   chambre_salon: 'Chambre-Salon', entree_coucher: 'Entrée-Coucher',
@@ -30,23 +36,29 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
+
 export default function CommercialDashboardPage() {
   const navigate = useNavigate();
   const [biens, setBiens]     = useState<any[]>([]);
   const [visites, setVisites] = useState<any[]>([]);
+  const [portefeuille, setPortefeuille] = useState<Portefeuille | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
       getMesBiens.list().catch(() => []),
       getMesVisites.list().catch(() => ({ visites: [] })),
-    ]).then(([b, v]) => {
+      getPortefeuille.get().catch(() => null),
+    ]).then(([b, v, p]) => {
       setBiens(Array.isArray(b) ? b : []);
       setVisites(Array.isArray(v) ? v : (v?.visites ?? []));
+      setPortefeuille(p);
       setLoading(false);
     });
   }, []);
 
+  const soumis     = biens.length;
+  const enVerif    = biens.filter(b => b.statut_moderation === 'en_attente').length;
   const published  = biens.filter(b => b.statut_moderation === 'approuve').length;
   const totalViews = biens.reduce((acc, b) => acc + (b.nb_consultations ?? 0), 0);
   const pending    = visites.filter(v => v.statut === 'en_attente').length;
@@ -56,7 +68,25 @@ export default function CommercialDashboardPage() {
 
   const statCards = [
     {
-      label: 'Biens publiés', value: published,
+      label: 'Biens soumis', value: soumis,
+      iconBg: '#EDE9FE', iconColor: '#7C3AED',
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
+        </svg>
+      ),
+    },
+    {
+      label: 'En vérification', value: enVerif,
+      iconBg: '#FEF3C7', iconColor: '#D97706',
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+      ),
+    },
+    {
+      label: 'Biens validés', value: published,
       iconBg: '#DCFCE7', iconColor: '#16A34A',
       icon: (
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -118,6 +148,9 @@ export default function CommercialDashboardPage() {
         </button>
       </div>
 
+      {/* ── Portefeuille hebdomadaire ── */}
+      <PortefeuilleCard loading={loading} portefeuille={portefeuille} />
+
       {/* ── KPI cards ── */}
       <div className="stat-grid">
         {statCards.map(s => (
@@ -129,10 +162,34 @@ export default function CommercialDashboardPage() {
             </div>
             <div>
               <div className="stat-label">{s.label}</div>
-              <div className="stat-value">{loading ? '—' : s.value}</div>
+              <div className="stat-value">{loading ? <Skeleton width={40} height={22} /> : s.value}</div>
             </div>
           </div>
         ))}
+      </div>
+
+      {/* ── Portefeuille : sommes disponibles + historique ── */}
+      <div className="content-grid-2">
+        <SommesDisponiblesCard />
+        <HistoriquePortefeuilleCard />
+      </div>
+
+      {/* ── Géolocalisation de mes biens ── */}
+      <div className="immo-card">
+        <div className="section-header">
+          <span className="section-title">Localisation de mes biens</span>
+        </div>
+        <BiensMap
+          biens={biens
+            .filter(b => b.localisation?.latitude != null && b.localisation?.longitude != null)
+            .map(b => ({
+              id: b.id,
+              label: TYPE_LABEL[b.amenites?.sous_type] ?? TYPE_LABEL[b.type] ?? b.type,
+              statut_moderation: b.statut_moderation,
+              latitude: Number(b.localisation.latitude),
+              longitude: Number(b.localisation.longitude),
+            }))}
+        />
       </div>
 
       {/* ── Bottom panels ── */}
@@ -146,7 +203,20 @@ export default function CommercialDashboardPage() {
           </div>
 
           {loading ? (
-            <div style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--c-muted)', fontSize: 13 }}>Chargement…</div>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {[0, 1, 2].map(i => (
+                <div key={i} style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '0.75rem 0', borderTop: i === 0 ? 'none' : '1px solid var(--c-border)', gap: 10,
+                }}>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <Skeleton width="60%" height={13} style={{ marginBottom: 6 }} />
+                    <Skeleton width="40%" height={11} />
+                  </div>
+                  <Skeleton width={64} height={20} radius={999} style={{ flexShrink: 0 }} />
+                </div>
+              ))}
+            </div>
           ) : recentBiens.length === 0 ? (
             <div style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--c-muted)', fontSize: 13 }}>
               Aucun bien publié.{' '}
@@ -193,9 +263,19 @@ export default function CommercialDashboardPage() {
             <span>Visites</span>
           </div>
           <div className="flux-amount">
-            {loading ? '—' : totalV}
-            <span>total</span>
+            {loading ? <Skeleton onGlass width={48} height={30} radius={8} /> : totalV}
+            {!loading && <span>total</span>}
           </div>
+          {loading && (
+            <div style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {[0, 1].map(i => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                  <Skeleton onGlass width="70%" height={11} />
+                  <Skeleton onGlass width={40} height={16} radius={999} style={{ flexShrink: 0 }} />
+                </div>
+              ))}
+            </div>
+          )}
           {!loading && recentVisites.length > 0 && (
             <div style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               {recentVisites.map((v: any) => {
@@ -214,15 +294,15 @@ export default function CommercialDashboardPage() {
           <div className="flux-split" style={{ marginTop: '1rem' }}>
             <div className="flux-split-item">
               <div className="flux-split-label">En attente</div>
-              <div className="flux-split-pct orange">{loading ? '—' : pending}</div>
+              <div className="flux-split-pct orange">{loading ? <Skeleton onGlass width={22} height={20} /> : pending}</div>
             </div>
             <div className="flux-split-item">
               <div className="flux-split-label">Confirmées</div>
-              <div className="flux-split-pct">{loading ? '—' : confirmed}</div>
+              <div className="flux-split-pct">{loading ? <Skeleton onGlass width={22} height={20} /> : confirmed}</div>
             </div>
             <div className="flux-split-item">
               <div className="flux-split-label">Effectuées</div>
-              <div className="flux-split-pct">{loading ? '—' : effectuees}</div>
+              <div className="flux-split-pct">{loading ? <Skeleton onGlass width={22} height={20} /> : effectuees}</div>
             </div>
           </div>
           <Link to="/mes-visites" style={{ display: 'block', marginTop: '1rem', textAlign: 'center', fontSize: 11, color: 'rgba(255,255,255,0.6)', textDecoration: 'none', letterSpacing: '0.05em' }}>

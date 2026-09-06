@@ -4,8 +4,10 @@ import Topbar from './Topbar';
 import Sidebar from './Sidebar';
 import AdminFooter from './AdminFooter';
 import PhoneRequiredModal, { usePhoneRequired } from '../components/PhoneRequiredModal';
+import ChangePasswordRequiredModal, { useChangePasswordRequired } from '../components/ChangePasswordRequiredModal';
 
 export default function AdminLayout() {
+  const passwordChangeRequired = useChangePasswordRequired();
   const phoneRequired = usePhoneRequired();
   const [minimized, setMinimized] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -22,7 +24,7 @@ export default function AdminLayout() {
 
   return (
     <div className="immo-app">
-      {phoneRequired && <PhoneRequiredModal />}
+      {passwordChangeRequired ? <ChangePasswordRequiredModal /> : phoneRequired && <PhoneRequiredModal />}
       <Topbar
         minimized={minimized}
         mobileOpen={mobileOpen}

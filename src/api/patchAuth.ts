@@ -9,4 +9,6 @@ export const patchAuth = {
     axios.post(`${BASE}/auth/phone/send-otp`, { telephone }, auth()).then(r => r.data),
   verifyPhoneOtp:   (session_token: string, code: string, telephone: string) =>
     axios.post(`${BASE}/auth/phone/verify`, { session_token, code, telephone }, auth()).then(r => r.data),
+  changePassword:   (current_password: string, new_password: string) =>
+    axios.patch(`${BASE}/users/me/password`, { current_password, new_password }, auth()).then(r => r.data),
 };

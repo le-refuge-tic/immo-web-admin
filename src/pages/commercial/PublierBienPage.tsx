@@ -3,6 +3,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { postBien } from '../../api/postBien'
 import { BENIN_LOCATION_DATA } from '../../data/beninLocations'
+import { getGeocoding } from '../../api/getGeocoding'
 
 // ─── Quartiers — même structure que immo-web-user ─────────────────────────────
 type Quartier = { nom: string; arrondissement: string; ville: string }
@@ -314,6 +315,12 @@ export default function PublierBienPage() {
   const [indicationAdresse, setIndicationAdresse] = useState('')
   const [quartierSearch, setQuartierSearch]       = useState('')
   const [quartierInputFocused, setQuartierInputFocused] = useState(false)
+  const [latitude, setLatitude]                   = useState<number | null>(null)
+  const [longitude, setLongitude]                 = useState<number | null>(null)
+  const [adresseNormalisee, setAdresseNormalisee] = useState('')
+  const [adresseVerifiee, setAdresseVerifiee]     = useState('')
+  const [geocoding, setGeocoding]                 = useState(false)
+  const [geocodeError, setGeocodeError]           = useState('')
 
   // Étape 2
   const [chambres, setChambres]               = useState(1)
@@ -378,6 +385,7 @@ export default function PublierBienPage() {
     step, typeBien, typeTransaction, prix, estMeuble, sanitaire, sanitaireAutre, finition,
     prixLongSejour, prixSejourRestreint, prixHeure, tarifsAutres,
     ville, quartier, arrondissement, indicationAdresse, quartierSearch,
+    latitude, longitude, adresseNormalisee, adresseVerifiee,
     chambres, salons, cuisines, douches, typeCuisine, cuisineAutre,
     chambreACouloir, typeCour, nbVoisins, accesVehicule, nbVehicules,
     avanceMois, avanceAutre, avanceAutreText, echeanceMois, echeanceAutre, echeanceAutreText,
@@ -419,6 +427,10 @@ export default function PublierBienPage() {
       if (d.arrondissement)            setArrondissement(d.arrondissement)
       if (d.indicationAdresse)         setIndicationAdresse(d.indicationAdresse)
       if (d.quartierSearch)            setQuartierSearch(d.quartierSearch)
+      if (d.latitude !== undefined)    setLatitude(d.latitude)
+      if (d.longitude !== undefined)   setLongitude(d.longitude)
+      if (d.adresseNormalisee)         setAdresseNormalisee(d.adresseNormalisee)
+      if (d.adresseVerifiee)           setAdresseVerifiee(d.adresseVerifiee)
       if (d.chambres !== undefined)    setChambres(d.chambres)
       if (d.salons !== undefined)      setSalons(d.salons)
       if (d.cuisines !== undefined)    setCuisines(d.cuisines)
@@ -512,7 +524,36 @@ export default function PublierBienPage() {
     setQuartier(name); setArrondissement(arr ?? ''); setVille(vi ?? '')
     setQuartierSearch(name); setQuartierInputFocused(false)
   }
-  const clearQuartier = () => { setQuartier(''); setArrondissement(''); setVille(''); setQuartierSearch('') }
+  const clearQuartier = () => {
+    setQuartier(''); setArrondissement(''); setVille(''); setQuartierSearch('')
+    setLatitude(null); setLongitude(null); setAdresseNormalisee(''); setAdresseVerifiee(''); setGeocodeError('')
+  }
+
+  const buildAdresseComplete = () => {
+    const parts = [indicationAdresse.trim(), quartier, arrondissement, ville || quartier, 'Bénin'].filter(Boolean)
+    return parts.join(', ')
+  }
+  const adresseActuelle = buildAdresseComplete()
+  const adressePositionAJour = latitude !== null && longitude !== null && adresseVerifiee === adresseActuelle
+
+  const handleGeocode = async () => {
+    const adresse = buildAdresseComplete()
+    if (!quartier.trim()) { setGeocodeError('Sélectionnez d\'abord un quartier'); return }
+    setGeocoding(true)
+    setGeocodeError('')
+    try {
+      const res = await getGeocoding.geocoder(adresse)
+      setLatitude(res.latitude)
+      setLongitude(res.longitude)
+      setAdresseNormalisee(res.adresse_normalisee)
+      setAdresseVerifiee(adresse)
+    } catch (err: any) {
+      setLatitude(null); setLongitude(null); setAdresseNormalisee('')
+      setGeocodeError(err?.response?.data?.message ?? 'Adresse introuvable, précisez-la et réessayez.')
+    } finally {
+      setGeocoding(false)
+    }
+  }
 
   const labelFinition  = (v: string) => ({ ordinaire: 'Ordinaire', staffe_carele: 'Staffé', haut_standing: 'Haut Standing / VIP', villa: 'Villa' } as Record<string,string>)[v] ?? v
   const labelSanitaire = (v: string) =>
@@ -537,6 +578,7 @@ export default function PublierBienPage() {
       if (isMeuble && !hasAtLeastOneTarif) { setError('Renseignez au moins un tarif'); return }
     }
     if (step === 1 && !quartier.trim()) { setError('Veuillez sélectionner un quartier'); return }
+    if (step === 1 && !adressePositionAJour) { setError('Veuillez vérifier l\'adresse pour obtenir sa position'); return }
     if (step === 2 && isTerrain && !titreTerrain.trim()) { setError('Veuillez donner un nom à ce bien'); return }
     if (step === 2 && isTerrain && !superficieM2) { setError('Veuillez indiquer la superficie du terrain'); return }
     setError('')
@@ -652,8 +694,8 @@ export default function PublierBienPage() {
           adresse: indicationAdresse.trim() || [quartier, arrondissement].filter(Boolean).join(', ') || quartier,
           ville: ville || quartier || undefined,
           quartier: quartier || undefined,
-          latitude: 6.3654,
-          longitude: 2.4183,
+          latitude: latitude ?? 6.3654,
+          longitude: longitude ?? 2.4183,
         },
         amenites: buildAmenites(),
       }
@@ -939,6 +981,49 @@ export default function PublierBienPage() {
                     style={baseInput}
                     onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
                     onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 8, display: 'block', color: 'var(--c-muted)' }}>
+                    Position GPS
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleGeocode}
+                    disabled={geocoding || !quartier.trim()}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 8, padding: '11px 18px',
+                      borderRadius: 12, border: `1px solid ${adressePositionAJour ? 'rgba(72,199,116,0.45)' : 'var(--c-border)'}`,
+                      background: adressePositionAJour ? 'rgba(72,199,116,0.09)' : '#fff',
+                      color: adressePositionAJour ? '#48C774' : BLUE,
+                      fontSize: 13, fontWeight: 700, cursor: geocoding || !quartier.trim() ? 'not-allowed' : 'pointer',
+                      opacity: !quartier.trim() ? 0.5 : 1,
+                    }}
+                  >
+                    {geocoding ? (
+                      <span style={{ width: 14, height: 14, border: '2px solid currentColor', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite', display: 'block' }} />
+                    ) : adressePositionAJour ? (
+                      <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    ) : (
+                      <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    )}
+                    {geocoding ? 'Recherche…' : adressePositionAJour ? 'Position obtenue' : 'Vérifier l\'adresse'}
+                  </button>
+                  {adressePositionAJour && adresseNormalisee && (
+                    <div style={{ marginTop: 8, fontSize: 12, color: 'var(--c-muted)' }}>{adresseNormalisee}</div>
+                  )}
+                  {geocodeError && (
+                    <div style={{ marginTop: 8, fontSize: 12, color: '#DC2626' }}>{geocodeError}</div>
+                  )}
+                  {!adressePositionAJour && !geocodeError && quartier.trim() && (
+                    <div style={{ marginTop: 8, fontSize: 12, color: 'var(--c-muted)' }}>
+                      Cliquez pour convertir l'adresse en coordonnées GPS.
+                    </div>
+                  )}
                 </div>
               </div>
             </Card>
