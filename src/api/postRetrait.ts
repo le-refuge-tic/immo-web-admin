@@ -10,13 +10,15 @@ export type Retrait = {
   montant: number;
   statut: 'en_attente' | 'approuve' | 'rejete' | 'envoye' | 'echoue';
   numero_telephone: string;
+  nom_titulaire: string | null;
+  preuve_url: string | null;
   motif_rejet: string | null;
   created_at: string;
 };
 
 export const postRetrait = {
-  demander: (montant: number, wallet_type: string): Promise<Retrait> =>
-    axios.post(`${BASE}/retraits/me`, { montant, wallet_type }, auth()).then(r => r.data),
+  demander: (montant: number, wallet_type: string, numero_telephone?: string, nom_titulaire?: string): Promise<Retrait> =>
+    axios.post(`${BASE}/retraits/me`, { montant, wallet_type, numero_telephone, nom_titulaire }, auth()).then(r => r.data),
   mesRetraits: (): Promise<Retrait[]> =>
     axios.get(`${BASE}/retraits/me`, auth()).then(r => r.data),
 };

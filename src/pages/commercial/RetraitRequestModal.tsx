@@ -9,11 +9,14 @@ export default function RetraitRequestModal({ solde, onClose, onSuccess }: {
   solde: number; onClose: () => void; onSuccess: () => void;
 }) {
   const [montant, setMontant] = useState('');
+  const [numeroTelephone, setNumeroTelephone] = useState('');
+  const [nomTitulaire, setNomTitulaire]       = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
 
   const montantNum = Number(montant);
-  const canSubmit = montantNum >= 500 && montantNum <= solde;
+  const canSubmit = montantNum >= 500 && montantNum <= solde
+    && numeroTelephone.trim().length >= 8 && nomTitulaire.trim().length >= 2;
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -21,7 +24,7 @@ export default function RetraitRequestModal({ solde, onClose, onSuccess }: {
     if (!canSubmit) return;
     setLoading(true);
     try {
-      await postRetrait.demander(montantNum, 'commission_commerciale');
+      await postRetrait.demander(montantNum, 'commission_commerciale', numeroTelephone.trim(), nomTitulaire.trim());
       onSuccess();
     } catch (err: any) {
       setError(err?.response?.data?.message ?? 'Impossible de créer la demande de retrait.');
@@ -69,6 +72,34 @@ export default function RetraitRequestModal({ solde, onClose, onSuccess }: {
           {montant !== '' && montantNum > 0 && montantNum < 500 && (
             <div style={{ fontSize: 11, color: '#DC2626', marginBottom: 12 }}>Montant minimum : 500 FCFA.</div>
           )}
+
+          <div className="immo-form-field" style={{ marginBottom: 8, marginTop: 8 }}>
+            <label className="immo-form-label">Numéro Mobile Money *</label>
+            <input
+              className="immo-form-input"
+              type="tel"
+              value={numeroTelephone}
+              onChange={e => { setNumeroTelephone(e.target.value); setError(''); }}
+              placeholder="Ex: 0196123456"
+              disabled={loading}
+              required
+            />
+          </div>
+          <div className="immo-form-field" style={{ marginBottom: 8 }}>
+            <label className="immo-form-label">Nom du titulaire de ce numéro *</label>
+            <input
+              className="immo-form-input"
+              type="text"
+              value={nomTitulaire}
+              onChange={e => { setNomTitulaire(e.target.value); setError(''); }}
+              placeholder="Nom et prénom du titulaire"
+              disabled={loading}
+              required
+            />
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--c-muted)', marginBottom: 8 }}>
+            Votre demande sera traitée manuellement par un administrateur. Vous recevrez une notification et une preuve du virement dès que le transfert sera effectué.
+          </div>
 
           {error && (
             <div style={{

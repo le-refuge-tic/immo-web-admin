@@ -68,7 +68,7 @@ export default function App() {
             <Route path="feedbacks"    element={<AdminRoute><FeedbacksPage /></AdminRoute>} />
             <Route path="reclamations" element={<AdminRoute><PlaintesPage /></AdminRoute>} />
             <Route path="liaisons"     element={<AdminRoute><GestionLiaisonsPage /></AdminRoute>} />
-            <Route path="retraits"     element={<SuperAdminRoute><RetraitsPage /></SuperAdminRoute>} />
+            <Route path="retraits"     element={<AdminRoute><RetraitsPage /></AdminRoute>} />
 
             {/* Configuration */}
             <Route path="configuration">

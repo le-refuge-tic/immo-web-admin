@@ -62,7 +62,7 @@ export default function Sidebar({
       { to: '/feedbacks',    label: 'Feedbacks',       Icon: StarIcon       },
       { to: '/reclamations', label: 'Réclamations',    Icon: FlagIcon       },
     ] : []),
-    ...(isSuperAdmin ? [{ to: '/retraits', label: 'Retraits MoMo', Icon: WithdrawIcon }] : []),
+    ...(isAdmin ? [{ to: '/retraits', label: 'Retraits MoMo', Icon: WithdrawIcon }] : []),
   ];
 
   const configSubs = [

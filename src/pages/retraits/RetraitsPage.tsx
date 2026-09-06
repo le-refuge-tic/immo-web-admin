@@ -34,9 +34,10 @@ function fmtDate(raw: string) {
 
 function walletLabel(type: string) {
   switch (type) {
-    case 'epargne':          return 'Épargne';
-    case 'revenus_locatifs': return 'Revenus locatifs';
-    default:                 return type;
+    case 'epargne':               return 'Épargne';
+    case 'revenus_locatifs':      return 'Revenus locatifs';
+    case 'commission_commerciale': return 'Commission commerciale';
+    default:                      return type;
   }
 }
 
@@ -50,6 +51,8 @@ export default function RetraitsPage() {
   const [actionId, setActionId]         = useState<number | null>(null);
   const [motifRejet, setMotifRejet]     = useState('');
   const [rejectingId, setRejectingId]   = useState<number | null>(null);
+  const [sendingProofId, setSendingProofId] = useState<number | null>(null);
+  const [proofFile, setProofFile]       = useState<File | null>(null);
   const [toast, setToast]               = useState<{ msg: string; ok: boolean } | null>(null);
 
   const showToast = (msg: string, ok = true) => {
@@ -93,10 +96,11 @@ export default function RetraitsPage() {
     }
   };
 
-  const rejeter = async (id: number) => {
+  const rejeter = async (id: number, manuel: boolean) => {
     setActionId(id);
     try {
-      const res = await fetch(`${BASE}/retraits/admin/${id}/rejeter`, {
+      const endpoint = manuel ? 'rejeter-manuel' : 'rejeter';
+      const res = await fetch(`${BASE}/retraits/admin/${id}/${endpoint}`, {
         method: 'PATCH',
         headers: {
           ...((auth() as any).headers),
@@ -119,16 +123,42 @@ export default function RetraitsPage() {
     }
   };
 
-  if (!isSuperAdmin) {
+  const confirmerEnvoiManuel = async (id: number) => {
+    if (!proofFile) return;
+    setActionId(id);
+    try {
+      const form = new FormData();
+      form.append('preuve', proofFile);
+      const res = await fetch(`${BASE}/retraits/admin/${id}/marquer-envoye`, {
+        method: 'POST',
+        headers: { ...((auth() as any).headers) },
+        body: form,
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message ?? 'Erreur');
+      }
+      showToast('Retrait marqué comme envoyé');
+      setSendingProofId(null);
+      setProofFile(null);
+      load();
+    } catch (e: any) {
+      showToast(e.message ?? 'Erreur lors de l\'envoi', false);
+    } finally {
+      setActionId(null);
+    }
+  };
+
+  if (!user || !['admin', 'super_admin'].includes(user.role_principal ?? user.role)) {
     return (
       <div style={{ padding: 40, textAlign: 'center', color: '#6b7280' }}>
-        <p style={{ fontSize: 18, fontWeight: 600 }}>Accès réservé au Super Admin</p>
+        <p style={{ fontSize: 18, fontWeight: 600 }}>Accès réservé aux administrateurs</p>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: '24px 28px', maxWidth: 1100, margin: '0 auto' }}>
+    <div style={{ padding: '24px 28px', maxWidth: 1200, margin: '0 auto' }}>
       {/* Toast */}
       {toast && (
         <div style={{
@@ -145,7 +175,8 @@ export default function RetraitsPage() {
         Demandes de retrait
       </h1>
       <p style={{ color: '#6b7280', fontSize: 14, marginBottom: 20 }}>
-        Validez ou rejetez les demandes de retrait Mobile Money.
+        Épargne / revenus locatifs : validation automatique (Super Admin uniquement).{' '}
+        Commission commerciale : virement effectué manuellement hors app, preuve à téléverser.
       </p>
 
       {/* Filtres */}
@@ -180,7 +211,7 @@ export default function RetraitsPage() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
             <thead>
               <tr style={{ background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
-                {['Bénéficiaire', 'Montant', 'Wallet', 'Numéro', 'Statut', 'Date', 'Actions'].map(h => (
+                {['Bénéficiaire', 'Montant', 'Wallet', 'Numéro / Titulaire', 'Statut', 'Date', 'Actions'].map(h => (
                   <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 600, color: '#374151', fontSize: 12 }}>
                     {h}
                   </th>
@@ -189,10 +220,12 @@ export default function RetraitsPage() {
             </thead>
             <tbody>
               {retraits.map((r: any, i: number) => {
-                const isLast     = i === retraits.length - 1;
-                const pending    = r.statut === 'en_attente';
-                const isRejecting = rejectingId === r.id;
-                const isActing   = actionId === r.id;
+                const isLast       = i === retraits.length - 1;
+                const pending      = r.statut === 'en_attente';
+                const isRejecting  = rejectingId === r.id;
+                const isSendingProof = sendingProofId === r.id;
+                const isActing     = actionId === r.id;
+                const isManuel     = (r.wallet?.type ?? '') === 'commission_commerciale';
                 const nom = [r.user?.prenom, r.user?.nom].filter(Boolean).join(' ') || `User #${r.user_id}`;
 
                 return (
@@ -212,8 +245,11 @@ export default function RetraitsPage() {
                     <td style={{ padding: '14px 16px', color: '#6b7280' }}>
                       {walletLabel(r.wallet?.type ?? '')}
                     </td>
-                    <td style={{ padding: '14px 16px', fontFamily: 'monospace', letterSpacing: 1 }}>
-                      {r.numero_telephone}
+                    <td style={{ padding: '14px 16px' }}>
+                      <div style={{ fontFamily: 'monospace', letterSpacing: 1 }}>{r.numero_telephone}</div>
+                      {r.nom_titulaire && (
+                        <div style={{ color: '#6b7280', fontSize: 12, marginTop: 2 }}>{r.nom_titulaire}</div>
+                      )}
                     </td>
                     <td style={{ padding: '14px 16px' }}>
                       <span style={{
@@ -225,38 +261,82 @@ export default function RetraitsPage() {
                       }}>
                         {STATUT_LABELS[r.statut] ?? r.statut}
                       </span>
+                      {r.statut === 'envoye' && r.preuve_url && (
+                        <div style={{ marginTop: 6 }}>
+                          <a href={r.preuve_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: '#1a3a6b', fontWeight: 600 }}>
+                            Voir la preuve
+                          </a>
+                        </div>
+                      )}
+                      {r.statut === 'rejete' && r.motif_rejet && (
+                        <div style={{ marginTop: 4, fontSize: 12, color: '#ef4444' }}>{r.motif_rejet}</div>
+                      )}
                     </td>
                     <td style={{ padding: '14px 16px', color: '#6b7280', fontSize: 12, whiteSpace: 'nowrap' }}>
                       {fmtDate(r.created_at)}
                     </td>
                     <td style={{ padding: '14px 16px' }}>
-                      {pending && !isRejecting && (
-                        <div style={{ display: 'flex', gap: 8 }}>
-                          <button
-                            onClick={() => valider(r.id)}
-                            disabled={isActing}
-                            style={{
-                              padding: '6px 14px', borderRadius: 8, border: 'none',
-                              background: '#10b981', color: '#fff', fontWeight: 600,
-                              fontSize: 13, cursor: isActing ? 'not-allowed' : 'pointer',
-                              opacity: isActing ? 0.7 : 1,
-                            }}
-                          >
-                            {isActing ? '…' : 'Valider'}
-                          </button>
-                          <button
-                            onClick={() => setRejectingId(r.id)}
-                            disabled={isActing}
-                            style={{
-                              padding: '6px 14px', borderRadius: 8, border: 'none',
-                              background: '#fee2e2', color: '#ef4444', fontWeight: 600,
-                              fontSize: 13, cursor: isActing ? 'not-allowed' : 'pointer',
-                            }}
-                          >
-                            Rejeter
-                          </button>
-                        </div>
+                      {!pending && (
+                        <span style={{ color: '#9ca3af', fontSize: 12 }}>—</span>
                       )}
+
+                      {pending && !isRejecting && !isSendingProof && (
+                        isManuel ? (
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            <button
+                              onClick={() => setSendingProofId(r.id)}
+                              disabled={isActing}
+                              style={{
+                                padding: '6px 14px', borderRadius: 8, border: 'none',
+                                background: '#10b981', color: '#fff', fontWeight: 600,
+                                fontSize: 13, cursor: isActing ? 'not-allowed' : 'pointer',
+                              }}
+                            >
+                              Marquer envoyé
+                            </button>
+                            <button
+                              onClick={() => setRejectingId(r.id)}
+                              disabled={isActing}
+                              style={{
+                                padding: '6px 14px', borderRadius: 8, border: 'none',
+                                background: '#fee2e2', color: '#ef4444', fontWeight: 600,
+                                fontSize: 13, cursor: isActing ? 'not-allowed' : 'pointer',
+                              }}
+                            >
+                              Rejeter
+                            </button>
+                          </div>
+                        ) : isSuperAdmin ? (
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            <button
+                              onClick={() => valider(r.id)}
+                              disabled={isActing}
+                              style={{
+                                padding: '6px 14px', borderRadius: 8, border: 'none',
+                                background: '#10b981', color: '#fff', fontWeight: 600,
+                                fontSize: 13, cursor: isActing ? 'not-allowed' : 'pointer',
+                                opacity: isActing ? 0.7 : 1,
+                              }}
+                            >
+                              {isActing ? '…' : 'Valider'}
+                            </button>
+                            <button
+                              onClick={() => setRejectingId(r.id)}
+                              disabled={isActing}
+                              style={{
+                                padding: '6px 14px', borderRadius: 8, border: 'none',
+                                background: '#fee2e2', color: '#ef4444', fontWeight: 600,
+                                fontSize: 13, cursor: isActing ? 'not-allowed' : 'pointer',
+                              }}
+                            >
+                              Rejeter
+                            </button>
+                          </div>
+                        ) : (
+                          <span style={{ color: '#9ca3af', fontSize: 12 }}>Réservé au Super Admin</span>
+                        )
+                      )}
+
                       {pending && isRejecting && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 200 }}>
                           <input
@@ -270,7 +350,7 @@ export default function RetraitsPage() {
                           />
                           <div style={{ display: 'flex', gap: 6 }}>
                             <button
-                              onClick={() => rejeter(r.id)}
+                              onClick={() => rejeter(r.id, isManuel)}
                               disabled={isActing}
                               style={{
                                 flex: 1, padding: '6px 0', borderRadius: 8, border: 'none',
@@ -293,8 +373,39 @@ export default function RetraitsPage() {
                           </div>
                         </div>
                       )}
-                      {!pending && (
-                        <span style={{ color: '#9ca3af', fontSize: 12 }}>—</span>
+
+                      {pending && isSendingProof && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 220 }}>
+                          <input
+                            type="file"
+                            accept="image/png,image/jpeg,image/webp"
+                            onChange={e => setProofFile(e.target.files?.[0] ?? null)}
+                            style={{ fontSize: 12 }}
+                          />
+                          <div style={{ display: 'flex', gap: 6 }}>
+                            <button
+                              onClick={() => confirmerEnvoiManuel(r.id)}
+                              disabled={isActing || !proofFile}
+                              style={{
+                                flex: 1, padding: '6px 0', borderRadius: 8, border: 'none',
+                                background: '#10b981', color: '#fff', fontWeight: 600,
+                                fontSize: 13, cursor: (isActing || !proofFile) ? 'not-allowed' : 'pointer',
+                                opacity: (isActing || !proofFile) ? 0.7 : 1,
+                              }}
+                            >
+                              {isActing ? '…' : 'Confirmer'}
+                            </button>
+                            <button
+                              onClick={() => { setSendingProofId(null); setProofFile(null); }}
+                              style={{
+                                padding: '6px 12px', borderRadius: 8, border: '1px solid #e5e7eb',
+                                background: '#fff', fontSize: 13, cursor: 'pointer',
+                              }}
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        </div>
                       )}
                     </td>
                   </tr>

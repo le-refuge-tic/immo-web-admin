@@ -506,12 +506,15 @@ export default function PublierBienPage() {
     : typeBien === 'maison' ? 'maison_individuelle'
     : typeBien
 
+  // Commission plateforme : 50% du loyer mensuel, uniquement pour les biens en location.
+  const commissionAgence = (!isTerrain && typeTransaction === 'location') ? (parsePrix(prix) ?? 0) * 0.5 : 0
+
   const montantBrut = (() => {
     const loyer  = parsePrix(prix) ?? 0
     const cEau   = parsePrix(cautionEau) ?? 0
     const cElec  = parsePrix(cautionElec) ?? 0
     const autres = autresFrais.reduce((a, f) => a + (parsePrix(f.prix) ?? 0), 0)
-    return loyer * (avanceMois + loyerPrepayeMois) + cEau + cElec + autres
+    return loyer * (avanceMois + loyerPrepayeMois) + cEau + cElec + autres + commissionAgence
   })()
 
   const STEP_LABELS = ['Type & Prix', 'Localisation', isTerrain ? 'Terrain' : isBoutique ? 'Boutique' : 'Confort', 'Honoraires', 'Photos']
@@ -635,6 +638,7 @@ export default function PublierBienPage() {
       a.avance_mois = avanceMois
       if (loyerPrepayeMois > 0) a.loyer_prepaye_mois = loyerPrepayeMois
       if (typeTransaction === 'location') a.echeance_mois = echeanceMois
+      if (typeTransaction === 'location') a.commission_agence = commissionAgence
       if (cEau  > 0) a.caution_eau  = cEau
       if (cElec > 0) a.caution_elec = cElec
       a.electricite = electricite
@@ -1570,6 +1574,7 @@ export default function PublierBienPage() {
                       ...(loyerPrepayeMois > 0 ? [`Loyer prépayé : ${loyerPrepayeMois} mois`] : []),
                       ...((parsePrix(cautionEau)  ?? 0) > 0 ? [`Caution eau : ${formatFcfa(parsePrix(cautionEau)  ?? 0)}`] : []),
                       ...((parsePrix(cautionElec) ?? 0) > 0 ? [`Caution électricité : ${formatFcfa(parsePrix(cautionElec) ?? 0)}`] : []),
+                      ...(commissionAgence > 0 ? [`Frais de commission (50% du loyer) : ${formatFcfa(commissionAgence)}`] : []),
                     ]} />
                     {montantBrut > 0 && (
                       <div style={{ borderRadius: 12, padding: '14px', marginBottom: 8, background: BLUE + '12', border: `1px solid ${BLUE}30` }}>

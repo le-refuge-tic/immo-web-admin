@@ -69,13 +69,24 @@ export default function SommesDisponiblesCard() {
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--c-text)' }}>{formatFcfa(r.montant)}</div>
                   <div style={{ fontSize: 11, color: 'var(--c-muted)' }}>{formatDate(r.created_at)}</div>
+                  {r.statut === 'rejete' && r.motif_rejet && (
+                    <div style={{ fontSize: 11, color: '#DC2626', marginTop: 2 }}>{r.motif_rejet}</div>
+                  )}
                 </div>
-                <span style={{
-                  fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999,
-                  color: STATUT_COLOR[r.statut], background: `${STATUT_COLOR[r.statut]}18`,
-                }}>
-                  {STATUT_LABEL[r.statut] ?? r.statut}
-                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                  {r.statut === 'envoye' && r.preuve_url && (
+                    <a href={r.preuve_url} target="_blank" rel="noopener noreferrer"
+                      style={{ fontSize: 11, fontWeight: 600, color: 'var(--c-blue)', textDecoration: 'none' }}>
+                      Voir la preuve
+                    </a>
+                  )}
+                  <span style={{
+                    fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999,
+                    color: STATUT_COLOR[r.statut], background: `${STATUT_COLOR[r.statut]}18`,
+                  }}>
+                    {STATUT_LABEL[r.statut] ?? r.statut}
+                  </span>
+                </div>
               </div>
             ))}
           </div>
