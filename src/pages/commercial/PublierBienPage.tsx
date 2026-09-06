@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { postBien } from '../../api/postBien'
 import { BENIN_LOCATION_DATA } from '../../data/beninLocations'
 import { getGeocoding } from '../../api/getGeocoding'
+import { getQuartiers } from '../../api/getQuartiers'
 
 // ─── Quartiers — même structure que immo-web-user ─────────────────────────────
 type Quartier = { nom: string; arrondissement: string; ville: string }
@@ -356,6 +357,7 @@ export default function PublierBienPage() {
   const [alentours, setAlentours]             = useState<string[]>([])
   const [alentoursAutre, setAlentoursAutre]   = useState('')
   const [disponibilite, setDisponibilite]     = useState<'immediate' | 'en_finition'>('immediate')
+  const [disponibleA, setDisponibleA]         = useState<string>('') // date YYYY-MM-DD si en_finition
   const [showMoreOptions, setShowMoreOptions] = useState(false)
 
   // Terrain
@@ -702,6 +704,7 @@ export default function PublierBienPage() {
           longitude: longitude ?? 2.4183,
         },
         amenites: buildAmenites(),
+        ...(disponibilite === 'en_finition' && disponibleA ? { disponible_a: disponibleA } : {}),
       }
 
       if (isTerrain && superficieM2 !== undefined) {
@@ -938,13 +941,23 @@ export default function PublierBienPage() {
                         <div style={{ position: 'fixed', top: dropdownRect.top, left: dropdownRect.left, width: dropdownRect.width, zIndex: 9999, background: '#fff', borderColor: 'var(--c-border)', border: '1px solid var(--c-border)', borderRadius: 12, maxHeight: 260, overflowY: 'auto' }}>
                           {filteredQuartiers.length === 0 ? (
                             quartierSearch.trim() ? (
-                              <button type="button" onMouseDown={() => selectQuartier(quartierSearch.trim(), null, null)}
-                                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', textAlign: 'left', fontSize: 14, fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-text)' }}>
-                                <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={BLUE} strokeWidth={2} style={{ flexShrink: 0 }}>
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                                <span style={{ color: BLUE }}>Utiliser « {quartierSearch.trim()} »</span>
+                              <button type="button" onMouseDown={() => {
+                                const nom = quartierSearch.trim()
+                                selectQuartier(nom, null, null)
+                                // Enregistre le quartier absent pour validation admin ultérieure (non bloquant).
+                                getQuartiers.proposer(nom, ville || undefined).catch(() => {})
+                              }}
+                                style={{ width: '100%', display: 'block', padding: '12px 16px', textAlign: 'left', fontSize: 14, fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-text)' }}>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                  <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={BLUE} strokeWidth={2} style={{ flexShrink: 0 }}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  </svg>
+                                  <span style={{ color: BLUE }}>Ajouter « {quartierSearch.trim()} »</span>
+                                </span>
+                                <span style={{ display: 'block', marginLeft: 26, fontSize: 11, fontWeight: 400, color: 'var(--c-muted)', marginTop: 2 }}>
+                                  Ce quartier sera enregistré et vérifié par un administrateur.
+                                </span>
                               </button>
                             ) : (
                               <p style={{ padding: '12px 16px', fontSize: 14, color: 'var(--c-muted)', margin: 0 }}>Commencez à taper…</p>
@@ -1205,6 +1218,19 @@ export default function PublierBienPage() {
                   <Chip label="Immédiate"             active={disponibilite === 'immediate'}   onClick={() => setDisponibilite('immediate')}   />
                   <Chip label="En finition / Bientôt" active={disponibilite === 'en_finition'} onClick={() => setDisponibilite('en_finition')} />
                 </div>
+                {disponibilite === 'en_finition' && (
+                  <div style={{ marginTop: 12 }}>
+                    <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 8, display: 'block', color: 'var(--c-muted)' }}>
+                      Disponible à partir du <span style={{ textTransform: 'none', letterSpacing: 0, fontWeight: 400 }}>(optionnel)</span>
+                    </label>
+                    <input type="date" value={disponibleA}
+                      min={new Date().toISOString().slice(0, 10)}
+                      onChange={e => setDisponibleA(e.target.value)}
+                      style={baseInput}
+                      onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
+                      onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
+                  </div>
+                )}
               </Card>
             </div>
           )}
@@ -1496,6 +1522,19 @@ export default function PublierBienPage() {
                   <Chip label="Immédiate"             active={disponibilite === 'immediate'}   onClick={() => setDisponibilite('immediate')}   />
                   <Chip label="En finition / Bientôt" active={disponibilite === 'en_finition'} onClick={() => setDisponibilite('en_finition')} />
                 </div>
+                {disponibilite === 'en_finition' && (
+                  <div style={{ marginTop: 12 }}>
+                    <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 8, display: 'block', color: 'var(--c-muted)' }}>
+                      Disponible à partir du <span style={{ textTransform: 'none', letterSpacing: 0, fontWeight: 400 }}>(optionnel)</span>
+                    </label>
+                    <input type="date" value={disponibleA}
+                      min={new Date().toISOString().slice(0, 10)}
+                      onChange={e => setDisponibleA(e.target.value)}
+                      style={baseInput}
+                      onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
+                      onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
+                  </div>
+                )}
               </Card>
             </div>
           )}

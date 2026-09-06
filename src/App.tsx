@@ -22,6 +22,7 @@ import FinancesPage  from './pages/finances/FinancesPage';
 import FeedbacksPage from './pages/feedbacks/FeedbacksPage';
 import GestionLiaisonsPage from './pages/gestion/GestionLiaisonsPage';
 import RetraitsPage        from './pages/retraits/RetraitsPage';
+import QuartiersPage       from './pages/quartiers/QuartiersPage';
 import MesAnnoncesPage         from './pages/commercial/MesAnnoncesPage';
 import MesVisitesPage          from './pages/commercial/MesVisitesPage';
 import PublierBienPage         from './pages/commercial/PublierBienPage';
@@ -69,6 +70,7 @@ export default function App() {
             <Route path="reclamations" element={<AdminRoute><PlaintesPage /></AdminRoute>} />
             <Route path="liaisons"     element={<AdminRoute><GestionLiaisonsPage /></AdminRoute>} />
             <Route path="retraits"     element={<AdminRoute><RetraitsPage /></AdminRoute>} />
+            <Route path="quartiers"    element={<AdminRoute><QuartiersPage /></AdminRoute>} />
 
             {/* Configuration */}
             <Route path="configuration">
