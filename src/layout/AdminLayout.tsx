@@ -24,7 +24,9 @@ export default function AdminLayout() {
 
   return (
     <div className="immo-app">
-      {passwordChangeRequired ? <ChangePasswordRequiredModal /> : phoneRequired && <PhoneRequiredModal />}
+      {/* 1re connexion : d'abord vérifier le téléphone (numéro + OTP SMS),
+          puis SEULEMENT après, forcer le changement de mot de passe. */}
+      {phoneRequired ? <PhoneRequiredModal /> : passwordChangeRequired && <ChangePasswordRequiredModal />}
       <Topbar
         minimized={minimized}
         mobileOpen={mobileOpen}
