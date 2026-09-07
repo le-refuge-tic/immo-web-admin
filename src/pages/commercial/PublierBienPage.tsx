@@ -36,17 +36,17 @@ const TYPES_BIEN = [
 ]
 
 const SANITAIRE_OPTS = [
-  { value: 'interieur',      label: 'Sanitaire',        sub: 'Douche intérieure au logement'              },
-  { value: 'semi_interieur', label: 'Semi sanitaire',   sub: 'Douche partiellement intérieure / partagée' },
-  { value: 'cour',           label: 'Non sanitaire',    sub: 'Douche extérieure / commune'                },
-  { value: 'autre',          label: 'Autre à préciser', sub: ''                                           },
+  { value: 'interieur',      label: 'Sanitaire',        sub: '' },
+  { value: 'semi_interieur', label: 'Semi sanitaire',   sub: '' },
+  { value: 'cour',           label: 'Non sanitaire',    sub: '' },
+  { value: 'autre',          label: 'Autre à préciser', sub: '' },
 ]
 
 const FINITION_OPTS = [
   { value: 'ordinaire',     label: 'Ordinaire',           sub: '' },
-  { value: 'staffe_carele', label: 'Staffé',              sub: 'Staff complet moderne et carreaux récents partout.' },
-  { value: 'haut_standing', label: 'Haut Standing / VIP', sub: 'Baies vitrées, douche moderne, climatisation.' },
-  { value: 'villa',         label: 'Villa',               sub: 'Clôture, espace extérieur, standing élevé.' },
+  { value: 'staffe_carele', label: 'Staffé',              sub: '' },
+  { value: 'haut_standing', label: 'Haut Standing / VIP', sub: '' },
+  { value: 'villa',         label: 'Villa',               sub: '' },
 ]
 
 const CUISINE_OPTS = [
@@ -581,7 +581,6 @@ export default function PublierBienPage() {
       if (isMeuble && !hasAtLeastOneTarif) { setError('Renseignez au moins un tarif'); return }
     }
     if (step === 1 && !quartier.trim()) { setError('Veuillez sélectionner un quartier'); return }
-    if (step === 1 && !adressePositionAJour) { setError('Veuillez vérifier l\'adresse pour obtenir sa position'); return }
     if (step === 2 && isTerrain && !titreTerrain.trim()) { setError('Veuillez donner un nom à ce bien'); return }
     if (step === 2 && isTerrain && !superficieM2) { setError('Veuillez indiquer la superficie du terrain'); return }
     setError('')
@@ -988,7 +987,7 @@ export default function PublierBienPage() {
                 </div>
                 <div>
                   <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 8, display: 'block', color: 'var(--c-muted)' }}>
-                    Position GPS
+                    Position GPS <span style={{ textTransform: 'none', letterSpacing: 0, fontWeight: 400 }}>(optionnel)</span>
                   </label>
                   <button
                     type="button"
@@ -1021,11 +1020,13 @@ export default function PublierBienPage() {
                     <div style={{ marginTop: 8, fontSize: 12, color: 'var(--c-muted)' }}>{adresseNormalisee}</div>
                   )}
                   {geocodeError && (
-                    <div style={{ marginTop: 8, fontSize: 12, color: '#DC2626' }}>{geocodeError}</div>
+                    <div style={{ marginTop: 8, fontSize: 12, color: '#DC2626' }}>
+                      {geocodeError} Vous pouvez continuer sans — la position sera approximative.
+                    </div>
                   )}
                   {!adressePositionAJour && !geocodeError && quartier.trim() && (
                     <div style={{ marginTop: 8, fontSize: 12, color: 'var(--c-muted)' }}>
-                      Cliquez pour convertir l'adresse en coordonnées GPS.
+                      Cliquez pour convertir l'adresse en coordonnées GPS précises (facultatif).
                     </div>
                   )}
                 </div>
