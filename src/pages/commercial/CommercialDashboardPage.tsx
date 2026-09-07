@@ -10,7 +10,7 @@ import Skeleton from '../../components/Skeleton';
 
 const TYPE_LABEL: Record<string, string> = {
   chambre_salon: 'Chambre-Salon', entree_coucher: 'Entrée-Coucher',
-  appartement: 'Appartement', villa: 'Villa',
+  appartement: 'Appartement', villa: 'Villa', duplex: 'Duplex / Grande propriété',
   maison_individuelle: 'Maison', boutique: 'Boutique / Local',
   terrain: 'Terrain', maison: 'Maison', appart_vide: 'Appartement',
   appart_meuble: 'Appart. meublé', guesthouse: 'Guesthouse',

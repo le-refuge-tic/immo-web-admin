@@ -515,7 +515,7 @@ const TYPE_LABEL_MAP: Record<string, string> = {
   maison: 'Maison', appart_vide: 'Appartement', appart_meuble: 'Appart. meublé',
   guesthouse: 'Guesthouse', terrain: 'Terrain',
   chambre_salon: 'Chambre-Salon', entree_coucher: 'Entrée-Coucher',
-  villa: 'Villa', maison_individuelle: 'Maison indiv.', appartement: 'Appartement',
+  villa: 'Villa', duplex: 'Duplex / Grande prop.', maison_individuelle: 'Maison indiv.', appartement: 'Appartement',
 };
 const MOD_LABELS: Record<string, { label: string; color: string; bg: string }> = {
   en_attente:   { label: 'En attente',  color: '#D97706', bg: '#FFFBEB' },

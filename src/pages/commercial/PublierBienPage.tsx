@@ -31,6 +31,7 @@ const TYPES_BIEN = [
   { key: 'chambre_salon',  label: 'Chambre-Salon'  },
   { key: 'appartement',   label: 'Appartement'    },
   { key: 'villa',         label: 'Villa'           },
+  { key: 'duplex',        label: 'Duplex / Grande propriété' },
   { key: 'maison',        label: 'Maison'          },
   { key: 'terrain',       label: 'Terrain / Parcelle' },
   { key: 'boutique',      label: 'Boutique'        },
@@ -313,6 +314,7 @@ export default function PublierBienPage() {
   const [ville, setVille]                         = useState('')
   const [quartier, setQuartier]                   = useState('')
   const [arrondissement, setArrondissement]       = useState('')
+  const [quartierManuel, setQuartierManuel]       = useState(false) // quartier ajouté à la main (arrondissement à saisir)
   const [indicationAdresse, setIndicationAdresse] = useState('')
   const [quartierSearch, setQuartierSearch]       = useState('')
   const [quartierInputFocused, setQuartierInputFocused] = useState(false)
@@ -489,9 +491,9 @@ export default function PublierBienPage() {
   const isTerrain      = typeBien === 'terrain'
   const isBoutique     = typeBien === 'boutique'
   const isSmallUnit    = typeBien === 'entree_coucher' || typeBien === 'chambre_salon'
-  const peutEtreMeuble = typeBien === 'appartement' || typeBien === 'villa' || typeBien === 'maison'
+  const peutEtreMeuble = typeBien === 'appartement' || typeBien === 'villa' || typeBien === 'duplex' || typeBien === 'maison'
   const isMeuble       = peutEtreMeuble && estMeuble
-  const showPieces     = ['appartement', 'villa', 'maison', 'chambre_salon'].includes(typeBien)
+  const showPieces     = ['appartement', 'villa', 'duplex', 'maison', 'chambre_salon'].includes(typeBien)
   const hasAtLeastOneTarif = !!(parsePrix(prixLongSejour) || parsePrix(prixSejourRestreint) || parsePrix(prixHeure) || tarifsAutres.some(t => parsePrix(t.prix)))
 
   const superficieM2 = (() => {
@@ -501,7 +503,7 @@ export default function PublierBienPage() {
   })()
 
   const typeBackend = isTerrain ? 'terrain'
-    : (typeBien === 'villa' || typeBien === 'maison' || isBoutique) ? 'maison'
+    : (typeBien === 'villa' || typeBien === 'duplex' || typeBien === 'maison' || isBoutique) ? 'maison'
     : isMeuble ? 'appart_meuble' : 'appart_vide'
 
   const sousType = typeBien === 'appartement' ? (isMeuble ? 'appart_meuble' : 'appartement')
@@ -525,12 +527,13 @@ export default function PublierBienPage() {
     ? QUARTIERS.filter(q => normalizeStr(q.nom).includes(normalizeStr(quartierSearch))).slice(0, 60)
     : QUARTIERS.slice(0, 40)
 
-  const selectQuartier = (name: string, arr: string | null, vi: string | null) => {
+  const selectQuartier = (name: string, arr: string | null, vi: string | null, manuel = false) => {
     setQuartier(name); setArrondissement(arr ?? ''); setVille(vi ?? '')
+    setQuartierManuel(manuel)
     setQuartierSearch(name); setQuartierInputFocused(false)
   }
   const clearQuartier = () => {
-    setQuartier(''); setArrondissement(''); setVille(''); setQuartierSearch('')
+    setQuartier(''); setArrondissement(''); setVille(''); setQuartierSearch(''); setQuartierManuel(false)
     setLatitude(null); setLongitude(null); setAdresseNormalisee(''); setAdresseVerifiee(''); setGeocodeError('')
   }
 
@@ -728,6 +731,11 @@ export default function PublierBienPage() {
       }
       if (video && bien.id) {
         try { await postBien.uploadVideo(bien.id, video) } catch (_) {}
+      }
+
+      // Enregistre le quartier ajouté manuellement (avec arrondissement + ville) pour validation admin.
+      if (quartierManuel && quartier.trim()) {
+        getQuartiers.proposer(quartier.trim(), ville || undefined, arrondissement || undefined).catch(() => {})
       }
 
       sessionStorage.removeItem('proprietaire_info')
@@ -942,9 +950,7 @@ export default function PublierBienPage() {
                             quartierSearch.trim() ? (
                               <button type="button" onMouseDown={() => {
                                 const nom = quartierSearch.trim()
-                                selectQuartier(nom, null, null)
-                                // Enregistre le quartier absent pour validation admin ultérieure (non bloquant).
-                                getQuartiers.proposer(nom, ville || undefined).catch(() => {})
+                                selectQuartier(nom, null, null, true)
                               }}
                                 style={{ width: '100%', display: 'block', padding: '12px 16px', textAlign: 'left', fontSize: 14, fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-text)' }}>
                                 <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -980,7 +986,31 @@ export default function PublierBienPage() {
                     </div>
                   )}
                 </div>
-                {quartier && arrondissement && (
+                {quartier && quartierManuel && (
+                  <>
+                    <div>
+                      <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 8, display: 'block', color: 'var(--c-muted)' }}>
+                        Arrondissement <span style={{ textTransform: 'none', letterSpacing: 0, fontWeight: 400 }}>(à préciser pour ce nouveau quartier)</span>
+                      </label>
+                      <input value={arrondissement} onChange={e => setArrondissement(e.target.value)}
+                        placeholder="Ex: 12e arrondissement"
+                        style={baseInput}
+                        onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
+                        onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 8, display: 'block', color: 'var(--c-muted)' }}>
+                        Ville <span style={{ textTransform: 'none', letterSpacing: 0, fontWeight: 400 }}>(optionnel)</span>
+                      </label>
+                      <input value={ville} onChange={e => setVille(e.target.value)}
+                        placeholder="Ex: Cotonou"
+                        style={baseInput}
+                        onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
+                        onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
+                    </div>
+                  </>
+                )}
+                {quartier && !quartierManuel && arrondissement && (
                   <div>
                     <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 8, display: 'block', color: 'var(--c-muted)' }}>Arrondissement</label>
                     <div style={{ padding: '12px 16px', borderRadius: 12, border: '1px solid var(--c-border)', fontSize: 14, fontWeight: 600, background: 'var(--c-bg)', color: 'var(--c-muted)' }}>
