@@ -26,8 +26,9 @@ import QuartiersPage       from './pages/quartiers/QuartiersPage';
 import MesAnnoncesPage         from './pages/commercial/MesAnnoncesPage';
 import MesVisitesPage          from './pages/commercial/MesVisitesPage';
 import PublierBienPage         from './pages/commercial/PublierBienPage';
-import CommercialDashboardPage from './pages/commercial/CommercialDashboardPage';
-import MesClientsPage          from './pages/commercial/MesClientsPage';
+import CommercialDashboardPage    from './pages/commercial/CommercialDashboardPage';
+import CommercialPortefeuillePage from './pages/commercial/CommercialPortefeuillePage';
+import MesClientsPage             from './pages/commercial/MesClientsPage';
 import SupervisionPage         from './pages/supervision/SupervisionPage';
 import PlaintesPage            from './pages/plaintes/PlaintesPage';
 
@@ -59,7 +60,8 @@ export default function App() {
             <Route path="commercial-dashboard" element={<CommercialDashboardPage />} />
             <Route path="mes-annonces"         element={<MesAnnoncesPage />} />
             <Route path="mes-visites"          element={<MesVisitesPage />} />
-            <Route path="mes-clients"          element={<MesClientsPage />} />
+            <Route path="mes-clients"              element={<MesClientsPage />} />
+            <Route path="portefeuille-commercial" element={<CommercialPortefeuillePage />} />
             <Route path="publier-bien"         element={<PublierBienPage />} />
             <Route path="messages"     element={<MessagesPage />} />
             <Route path="supervision"  element={<AdminRoute><SupervisionPage /></AdminRoute>} />

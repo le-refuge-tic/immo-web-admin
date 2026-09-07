@@ -4,7 +4,6 @@ import { getMesBiens } from '../../api/getMesBiens';
 import { getMesVisites } from '../../api/getMesVisites';
 import { getPortefeuille, type Portefeuille } from '../../api/getPortefeuille';
 import PortefeuilleCard from './PortefeuilleCard';
-import SommesDisponiblesCard from './SommesDisponiblesCard';
 import HistoriquePortefeuilleCard from './HistoriquePortefeuilleCard';
 import BiensMap from './BiensMap';
 import Skeleton from '../../components/Skeleton';
@@ -168,10 +167,21 @@ export default function CommercialDashboardPage() {
         ))}
       </div>
 
-      {/* ── Portefeuille : sommes disponibles + historique ── */}
+      {/* ── Historique portefeuille (4 derniers) ── */}
       <div className="content-grid-2">
-        <SommesDisponiblesCard />
         <HistoriquePortefeuilleCard />
+        <div className="immo-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, minHeight: 120 }}>
+          <div style={{ fontSize: 13, color: 'var(--c-muted)', textAlign: 'center' }}>
+            Gérez votre solde et vos demandes de retrait sur la page dédiée.
+          </div>
+          <button className="btn-submit" onClick={() => navigate('/portefeuille-commercial')}
+            style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+            </svg>
+            Mon portefeuille
+          </button>
+        </div>
       </div>
 
       {/* ── Géolocalisation de mes biens ── */}
