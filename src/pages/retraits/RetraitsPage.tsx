@@ -211,7 +211,7 @@ export default function RetraitsPage() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
             <thead>
               <tr style={{ background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
-                {['Bénéficiaire', 'Montant', 'Wallet', 'Numéro / Titulaire', 'Statut', 'Date', 'Actions'].map(h => (
+                {['Bénéficiaire', 'Montant', 'Wallet', 'Numéro / Titulaire', 'Statut', 'Date', 'Traité par', 'Actions'].map(h => (
                   <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 600, color: '#374151', fontSize: 12 }}>
                     {h}
                   </th>
@@ -274,6 +274,21 @@ export default function RetraitsPage() {
                     </td>
                     <td style={{ padding: '14px 16px', color: '#6b7280', fontSize: 12, whiteSpace: 'nowrap' }}>
                       {fmtDate(r.created_at)}
+                    </td>
+                    <td style={{ padding: '14px 16px', fontSize: 12, whiteSpace: 'nowrap' }}>
+                      {r.validateur ? (
+                        <>
+                          <div style={{ fontWeight: 600, color: '#374151' }}>
+                            {[r.validateur.prenom, r.validateur.nom].filter(Boolean).join(' ')}
+                          </div>
+                          <div style={{ color: '#9ca3af' }}>
+                            {r.validateur.role === 'super_admin' ? 'Super Admin' : 'Admin'}
+                            {r.valide_le ? ` · ${fmtDate(r.valide_le)}` : ''}
+                          </div>
+                        </>
+                      ) : (
+                        <span style={{ color: '#9ca3af' }}>—</span>
+                      )}
                     </td>
                     <td style={{ padding: '14px 16px' }}>
                       {!pending && (
