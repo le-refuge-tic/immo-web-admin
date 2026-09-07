@@ -12,10 +12,13 @@ export function usePhoneRequired() {
 
 type Step = 'phone' | 'otp';
 
+const PHONE_PREFIX = '229';
+
 export default function PhoneRequiredModal() {
   const { refreshUser } = useAuth();
   const [step, setStep]               = useState<Step>('phone');
-  const [phone, setPhone]             = useState('');
+  const [localNumber, setLocalNumber] = useState('');
+  const phone = PHONE_PREFIX + localNumber.replace(/\D/g, '');
   const [sessionToken, setSessionToken] = useState('');
   const [otp, setOtp]                 = useState('');
   const [loading, setLoading]         = useState(false);
@@ -32,15 +35,14 @@ export default function PhoneRequiredModal() {
 
   const handleSendOtp = async (e: FormEvent) => {
     e.preventDefault();
-    const clean = phone.trim();
-    if (clean.replace(/\D/g, '').length < 8) {
-      setError('Numéro invalide — au moins 8 chiffres requis.');
+    if (localNumber.replace(/\D/g, '').length !== 10) {
+      setError('Numéro invalide — 10 chiffres requis (ex: 01XXXXXXXX).');
       return;
     }
     setLoading(true);
     setError('');
     try {
-      const res = await patchAuth.sendPhoneOtp(clean);
+      const res = await patchAuth.sendPhoneOtp(phone);
       setSessionToken(res.session_token);
       setStep('otp');
       startCountdown();
@@ -138,20 +140,31 @@ export default function PhoneRequiredModal() {
             <form onSubmit={handleSendOtp}>
               <div className="immo-form-field" style={{ marginBottom: 16 }}>
                 <label className="immo-form-label" style={{ color: '#0F172A' }}>Numéro de téléphone *</label>
-                <input
-                  className="immo-form-input"
-                  type="tel"
-                  placeholder="+229 XX XX XX XX"
-                  value={phone}
-                  onChange={e => { setPhone(e.target.value); setError(''); }}
-                  autoFocus
-                  disabled={loading}
-                  required
-                  style={{ background: '#F8FAFC', color: '#0F172A' }}
-                />
+                <div style={{ display: 'flex', alignItems: 'stretch', gap: 0 }}>
+                  <span style={{
+                    display: 'flex', alignItems: 'center', padding: '0 12px',
+                    background: '#F1F5F9', border: '1px solid var(--c-border)', borderRight: 'none',
+                    borderRadius: '10px 0 0 10px', color: '#0F172A', fontSize: 14, fontWeight: 600,
+                  }}>
+                    +229
+                  </span>
+                  <input
+                    className="immo-form-input"
+                    type="tel"
+                    inputMode="numeric"
+                    placeholder="01XXXXXXXX"
+                    maxLength={10}
+                    value={localNumber}
+                    onChange={e => { setLocalNumber(e.target.value.replace(/\D/g, '').slice(0, 10)); setError(''); }}
+                    autoFocus
+                    disabled={loading}
+                    required
+                    style={{ background: '#F8FAFC', color: '#0F172A', borderRadius: '0 10px 10px 0', flex: 1 }}
+                  />
+                </div>
               </div>
               {error && <ErrorBox message={error} />}
-              <SubmitBtn loading={loading} disabled={!phone.trim()}>
+              <SubmitBtn loading={loading} disabled={localNumber.replace(/\D/g, '').length !== 10}>
                 Envoyer le code
               </SubmitBtn>
             </form>
@@ -162,7 +175,7 @@ export default function PhoneRequiredModal() {
               Vérifiez votre numéro
             </h2>
             <p style={{ fontSize: 13, color: '#374151', lineHeight: 1.6, marginBottom: 24 }}>
-              Entrez le code à 6 chiffres envoyé au <strong style={{ color: '#0F172A' }}>{phone}</strong>.
+              Entrez le code à 6 chiffres envoyé au <strong style={{ color: '#0F172A' }}>+{phone}</strong>.
               <button
                 type="button"
                 onClick={() => { setStep('phone'); setError(''); setOtp(''); }}
