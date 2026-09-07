@@ -13,9 +13,14 @@ export function AuthProvider({ children }: { children: any }) {
     if (!token) { setLoading(false); return; }
     getAuth.profile()
       .then(setUser)
-      .catch(() => {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
+      .catch((err: any) => {
+        // Ne supprimer le token que si le serveur confirme qu'il est invalide (401/403).
+        // Une erreur réseau (Render endormi, timeout) ne doit pas déconnecter l'utilisateur.
+        const status = err?.response?.status;
+        if (status === 401 || status === 403) {
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
+        }
       })
       .finally(() => setLoading(false));
   }, []);
@@ -36,7 +41,7 @@ export function AuthProvider({ children }: { children: any }) {
   };
 
   const refreshUser = async () => {
-    const profile = await getAuth.profile();
+    const profile = await getAuth.profile(); // peut lever — l'appelant doit catcher
     setUser(profile);
   };
 
