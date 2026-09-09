@@ -7,6 +7,12 @@ export const supervisionApi = {
   getBiens: (commercialId: number) =>
     axios.get(`${BASE}/admin/commerciaux/${commercialId}/biens`, auth()).then(r => r.data),
 
+  getCompteurs: (commercialId: number) =>
+    axios.get(`${BASE}/admin/commerciaux/${commercialId}/compteurs`, auth()).then(r => r.data),
+
+  getPerformanceHebdo: (commercialId: number, semaines = 8) =>
+    axios.get(`${BASE}/admin/commerciaux/${commercialId}/performance-hebdo`, { ...auth(), params: { semaines } }).then(r => r.data),
+
   getConversations: (commercialId: number) =>
     axios.get(`${BASE}/admin/commerciaux/${commercialId}/conversations`, auth()).then(r => r.data),
 

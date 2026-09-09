@@ -524,10 +524,22 @@ const MOD_LABELS: Record<string, { label: string; color: string; bg: string }> =
   conditionnel: { label: 'Conditionnel',color: '#7C3AED', bg: '#F5F3FF' },
 };
 
+function fmtSemaine(raw: string) {
+  const d = new Date(raw);
+  if (isNaN(d.getTime())) return raw.slice(0, 10);
+  return `Sem. du ${d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+}
+function fmtFcfa(n: number) {
+  return `${new Intl.NumberFormat('fr-FR').format(Number(n) || 0)} FCFA`;
+}
+
 function SupervisionModal({ commercial, onClose }: { commercial: any; onClose: () => void }) {
-  const [tab, setTab]           = useState<'conversations' | 'biens'>('conversations');
+  const [tab, setTab]           = useState<'performance' | 'conversations' | 'biens'>('performance');
   const [convs, setConvs]       = useState<any[]>([]);
   const [biens, setBiens]       = useState<any[]>([]);
+  const [compteurs, setCompteurs] = useState<any | null>(null);
+  const [perfHebdo, setPerfHebdo] = useState<any[]>([]);
+  const [loadingPerf, setLoadingPerf]   = useState(false);
   const [loadingConvs, setLoadingConvs] = useState(false);
   const [loadingBiens, setLoadingBiens] = useState(false);
   const [openConv, setOpenConv] = useState<any | null>(null);
@@ -543,6 +555,17 @@ function SupervisionModal({ commercial, onClose }: { commercial: any; onClose: (
       .then(d => setConvs(Array.isArray(d) ? d : []))
       .catch(() => setConvs([]))
       .finally(() => setLoadingConvs(false));
+  }, [commercial.id]);
+
+  useEffect(() => {
+    setLoadingPerf(true);
+    Promise.all([
+      supervisionApi.getCompteurs(commercial.id).catch(() => null),
+      supervisionApi.getPerformanceHebdo(commercial.id, 8).catch(() => []),
+    ]).then(([c, p]) => {
+      setCompteurs(c);
+      setPerfHebdo(Array.isArray(p) ? p : []);
+    }).finally(() => setLoadingPerf(false));
   }, [commercial.id]);
 
   useEffect(() => {
@@ -604,7 +627,7 @@ function SupervisionModal({ commercial, onClose }: { commercial: any; onClose: (
 
         {/* Tabs */}
         <div style={{ display: 'flex', borderBottom: '1px solid var(--c-border)', flexShrink: 0 }}>
-          {([['conversations', 'Conversations'], ['biens', 'Biens']] as const).map(([key, label]) => (
+          {([['performance', 'Performance'], ['conversations', 'Conversations'], ['biens', 'Biens']] as const).map(([key, label]) => (
             <button key={key} onClick={() => { setTab(key); setOpenConv(null); }} style={{
               padding: '10px 20px', border: 'none', background: 'none', cursor: 'pointer',
               fontSize: 13, fontWeight: 600,
@@ -619,6 +642,66 @@ function SupervisionModal({ commercial, onClose }: { commercial: any; onClose: (
 
         {/* Body */}
         <div style={{ flex: 1, overflow: 'hidden', display: 'flex' }}>
+          {tab === 'performance' && (
+            <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px' }}>
+              {loadingPerf ? (
+                <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
+                  <span style={{ width: 26, height: 26, border: '3px solid var(--c-border)', borderTopColor: 'var(--c-blue)', borderRadius: '50%', animation: 'spin 0.8s linear infinite', display: 'block' }} />
+                </div>
+              ) : (
+                <>
+                  {/* Compteurs */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
+                    {[
+                      { label: 'Biens publiés', value: compteurs?.total_publies ?? 0, color: '#7C3AED' },
+                      { label: 'En vérification', value: compteurs?.en_verification ?? 0, color: '#D97706' },
+                      { label: 'Validés', value: compteurs?.valides ?? 0, color: '#16A34A' },
+                      { label: 'Validés cette semaine', value: compteurs?.valides_semaine ?? 0, color: '#2563EB' },
+                    ].map(c => (
+                      <div key={c.label} style={{ background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 10, padding: '12px 14px' }}>
+                        <div style={{ fontSize: 24, fontWeight: 800, color: c.color }}>{c.value}</div>
+                        <div style={{ fontSize: 11, color: 'var(--c-muted)', marginTop: 2 }}>{c.label}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Historique hebdomadaire */}
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-text)', marginBottom: 10 }}>
+                    Historique hebdomadaire des performances
+                  </div>
+                  {perfHebdo.length === 0 ? (
+                    <div style={{ padding: '24px 0', textAlign: 'center', color: 'var(--c-muted)', fontSize: 13 }}>
+                      Aucune performance enregistrée sur les 8 dernières semaines.
+                    </div>
+                  ) : (
+                    <div style={{ border: '1px solid var(--c-border)', borderRadius: 10, overflow: 'hidden' }}>
+                      {perfHebdo.map((s: any, i: number) => (
+                        <div key={s.semaine_debut} style={{
+                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                          padding: '10px 14px', gap: 10,
+                          borderTop: i === 0 ? 'none' : '1px solid var(--c-border)',
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                            <span style={{ fontSize: 12, color: 'var(--c-text)', fontWeight: 600 }}>{fmtSemaine(s.semaine_debut)}</span>
+                            <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, background: '#F5F3FF', color: '#7C3AED', border: '1px solid #DDD6FE' }}>
+                              {s.nb_biens_valides} bien{s.nb_biens_valides !== 1 ? 's' : ''}
+                            </span>
+                            {s.palier_atteint && (
+                              <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, background: '#F0FDF4', color: '#16A34A', border: '1px solid #BBF7D0', fontWeight: 700 }}>
+                                Palier 20
+                              </span>
+                            )}
+                          </div>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-text)', flexShrink: 0 }}>{fmtFcfa(s.montant)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
           {tab === 'conversations' && !openConv && (
             <div style={{ flex: 1, overflowY: 'auto', padding: '8px 0' }}>
               {loadingConvs ? (
