@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getWallet, type WalletTransaction } from '../../api/getWallet';
 
 function formatFcfa(v: number) {
@@ -9,6 +10,7 @@ function formatDate(iso: string) {
 }
 
 export default function HistoriquePortefeuilleCard() {
+  const navigate = useNavigate();
   const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -20,11 +22,16 @@ export default function HistoriquePortefeuilleCard() {
   }, []);
 
   const credits = transactions.filter(t => t.type === 'depot');
+  const recent = credits.slice(0, 4);
 
   return (
     <div className="immo-card">
       <div className="section-header">
         <span className="section-title">Performance & historique</span>
+        <button onClick={() => navigate('/portefeuille-commercial')}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 700, color: 'var(--c-blue)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+          VOIR TOUT
+        </button>
       </div>
 
       {loading ? (
@@ -35,7 +42,7 @@ export default function HistoriquePortefeuilleCard() {
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          {credits.map((t, i) => {
+          {recent.map((t, i) => {
             const isBonus = t.metadata?.type === 'bonus_admin';
             return (
               <div key={t.id} style={{
@@ -56,6 +63,12 @@ export default function HistoriquePortefeuilleCard() {
               </div>
             );
           })}
+          {credits.length > 4 && (
+            <button onClick={() => navigate('/portefeuille-commercial')}
+              style={{ marginTop: 10, padding: '8px 0', background: 'none', border: '1px solid var(--c-border)', borderRadius: 8, cursor: 'pointer', fontSize: 12, fontWeight: 600, color: 'var(--c-blue)', width: '100%' }}>
+              Voir tout l'historique ({credits.length})
+            </button>
+          )}
         </div>
       )}
     </div>

@@ -63,10 +63,16 @@ export default function PhoneRequiredModal() {
     setError('');
     try {
       await patchAuth.verifyPhoneOtp(sessionToken, otp, phone.trim());
-      await refreshUser();
     } catch (err: any) {
       setError(err?.response?.data?.message ?? 'Code incorrect ou expiré.');
       setLoading(false);
+      return;
+    }
+    try {
+      await refreshUser();
+    } catch {
+      // refreshUser a planté (réseau flash) — on recharge la page pour récupérer le profil à jour
+      window.location.reload();
     }
   };
 

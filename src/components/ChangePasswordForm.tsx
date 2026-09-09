@@ -6,6 +6,59 @@ type Props = {
   submitLabel?: string;
 };
 
+function EyeIcon({ open }: { open: boolean }) {
+  return open ? (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+      <circle cx="12" cy="12" r="3"/>
+    </svg>
+  ) : (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+      <line x1="1" y1="1" x2="23" y2="23"/>
+    </svg>
+  );
+}
+
+function PasswordField({
+  label, value, onChange, placeholder, disabled, autoFocus,
+}: {
+  label: string; value: string; onChange: (v: string) => void;
+  placeholder?: string; disabled?: boolean; autoFocus?: boolean;
+}) {
+  const [show, setShow] = useState(false);
+  return (
+    <div style={{ position: 'relative' }}>
+      <input
+        className="immo-form-input"
+        type={show ? 'text' : 'password'}
+        placeholder={placeholder}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        autoFocus={autoFocus}
+        disabled={disabled}
+        required
+        style={{ background: '#F8FAFC', color: '#0F172A', paddingRight: 40 }}
+        aria-label={label}
+      />
+      <button
+        type="button"
+        onClick={() => setShow(s => !s)}
+        tabIndex={-1}
+        style={{
+          position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
+          background: 'none', border: 'none', cursor: 'pointer',
+          color: '#6B7280', padding: 2, display: 'flex', alignItems: 'center',
+        }}
+        aria-label={show ? 'Masquer' : 'Afficher'}
+      >
+        <EyeIcon open={show} />
+      </button>
+    </div>
+  );
+}
+
 export default function ChangePasswordForm({ onSuccess, submitLabel = 'Valider le nouveau mot de passe' }: Props) {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword]         = useState('');
@@ -35,55 +88,28 @@ export default function ChangePasswordForm({ onSuccess, submitLabel = 'Valider l
     <form onSubmit={handleSubmit}>
       <div className="immo-form-field" style={{ marginBottom: 16 }}>
         <label className="immo-form-label" style={{ color: '#0F172A' }}>Mot de passe actuel *</label>
-        <input
-          className="immo-form-input"
-          type="password"
-          value={currentPassword}
-          onChange={e => { setCurrentPassword(e.target.value); setError(''); }}
-          autoFocus
-          disabled={loading}
-          required
-          style={{ background: '#F8FAFC', color: '#0F172A' }}
-        />
+        <PasswordField label="Mot de passe actuel" value={currentPassword}
+          onChange={v => { setCurrentPassword(v); setError(''); }} autoFocus disabled={loading} />
       </div>
+
       <div className="immo-form-field" style={{ marginBottom: 16 }}>
         <label className="immo-form-label" style={{ color: '#0F172A' }}>Nouveau mot de passe *</label>
-        <input
-          className="immo-form-input"
-          type="password"
-          placeholder="8 caractères minimum"
-          value={newPassword}
-          onChange={e => { setNewPassword(e.target.value); setError(''); }}
-          disabled={loading}
-          required
-          style={{ background: '#F8FAFC', color: '#0F172A' }}
-        />
+        <PasswordField label="Nouveau mot de passe" value={newPassword} placeholder="8 caractères minimum"
+          onChange={v => { setNewPassword(v); setError(''); }} disabled={loading} />
         {tooShort && (
-          <div style={{ fontSize: 11, color: '#D97706', marginTop: 4 }}>
-            8 caractères minimum requis.
-          </div>
+          <div style={{ fontSize: 11, color: '#D97706', marginTop: 4 }}>8 caractères minimum requis.</div>
         )}
       </div>
+
       <div className="immo-form-field" style={{ marginBottom: 16 }}>
         <label className="immo-form-label" style={{ color: '#0F172A' }}>Confirmer le nouveau mot de passe *</label>
-        <input
-          className="immo-form-input"
-          type="password"
-          value={confirmPassword}
-          onChange={e => { setConfirmPassword(e.target.value); setError(''); }}
-          disabled={loading}
-          required
-          style={{ background: '#F8FAFC', color: '#0F172A' }}
-        />
+        <PasswordField label="Confirmer le mot de passe" value={confirmPassword}
+          onChange={v => { setConfirmPassword(v); setError(''); }} disabled={loading} />
         {mismatch && (
-          <div style={{ fontSize: 11, color: '#DC2626', marginTop: 4 }}>
-            Les mots de passe ne correspondent pas.
-          </div>
+          <div style={{ fontSize: 11, color: '#DC2626', marginTop: 4 }}>Les mots de passe ne correspondent pas.</div>
         )}
         {!mismatch && confirmPassword.length > 0 && newPassword.length >= 8 && (
-          <div style={{ fontSize: 11, color: '#16A34A', marginTop: 4 }}>
-            Les mots de passe correspondent.
-          </div>
+          <div style={{ fontSize: 11, color: '#16A34A', marginTop: 4 }}>Les mots de passe correspondent.</div>
         )}
       </div>
 
