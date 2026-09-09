@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { getMessages } from '../../api/getMessages';
 import { postMessage } from '../../api/postMessage';
+import { patchSlot } from '../../api/patchSlot';
 import { useAuth } from '../../context/AuthContext';
 import { useChatSocket } from '../../hooks/useChatSocket';
 import NewConversationModal from './NewConversationModal';
+import ContrePropositionModal from './ContrePropositionModal';
 
 /* ─── Helpers ─────────────────────────────────────────────────── */
 
@@ -33,6 +35,17 @@ function fmtDateSep(iso: string) {
 function sameDay(a: string, b: string) {
   return new Date(a).toDateString() === new Date(b).toDateString();
 }
+function fmtSlotDate(iso?: string) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+}
+const SLOT_STATUS: Record<string, { label: string; color: string }> = {
+  pending:   { label: 'En attente de réponse', color: '#D97706' },
+  accepted:  { label: 'Confirmé',              color: '#16A34A' },
+  declined:  { label: 'Refusé',                color: '#6B7280' },
+  countered: { label: 'Contre-proposé',        color: '#7C3AED' },
+};
 
 const ROLE_LABELS: Record<string, string> = {
   prospect:     'Prospect',
@@ -96,12 +109,16 @@ export default function MessagesPage() {
   const [loadingMsgs, setLoadingMsgs]   = useState(false);
   const [showNewModal, setShowNewModal] = useState(false);
   const [popover, setPopover]           = useState<{ user: any } | null>(null);
+  const [cpModalFor, setCpModalFor]     = useState<number | null>(null);
+  const [slotActing, setSlotActing]     = useState<number | null>(null);
   const bottomRef                       = useRef<HTMLDivElement>(null);
   const sendingRef                      = useRef(false);
 
   useChatSocket(activeId, (msg) => {
     if (msg.conversation_id === activeId) {
-      setMessages(prev => prev.some(m => m.id === msg.id) ? prev : [...prev, msg]);
+      setMessages(prev => prev.some(m => m.id === msg.id)
+        ? prev.map(m => m.id === msg.id ? { ...m, ...msg } : m)
+        : [...prev, msg]);
     }
     setConvs(prev => prev.map((c: any) =>
       c.id === msg.conversation_id
@@ -151,6 +168,32 @@ export default function MessagesPage() {
       ));
     } catch { setInput(text); }
     finally { sendingRef.current = false; setSending(false); }
+  };
+
+  const handleRepondreCreneau = async (messageId: number, response: 'accepted' | 'declined' | 'countered', proposedAt?: string) => {
+    setSlotActing(messageId);
+    try {
+      const result = await patchSlot.repondre(messageId, response, proposedAt);
+      if (response === 'countered') {
+        // Le backend renvoie le NOUVEAU message (la contre-proposition), pas l'original mis à jour.
+        setMessages(prev => {
+          const withOriginalUpdated = prev.map(m =>
+            m.id === messageId
+              ? { ...m, metadata: { ...(m.metadata ?? {}), status: 'countered', responded_at: new Date().toISOString() } }
+              : m
+          );
+          const newId = (result as any)?.id;
+          return withOriginalUpdated.some(m => m.id === newId) ? withOriginalUpdated : [...withOriginalUpdated, result];
+        });
+      } else {
+        setMessages(prev => prev.map(m => m.id === messageId ? { ...m, ...result } : m));
+      }
+      setCpModalFor(null);
+    } catch (err: any) {
+      alert(err?.response?.data?.message ?? 'Erreur lors de la réponse au créneau.');
+    } finally {
+      setSlotActing(null);
+    }
   };
 
   const handleConvCreated = (conv: any) => {
@@ -339,7 +382,12 @@ export default function MessagesPage() {
               messages.map((m: any, i: number) => {
                 const isMine   = m.expediteur_id != null && m.expediteur_id === me?.id;
                 const isSystem = m.sender_role === 'systeme';
+                const isSlot   = m.type === 'slot_proposal';
                 const showDate = i === 0 || !sameDay(messages[i - 1].created_at, m.created_at);
+                const estParticipant = me?.id != null && (activeConv.gestionnaire_id === me.id || activeConv.client_id === me.id);
+                const slotStatus = m.metadata?.status ?? 'pending';
+                const peutRepondre = isSlot && estParticipant && !isMine && slotStatus === 'pending';
+                const isSlotActing = slotActing === m.id;
 
                 return (
                   <div key={m.id ?? i}>
@@ -351,6 +399,62 @@ export default function MessagesPage() {
                     {isSystem ? (
                       <div style={{ textAlign: 'center', margin: '4px 0', fontSize: 11, color: 'var(--c-muted)', fontStyle: 'italic' }}>
                         {m.contenu}
+                      </div>
+                    ) : isSlot ? (
+                      <div style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start', marginBottom: 2 }}>
+                        <div style={{
+                          maxWidth: '78%', background: '#fff', border: `1.5px solid ${SLOT_STATUS[slotStatus]?.color ?? '#D97706'}55`,
+                          borderRadius: isMine ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                          padding: '12px 14px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={SLOT_STATUS[slotStatus]?.color ?? '#D97706'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                            </svg>
+                            <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--c-muted)' }}>
+                              Proposition de créneau
+                            </span>
+                          </div>
+                          <div style={{ fontSize: 13, color: 'var(--c-text)', marginBottom: 4 }}>{m.contenu}</div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-text)', marginBottom: 8 }}>
+                            {fmtSlotDate(m.metadata?.proposed_at)}
+                          </div>
+                          <span style={{
+                            fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 999,
+                            color: SLOT_STATUS[slotStatus]?.color ?? '#D97706',
+                            background: `${SLOT_STATUS[slotStatus]?.color ?? '#D97706'}18`,
+                          }}>
+                            {SLOT_STATUS[slotStatus]?.label ?? slotStatus}
+                          </span>
+                          {peutRepondre && (
+                            <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
+                              <button
+                                onClick={() => handleRepondreCreneau(m.id, 'accepted')}
+                                disabled={isSlotActing}
+                                style={{ flex: 1, padding: '6px 0', borderRadius: 8, border: 'none', background: '#DCFCE7', color: '#166534', fontSize: 12, fontWeight: 700, cursor: isSlotActing ? 'not-allowed' : 'pointer' }}
+                              >
+                                Confirmer
+                              </button>
+                              <button
+                                onClick={() => setCpModalFor(m.id)}
+                                disabled={isSlotActing}
+                                style={{ flex: 1, padding: '6px 0', borderRadius: 8, border: 'none', background: '#EDE9FE', color: '#5B21B6', fontSize: 12, fontWeight: 700, cursor: isSlotActing ? 'not-allowed' : 'pointer' }}
+                              >
+                                Contre-proposer
+                              </button>
+                              <button
+                                onClick={() => handleRepondreCreneau(m.id, 'declined')}
+                                disabled={isSlotActing}
+                                style={{ flex: 1, padding: '6px 0', borderRadius: 8, border: 'none', background: '#FEE2E2', color: '#991B1B', fontSize: 12, fontWeight: 700, cursor: isSlotActing ? 'not-allowed' : 'pointer' }}
+                              >
+                                Refuser
+                              </button>
+                            </div>
+                          )}
+                          <div style={{ fontSize: 10, color: 'var(--c-muted)', marginTop: 8 }}>
+                            {fmtMsgTime(m.created_at)}
+                          </div>
+                        </div>
                       </div>
                     ) : (
                       <div style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start', marginBottom: 2 }}>
@@ -408,6 +512,14 @@ export default function MessagesPage() {
       {/* Modal nouveau message */}
       {showNewModal && (
         <NewConversationModal onClose={() => setShowNewModal(false)} onCreated={handleConvCreated} />
+      )}
+
+      {/* Modal contre-proposition de créneau */}
+      {cpModalFor != null && (
+        <ContrePropositionModal
+          onClose={() => setCpModalFor(null)}
+          onConfirm={date => handleRepondreCreneau(cpModalFor, 'countered', new Date(date).toISOString())}
+        />
       )}
     </div>
   );
