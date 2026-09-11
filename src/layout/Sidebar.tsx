@@ -46,7 +46,7 @@ export default function Sidebar({
   const navItems = [
     ...(isAdmin      ? [{ to: '/dashboard',           label: 'Tableau de bord',  Icon: GridIcon     }] : []),
     ...(isCommercial ? [{ to: '/commercial-dashboard', label: 'Tableau de bord',  Icon: GridIcon     }] : []),
-    { to: '/annonces',     label: 'Annonces',           Icon: HomeIcon       },
+    ...(isAdmin ? [{ to: '/annonces', label: 'Annonces', Icon: HomeIcon }] : []),
     ...(isCommercial ? [
       { to: '/mes-annonces', label: 'Mes annonces',    Icon: ListingsIcon   },
       { to: '/mes-visites',  label: 'Mes visites',     Icon: VisitIcon      },
@@ -145,11 +145,13 @@ export default function Sidebar({
           )}
         </div>
 
-        {/* Téléchargement de l'app mobile (APK) — fichier servi depuis public/ */}
-        {(
+        {/* Téléchargement de l'app mobile (APK) — visible seulement si l'URL est configurée */}
+        {import.meta.env.VITE_APK_URL && (
           <a
             className="immo-nav-item"
-            href="/base.apk"
+            href={import.meta.env.VITE_APK_URL}
+            target="_blank"
+            rel="noopener noreferrer"
             download
             title={minimized ? "Télécharger l'app (APK)" : undefined}
             style={{ marginTop: 12, color: 'var(--c-blue)' }}

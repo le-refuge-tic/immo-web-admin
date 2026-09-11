@@ -54,9 +54,9 @@ export default function App() {
           >
             <Route index element={<DefaultRedirect />} />
             <Route path="dashboard"    element={<AdminRoute><DashboardPage /></AdminRoute>} />
-            <Route path="annonces"           element={<AnnoncesPage />} />
-            <Route path="annonces/:id"      element={<AnnonceDetailPage />} />
-            <Route path="annonces/:id/modifier" element={<AnnonceEditPage />} />
+            <Route path="annonces"           element={<AdminRoute><AnnoncesPage /></AdminRoute>} />
+            <Route path="annonces/:id"      element={<AdminRoute><AnnonceDetailPage /></AdminRoute>} />
+            <Route path="annonces/:id/modifier" element={<AdminRoute><AnnonceEditPage /></AdminRoute>} />
             <Route path="commercial-dashboard" element={<CommercialDashboardPage />} />
             <Route path="mes-annonces"         element={<MesAnnoncesPage />} />
             <Route path="mes-visites"          element={<MesVisitesPage />} />
