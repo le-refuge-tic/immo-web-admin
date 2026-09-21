@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { SearchIcon, CardIcon, UsersIcon, HomeIcon, AlertIcon } from '../../components/Icons';
 import { getAdminStats } from '../../api/getAdminStats';
 import { getMessages } from '../../api/getMessages';
