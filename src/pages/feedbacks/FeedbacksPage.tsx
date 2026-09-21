@@ -24,10 +24,12 @@ export default function FeedbacksPage() {
   const [filtreType, setFiltreType] = useState('');
   const [meteoOnly, setMeteoOnly]   = useState(false);
   const [loading, setLoading]       = useState(false);
+  const [loadError, setLoadError]   = useState(false);
   const [totalMeteo, setTotalMeteo] = useState(0);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError(false);
     try {
       const [res, meteo] = await Promise.all([
         getFeedback.list({
@@ -40,6 +42,8 @@ export default function FeedbacksPage() {
       setFeedbacks(res.data);
       setTotal(res.total);
       setTotalMeteo(meteo.total);
+    } catch {
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -71,6 +75,14 @@ export default function FeedbacksPage() {
       </div>
 
       <div className="immo-page">
+        {loadError && (
+          <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8, padding: '10px 16px', fontSize: 13, color: '#DC2626', fontWeight: 500, marginBottom: 12 }}>
+            Erreur lors du chargement des feedbacks.{' '}
+            <button onClick={load} style={{ background: 'none', border: 'none', color: '#DC2626', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>
+              Réessayer
+            </button>
+          </div>
+        )}
         <div className="mod-stat-cards">
           <div className="mod-stat-card">
             <div>

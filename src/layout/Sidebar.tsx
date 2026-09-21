@@ -1,12 +1,18 @@
 import { useState, useEffect, useRef } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
-  GridIcon, HomeIcon, UsersIcon, SettingsIcon, ShieldIcon,
+  GridIcon, HomeIcon, UsersIcon, SettingsIcon, ShieldIcon, AlertIcon,
   ChevronDownIcon, UserIcon, BuildingIcon, KeyIcon, FileTextIcon, TrendingUpIcon, StarIcon,
   MessageIcon, WithdrawIcon, ListingsIcon, VisitIcon, ClientsIcon, FlagIcon,
 } from '../components/Icons';
 import { useAuth } from '../context/AuthContext';
 import { getMessages, getActiveCommercialIds } from '../api/getMessages';
+import { getAdminStats } from '../api/getAdminStats';
+import { getQuartiers } from '../api/getQuartiers';
+import axios from 'axios';
+
+const BASE_SIDEBAR = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api/v1';
+const authSidebar = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` } });
 
 export default function Sidebar({
   minimized,
@@ -25,10 +31,14 @@ export default function Sidebar({
 
   const isConfigActive = location.pathname.startsWith('/configuration');
   const [configOpen, setConfigOpen] = useState(isConfigActive);
-  const [unreadCount, setUnreadCount]       = useState(0);
-  const [msgUnreadCount, setMsgUnreadCount] = useState(0);
-  const pollRef    = useRef<ReturnType<typeof setInterval> | null>(null);
-  const pollMsgRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [unreadCount, setUnreadCount]         = useState(0);
+  const [msgUnreadCount, setMsgUnreadCount]   = useState(0);
+  const [moderationCount, setModerationCount] = useState(0);
+  const [quartiersCount, setQuartiersCount]   = useState(0);
+  const [retraitsCount, setRetraitsCount]     = useState(0);
+  const pollRef      = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollMsgRef   = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollBadgeRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -70,6 +80,26 @@ export default function Sidebar({
     };
   }, []);
 
+  useEffect(() => {
+    if (!isAdmin) return;
+    const loadBadges = async () => {
+      try {
+        const [stats, quartiers, retraitsRes] = await Promise.all([
+          getAdminStats.get(),
+          getQuartiers.lister('en_attente'),
+          axios.get(`${BASE_SIDEBAR}/retraits/admin?statut=en_attente`, authSidebar()),
+        ]);
+        setModerationCount(stats?.biens_en_attente ?? 0);
+        setQuartiersCount(Array.isArray(quartiers) ? quartiers.length : 0);
+        const rd = retraitsRes.data;
+        setRetraitsCount(Array.isArray(rd) ? rd.length : (rd?.data?.length ?? 0));
+      } catch { /**/ }
+    };
+    loadBadges();
+    pollBadgeRef.current = setInterval(loadBadges, 60_000);
+    return () => { if (pollBadgeRef.current) clearInterval(pollBadgeRef.current); };
+  }, [isAdmin]);
+
   const classes = [
     'immo-sidebar',
     minimized ? 'immo-sidebar--min' : '',
@@ -80,6 +110,7 @@ export default function Sidebar({
     ...(isAdmin      ? [{ to: '/dashboard',           label: 'Tableau de bord',  Icon: GridIcon     }] : []),
     ...(isCommercial ? [{ to: '/commercial-dashboard', label: 'Tableau de bord',  Icon: GridIcon     }] : []),
     ...(isAdmin ? [{ to: '/annonces', label: 'Annonces', Icon: HomeIcon }] : []),
+    ...(isAdmin ? [{ to: '/moderation', label: 'Modération', Icon: AlertIcon }] : []),
     ...(isCommercial ? [
       { to: '/mes-annonces', label: 'Mes annonces',    Icon: ListingsIcon   },
       { to: '/mes-visites',  label: 'Mes visites',     Icon: VisitIcon      },
@@ -116,11 +147,20 @@ export default function Sidebar({
         {navItems.map(({ to, label, Icon }) => {
           const isSupervision = to === '/supervision';
           const isMessages    = to === '/messages';
+          const isModeration  = to === '/moderation';
+          const isQuartiers   = to === '/quartiers';
+          const isRetraits    = to === '/retraits';
           const badge = isSupervision && unreadCount > 0
             ? unreadCount
             : isMessages && msgUnreadCount > 0
               ? msgUnreadCount
-              : 0;
+              : isModeration && moderationCount > 0
+                ? moderationCount
+                : isQuartiers && quartiersCount > 0
+                  ? quartiersCount
+                  : isRetraits && retraitsCount > 0
+                    ? retraitsCount
+                    : 0;
           return (
             <NavLink
               key={to}

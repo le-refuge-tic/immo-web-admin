@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SearchIcon, CardIcon, UsersIcon, HomeIcon, AlertIcon } from '../../components/Icons';
 import { getAdminStats } from '../../api/getAdminStats';
-import { getMessages } from '../../api/getMessages';
+import { getMessages, getActiveCommercialIds } from '../../api/getMessages';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -17,7 +17,16 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const load = () =>
-      getMessages.supervision().then(r => setTotalUnread(r.total_unread)).catch(() => {});
+      getMessages.supervision().then(r => {
+        const activeIds = getActiveCommercialIds();
+        const convs: any[] = r.data ?? [];
+        const count = activeIds.size === 0
+          ? (r.total_unread ?? 0)
+          : convs
+              .filter((c: any) => !c.gestionnaire_id || activeIds.has(c.gestionnaire_id))
+              .reduce((s: number, c: any) => s + (c.unread_count ?? 0), 0);
+        setTotalUnread(count);
+      }).catch(() => {});
     load();
     pollRef.current = setInterval(load, 20_000);
     return () => { if (pollRef.current) clearInterval(pollRef.current); };
