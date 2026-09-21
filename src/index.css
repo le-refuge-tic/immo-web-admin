@@ -1653,26 +1653,69 @@ body {
 .ut-confirm-actions { display: flex; gap: 0.625rem; justify-content: center; }
 .ut-confirm-actions .ut-action-btn { flex: 1; justify-content: center; padding: 0.625rem 1rem; }
 
-/* ─── Utilisateurs — responsive ──────────────────────────── */
+/* ─── Utilisateurs — vue cartes mobile / tableau desktop ──── */
+
+/* Par défaut : tableau visible, cartes cachées */
+.ut-mobile-only { display: none; }
+.ut-desktop-only { display: block; }
+
+/* Vue carte (< 768px) */
 @media (max-width: 48rem) {
-  /* Sur mobile, masquer téléphone et date pour alléger */
-  .ut-table th:nth-child(3),
-  .ut-table td:nth-child(3),
-  .ut-table th:nth-child(5),
-  .ut-table td:nth-child(5) { display: none; }
+  .ut-desktop-only { display: none !important; }
+  .ut-mobile-only  { display: block !important; }
+}
 
-  /* Ajuster les largeurs des colonnes restantes */
-  .ut-table th:first-child { width: 44%; }
-  .ut-table th:nth-child(2) { width: 20%; }
-  .ut-table th:nth-child(4) { width: 18%; }
-  .ut-table th:last-child   { width: 18%; }
+/* Cartes utilisateurs */
+.ut-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
 
-  .ut-table td { padding: 0.75rem 0.875rem; }
-  .ut-table th { padding: 0.625rem 0.875rem; }
+.ut-card {
+  background: #fff;
+  border-radius: 0.875rem;
+  border: 1px solid #E2E8F0;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
 
-  .ut-user-name  { font-size: 0.8125rem; }
-  .ut-user-email { font-size: 0.6875rem; }
-  .ut-table { min-width: unset; }
+.ut-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+}
+
+.ut-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.ut-card-phone {
+  font-size: 0.6875rem;
+  color: var(--c-muted);
+  margin-top: 0.125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.ut-card-right {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.375rem;
+}
+
+.ut-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.625rem 1rem;
+  border-top: 1px solid #F1F5F9;
+  background: #FAFBFF;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 /* ─── PAGINATION ─────────────────────────────────────────── */

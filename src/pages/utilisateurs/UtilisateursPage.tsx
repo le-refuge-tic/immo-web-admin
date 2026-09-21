@@ -128,8 +128,8 @@ export default function UtilisateursPage() {
           ))}
         </div>
 
-        {/* ── Tableau ── */}
-        <div className="ut-table-wrap">
+        {/* ── Vue tableau (≥ 768px) ── */}
+        <div className="ut-table-wrap ut-desktop-only">
           <table className="ut-table">
             <thead>
               <tr>
@@ -143,95 +143,50 @@ export default function UtilisateursPage() {
             </thead>
             <tbody>
               {loading ? (
-                <tr>
-                  <td colSpan={6} className="ut-state-cell">Chargement…</td>
-                </tr>
+                <tr><td colSpan={6} className="ut-state-cell">Chargement…</td></tr>
               ) : users.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="ut-state-cell">Aucun utilisateur trouvé.</td>
-                </tr>
+                <tr><td colSpan={6} className="ut-state-cell">Aucun utilisateur trouvé.</td></tr>
               ) : users.map((u: any) => {
                 const rc = ROLE_CONFIG[u.role];
                 const isToggling = togglingId === u.id;
                 const isDeleting = deletingId === u.id;
                 const isConfirm  = confirmId  === u.id;
-
                 return (
                   <tr key={u.id} className="ut-row">
-                    {/* Utilisateur */}
                     <td>
                       <div className="ut-user-cell">
-                        <div className="ut-avatar" style={{ background: avatarColor(u.id) }}>
-                          {initials(u)}
-                        </div>
+                        <div className="ut-avatar" style={{ background: avatarColor(u.id) }}>{initials(u)}</div>
                         <div className="ut-user-info">
                           <div className="ut-user-name">{u.prenom} {u.nom}</div>
                           <div className="ut-user-email">{u.email ?? '—'}</div>
                         </div>
                       </div>
                     </td>
-
-                    {/* Rôle */}
                     <td>
-                      {rc ? (
-                        <span
-                          className="ut-role-badge"
-                          style={{ color: rc.color, background: rc.bg }}
-                        >
-                          {rc.label}
-                        </span>
-                      ) : (
-                        <span className="ut-role-badge" style={{ color: '#64748B', background: '#F1F5F9' }}>
-                          {u.role}
-                        </span>
-                      )}
+                      <span className="ut-role-badge" style={{ color: rc?.color ?? '#64748B', background: rc?.bg ?? '#F1F5F9' }}>
+                        {rc?.label ?? u.role}
+                      </span>
                     </td>
-
-                    {/* Téléphone */}
                     <td className="ut-phone">{u.telephone ?? '—'}</td>
-
-                    {/* Statut */}
                     <td>
-                      <button
-                        className={`ut-status-btn${u.actif ? ' actif' : ' bloque'}`}
-                        onClick={() => toggleActif(u)}
-                        disabled={isToggling}
-                        title="Cliquer pour basculer"
-                      >
+                      <button className={`ut-status-btn${u.actif ? ' actif' : ' bloque'}`}
+                        onClick={() => toggleActif(u)} disabled={isToggling} title="Cliquer pour basculer">
                         <span className="ut-status-dot" />
                         {isToggling ? '…' : u.actif ? 'Actif' : 'Bloqué'}
                       </button>
                     </td>
-
-                    {/* Inscription */}
                     <td className="ut-date">{formatDate(u.created_at)}</td>
-
-                    {/* Actions */}
                     <td>
                       <div className="ut-actions">
                         {isConfirm ? (
                           <>
-                            <button
-                              className="ut-action-btn ut-action-btn--confirm"
-                              onClick={() => handleDelete(u.id)}
-                              disabled={isDeleting}
-                              title="Confirmer la suppression"
-                            >
+                            <button className="ut-action-btn ut-action-btn--confirm" onClick={() => handleDelete(u.id)} disabled={isDeleting}>
                               {isDeleting ? '…' : 'Confirmer'}
                             </button>
-                            <button
-                              className="ut-action-btn ut-action-btn--cancel"
-                              onClick={() => setConfirmId(null)}
-                            >
-                              Annuler
-                            </button>
+                            <button className="ut-action-btn ut-action-btn--cancel" onClick={() => setConfirmId(null)}>Annuler</button>
                           </>
                         ) : (
-                          <button
-                            className="ut-action-btn ut-action-btn--delete"
-                            onClick={() => setConfirmId(u.id)}
-                            title="Supprimer cet utilisateur"
-                          >
+                          <button className="ut-action-btn ut-action-btn--delete" onClick={() => setConfirmId(u.id)} title="Supprimer">
                             <TrashIcon size={13} />
                           </button>
                         )}
@@ -242,6 +197,63 @@ export default function UtilisateursPage() {
               })}
             </tbody>
           </table>
+        </div>
+
+        {/* ── Vue cartes (< 768px) ── */}
+        <div className="ut-card-list ut-mobile-only">
+          {loading ? (
+            <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--c-muted)' }}>Chargement…</div>
+          ) : users.length === 0 ? (
+            <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--c-muted)', fontSize: 13 }}>Aucun utilisateur trouvé.</div>
+          ) : users.map((u: any) => {
+            const rc = ROLE_CONFIG[u.role];
+            const isToggling = togglingId === u.id;
+            const isDeleting = deletingId === u.id;
+            const isConfirm  = confirmId  === u.id;
+            return (
+              <div key={u.id} className="ut-card">
+                {/* En-tête de la carte */}
+                <div className="ut-card-header">
+                  <div className="ut-avatar" style={{ background: avatarColor(u.id), width: 40, height: 40, fontSize: '0.875rem' }}>
+                    {initials(u)}
+                  </div>
+                  <div className="ut-card-info">
+                    <div className="ut-user-name">{u.prenom} {u.nom}</div>
+                    <div className="ut-user-email">{u.email ?? '—'}</div>
+                    {u.telephone && <div className="ut-card-phone">{u.telephone}</div>}
+                  </div>
+                  <div className="ut-card-right">
+                    <span className="ut-role-badge" style={{ color: rc?.color ?? '#64748B', background: rc?.bg ?? '#F1F5F9' }}>
+                      {rc?.label ?? u.role}
+                    </span>
+                  </div>
+                </div>
+                {/* Pied de carte */}
+                <div className="ut-card-footer">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <button className={`ut-status-btn${u.actif ? ' actif' : ' bloque'}`}
+                      onClick={() => toggleActif(u)} disabled={isToggling}>
+                      <span className="ut-status-dot" />
+                      {isToggling ? '…' : u.actif ? 'Actif' : 'Bloqué'}
+                    </button>
+                    <span style={{ fontSize: 11, color: 'var(--c-muted)' }}>{formatDate(u.created_at)}</span>
+                  </div>
+                  {isConfirm ? (
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button className="ut-action-btn ut-action-btn--confirm" onClick={() => handleDelete(u.id)} disabled={isDeleting}>
+                        {isDeleting ? '…' : 'Supprimer'}
+                      </button>
+                      <button className="ut-action-btn ut-action-btn--cancel" onClick={() => setConfirmId(null)}>✕</button>
+                    </div>
+                  ) : (
+                    <button className="ut-action-btn ut-action-btn--delete" onClick={() => setConfirmId(u.id)} title="Supprimer">
+                      <TrashIcon size={13} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         {/* ── Pagination ── */}
