@@ -82,8 +82,8 @@ export default function LoyersPage() {
           </div>
         </div>
 
-        <div className="immo-card" style={{ padding: 0, overflow: 'hidden' }}>
-          <div className="mod-table-header" style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr 80px' }}>
+        <div className="immo-card" style={{ padding: 0, overflow: 'hidden', overflowX: 'auto' }}>
+          <div className="mod-table-header" style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr 80px', minWidth: 560 }}>
             <span className="mod-table-col">Mois</span>
             <span className="mod-table-col">Montant</span>
             <span className="mod-table-col">Échéance</span>
@@ -97,7 +97,7 @@ export default function LoyersPage() {
           ) : loyers.length === 0 ? (
             <div style={{ padding: '32px 20px', textAlign: 'center', color: 'var(--c-muted)' }}>Aucun loyer trouvé.</div>
           ) : loyers.map((l: any) => (
-            <div className="mod-row" key={l.id} style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr 80px' }}>
+            <div className="mod-row" key={l.id} style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr 80px', minWidth: 560 }}>
               <div>
                 <div style={{ fontWeight: 600, fontSize: 13 }}>{formatMois(l.mois)}</div>
                 <div style={{ fontSize: 11, color: 'var(--c-muted)' }}>Contrat #{l.contrat_id}</div>

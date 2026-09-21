@@ -15,7 +15,7 @@ export default function Topbar({
   const { user, logout } = useAuth();
 
   const initials = user
-    ? `${user.nom[0] ?? ''}${user.prenom[0] ?? ''}`.toUpperCase()
+    ? `${user.nom?.[0] ?? ''}${user.prenom?.[0] ?? ''}`.toUpperCase()
     : 'SA';
 
   const role = user?.role_principal ?? user?.role ?? '';

@@ -133,7 +133,8 @@ export default function GestionLiaisonsPage() {
             <p style={{ marginTop: 12 }}>Aucune demande {filtre === 'en_attente' ? 'en attente' : ''}</p>
           </div>
         ) : (
-          <table className="immo-table">
+          <div style={{ overflowX: 'auto' }}>
+          <table className="immo-table" style={{ minWidth: 700 }}>
             <thead>
               <tr>
                 <th>Locataire</th>
@@ -200,6 +201,7 @@ export default function GestionLiaisonsPage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 
@@ -210,7 +212,7 @@ export default function GestionLiaisonsPage() {
           display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999,
         }}>
           <div style={{
-            background: '#fff', borderRadius: 16, padding: 32, width: 420,
+            background: '#fff', borderRadius: 16, padding: 32, width: 'min(420px, 90vw)',
             boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
           }}>
             <h2 style={{ margin: '0 0 4px', fontSize: 18 }}>Valider la liaison</h2>

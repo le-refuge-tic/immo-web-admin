@@ -153,7 +153,7 @@ export default function FinancesPage() {
         </div>
 
         {/* ── Frais de visite : liste détaillée (revenus du refuge) ── */}
-        <div className="immo-card" style={{ padding: 0, overflow: 'hidden', marginBottom: 20 }}>
+        <div className="immo-card" style={{ padding: 0, overflow: 'hidden', marginBottom: 20, overflowX: 'auto' }}>
           <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--c-border)' }}>
             <div style={{ fontWeight: 700, fontSize: 14 }}>Frais de visite encaissés</div>
             <div style={{ fontSize: 12, color: 'var(--c-muted)' }}>
@@ -211,8 +211,8 @@ export default function FinancesPage() {
           </div>
         </div>
 
-        <div className="immo-card" style={{ padding: 0, overflow: 'hidden' }}>
-          <div className="mod-table-header" style={{ gridTemplateColumns: '1.4fr 1fr 1.4fr 1fr 1fr 1fr 1.2fr' }}>
+        <div className="immo-card" style={{ padding: 0, overflow: 'hidden', overflowX: 'auto' }}>
+          <div className="mod-table-header" style={{ gridTemplateColumns: '1.4fr 1fr 1.4fr 1fr 1fr 1fr 1.2fr', minWidth: 700 }}>
             <span className="mod-table-col">Référence</span>
             <span className="mod-table-col">Type</span>
             <span className="mod-table-col">Payeur → Bénéficiaire</span>
@@ -227,7 +227,7 @@ export default function FinancesPage() {
           ) : transactions.length === 0 ? (
             <div style={{ padding: '32px 20px', textAlign: 'center', color: 'var(--c-muted)' }}>Aucune transaction trouvée.</div>
           ) : transactions.map((t: any) => (
-            <div className="mod-row" key={t.id} style={{ gridTemplateColumns: '1.4fr 1fr 1.4fr 1fr 1fr 1fr 1.2fr' }}>
+            <div className="mod-row" key={t.id} style={{ gridTemplateColumns: '1.4fr 1fr 1.4fr 1fr 1fr 1fr 1.2fr', minWidth: 700 }}>
               <div>
                 <div style={{ fontWeight: 600, fontSize: 12, fontFamily: 'monospace' }}>
                   {t.reference.slice(0, 8).toUpperCase()}…

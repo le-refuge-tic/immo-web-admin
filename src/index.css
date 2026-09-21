@@ -3433,6 +3433,31 @@ body {
   .sup-back-btn { display: flex !important; }
 }
 
+/* ── Plaintes / Réclamations layout ── */
+.plaintes-layout {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+.plaintes-list-panel  { flex: 1; min-width: 0; }
+.plaintes-detail-panel { width: 360px; flex-shrink: 0; }
+
+@media (max-width: 48rem) {
+  .plaintes-detail-panel { width: 100% !important; flex-shrink: unset; }
+  .plaintes-layout .plaintes-list-panel { display: block; }
+  .plaintes-layout.detail-open .plaintes-list-panel { display: none !important; }
+  .plaintes-layout.detail-open .plaintes-detail-panel { display: block !important; width: 100%; }
+  .plaintes-back-btn { display: flex !important; }
+}
+
+/* ── Responsive stat-grid ── */
+@media (max-width: 64rem) {
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 30rem) {
+  .stat-grid { grid-template-columns: 1fr; }
+}
+
 /* ══════════════════════════════════════════════════════════
    PUBLICATION WIZARD  (préfixe pb-)
    ══════════════════════════════════════════════════════════ */

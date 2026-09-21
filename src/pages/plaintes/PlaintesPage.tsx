@@ -24,6 +24,13 @@ export default function PlaintesPage() {
   const [selected, setSelected] = useState<any | null>(null);
   const [reponse, setReponse]   = useState('');
   const [saving, setSaving]     = useState(false);
+  const [mobilePanel, setMobilePanel] = useState<'list' | 'detail'>('list');
+  const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
+
+  const showToast = (msg: string, ok = true) => {
+    setToast({ msg, ok });
+    setTimeout(() => setToast(null), 4000);
+  };
 
   const load = async (statut = filterStatut) => {
     setLoading(true);
@@ -45,7 +52,7 @@ export default function PlaintesPage() {
       await axios.patch(`${BASE}/admin/plaintes/${id}/statut`, { statut, reponse_admin: reponseAdmin }, auth());
       setPlaintes(prev => prev.map(p => p.id === id ? { ...p, statut, reponse_admin: reponseAdmin ?? p.reponse_admin } : p));
       if (selected?.id === id) setSelected((prev: any) => ({ ...prev, statut, reponse_admin: reponseAdmin ?? prev.reponse_admin }));
-    } catch { /**/ } finally { setSaving(false); }
+    } catch { showToast('Erreur lors de la mise à jour', false); } finally { setSaving(false); }
   }
 
   return (
@@ -75,9 +82,19 @@ export default function PlaintesPage() {
       </div>
 
       <div className="immo-page" style={{ paddingTop: 0 }}>
-        <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
+        {toast && (
+          <div style={{
+            position: 'fixed', top: 24, right: 24, zIndex: 9999,
+            background: toast.ok ? '#10b981' : '#ef4444',
+            color: '#fff', padding: '12px 20px', borderRadius: 10,
+            fontWeight: 600, fontSize: 14, boxShadow: '0 4px 16px rgba(0,0,0,.2)',
+          }}>
+            {toast.msg}
+          </div>
+        )}
+        <div className={`plaintes-layout${mobilePanel === 'detail' ? ' detail-open' : ''}`}>
           {/* Liste */}
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="plaintes-list-panel">
             {loading ? (
               <div style={{ padding: 40, textAlign: 'center', color: 'var(--c-muted)' }}>Chargement…</div>
             ) : plaintes.length === 0 ? (
@@ -96,7 +113,7 @@ export default function PlaintesPage() {
                   const isSelected = selected?.id === p.id;
                   return (
                     <div key={p.id}
-                      onClick={() => { setSelected(p); setReponse(p.reponse_admin ?? ''); }}
+                      onClick={() => { setSelected(p); setReponse(p.reponse_admin ?? ''); setMobilePanel('detail'); }}
                       style={{
                         padding: '14px 20px', borderBottom: idx < plaintes.length - 1 ? '1px solid var(--c-border)' : 'none',
                         cursor: 'pointer', transition: 'background 0.1s',
@@ -135,8 +152,15 @@ export default function PlaintesPage() {
 
           {/* Détail */}
           {selected && (
-            <div style={{ width: 360, flexShrink: 0 }}>
+            <div className="plaintes-detail-panel">
               <div className="immo-card" style={{ padding: '20px 24px' }}>
+                <button className="plaintes-back-btn" onClick={() => setMobilePanel('list')}
+                  style={{ display: 'none', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-blue)', padding: '0 0 12px 0', alignItems: 'center', gap: 4, fontSize: 13, fontWeight: 600 }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="15 18 9 12 15 6"/>
+                  </svg>
+                  Retour
+                </button>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
                   <div style={{ width: 42, height: 42, borderRadius: '50%', flexShrink: 0, background: avatarColor(selected.user?.id ?? selected.user_id), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, color: '#fff' }}>
                     {initials(selected.user)}
@@ -206,3 +230,4 @@ export default function PlaintesPage() {
     </>
   );
 }
+

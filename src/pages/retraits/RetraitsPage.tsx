@@ -158,7 +158,15 @@ export default function RetraitsPage() {
   }
 
   return (
-    <div style={{ padding: '24px 28px', maxWidth: 1200, margin: '0 auto' }}>
+    <>
+      <div className="immo-topbar">
+        <div className="immo-topbar-title">
+          <h1>Demandes de retrait</h1>
+          <p>Épargne / revenus locatifs : validation automatique. Commission : virement manuel.</p>
+        </div>
+      </div>
+
+      <div className="immo-page">
       {/* Toast */}
       {toast && (
         <div style={{
@@ -170,14 +178,6 @@ export default function RetraitsPage() {
           {toast.msg}
         </div>
       )}
-
-      <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 6 }}>
-        Demandes de retrait
-      </h1>
-      <p style={{ color: '#6b7280', fontSize: 14, marginBottom: 20 }}>
-        Épargne / revenus locatifs : validation automatique (Super Admin uniquement).{' '}
-        Commission commerciale : virement effectué manuellement hors app, preuve à téléverser.
-      </p>
 
       {/* Filtres */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
@@ -207,8 +207,8 @@ export default function RetraitsPage() {
           Aucune demande de retrait
         </div>
       ) : (
-        <div style={{ background: '#fff', borderRadius: 14, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,.06)' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+        <div style={{ background: '#fff', borderRadius: 14, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,.06)', overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14, minWidth: 800 }}>
             <thead>
               <tr style={{ background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
                 {['Bénéficiaire', 'Montant', 'Wallet', 'Numéro / Titulaire', 'Statut', 'Date', 'Traité par', 'Actions'].map(h => (
@@ -430,6 +430,7 @@ export default function RetraitsPage() {
           </table>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

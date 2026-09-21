@@ -88,8 +88,8 @@ export default function FeedbacksPage() {
           </div>
         </div>
 
-        <div className="immo-card" style={{ padding: 0, overflow: 'hidden' }}>
-          <div className="mod-table-header" style={{ gridTemplateColumns: '1fr 1fr 1fr 2fr 100px' }}>
+        <div className="immo-card" style={{ padding: 0, overflow: 'hidden', overflowX: 'auto' }}>
+          <div className="mod-table-header" style={{ gridTemplateColumns: '1fr 1fr 1fr 2fr 100px', minWidth: 560 }}>
             <span className="mod-table-col">Type</span>
             <span className="mod-table-col">Note</span>
             <span className="mod-table-col">Bien</span>
@@ -102,7 +102,7 @@ export default function FeedbacksPage() {
           ) : feedbacks.length === 0 ? (
             <div style={{ padding: '32px 20px', textAlign: 'center', color: 'var(--c-muted)' }}>Aucun feedback trouvé.</div>
           ) : feedbacks.map((f: any) => (
-            <div className="mod-row" key={f.id} style={{ gridTemplateColumns: '1fr 1fr 1fr 2fr 100px' }}>
+            <div className="mod-row" key={f.id} style={{ gridTemplateColumns: '1fr 1fr 1fr 2fr 100px', minWidth: 560 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span style={{
                   fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 99,

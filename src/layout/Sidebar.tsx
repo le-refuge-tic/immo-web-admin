@@ -54,7 +54,7 @@ export default function Sidebar({
     ] : []),
     { to: '/messages',     label: 'Messages',           Icon: MessageIcon    },
     ...(isAdmin ? [
-      { to: '/supervision',  label: 'Messagerie',      Icon: ShieldIcon     },
+      { to: '/supervision',  label: 'Suivi des échanges', Icon: ShieldIcon   },
       { to: '/utilisateurs', label: 'Utilisateurs',    Icon: UsersIcon      },
       { to: '/loyers',       label: 'Loyers',          Icon: FileTextIcon   },
       { to: '/liaisons',     label: 'Liaisons gestion',Icon: KeyIcon        },

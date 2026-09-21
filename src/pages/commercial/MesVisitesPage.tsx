@@ -57,14 +57,63 @@ function ContreProposerModal({ onClose, onConfirm }: { onClose: () => void; onCo
   );
 }
 
+/* ─── Modal annulation ── */
+function AnnulerModal({ onClose, onConfirm }: { onClose: () => void; onConfirm: (motif: string) => void }) {
+  const [motif, setMotif] = useState('');
+  return (
+    <div className="immo-modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="immo-modal" style={{ maxWidth: 380 }}>
+        <div className="immo-modal-title">Annuler la visite</div>
+        <div className="immo-form-field" style={{ marginTop: 16 }}>
+          <label className="immo-form-label">Motif (optionnel)</label>
+          <input
+            className="immo-form-input"
+            placeholder="Raison de l'annulation…"
+            value={motif}
+            onChange={e => setMotif(e.target.value)}
+          />
+        </div>
+        <div className="immo-modal-actions">
+          <button className="btn-cancel" onClick={onClose}>Retour</button>
+          <button className="btn-submit" style={{ background: '#DC2626' }} onClick={() => onConfirm(motif)}>
+            Confirmer l'annulation
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Modal confirmation effectuée ── */
+function EffectueeModal({ onClose, onConfirm }: { onClose: () => void; onConfirm: () => void }) {
+  return (
+    <div className="immo-modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="immo-modal" style={{ maxWidth: 380 }}>
+        <div className="immo-modal-title">Confirmer la visite</div>
+        <p style={{ fontSize: 13, color: 'var(--c-muted)', marginTop: 8, marginBottom: 0 }}>
+          Marquer cette visite comme effectuée ? Cette action est irréversible.
+        </p>
+        <div className="immo-modal-actions">
+          <button className="btn-cancel" onClick={onClose}>Annuler</button>
+          <button className="btn-submit" onClick={onConfirm}>
+            Marquer effectuée
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Page ────────────────────────────────────────────────── */
 
 export default function MesVisitesPage() {
   const [visites, setVisites]   = useState<any[]>([]);
   const [loading, setLoading]   = useState(true);
   const [statut, setStatut]     = useState('');
-  const [acting, setActing]     = useState<number | null>(null);
-  const [cpModal, setCpModal]   = useState<number | null>(null);
+  const [acting, setActing]       = useState<number | null>(null);
+  const [cpModal, setCpModal]     = useState<number | null>(null);
+  const [annulerModal, setAnnulerModal] = useState<any | null>(null);
+  const [effectueeModal, setEffectueeModal] = useState<any | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -102,12 +151,20 @@ export default function MesVisitesPage() {
   };
 
   const handleAnnuler = (v: any) => {
-    const motif = prompt('Motif d\'annulation (optionnel) :') ?? '';
+    setAnnulerModal(v);
+  };
+
+  const confirmAnnuler = (v: any, motif: string) => {
+    setAnnulerModal(null);
     act(() => patchVisite.annuler(v.id, motif), v.id);
   };
 
   const handleEffectuee = (v: any) => {
-    if (!confirm('Marquer cette visite comme effectuée ?')) return;
+    setEffectueeModal(v);
+  };
+
+  const confirmEffectuee = (v: any) => {
+    setEffectueeModal(null);
     act(() => patchVisite.effectuee(v.id), v.id);
   };
 
@@ -315,6 +372,7 @@ export default function MesVisitesPage() {
                               ✕
                             </button>
                           )}
+
                         </div>
                       </td>
                     </tr>
@@ -330,6 +388,18 @@ export default function MesVisitesPage() {
         <ContreProposerModal
           onClose={() => setCpModal(null)}
           onConfirm={date => handleContreProposer(cpModal, date)}
+        />
+      )}
+      {annulerModal != null && (
+        <AnnulerModal
+          onClose={() => setAnnulerModal(null)}
+          onConfirm={motif => confirmAnnuler(annulerModal, motif)}
+        />
+      )}
+      {effectueeModal != null && (
+        <EffectueeModal
+          onClose={() => setEffectueeModal(null)}
+          onConfirm={() => confirmEffectuee(effectueeModal)}
         />
       )}
     </div>
