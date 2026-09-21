@@ -1482,13 +1482,16 @@ body {
   border-radius: 0.875rem;
   border: 1px solid #E2E8F0;
   overflow: hidden;
+  overflow-x: auto;
   box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  -webkit-overflow-scrolling: touch;
 }
 
 .ut-table {
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
+  min-width: 580px;
 }
 
 .ut-table thead tr {
@@ -1649,6 +1652,28 @@ body {
 .ut-confirm-sub   { font-size: 0.8125rem; color: var(--c-muted); line-height: 1.5; margin-bottom: 1.5rem; }
 .ut-confirm-actions { display: flex; gap: 0.625rem; justify-content: center; }
 .ut-confirm-actions .ut-action-btn { flex: 1; justify-content: center; padding: 0.625rem 1rem; }
+
+/* ─── Utilisateurs — responsive ──────────────────────────── */
+@media (max-width: 48rem) {
+  /* Sur mobile, masquer téléphone et date pour alléger */
+  .ut-table th:nth-child(3),
+  .ut-table td:nth-child(3),
+  .ut-table th:nth-child(5),
+  .ut-table td:nth-child(5) { display: none; }
+
+  /* Ajuster les largeurs des colonnes restantes */
+  .ut-table th:first-child { width: 44%; }
+  .ut-table th:nth-child(2) { width: 20%; }
+  .ut-table th:nth-child(4) { width: 18%; }
+  .ut-table th:last-child   { width: 18%; }
+
+  .ut-table td { padding: 0.75rem 0.875rem; }
+  .ut-table th { padding: 0.625rem 0.875rem; }
+
+  .ut-user-name  { font-size: 0.8125rem; }
+  .ut-user-email { font-size: 0.6875rem; }
+  .ut-table { min-width: unset; }
+}
 
 /* ─── PAGINATION ─────────────────────────────────────────── */
 
@@ -3428,8 +3453,25 @@ body {
 
 /* ── Responsive Supervision ── */
 @media (max-width: 48rem) {
+  .sup-layout-body {
+    flex-direction: column !important;
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 0;
+  }
+  .sup-panel-list {
+    width: 100% !important;
+    flex-shrink: unset !important;
+    border-right: none !important;
+    border-bottom: 1px solid var(--c-border);
+    max-height: none;
+  }
+  .sup-panel-right {
+    width: 100% !important;
+    flex: 1;
+    min-height: 60vh;
+  }
   .sup-panel-hidden { display: none !important; }
-  .sup-panel-right { width: 100% !important; flex: 1; }
   .sup-back-btn { display: flex !important; }
 }
 

@@ -117,12 +117,18 @@ export default function DashboardPage() {
         </div>
 
         <div className="dashboard-bottom">
-          <div className="immo-card" style={{ padding: '20px 24px' }}>
+          <div
+            className="immo-card"
+            style={{ padding: '20px 24px', cursor: 'pointer' }}
+            onClick={() => navigate('/moderation')}
+            role="button" tabIndex={0}
+            onKeyDown={e => e.key === 'Enter' && navigate('/moderation')}
+          >
             <div className="section-header">
               <span className="section-title">Annonces en attente de modération</span>
-              <Link to="/moderation" className="section-link" style={{ textDecoration: 'none' }}>
-                VOIR TOUT
-              </Link>
+              <span className="section-link" style={{ fontSize: 11, fontWeight: 700, color: 'var(--c-blue)', letterSpacing: '0.05em' }}>
+                VOIR TOUT →
+              </span>
             </div>
             {stats && stats.biens_en_attente === 0 ? (
               <p style={{ color: 'var(--c-muted)', fontSize: 13, marginTop: 16 }}>
@@ -166,6 +172,8 @@ export default function DashboardPage() {
         {/* ── Supervision commerciaux ── */}
         <div
           onClick={() => navigate('/supervision')}
+          role="button" tabIndex={0}
+          onKeyDown={e => e.key === 'Enter' && navigate('/supervision')}
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             padding: '18px 24px', borderRadius: 14, cursor: 'pointer',

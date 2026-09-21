@@ -342,7 +342,7 @@ export default function SupervisionPage() {
       </div>
 
       {/* Corps */}
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
+      <div className="sup-layout-body" style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
 
         {/* ═══ Panel gauche ═══ */}
         <div
