@@ -31,6 +31,7 @@ export default function DashboardPage() {
       iconBg:  '#EFF6FF',
       icon:    <UsersIcon size={22} />,
       iconColor: '#2563EB',
+      to:      '/utilisateurs',
     },
     {
       label:   'ANNONCES ACTIVES',
@@ -40,6 +41,7 @@ export default function DashboardPage() {
       iconBg:  '#FFF7ED',
       icon:    <HomeIcon size={22} />,
       iconColor: '#F97316',
+      to:      '/annonces',
     },
     {
       label:   'EN ATTENTE MODÉRATION',
@@ -49,6 +51,7 @@ export default function DashboardPage() {
       iconBg:  '#FEF2F2',
       icon:    <AlertIcon size={22} />,
       iconColor: '#DC2626',
+      to:      '/moderation',
     },
     {
       label:   'PROPRIÉTAIRES & DÉMARCHEURS',
@@ -63,6 +66,7 @@ export default function DashboardPage() {
         </svg>
       ),
       iconColor: '#16A34A',
+      to:      '/configuration/proprietaires',
     },
   ];
 
@@ -87,7 +91,15 @@ export default function DashboardPage() {
 
         <div className="stat-grid">
           {statCards.map((s) => (
-            <div className="stat-card" key={s.label}>
+            <div
+              className="stat-card"
+              key={s.label}
+              onClick={() => navigate(s.to)}
+              style={{ cursor: 'pointer' }}
+              role="button"
+              tabIndex={0}
+              onKeyDown={e => e.key === 'Enter' && navigate(s.to)}
+            >
               <div className="stat-card-top">
                 <div className="stat-icon-wrap" style={{ background: s.iconBg, color: s.iconColor }}>
                   {s.icon}

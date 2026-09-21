@@ -144,6 +144,7 @@ export default function SupervisionPage() {
   const [hoveredMsg, setHoveredMsg]     = useState<number | null>(null);
   const [claims, setClaims]             = useState<Record<number, { name: string; at: number }>>({});
   const [popover, setPopover]           = useState<number | null>(null);
+  const [mobilePanel, setMobilePanel]   = useState<'list' | 'person' | 'thread'>('list');
 
   const bottomRef     = useRef<HTMLDivElement>(null);
   const listPollRef   = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -254,6 +255,7 @@ export default function SupervisionPage() {
     if (openConv) clearClaim(openConv.id);
     setOpenConv(conv);
     setInput('');
+    setMobilePanel('thread');
     if (selectedPerson?.type === 'commercial') {
       setClaim(conv.id, adminName);
       syncClaims();
@@ -340,10 +342,13 @@ export default function SupervisionPage() {
       </div>
 
       {/* Corps */}
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
 
         {/* ═══ Panel gauche ═══ */}
-        <div style={{ width: 300, flexShrink: 0, borderRight: '1px solid var(--c-border)', display: 'flex', flexDirection: 'column', background: '#fff' }}>
+        <div
+          className={`sup-panel-list${mobilePanel !== 'list' ? ' sup-panel-hidden' : ''}`}
+          style={{ width: 300, flexShrink: 0, borderRight: '1px solid var(--c-border)', display: 'flex', flexDirection: 'column', background: '#fff' }}
+        >
 
           {/* Tabs commerciaux / propriétaires */}
           <div style={{ display: 'flex', borderBottom: '1px solid var(--c-border)' }}>
@@ -400,7 +405,7 @@ export default function SupervisionPage() {
                 const isActive = selectedPerson?.type === 'commercial' && selectedPerson.data.id === c.id;
                 const unread = commercialUnread[c.id] ?? 0;
                 return (
-                  <div key={c.id} onClick={() => setSelectedPerson({ type: 'commercial', data: c })}
+                  <div key={c.id} onClick={() => { setSelectedPerson({ type: 'commercial', data: c }); setMobilePanel('person'); }}
                     style={{
                       padding: '11px 14px', borderBottom: '1px solid var(--c-border)', cursor: 'pointer',
                       background: isActive ? '#EFF6FF' : 'transparent',
@@ -448,7 +453,7 @@ export default function SupervisionPage() {
               ) : filteredProprietaires.map(p => {
                 const isActive = selectedPerson?.type === 'proprietaire' && selectedPerson.data.id === p.id;
                 return (
-                  <div key={p.id} onClick={() => setSelectedPerson({ type: 'proprietaire', data: p })}
+                  <div key={p.id} onClick={() => { setSelectedPerson({ type: 'proprietaire', data: p }); setMobilePanel('person'); }}
                     style={{
                       padding: '11px 14px', borderBottom: '1px solid var(--c-border)', cursor: 'pointer',
                       background: isActive ? '#F5F3FF' : 'transparent',
@@ -480,7 +485,10 @@ export default function SupervisionPage() {
         </div>
 
         {/* ═══ Panel droit ═══ */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--c-bg)' }}>
+        <div
+          className={`sup-panel-right${mobilePanel === 'list' ? ' sup-panel-hidden' : ''}`}
+          style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--c-bg)' }}
+        >
 
           {!selectedPerson ? (
             /* État vide */
@@ -499,7 +507,7 @@ export default function SupervisionPage() {
             /* ─── Vue thread ─────────────────────────────────────── */
             <>
               <div style={{ padding: '10px 16px', borderBottom: '1px solid var(--c-border)', background: '#fff', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-                <button onClick={() => { setOpenConv(null); if (openConv) clearClaim(openConv.id); }}
+                <button onClick={() => { setOpenConv(null); if (openConv) clearClaim(openConv.id); setMobilePanel('person'); }}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-blue)', padding: 4 }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="15 18 9 12 15 6"/>
@@ -678,6 +686,17 @@ export default function SupervisionPage() {
 
               {/* Header profil */}
               <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--c-border)', flexShrink: 0 }}>
+                {/* Bouton retour mobile vers liste */}
+                <button
+                  className="sup-back-btn"
+                  onClick={() => { setSelectedPerson(null); setMobilePanel('list'); }}
+                  style={{ display: 'none', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-blue)', padding: '0 0 10px 0', alignItems: 'center', gap: 4, fontSize: 13, fontWeight: 600 }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="15 18 9 12 15 6"/>
+                  </svg>
+                  Retour
+                </button>
                 <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
                   <div style={{
                     width: 52, height: 52, borderRadius: '50%', flexShrink: 0,

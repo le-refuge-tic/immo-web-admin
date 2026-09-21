@@ -111,6 +111,7 @@ export default function MessagesPage() {
   const [popover, setPopover]           = useState<{ user: any } | null>(null);
   const [cpModalFor, setCpModalFor]     = useState<number | null>(null);
   const [slotActing, setSlotActing]     = useState<number | null>(null);
+  const [isMobileThreadOpen, setIsMobileThreadOpen] = useState(false);
   const bottomRef                       = useRef<HTMLDivElement>(null);
   const sendingRef                      = useRef(false);
 
@@ -200,6 +201,16 @@ export default function MessagesPage() {
     setShowNewModal(false);
     if (!convs.find((c: any) => c.id === conv.id)) setConvs(prev => [conv, ...prev]);
     setActiveId(conv.id);
+    setIsMobileThreadOpen(true);
+  };
+
+  const handleSelectConv = (id: number) => {
+    setActiveId(id);
+    setIsMobileThreadOpen(true);
+  };
+
+  const handleBackToList = () => {
+    setIsMobileThreadOpen(false);
   };
 
   const activeConv = convs.find((c: any) => c.id === activeId);
@@ -220,10 +231,14 @@ export default function MessagesPage() {
   /* ─── Rendu ─────────────────────────────────────────────────── */
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - var(--topbar-h, 60px))', overflow: 'hidden' }} onClick={() => setPopover(null)}>
+    <div
+      className={`msg-layout${isMobileThreadOpen ? ' thread-open' : ''}`}
+      style={{ display: 'flex', height: 'calc(100vh - var(--topbar-h, 60px))', overflow: 'hidden', position: 'relative' }}
+      onClick={() => setPopover(null)}
+    >
 
       {/* ═══ Panel gauche — liste ═══ */}
-      <div style={{ width: 320, flexShrink: 0, borderRight: '1px solid var(--c-border)', display: 'flex', flexDirection: 'column', background: '#fff' }}>
+      <div className="msg-conv-panel" style={{ width: 320, flexShrink: 0, borderRight: '1px solid var(--c-border)', display: 'flex', flexDirection: 'column', background: '#fff' }}>
 
         {/* Header */}
         <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--c-border)', display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -264,7 +279,7 @@ export default function MessagesPage() {
             const other = otherUser(c);
             const role = other?.role_principal ?? other?.role ?? '';
             return (
-              <div key={c.id} onClick={() => setActiveId(c.id)}
+              <div key={c.id} onClick={() => handleSelectConv(c.id)}
                 style={{
                   padding: '12px 14px', borderBottom: '1px solid var(--c-border)', cursor: 'pointer',
                   background: isActive ? '#EFF6FF' : 'transparent',
@@ -328,7 +343,7 @@ export default function MessagesPage() {
 
       {/* ═══ Panel droit — thread ═══ */}
       {!activeConv ? (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--c-muted)', background: 'var(--c-bg)' }}>
+        <div className="msg-thread" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--c-muted)', background: 'var(--c-bg)' }}>
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: 14, opacity: 0.4 }}>
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
           </svg>
@@ -336,10 +351,20 @@ export default function MessagesPage() {
           <div style={{ fontSize: 12 }}>Ou démarrez une nouvelle discussion ci-contre.</div>
         </div>
       ) : (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div className="msg-thread" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
           {/* Header thread */}
           <div style={{ padding: '12px 18px', borderBottom: '1px solid var(--c-border)', background: '#fff', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+            {/* Bouton retour mobile */}
+            <button
+              className="msg-back-btn"
+              onClick={handleBackToList}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-blue)', padding: 4, display: 'none', flexShrink: 0 }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 18 9 12 15 6"/>
+              </svg>
+            </button>
             <div style={{ position: 'relative' }}>
               <div
                 style={{ width: 40, height: 40, borderRadius: '50%', background: avatarColor(activeOther?.id ?? activeConv.id), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', flexShrink: 0 }}

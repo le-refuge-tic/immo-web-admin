@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Topbar from './Topbar';
 import Sidebar from './Sidebar';
-import AdminFooter from './AdminFooter';
 import PhoneRequiredModal, { usePhoneRequired } from '../components/PhoneRequiredModal';
 import ChangePasswordRequiredModal, { useChangePasswordRequired } from '../components/ChangePasswordRequiredModal';
 
@@ -43,7 +42,6 @@ export default function AdminLayout() {
           <div className="immo-content-scroll">
             <Outlet />
           </div>
-          <AdminFooter />
         </div>
       </div>
     </div>

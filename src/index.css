@@ -3419,10 +3419,18 @@ body {
 
 /* ── Responsive Messages ── */
 @media (max-width: 48rem) {
-  .msg-conv-panel { width: 100%; position: absolute; z-index: 10; }
-  .msg-thread { display: none; }
-  .msg-layout.thread-open .msg-conv-panel { display: none; }
-  .msg-layout.thread-open .msg-thread { display: flex; }
+  .msg-conv-panel { width: 100% !important; flex-shrink: unset; }
+  .msg-thread { display: none !important; }
+  .msg-layout.thread-open .msg-conv-panel { display: none !important; }
+  .msg-layout.thread-open .msg-thread { display: flex !important; flex: 1; flex-direction: column; overflow: hidden; }
+  .msg-back-btn { display: flex !important; }
+}
+
+/* ── Responsive Supervision ── */
+@media (max-width: 48rem) {
+  .sup-panel-hidden { display: none !important; }
+  .sup-panel-right { width: 100% !important; flex: 1; }
+  .sup-back-btn { display: flex !important; }
 }
 
 /* ══════════════════════════════════════════════════════════
