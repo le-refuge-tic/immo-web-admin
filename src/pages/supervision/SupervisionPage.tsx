@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getMessages, markConvRead, getReadConvIds, setActiveCommercialIds } from '../../api/getMessages';
 import { supervisionApi } from '../../api/commercialSupervisionApi';
 import { getCommerciaux } from '../../api/getCommerciaux';
@@ -174,6 +175,7 @@ function ConfirmDeleteModal({ onConfirm, onCancel }: { onConfirm: () => void; on
 
 export default function SupervisionPage() {
   const { user: me } = useAuth();
+  const navigate = useNavigate();
   const adminName = me ? displayName(me) : 'Admin';
 
   /* — état gauche — */
@@ -972,13 +974,23 @@ export default function SupervisionPage() {
                     const mod   = MOD_LABELS[b.statut_moderation] ?? { label: b.statut_moderation, color: '#6B7280', bg: '#F3F4F6' };
                     const proprio = b.amenites?.proprietaire_info;
                     return (
-                      <div key={b.id} style={{ padding: '12px 20px', borderBottom: '1px solid var(--c-border)' }}>
+                      <div
+                        key={b.id}
+                        onClick={() => navigate(`/annonces/${b.id}`)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={e => e.key === 'Enter' && navigate(`/annonces/${b.id}`)}
+                        style={{ padding: '12px 20px', borderBottom: '1px solid var(--c-border)', cursor: 'pointer', transition: 'background 0.15s' }}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'var(--c-bg)')}
+                        onMouseLeave={e => (e.currentTarget.style.background = '')}
+                      >
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                           <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--c-text)' }}>{label}</span>
                           <span style={{ padding: '2px 8px', borderRadius: 20, fontSize: 10, fontWeight: 700, background: mod.bg, color: mod.color, border: `1px solid ${mod.color}33` }}>{mod.label}</span>
                           <span style={{ padding: '2px 8px', borderRadius: 20, fontSize: 10, fontWeight: 600, background: 'var(--c-bg)', color: 'var(--c-muted)', border: '1px solid var(--c-border)' }}>
                             {b.transaction === 'location' ? 'Location' : 'Vente'}
                           </span>
+                          <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--c-blue)', fontWeight: 600 }}>Voir →</span>
                         </div>
                         <div style={{ fontSize: 12, color: 'var(--c-muted)', marginTop: 4 }}>
                           {b.localisation?.ville ?? ''}{b.localisation?.quartier ? ` · ${b.localisation.quartier}` : ''}
