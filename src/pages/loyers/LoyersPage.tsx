@@ -12,11 +12,13 @@ export default function LoyersPage() {
   const [filtre, setFiltre]               = useState('');
   const [escaladeOnly, setEscalade]       = useState(false);
   const [loading, setLoading]             = useState(false);
+  const [loadError, setLoadError]         = useState(false);
   const [totalRetard, setTotalRetard]     = useState(0);
   const [totalEscalade, setTotalEscalade] = useState(0);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError(false);
     try {
       const [res, retard, escalade] = await Promise.all([
         getLoyer.list({
@@ -31,6 +33,8 @@ export default function LoyersPage() {
       setTotal(res.total);
       setTotalRetard(retard.total);
       setTotalEscalade(escalade.total);
+    } catch {
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -60,11 +64,19 @@ export default function LoyersPage() {
         </select>
         <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--c-text)', marginLeft: 12, cursor: 'pointer' }}>
           <input type="checkbox" checked={escaladeOnly} onChange={(e) => { setEscalade(e.target.checked); setPage(1); }} />
-          Escaladés uniquement
+          Escaladés
         </label>
       </div>
 
       <div className="immo-page">
+        {loadError && (
+          <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8, padding: '10px 16px', fontSize: 13, color: '#DC2626', fontWeight: 500 }}>
+            Erreur lors du chargement.{' '}
+            <button onClick={load} style={{ background: 'none', border: 'none', color: '#DC2626', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>
+              Réessayer
+            </button>
+          </div>
+        )}
         <div className="mod-stat-cards">
           <div className="mod-stat-card urgent">
             <div>
@@ -82,7 +94,8 @@ export default function LoyersPage() {
           </div>
         </div>
 
-        <div className="immo-card" style={{ padding: 0, overflow: 'hidden', overflowX: 'auto' }}>
+        {/* ── Vue tableau (desktop) ── */}
+        <div className="immo-card ut-desktop-only" style={{ padding: 0, overflow: 'hidden', overflowX: 'auto' }}>
           <div className="mod-table-header" style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr 80px', minWidth: 560 }}>
             <span className="mod-table-col">Mois</span>
             <span className="mod-table-col">Montant</span>
@@ -91,7 +104,6 @@ export default function LoyersPage() {
             <span className="mod-table-col">Retard</span>
             <span className="mod-table-col">Escalade</span>
           </div>
-
           {loading ? (
             <div style={{ padding: '32px 20px', textAlign: 'center', color: 'var(--c-muted)' }}>Chargement…</div>
           ) : loyers.length === 0 ? (
@@ -119,8 +131,54 @@ export default function LoyersPage() {
               </div>
             </div>
           ))}
-
           <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--c-border)' }}>
+            <span style={{ fontSize: 12, color: 'var(--c-muted)' }}>
+              {total === 0 ? '0 résultat' : `${(page - 1) * LIMIT + 1}–${Math.min(page * LIMIT, total)} sur ${total}`}
+            </span>
+            <div className="immo-pagination">
+              <button className="page-btn" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}><ChevronLeftIcon /></button>
+              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map((p) => (
+                <button key={p} className={`page-btn ${page === p ? 'active' : ''}`} onClick={() => setPage(p)}>{p}</button>
+              ))}
+              <button className="page-btn" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}><ChevronRightIcon /></button>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Vue cartes (mobile) ── */}
+        <div className="ut-card-list ut-mobile-only">
+          {loading ? (
+            <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--c-muted)' }}>Chargement…</div>
+          ) : loyers.length === 0 ? (
+            <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--c-muted)', fontSize: 13 }}>Aucun loyer trouvé.</div>
+          ) : loyers.map((l: any) => (
+            <div key={l.id} className="ut-card">
+              <div className="ut-card-header">
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 700, fontSize: 14 }}>{formatMois(l.mois)}</div>
+                  <div style={{ fontSize: 11, color: 'var(--c-muted)', marginTop: 2 }}>Contrat #{l.contrat_id}</div>
+                </div>
+                <LoyersStatutBadge statut={l.statut} />
+              </div>
+              <div className="ut-card-footer">
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--c-text)' }}>
+                    {Number(l.montant).toLocaleString('fr-FR')} <span style={{ fontSize: 11, fontWeight: 400 }}>FCFA</span>
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--c-muted)', marginTop: 2 }}>
+                    Échéance : {formatDate(l.date_echeance)}
+                    {l.jours_retard > 0 && (
+                      <span style={{ color: '#DC2626', marginLeft: 8, fontWeight: 700 }}>+{l.jours_retard}j retard</span>
+                    )}
+                  </div>
+                </div>
+                {l.escalade_admin && (
+                  <span style={{ fontSize: 11, background: '#FEF2F2', color: '#DC2626', padding: '2px 8px', borderRadius: 6, fontWeight: 700 }}>Escaladé</span>
+                )}
+              </div>
+            </div>
+          ))}
+          <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--c-border)' }}>
             <span style={{ fontSize: 12, color: 'var(--c-muted)' }}>
               {total === 0 ? '0 résultat' : `${(page - 1) * LIMIT + 1}–${Math.min(page * LIMIT, total)} sur ${total}`}
             </span>

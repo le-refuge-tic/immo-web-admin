@@ -41,6 +41,19 @@ function walletLabel(type: string) {
   }
 }
 
+function StatutBadge({ statut }: { statut: string }) {
+  return (
+    <span style={{
+      padding: '3px 10px', borderRadius: 20,
+      background: (STATUT_COLORS[statut] ?? '#9ca3af') + '18',
+      color: STATUT_COLORS[statut] ?? '#9ca3af',
+      fontWeight: 700, fontSize: 12, whiteSpace: 'nowrap',
+    }}>
+      {STATUT_LABELS[statut] ?? statut}
+    </span>
+  );
+}
+
 export default function RetraitsPage() {
   const { user } = useAuth();
   const isSuperAdmin = user?.role === 'super_admin';
@@ -79,14 +92,8 @@ export default function RetraitsPage() {
   const valider = async (id: number) => {
     setActionId(id);
     try {
-      const res = await fetch(`${BASE}/retraits/admin/${id}/valider`, {
-        method: 'PATCH',
-        ...(auth() as any),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message ?? 'Erreur');
-      }
+      const res = await fetch(`${BASE}/retraits/admin/${id}/valider`, { method: 'PATCH', ...(auth() as any) });
+      if (!res.ok) { const err = await res.json(); throw new Error(err.message ?? 'Erreur'); }
       showToast('Retrait validé et envoyé avec succès');
       load();
     } catch (e: any) {
@@ -102,16 +109,10 @@ export default function RetraitsPage() {
       const endpoint = manuel ? 'rejeter-manuel' : 'rejeter';
       const res = await fetch(`${BASE}/retraits/admin/${id}/${endpoint}`, {
         method: 'PATCH',
-        headers: {
-          ...((auth() as any).headers),
-          'Content-Type': 'application/json',
-        },
+        headers: { ...((auth() as any).headers), 'Content-Type': 'application/json' },
         body: JSON.stringify({ motif: motifRejet || undefined }),
       });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message ?? 'Erreur');
-      }
+      if (!res.ok) { const err = await res.json(); throw new Error(err.message ?? 'Erreur'); }
       showToast('Retrait rejeté');
       setRejectingId(null);
       setMotifRejet('');
@@ -134,16 +135,13 @@ export default function RetraitsPage() {
         headers: { ...((auth() as any).headers) },
         body: form,
       });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message ?? 'Erreur');
-      }
+      if (!res.ok) { const err = await res.json(); throw new Error(err.message ?? 'Erreur'); }
       showToast('Retrait marqué comme envoyé');
       setSendingProofId(null);
       setProofFile(null);
       load();
     } catch (e: any) {
-      showToast(e.message ?? 'Erreur lors de l\'envoi', false);
+      showToast(e.message ?? "Erreur lors de l'envoi", false);
     } finally {
       setActionId(null);
     }
@@ -167,269 +165,261 @@ export default function RetraitsPage() {
       </div>
 
       <div className="immo-page">
-      {/* Toast */}
-      {toast && (
-        <div style={{
-          position: 'fixed', top: 24, right: 24, zIndex: 9999,
-          background: toast.ok ? '#10b981' : '#ef4444',
-          color: '#fff', padding: '12px 20px', borderRadius: 10,
-          fontWeight: 600, fontSize: 14, boxShadow: '0 4px 16px rgba(0,0,0,.2)',
-        }}>
-          {toast.msg}
-        </div>
-      )}
+        {toast && (
+          <div style={{
+            position: 'fixed', top: 24, right: 24, zIndex: 9999,
+            background: toast.ok ? '#10b981' : '#ef4444',
+            color: '#fff', padding: '12px 20px', borderRadius: 10,
+            fontWeight: 600, fontSize: 14, boxShadow: '0 4px 16px rgba(0,0,0,.2)',
+          }}>
+            {toast.msg}
+          </div>
+        )}
 
-      {/* Filtres */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
-        {['en_attente', 'approuve', 'envoye', 'rejete', 'echoue', ''].map(s => (
-          <button
-            key={s}
-            onClick={() => setFiltreStatut(s)}
-            style={{
-              padding: '6px 16px',
-              borderRadius: 20,
-              border: '1.5px solid',
-              borderColor: filtreStatut === s ? '#1a3a6b' : '#e5e7eb',
-              background: filtreStatut === s ? '#1a3a6b' : '#fff',
-              color: filtreStatut === s ? '#fff' : '#374151',
-              fontWeight: 600, fontSize: 13, cursor: 'pointer',
-            }}
-          >
-            {s ? STATUT_LABELS[s] : 'Tous'}
-          </button>
-        ))}
-      </div>
-
-      {loading ? (
-        <div style={{ textAlign: 'center', padding: 60, color: '#9ca3af' }}>Chargement…</div>
-      ) : retraits.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 60, color: '#9ca3af', fontSize: 15 }}>
-          Aucune demande de retrait
+        <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
+          {['en_attente', 'approuve', 'envoye', 'rejete', 'echoue', ''].map(s => (
+            <button key={s} onClick={() => setFiltreStatut(s)}
+              style={{
+                padding: '6px 16px', borderRadius: 20, border: '1.5px solid',
+                borderColor: filtreStatut === s ? '#1a3a6b' : '#e5e7eb',
+                background: filtreStatut === s ? '#1a3a6b' : 'var(--c-card)',
+                color: filtreStatut === s ? '#fff' : '#374151',
+                fontWeight: 600, fontSize: 13, cursor: 'pointer',
+              }}
+            >
+              {s ? STATUT_LABELS[s] : 'Tous'}
+            </button>
+          ))}
         </div>
-      ) : (
-        <div style={{ background: '#fff', borderRadius: 14, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,.06)', overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14, minWidth: 800 }}>
-            <thead>
-              <tr style={{ background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
-                {['Bénéficiaire', 'Montant', 'Wallet', 'Numéro / Titulaire', 'Statut', 'Date', 'Traité par', 'Actions'].map(h => (
-                  <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 600, color: '#374151', fontSize: 12 }}>
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {retraits.map((r: any, i: number) => {
-                const isLast       = i === retraits.length - 1;
-                const pending      = r.statut === 'en_attente';
-                const isRejecting  = rejectingId === r.id;
+
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: 60, color: '#9ca3af' }}>Chargement…</div>
+        ) : retraits.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: 60, color: '#9ca3af', fontSize: 15 }}>Aucune demande de retrait</div>
+        ) : (
+          <>
+            {/* ── Vue tableau (desktop) ── */}
+            <div className="ut-desktop-only" style={{ background: 'var(--c-card)', borderRadius: 14, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,.06)', overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14, minWidth: 800 }}>
+                <thead>
+                  <tr style={{ background: 'var(--c-bg)', borderBottom: '1px solid var(--c-border)' }}>
+                    {['Bénéficiaire', 'Montant', 'Wallet', 'Numéro / Titulaire', 'Statut', 'Date', 'Traité par', 'Actions'].map(h => (
+                      <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 600, color: 'var(--c-muted)', fontSize: 12 }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {retraits.map((r: any, i: number) => {
+                    const isLast        = i === retraits.length - 1;
+                    const pending       = r.statut === 'en_attente';
+                    const isRejecting   = rejectingId === r.id;
+                    const isSendingProof = sendingProofId === r.id;
+                    const isActing      = actionId === r.id;
+                    const isManuel      = (r.wallet?.type ?? '') === 'commission_commerciale';
+                    const nom = [r.user?.prenom, r.user?.nom].filter(Boolean).join(' ') || `User #${r.user_id}`;
+                    return (
+                      <tr key={r.id} style={{ borderBottom: isLast ? 'none' : '1px solid var(--c-border)', verticalAlign: 'top' }}>
+                        <td style={{ padding: '14px 16px' }}>
+                          <div style={{ fontWeight: 600 }}>{nom}</div>
+                          {r.user?.email && <div style={{ color: '#9ca3af', fontSize: 12 }}>{r.user.email}</div>}
+                        </td>
+                        <td style={{ padding: '14px 16px', fontWeight: 700, color: '#1a3a6b' }}>{fmtMontant(Number(r.montant))}</td>
+                        <td style={{ padding: '14px 16px', color: '#6b7280' }}>{walletLabel(r.wallet?.type ?? '')}</td>
+                        <td style={{ padding: '14px 16px' }}>
+                          <div style={{ fontFamily: 'monospace', letterSpacing: 1 }}>{r.numero_telephone}</div>
+                          {r.nom_titulaire && <div style={{ color: '#6b7280', fontSize: 12, marginTop: 2 }}>{r.nom_titulaire}</div>}
+                        </td>
+                        <td style={{ padding: '14px 16px' }}>
+                          <StatutBadge statut={r.statut} />
+                          {r.statut === 'envoye' && r.preuve_url && (
+                            <div style={{ marginTop: 6 }}>
+                              <a href={r.preuve_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: '#1a3a6b', fontWeight: 600 }}>Voir la preuve</a>
+                            </div>
+                          )}
+                          {r.statut === 'rejete' && r.motif_rejet && (
+                            <div style={{ marginTop: 4, fontSize: 12, color: '#ef4444' }}>{r.motif_rejet}</div>
+                          )}
+                        </td>
+                        <td style={{ padding: '14px 16px', color: '#6b7280', fontSize: 12, whiteSpace: 'nowrap' }}>{fmtDate(r.created_at)}</td>
+                        <td style={{ padding: '14px 16px', fontSize: 12, whiteSpace: 'nowrap' }}>
+                          {r.validateur ? (
+                            <>
+                              <div style={{ fontWeight: 600, color: '#374151' }}>{[r.validateur.prenom, r.validateur.nom].filter(Boolean).join(' ')}</div>
+                              <div style={{ color: '#9ca3af' }}>{r.validateur.role === 'super_admin' ? 'Super Admin' : 'Admin'}{r.valide_le ? ` · ${fmtDate(r.valide_le)}` : ''}</div>
+                            </>
+                          ) : <span style={{ color: '#9ca3af' }}>—</span>}
+                        </td>
+                        <td style={{ padding: '14px 16px' }}>
+                          {!pending && <span style={{ color: '#9ca3af', fontSize: 12 }}>—</span>}
+                          {pending && !isRejecting && !isSendingProof && (
+                            isManuel ? (
+                              <div style={{ display: 'flex', gap: 8 }}>
+                                <button onClick={() => setSendingProofId(r.id)} disabled={isActing}
+                                  style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: '#10b981', color: '#fff', fontWeight: 600, fontSize: 13, cursor: isActing ? 'not-allowed' : 'pointer' }}>
+                                  Marquer envoyé
+                                </button>
+                                <button onClick={() => setRejectingId(r.id)} disabled={isActing}
+                                  style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: '#fee2e2', color: '#ef4444', fontWeight: 600, fontSize: 13, cursor: isActing ? 'not-allowed' : 'pointer' }}>
+                                  Rejeter
+                                </button>
+                              </div>
+                            ) : isSuperAdmin ? (
+                              <div style={{ display: 'flex', gap: 8 }}>
+                                <button onClick={() => valider(r.id)} disabled={isActing}
+                                  style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: '#10b981', color: '#fff', fontWeight: 600, fontSize: 13, cursor: isActing ? 'not-allowed' : 'pointer', opacity: isActing ? 0.7 : 1 }}>
+                                  {isActing ? '…' : 'Valider'}
+                                </button>
+                                <button onClick={() => setRejectingId(r.id)} disabled={isActing}
+                                  style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: '#fee2e2', color: '#ef4444', fontWeight: 600, fontSize: 13, cursor: isActing ? 'not-allowed' : 'pointer' }}>
+                                  Rejeter
+                                </button>
+                              </div>
+                            ) : <span style={{ color: '#9ca3af', fontSize: 12 }}>Réservé au Super Admin</span>
+                          )}
+                          {pending && isRejecting && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 200 }}>
+                              <input placeholder="Motif (optionnel)" value={motifRejet} onChange={e => setMotifRejet(e.target.value)}
+                                style={{ padding: '6px 10px', borderRadius: 8, border: '1.5px solid #e5e7eb', fontSize: 13 }} />
+                              <div style={{ display: 'flex', gap: 6 }}>
+                                <button onClick={() => rejeter(r.id, isManuel)} disabled={isActing}
+                                  style={{ flex: 1, padding: '6px 0', borderRadius: 8, border: 'none', background: '#ef4444', color: '#fff', fontWeight: 600, fontSize: 13, cursor: isActing ? 'not-allowed' : 'pointer', opacity: isActing ? 0.7 : 1 }}>
+                                  {isActing ? '…' : 'Confirmer rejet'}
+                                </button>
+                                <button onClick={() => { setRejectingId(null); setMotifRejet(''); }}
+                                  style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #e5e7eb', background: 'var(--c-card)', fontSize: 13, cursor: 'pointer' }}>✕</button>
+                              </div>
+                            </div>
+                          )}
+                          {pending && isSendingProof && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 220 }}>
+                              <input type="file" accept="image/png,image/jpeg,image/webp" onChange={e => setProofFile(e.target.files?.[0] ?? null)} style={{ fontSize: 12 }} />
+                              <div style={{ display: 'flex', gap: 6 }}>
+                                <button onClick={() => confirmerEnvoiManuel(r.id)} disabled={isActing || !proofFile}
+                                  style={{ flex: 1, padding: '6px 0', borderRadius: 8, border: 'none', background: '#10b981', color: '#fff', fontWeight: 600, fontSize: 13, cursor: (isActing || !proofFile) ? 'not-allowed' : 'pointer', opacity: (isActing || !proofFile) ? 0.7 : 1 }}>
+                                  {isActing ? '…' : 'Confirmer'}
+                                </button>
+                                <button onClick={() => { setSendingProofId(null); setProofFile(null); }}
+                                  style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #e5e7eb', background: 'var(--c-card)', fontSize: 13, cursor: 'pointer' }}>✕</button>
+                              </div>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* ── Vue cartes (mobile) ── */}
+            <div className="ut-card-list ut-mobile-only">
+              {retraits.map((r: any) => {
+                const pending        = r.statut === 'en_attente';
+                const isRejecting    = rejectingId === r.id;
                 const isSendingProof = sendingProofId === r.id;
-                const isActing     = actionId === r.id;
-                const isManuel     = (r.wallet?.type ?? '') === 'commission_commerciale';
+                const isActing       = actionId === r.id;
+                const isManuel       = (r.wallet?.type ?? '') === 'commission_commerciale';
                 const nom = [r.user?.prenom, r.user?.nom].filter(Boolean).join(' ') || `User #${r.user_id}`;
-
                 return (
-                  <tr
-                    key={r.id}
-                    style={{ borderBottom: isLast ? 'none' : '1px solid #f3f4f6', verticalAlign: 'top' }}
-                  >
-                    <td style={{ padding: '14px 16px' }}>
-                      <div style={{ fontWeight: 600 }}>{nom}</div>
-                      {r.user?.email && (
-                        <div style={{ color: '#9ca3af', fontSize: 12 }}>{r.user.email}</div>
-                      )}
-                    </td>
-                    <td style={{ padding: '14px 16px', fontWeight: 700, color: '#1a3a6b' }}>
-                      {fmtMontant(Number(r.montant))}
-                    </td>
-                    <td style={{ padding: '14px 16px', color: '#6b7280' }}>
-                      {walletLabel(r.wallet?.type ?? '')}
-                    </td>
-                    <td style={{ padding: '14px 16px' }}>
-                      <div style={{ fontFamily: 'monospace', letterSpacing: 1 }}>{r.numero_telephone}</div>
-                      {r.nom_titulaire && (
-                        <div style={{ color: '#6b7280', fontSize: 12, marginTop: 2 }}>{r.nom_titulaire}</div>
-                      )}
-                    </td>
-                    <td style={{ padding: '14px 16px' }}>
-                      <span style={{
-                        padding: '3px 10px',
-                        borderRadius: 20,
-                        background: (STATUT_COLORS[r.statut] ?? '#9ca3af') + '18',
-                        color: STATUT_COLORS[r.statut] ?? '#9ca3af',
-                        fontWeight: 700, fontSize: 12,
-                      }}>
-                        {STATUT_LABELS[r.statut] ?? r.statut}
-                      </span>
-                      {r.statut === 'envoye' && r.preuve_url && (
-                        <div style={{ marginTop: 6 }}>
-                          <a href={r.preuve_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: '#1a3a6b', fontWeight: 600 }}>
-                            Voir la preuve
-                          </a>
-                        </div>
-                      )}
-                      {r.statut === 'rejete' && r.motif_rejet && (
-                        <div style={{ marginTop: 4, fontSize: 12, color: '#ef4444' }}>{r.motif_rejet}</div>
-                      )}
-                    </td>
-                    <td style={{ padding: '14px 16px', color: '#6b7280', fontSize: 12, whiteSpace: 'nowrap' }}>
-                      {fmtDate(r.created_at)}
-                    </td>
-                    <td style={{ padding: '14px 16px', fontSize: 12, whiteSpace: 'nowrap' }}>
-                      {r.validateur ? (
-                        <>
-                          <div style={{ fontWeight: 600, color: '#374151' }}>
-                            {[r.validateur.prenom, r.validateur.nom].filter(Boolean).join(' ')}
-                          </div>
-                          <div style={{ color: '#9ca3af' }}>
-                            {r.validateur.role === 'super_admin' ? 'Super Admin' : 'Admin'}
-                            {r.valide_le ? ` · ${fmtDate(r.valide_le)}` : ''}
-                          </div>
-                        </>
-                      ) : (
-                        <span style={{ color: '#9ca3af' }}>—</span>
-                      )}
-                    </td>
-                    <td style={{ padding: '14px 16px' }}>
-                      {!pending && (
-                        <span style={{ color: '#9ca3af', fontSize: 12 }}>—</span>
-                      )}
+                  <div key={r.id} className="ut-card">
+                    <div className="ut-card-header">
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 700, fontSize: 14 }}>{nom}</div>
+                        {r.user?.email && <div style={{ fontSize: 11, color: 'var(--c-muted)', marginTop: 2 }}>{r.user.email}</div>}
+                        <div style={{ fontSize: 11, color: 'var(--c-muted)', marginTop: 2 }}>{walletLabel(r.wallet?.type ?? '')}</div>
+                      </div>
+                      <StatutBadge statut={r.statut} />
+                    </div>
 
-                      {pending && !isRejecting && !isSendingProof && (
-                        isManuel ? (
-                          <div style={{ display: 'flex', gap: 8 }}>
-                            <button
-                              onClick={() => setSendingProofId(r.id)}
-                              disabled={isActing}
-                              style={{
-                                padding: '6px 14px', borderRadius: 8, border: 'none',
-                                background: '#10b981', color: '#fff', fontWeight: 600,
-                                fontSize: 13, cursor: isActing ? 'not-allowed' : 'pointer',
-                              }}
-                            >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '8px 0' }}>
+                      <div style={{ fontWeight: 800, fontSize: 16, color: '#1a3a6b' }}>{fmtMontant(Number(r.montant))}</div>
+                      <div style={{ fontSize: 11, color: 'var(--c-muted)', textAlign: 'right' }}>
+                        <div style={{ fontFamily: 'monospace' }}>{r.numero_telephone}</div>
+                        {r.nom_titulaire && <div>{r.nom_titulaire}</div>}
+                      </div>
+                    </div>
+
+                    {r.statut === 'envoye' && r.preuve_url && (
+                      <a href={r.preuve_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: '#1a3a6b', fontWeight: 600, display: 'block', marginBottom: 6 }}>Voir la preuve</a>
+                    )}
+                    {r.statut === 'rejete' && r.motif_rejet && (
+                      <div style={{ fontSize: 12, color: '#ef4444', marginBottom: 6 }}>{r.motif_rejet}</div>
+                    )}
+
+                    <div className="ut-card-footer" style={{ marginTop: 4 }}>
+                      <span style={{ fontSize: 11, color: 'var(--c-muted)' }}>{fmtDate(r.created_at)}</span>
+                      {r.validateur && (
+                        <span style={{ fontSize: 11, color: 'var(--c-muted)' }}>
+                          {[r.validateur.prenom, r.validateur.nom].filter(Boolean).join(' ')}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Actions mobile */}
+                    {pending && !isRejecting && !isSendingProof && (
+                      <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+                        {isManuel ? (
+                          <>
+                            <button onClick={() => setSendingProofId(r.id)} disabled={isActing}
+                              style={{ flex: 1, padding: '8px', borderRadius: 8, border: 'none', background: '#10b981', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
                               Marquer envoyé
                             </button>
-                            <button
-                              onClick={() => setRejectingId(r.id)}
-                              disabled={isActing}
-                              style={{
-                                padding: '6px 14px', borderRadius: 8, border: 'none',
-                                background: '#fee2e2', color: '#ef4444', fontWeight: 600,
-                                fontSize: 13, cursor: isActing ? 'not-allowed' : 'pointer',
-                              }}
-                            >
+                            <button onClick={() => setRejectingId(r.id)} disabled={isActing}
+                              style={{ flex: 1, padding: '8px', borderRadius: 8, border: 'none', background: '#fee2e2', color: '#ef4444', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
                               Rejeter
                             </button>
-                          </div>
+                          </>
                         ) : isSuperAdmin ? (
-                          <div style={{ display: 'flex', gap: 8 }}>
-                            <button
-                              onClick={() => valider(r.id)}
-                              disabled={isActing}
-                              style={{
-                                padding: '6px 14px', borderRadius: 8, border: 'none',
-                                background: '#10b981', color: '#fff', fontWeight: 600,
-                                fontSize: 13, cursor: isActing ? 'not-allowed' : 'pointer',
-                                opacity: isActing ? 0.7 : 1,
-                              }}
-                            >
+                          <>
+                            <button onClick={() => valider(r.id)} disabled={isActing}
+                              style={{ flex: 1, padding: '8px', borderRadius: 8, border: 'none', background: '#10b981', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer', opacity: isActing ? 0.7 : 1 }}>
                               {isActing ? '…' : 'Valider'}
                             </button>
-                            <button
-                              onClick={() => setRejectingId(r.id)}
-                              disabled={isActing}
-                              style={{
-                                padding: '6px 14px', borderRadius: 8, border: 'none',
-                                background: '#fee2e2', color: '#ef4444', fontWeight: 600,
-                                fontSize: 13, cursor: isActing ? 'not-allowed' : 'pointer',
-                              }}
-                            >
+                            <button onClick={() => setRejectingId(r.id)} disabled={isActing}
+                              style={{ flex: 1, padding: '8px', borderRadius: 8, border: 'none', background: '#fee2e2', color: '#ef4444', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
                               Rejeter
                             </button>
-                          </div>
+                          </>
                         ) : (
-                          <span style={{ color: '#9ca3af', fontSize: 12 }}>Réservé au Super Admin</span>
-                        )
-                      )}
+                          <span style={{ fontSize: 12, color: '#9ca3af' }}>Réservé au Super Admin</span>
+                        )}
+                      </div>
+                    )}
 
-                      {pending && isRejecting && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 200 }}>
-                          <input
-                            placeholder="Motif (optionnel)"
-                            value={motifRejet}
-                            onChange={e => setMotifRejet(e.target.value)}
-                            style={{
-                              padding: '6px 10px', borderRadius: 8,
-                              border: '1.5px solid #e5e7eb', fontSize: 13,
-                            }}
-                          />
-                          <div style={{ display: 'flex', gap: 6 }}>
-                            <button
-                              onClick={() => rejeter(r.id, isManuel)}
-                              disabled={isActing}
-                              style={{
-                                flex: 1, padding: '6px 0', borderRadius: 8, border: 'none',
-                                background: '#ef4444', color: '#fff', fontWeight: 600,
-                                fontSize: 13, cursor: isActing ? 'not-allowed' : 'pointer',
-                                opacity: isActing ? 0.7 : 1,
-                              }}
-                            >
-                              {isActing ? '…' : 'Confirmer rejet'}
-                            </button>
-                            <button
-                              onClick={() => { setRejectingId(null); setMotifRejet(''); }}
-                              style={{
-                                padding: '6px 12px', borderRadius: 8, border: '1px solid #e5e7eb',
-                                background: '#fff', fontSize: 13, cursor: 'pointer',
-                              }}
-                            >
-                              ✕
-                            </button>
-                          </div>
+                    {pending && isRejecting && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 10 }}>
+                        <input placeholder="Motif (optionnel)" value={motifRejet} onChange={e => setMotifRejet(e.target.value)}
+                          style={{ padding: '8px 12px', borderRadius: 8, border: '1.5px solid var(--c-border)', fontSize: 13, width: '100%', boxSizing: 'border-box' }} />
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button onClick={() => rejeter(r.id, isManuel)} disabled={isActing}
+                            style={{ flex: 1, padding: '8px', borderRadius: 8, border: 'none', background: '#ef4444', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer', opacity: isActing ? 0.7 : 1 }}>
+                            {isActing ? '…' : 'Confirmer rejet'}
+                          </button>
+                          <button onClick={() => { setRejectingId(null); setMotifRejet(''); }}
+                            style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid var(--c-border)', background: 'var(--c-card)', fontSize: 13, cursor: 'pointer' }}>✕</button>
                         </div>
-                      )}
+                      </div>
+                    )}
 
-                      {pending && isSendingProof && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 220 }}>
-                          <input
-                            type="file"
-                            accept="image/png,image/jpeg,image/webp"
-                            onChange={e => setProofFile(e.target.files?.[0] ?? null)}
-                            style={{ fontSize: 12 }}
-                          />
-                          <div style={{ display: 'flex', gap: 6 }}>
-                            <button
-                              onClick={() => confirmerEnvoiManuel(r.id)}
-                              disabled={isActing || !proofFile}
-                              style={{
-                                flex: 1, padding: '6px 0', borderRadius: 8, border: 'none',
-                                background: '#10b981', color: '#fff', fontWeight: 600,
-                                fontSize: 13, cursor: (isActing || !proofFile) ? 'not-allowed' : 'pointer',
-                                opacity: (isActing || !proofFile) ? 0.7 : 1,
-                              }}
-                            >
-                              {isActing ? '…' : 'Confirmer'}
-                            </button>
-                            <button
-                              onClick={() => { setSendingProofId(null); setProofFile(null); }}
-                              style={{
-                                padding: '6px 12px', borderRadius: 8, border: '1px solid #e5e7eb',
-                                background: '#fff', fontSize: 13, cursor: 'pointer',
-                              }}
-                            >
-                              ✕
-                            </button>
-                          </div>
+                    {pending && isSendingProof && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 10 }}>
+                        <input type="file" accept="image/png,image/jpeg,image/webp" onChange={e => setProofFile(e.target.files?.[0] ?? null)} style={{ fontSize: 12 }} />
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button onClick={() => confirmerEnvoiManuel(r.id)} disabled={isActing || !proofFile}
+                            style={{ flex: 1, padding: '8px', borderRadius: 8, border: 'none', background: '#10b981', color: '#fff', fontWeight: 600, fontSize: 13, cursor: (isActing || !proofFile) ? 'not-allowed' : 'pointer', opacity: (isActing || !proofFile) ? 0.7 : 1 }}>
+                            {isActing ? '…' : 'Confirmer'}
+                          </button>
+                          <button onClick={() => { setSendingProofId(null); setProofFile(null); }}
+                            style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid var(--c-border)', background: 'var(--c-card)', fontSize: 13, cursor: 'pointer' }}>✕</button>
                         </div>
-                      )}
-                    </td>
-                  </tr>
+                      </div>
+                    )}
+                  </div>
                 );
               })}
-            </tbody>
-          </table>
-        </div>
-      )}
+            </div>
+          </>
+        )}
       </div>
     </>
   );

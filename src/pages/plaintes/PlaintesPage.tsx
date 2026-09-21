@@ -41,7 +41,7 @@ export default function PlaintesPage() {
       const d = res.data;
       setPlaintes(Array.isArray(d) ? d : (d?.data ?? []));
       setTotal(d?.total ?? 0);
-    } catch { setPlaintes([]); } finally { setLoading(false); }
+    } catch { setPlaintes([]); showToast('Erreur lors du chargement des plaintes.', false); } finally { setLoading(false); }
   };
 
   useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps

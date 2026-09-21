@@ -114,6 +114,7 @@ export default function MesVisitesPage() {
   const [cpModal, setCpModal]     = useState<number | null>(null);
   const [annulerModal, setAnnulerModal] = useState<any | null>(null);
   const [effectueeModal, setEffectueeModal] = useState<any | null>(null);
+  const [toast, setToast]         = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -130,13 +131,18 @@ export default function MesVisitesPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 4000);
+  };
+
   const act = async (action: () => Promise<any>, visitId: number) => {
     setActing(visitId);
     try {
       const updated = await action();
       setVisites(prev => prev.map(v => v.id === visitId ? { ...v, ...updated } : v));
     } catch (err: any) {
-      alert(err?.response?.data?.message ?? 'Erreur');
+      showToast(err?.response?.data?.message ?? 'Une erreur est survenue.');
     } finally {
       setActing(null);
     }
@@ -213,6 +219,16 @@ export default function MesVisitesPage() {
 
   return (
     <div className="immo-page">
+
+      {toast && (
+        <div style={{
+          position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+          background: '#DC2626', color: '#fff', borderRadius: 8, padding: '10px 20px',
+          fontSize: 13, fontWeight: 600, zIndex: 9999, boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+        }}>
+          {toast}
+        </div>
+      )}
 
       {/* ── Titre ── */}
       <div>

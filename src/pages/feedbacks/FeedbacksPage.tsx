@@ -66,7 +66,7 @@ export default function FeedbacksPage() {
         </select>
         <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--c-text)', marginLeft: 12, cursor: 'pointer' }}>
           <input type="checkbox" checked={meteoOnly} onChange={(e) => { setMeteoOnly(e.target.checked); setPage(1); }} />
-          Signalements météo uniquement
+          Météo uniquement
         </label>
       </div>
 
@@ -88,7 +88,8 @@ export default function FeedbacksPage() {
           </div>
         </div>
 
-        <div className="immo-card" style={{ padding: 0, overflow: 'hidden', overflowX: 'auto' }}>
+        {/* ── Vue tableau (desktop) ── */}
+        <div className="immo-card ut-desktop-only" style={{ padding: 0, overflow: 'hidden', overflowX: 'auto' }}>
           <div className="mod-table-header" style={{ gridTemplateColumns: '1fr 1fr 1fr 2fr 100px', minWidth: 560 }}>
             <span className="mod-table-col">Type</span>
             <span className="mod-table-col">Note</span>
@@ -96,7 +97,6 @@ export default function FeedbacksPage() {
             <span className="mod-table-col">Commentaire</span>
             <span className="mod-table-col">Date</span>
           </div>
-
           {loading ? (
             <div style={{ padding: '32px 20px', textAlign: 'center', color: 'var(--c-muted)' }}>Chargement…</div>
           ) : feedbacks.length === 0 ? (
@@ -130,8 +130,54 @@ export default function FeedbacksPage() {
               </div>
             </div>
           ))}
-
           <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--c-border)' }}>
+            <span style={{ fontSize: 12, color: 'var(--c-muted)' }}>
+              {total === 0 ? '0 résultat' : `${(page - 1) * LIMIT + 1}–${Math.min(page * LIMIT, total)} sur ${total}`}
+            </span>
+            <div className="immo-pagination">
+              <button className="page-btn" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}><ChevronLeftIcon /></button>
+              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map((p) => (
+                <button key={p} className={`page-btn ${page === p ? 'active' : ''}`} onClick={() => setPage(p)}>{p}</button>
+              ))}
+              <button className="page-btn" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}><ChevronRightIcon /></button>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Vue cartes (mobile) ── */}
+        <div className="ut-card-list ut-mobile-only">
+          {loading ? (
+            <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--c-muted)' }}>Chargement…</div>
+          ) : feedbacks.length === 0 ? (
+            <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--c-muted)', fontSize: 13 }}>Aucun feedback trouvé.</div>
+          ) : feedbacks.map((f: any) => (
+            <div key={f.id} className="ut-card">
+              <div className="ut-card-header">
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                    <span style={{
+                      fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 99,
+                      background: TYPE_COLORS[f.type] + '18', color: TYPE_COLORS[f.type], textTransform: 'uppercase',
+                    }}>
+                      {TYPE_LABELS[f.type]}
+                    </span>
+                    {f.probleme_meteo && <span style={{ color: '#DC2626' }}>⚠️</span>}
+                  </div>
+                  <FeedbackStars note={f.note} />
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--c-muted)', textAlign: 'right' }}>
+                  <div>{f.bien_id ? `Bien #${f.bien_id}` : '—'}</div>
+                  <div style={{ marginTop: 2 }}>{new Date(f.created_at).toLocaleDateString('fr-FR')}</div>
+                </div>
+              </div>
+              {f.commentaire && (
+                <div style={{ fontSize: 12, color: 'var(--c-text)', marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--c-border)' }}>
+                  {f.commentaire}
+                </div>
+              )}
+            </div>
+          ))}
+          <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--c-border)' }}>
             <span style={{ fontSize: 12, color: 'var(--c-muted)' }}>
               {total === 0 ? '0 résultat' : `${(page - 1) * LIMIT + 1}–${Math.min(page * LIMIT, total)} sur ${total}`}
             </span>

@@ -112,6 +112,7 @@ export default function MessagesPage() {
   const [cpModalFor, setCpModalFor]     = useState<number | null>(null);
   const [slotActing, setSlotActing]     = useState<number | null>(null);
   const [isMobileThreadOpen, setIsMobileThreadOpen] = useState(false);
+  const [toast, setToast]               = useState<string | null>(null);
   const bottomRef                       = useRef<HTMLDivElement>(null);
   const sendingRef                      = useRef(false);
 
@@ -155,6 +156,11 @@ export default function MessagesPage() {
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 4000);
+  };
+
   const handleSend = async () => {
     const text = input.trim();
     if (sendingRef.current || !text || activeId == null) return;
@@ -191,7 +197,7 @@ export default function MessagesPage() {
       }
       setCpModalFor(null);
     } catch (err: any) {
-      alert(err?.response?.data?.message ?? 'Erreur lors de la réponse au créneau.');
+      showToast(err?.response?.data?.message ?? 'Erreur lors de la réponse au créneau.');
     } finally {
       setSlotActing(null);
     }
@@ -236,6 +242,17 @@ export default function MessagesPage() {
       style={{ display: 'flex', height: 'calc(100vh - var(--topbar-h, 60px))', overflow: 'hidden', position: 'relative' }}
       onClick={() => setPopover(null)}
     >
+
+      {toast && (
+        <div style={{
+          position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+          background: '#DC2626', color: '#fff', borderRadius: 8, padding: '10px 20px',
+          fontSize: 13, fontWeight: 600, zIndex: 9999, boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+          pointerEvents: 'none',
+        }}>
+          {toast}
+        </div>
+      )}
 
       {/* ═══ Panel gauche — liste ═══ */}
       <div className="msg-conv-panel" style={{ width: 320, flexShrink: 0, borderRight: '1px solid var(--c-border)', display: 'flex', flexDirection: 'column', background: '#fff' }}>

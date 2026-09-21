@@ -7,11 +7,12 @@ import { getMessages } from '../../api/getMessages';
 export default function DashboardPage() {
   const navigate = useNavigate();
   const [stats, setStats]             = useState(null as any);
+  const [statsError, setStatsError]   = useState(false);
   const [totalUnread, setTotalUnread] = useState(0);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    getAdminStats.get().then(setStats).catch(() => {});
+    getAdminStats.get().then(setStats).catch(() => setStatsError(true));
   }, []);
 
   useEffect(() => {
@@ -80,6 +81,20 @@ export default function DashboardPage() {
       </div>
 
       <div className="immo-page">
+        {statsError && (
+          <div style={{
+            background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8,
+            padding: '10px 16px', fontSize: 13, color: '#DC2626', fontWeight: 500,
+          }}>
+            Impossible de charger les statistiques. Vérifiez votre connexion et&nbsp;
+            <button
+              onClick={() => { setStatsError(false); getAdminStats.get().then(setStats).catch(() => setStatsError(true)); }}
+              style={{ background: 'none', border: 'none', color: '#DC2626', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
+            >
+              réessayer
+            </button>.
+          </div>
+        )}
         <div>
           <h2 style={{ fontSize: 26, fontWeight: 800, color: 'var(--c-text)', margin: 0 }}>
             LeRefugeTIC

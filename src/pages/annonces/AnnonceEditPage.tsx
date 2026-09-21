@@ -446,7 +446,7 @@ export default function AnnonceEditPage() {
         </nav>
 
         {/* Contenu de la section active */}
-        <div style={{ flex:1, padding:'24px 28px', minWidth:0 }}>
+        <div style={{ flex:1, padding:'16px clamp(12px, 4vw, 28px)', minWidth:0 }}>
 
           {/* ═══ TYPE & PRIX ═══ */}
           {activeTab === 'Type & Prix' && (

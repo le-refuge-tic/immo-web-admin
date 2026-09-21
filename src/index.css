@@ -30,10 +30,10 @@ body {
   background: var(--c-bg);
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
-  height: 100vh;
+  height: 100dvh;
 }
 
-#root { height: 100vh; overflow: hidden; }
+#root { height: 100dvh; overflow: hidden; }
 
 /* ─── LAYOUT ─────────────────────────────────────────────── */
 
@@ -2360,7 +2360,7 @@ body {
   .immo-hamburger-btn { display: flex; }
   .immo-toggle-btn    { display: none !important; }
 
-  /* Sidebar → drawer */
+  /* Sidebar → drawer hors flux */
   .immo-sidebar {
     position: fixed !important;
     top: 0 !important;
@@ -2371,12 +2371,16 @@ body {
     transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 6px 0 32px rgba(15,23,42,0.18);
     width: var(--sidebar-w) !important;
+    flex-shrink: 0;
   }
   .immo-sidebar--min { width: var(--sidebar-w) !important; }
   .immo-sidebar--min .immo-nav-label { display: flex !important; }
   .immo-sidebar--min .immo-nav-item  { justify-content: flex-start !important; padding: 0.625rem 0.75rem !important; }
   .immo-sidebar--min .immo-sidebar-footer { display: block !important; }
   .immo-sidebar.mobile-open { transform: translateX(0); }
+
+  /* Main prend toute la largeur — la sidebar est hors flux (fixed) */
+  .immo-main { width: 100% !important; max-width: 100% !important; }
 
   /* Topbar compact */
   .immo-layout-topbar { padding: 0 0.75rem; gap: 0.5rem; }

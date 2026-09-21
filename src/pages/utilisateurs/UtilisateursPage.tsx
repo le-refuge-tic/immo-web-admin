@@ -40,12 +40,14 @@ export default function UtilisateursPage() {
   const [page, setPage]                   = useState(1);
   const [search, setSearch]               = useState('');
   const [loading, setLoading]             = useState(false);
+  const [loadError, setLoadError]         = useState(false);
   const [togglingId, setTogglingId]       = useState(null as any);
   const [deletingId, setDeletingId]       = useState(null as any);
   const [confirmId, setConfirmId]         = useState(null as any);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError(false);
     try {
       const res = await getAdminUser.list({
         page,
@@ -55,6 +57,8 @@ export default function UtilisateursPage() {
       });
       setUsers(res.data ?? []);
       setTotal(res.total ?? 0);
+    } catch {
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -114,6 +118,15 @@ export default function UtilisateursPage() {
       </div>
 
       <div className="immo-page">
+
+        {loadError && (
+          <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8, padding: '10px 16px', fontSize: 13, color: '#DC2626', fontWeight: 500 }}>
+            Erreur lors du chargement des utilisateurs.{' '}
+            <button onClick={load} style={{ background: 'none', border: 'none', color: '#DC2626', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>
+              Réessayer
+            </button>
+          </div>
+        )}
 
         {/* ── Onglets ── */}
         <div className="ut-tabs">

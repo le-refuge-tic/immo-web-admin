@@ -47,9 +47,9 @@ export default function FinancesPage() {
   const [filtreStat, setFiltreStat]     = useState('');
   const [filtreType, setFiltreType]     = useState('');
   const [loading, setLoading]           = useState(false);
+  const [loadError, setLoadError]       = useState(false);
   const [totaux, setTotaux]             = useState({ confirme: 0, en_attente: 0 });
 
-  // Frais de visite (revenus du refuge / plateforme)
   const [fvItems, setFvItems]           = useState([] as any[]);
   const [fvTotalEncaisse, setFvTotal]   = useState(0);
   const [fvCount, setFvCount]           = useState(0);
@@ -58,6 +58,7 @@ export default function FinancesPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError(false);
     try {
       const res = await getTransaction.list({
         page, limit: LIMIT,
@@ -67,6 +68,8 @@ export default function FinancesPage() {
       setTransactions(res.data);
       setTotal(res.total);
       setTotaux(res.totaux);
+    } catch {
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -79,7 +82,7 @@ export default function FinancesPage() {
       setFvItems(res.data);
       setFvCount(res.total);
       setFvTotal(res.total_encaisse ?? 0);
-    } finally {
+    } catch { /**/ } finally {
       setFvLoading(false);
     }
   }, [fvPage]);
@@ -119,6 +122,14 @@ export default function FinancesPage() {
       </div>
 
       <div className="immo-page">
+        {loadError && (
+          <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8, padding: '10px 16px', fontSize: 13, color: '#DC2626', fontWeight: 500 }}>
+            Erreur lors du chargement des transactions.{' '}
+            <button onClick={load} style={{ background: 'none', border: 'none', color: '#DC2626', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>
+              Réessayer
+            </button>
+          </div>
+        )}
         <div className="mod-stat-cards">
           <div className="mod-stat-card">
             <div>
@@ -152,15 +163,13 @@ export default function FinancesPage() {
           </div>
         </div>
 
-        {/* ── Frais de visite : liste détaillée (revenus du refuge) ── */}
-        <div className="immo-card" style={{ padding: 0, overflow: 'hidden', marginBottom: 20, overflowX: 'auto' }}>
-          <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--c-border)' }}>
-            <div style={{ fontWeight: 700, fontSize: 14 }}>Frais de visite encaissés</div>
-            <div style={{ fontSize: 12, color: 'var(--c-muted)' }}>
-              Paiements reversés au refuge — total confirmé : {fmt(fvTotalEncaisse)} FCFA
-            </div>
-          </div>
+        {/* ══ Frais de visite ══ */}
+        <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+          Frais de visite encaissés — {fmt(fvTotalEncaisse)} FCFA
+        </div>
 
+        {/* Vue tableau frais (desktop) */}
+        <div className="immo-card ut-desktop-only" style={{ padding: 0, overflow: 'hidden', marginBottom: 20, overflowX: 'auto' }}>
           <div className="mod-table-header" style={{ gridTemplateColumns: '1.2fr 1.2fr 1fr 1fr 1fr' }}>
             <span className="mod-table-col">Client</span>
             <span className="mod-table-col">Bien</span>
@@ -168,22 +177,17 @@ export default function FinancesPage() {
             <span className="mod-table-col">Statut</span>
             <span className="mod-table-col">Date</span>
           </div>
-
           {fvLoading ? (
             <div style={{ padding: '32px 20px', textAlign: 'center', color: 'var(--c-muted)' }}>Chargement…</div>
           ) : fvItems.length === 0 ? (
             <div style={{ padding: '32px 20px', textAlign: 'center', color: 'var(--c-muted)' }}>Aucun frais de visite enregistré.</div>
           ) : fvItems.map((t: any) => (
             <div className="mod-row" key={t.id} style={{ gridTemplateColumns: '1.2fr 1.2fr 1fr 1fr 1fr' }}>
-              <div style={{ fontSize: 13 }}>
-                {t.client ? `${t.client.prenom} ${t.client.nom}` : '—'}
-              </div>
+              <div style={{ fontSize: 13 }}>{t.client ? `${t.client.prenom} ${t.client.nom}` : '—'}</div>
               <div style={{ fontSize: 12 }}>
                 <div>{t.bien ? (TYPE_BIEN_LABELS[t.bien.type] ?? t.bien.type) : '—'}</div>
                 {t.bien && (t.bien.quartier || t.bien.ville) && (
-                  <div style={{ fontSize: 11, color: 'var(--c-muted)' }}>
-                    {[t.bien.quartier, t.bien.ville].filter(Boolean).join(', ')}
-                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--c-muted)' }}>{[t.bien.quartier, t.bien.ville].filter(Boolean).join(', ')}</div>
                 )}
               </div>
               <div style={{ fontWeight: 700, fontSize: 14 }}>
@@ -191,12 +195,9 @@ export default function FinancesPage() {
                 <span style={{ fontSize: 10, fontWeight: 400, marginLeft: 2 }}>FCFA</span>
               </div>
               <div><FinancesStatutBadge statut={t.statut} /></div>
-              <div style={{ fontSize: 12, color: 'var(--c-muted)' }}>
-                {fmtDateHeure(t.date)}
-              </div>
+              <div style={{ fontSize: 12, color: 'var(--c-muted)' }}>{fmtDateHeure(t.date)}</div>
             </div>
           ))}
-
           <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--c-border)' }}>
             <span style={{ fontSize: 12, color: 'var(--c-muted)' }}>
               {fvCount === 0 ? '0 résultat' : `${(fvPage - 1) * LIMIT + 1}–${Math.min(fvPage * LIMIT, fvCount)} sur ${fvCount}`}
@@ -211,7 +212,53 @@ export default function FinancesPage() {
           </div>
         </div>
 
-        <div className="immo-card" style={{ padding: 0, overflow: 'hidden', overflowX: 'auto' }}>
+        {/* Vue cartes frais (mobile) */}
+        <div className="ut-card-list ut-mobile-only" style={{ marginBottom: 20 }}>
+          {fvLoading ? (
+            <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--c-muted)' }}>Chargement…</div>
+          ) : fvItems.length === 0 ? (
+            <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--c-muted)', fontSize: 13 }}>Aucun frais de visite.</div>
+          ) : fvItems.map((t: any) => (
+            <div key={t.id} className="ut-card">
+              <div className="ut-card-header">
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 600, fontSize: 13 }}>{t.client ? `${t.client.prenom} ${t.client.nom}` : '—'}</div>
+                  <div style={{ fontSize: 11, color: 'var(--c-muted)', marginTop: 2 }}>
+                    {t.bien ? (TYPE_BIEN_LABELS[t.bien.type] ?? t.bien.type) : '—'}
+                    {t.bien?.quartier ? ` · ${t.bien.quartier}` : ''}
+                  </div>
+                </div>
+                <FinancesStatutBadge statut={t.statut} />
+              </div>
+              <div className="ut-card-footer">
+                <div style={{ fontWeight: 700, fontSize: 15 }}>
+                  {Number(t.montant).toLocaleString('fr-FR')} <span style={{ fontSize: 11, fontWeight: 400 }}>FCFA</span>
+                </div>
+                <span style={{ fontSize: 11, color: 'var(--c-muted)' }}>{fmtDateHeure(t.date)}</span>
+              </div>
+            </div>
+          ))}
+          <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--c-border)' }}>
+            <span style={{ fontSize: 12, color: 'var(--c-muted)' }}>
+              {fvCount === 0 ? '0 résultat' : `${(fvPage - 1) * LIMIT + 1}–${Math.min(fvPage * LIMIT, fvCount)} sur ${fvCount}`}
+            </span>
+            <div className="immo-pagination">
+              <button className="page-btn" disabled={fvPage <= 1} onClick={() => setFvPage((p) => p - 1)}><ChevronLeftIcon /></button>
+              {Array.from({ length: Math.min(fvTotalPages, 5) }, (_, i) => i + 1).map((p) => (
+                <button key={p} className={`page-btn ${fvPage === p ? 'active' : ''}`} onClick={() => setFvPage(p)}>{p}</button>
+              ))}
+              <button className="page-btn" disabled={fvPage >= fvTotalPages} onClick={() => setFvPage((p) => p + 1)}><ChevronRightIcon /></button>
+            </div>
+          </div>
+        </div>
+
+        {/* ══ Transactions ══ */}
+        <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+          Toutes les transactions
+        </div>
+
+        {/* Vue tableau transactions (desktop) */}
+        <div className="immo-card ut-desktop-only" style={{ padding: 0, overflow: 'hidden', overflowX: 'auto' }}>
           <div className="mod-table-header" style={{ gridTemplateColumns: '1.4fr 1fr 1.4fr 1fr 1fr 1fr 1.2fr', minWidth: 700 }}>
             <span className="mod-table-col">Référence</span>
             <span className="mod-table-col">Type</span>
@@ -221,7 +268,6 @@ export default function FinancesPage() {
             <span className="mod-table-col">Statut</span>
             <span className="mod-table-col">Date</span>
           </div>
-
           {loading ? (
             <div style={{ padding: '32px 20px', textAlign: 'center', color: 'var(--c-muted)' }}>Chargement…</div>
           ) : transactions.length === 0 ? (
@@ -229,9 +275,7 @@ export default function FinancesPage() {
           ) : transactions.map((t: any) => (
             <div className="mod-row" key={t.id} style={{ gridTemplateColumns: '1.4fr 1fr 1.4fr 1fr 1fr 1fr 1.2fr', minWidth: 700 }}>
               <div>
-                <div style={{ fontWeight: 600, fontSize: 12, fontFamily: 'monospace' }}>
-                  {t.reference.slice(0, 8).toUpperCase()}…
-                </div>
+                <div style={{ fontWeight: 600, fontSize: 12, fontFamily: 'monospace' }}>{t.reference.slice(0, 8).toUpperCase()}…</div>
                 <div style={{ fontSize: 11, color: 'var(--c-muted)' }}>#{t.id}</div>
               </div>
               <div style={{ fontSize: 13 }}>{TYPE_LABELS[t.type] ?? t.type}</div>
@@ -243,17 +287,59 @@ export default function FinancesPage() {
                 {Number(t.montant).toLocaleString('fr-FR')}
                 <span style={{ fontSize: 10, fontWeight: 400, marginLeft: 2 }}>FCFA</span>
               </div>
-              <div style={{ fontSize: 12, color: 'var(--c-muted)' }}>
-                {METHODE_LABELS[t.methode_paiement] ?? t.methode_paiement}
-              </div>
+              <div style={{ fontSize: 12, color: 'var(--c-muted)' }}>{METHODE_LABELS[t.methode_paiement] ?? t.methode_paiement}</div>
               <div><FinancesStatutBadge statut={t.statut} /></div>
-              <div style={{ fontSize: 12, color: 'var(--c-muted)' }}>
-                {fmtDateHeure(t.created_at)}
+              <div style={{ fontSize: 12, color: 'var(--c-muted)' }}>{fmtDateHeure(t.created_at)}</div>
+            </div>
+          ))}
+          <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--c-border)' }}>
+            <span style={{ fontSize: 12, color: 'var(--c-muted)' }}>
+              {total === 0 ? '0 résultat' : `${(page - 1) * LIMIT + 1}–${Math.min(page * LIMIT, total)} sur ${total}`}
+            </span>
+            <div className="immo-pagination">
+              <button className="page-btn" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}><ChevronLeftIcon /></button>
+              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map((p) => (
+                <button key={p} className={`page-btn ${page === p ? 'active' : ''}`} onClick={() => setPage(p)}>{p}</button>
+              ))}
+              <button className="page-btn" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}><ChevronRightIcon /></button>
+            </div>
+          </div>
+        </div>
+
+        {/* Vue cartes transactions (mobile) */}
+        <div className="ut-card-list ut-mobile-only">
+          {loading ? (
+            <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--c-muted)' }}>Chargement…</div>
+          ) : transactions.length === 0 ? (
+            <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--c-muted)', fontSize: 13 }}>Aucune transaction trouvée.</div>
+          ) : transactions.map((t: any) => (
+            <div key={t.id} className="ut-card">
+              <div className="ut-card-header">
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                    <span style={{ fontWeight: 600, fontSize: 12, fontFamily: 'monospace' }}>{t.reference.slice(0, 8).toUpperCase()}…</span>
+                    <span style={{ fontSize: 11, color: 'var(--c-muted)' }}>#{t.id}</span>
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--c-muted)' }}>
+                    {TYPE_LABELS[t.type] ?? t.type} · {METHODE_LABELS[t.methode_paiement] ?? t.methode_paiement}
+                  </div>
+                </div>
+                <FinancesStatutBadge statut={t.statut} />
+              </div>
+              <div className="ut-card-footer">
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 15 }}>
+                    {Number(t.montant).toLocaleString('fr-FR')} <span style={{ fontSize: 11, fontWeight: 400 }}>FCFA</span>
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--c-muted)', marginTop: 2 }}>
+                    {nomPartie(t.payeur)} → {nomPartie(t.beneficiaire)}
+                  </div>
+                </div>
+                <span style={{ fontSize: 11, color: 'var(--c-muted)' }}>{fmtDateHeure(t.created_at)}</span>
               </div>
             </div>
           ))}
-
-          <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--c-border)' }}>
+          <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--c-border)' }}>
             <span style={{ fontSize: 12, color: 'var(--c-muted)' }}>
               {total === 0 ? '0 résultat' : `${(page - 1) * LIMIT + 1}–${Math.min(page * LIMIT, total)} sur ${total}`}
             </span>

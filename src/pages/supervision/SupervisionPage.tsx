@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { getMessages } from '../../api/getMessages';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { getMessages, markConvRead, getReadConvIds, setActiveCommercialIds } from '../../api/getMessages';
 import { supervisionApi } from '../../api/commercialSupervisionApi';
 import { getCommerciaux } from '../../api/getCommerciaux';
 import { getAdminUser } from '../../api/getAdminUser';
@@ -8,11 +8,11 @@ import PerformanceHebdoModal from './PerformanceHebdoModal';
 
 /* ─── Constants ─────────────────────────────────────────────── */
 
-const POLL_LIST_MS = 15_000;
-const POLL_MSGS_MS =  5_000;
-const CLAIM_TTL_MS = 5 * 60_000;
-const CLAIM_PREFIX = 'sup_claim_';
-
+const POLL_LIST_MS  = 15_000;
+const POLL_MSGS_MS  =  5_000;
+const CLAIM_TTL_MS  = 5 * 60_000;
+const CLAIM_PREFIX  = 'sup_claim_';
+const MAX_MSG_LEN   = 2000;
 const COLORS = ['#2563EB','#7C3AED','#DB2777','#D97706','#16A34A','#0891B2','#DC2626','#0284C7'];
 function avatarColor(id: number) { return COLORS[Math.abs(id ?? 0) % COLORS.length]; }
 function initials(u: any) {
@@ -43,17 +43,10 @@ function sameDay(a: string, b: string) {
 }
 
 const TYPE_LABEL_MAP: Record<string, string> = {
-  'chambre-salon': 'Chambre-salon',
-  'studio': 'Studio',
-  'appartement': 'Appartement',
-  'maison': 'Maison',
-  'villa': 'Villa',
-  'duplex': 'Duplex',
-  'entree-coucher': 'Entrée coucher',
-  'bureau': 'Bureau',
-  'commerce': 'Commerce',
-  'terrain': 'Terrain',
-  'entrepot': 'Entrepôt',
+  'chambre-salon': 'Chambre-salon', 'studio': 'Studio', 'appartement': 'Appartement',
+  'maison': 'Maison', 'villa': 'Villa', 'duplex': 'Duplex',
+  'entree-coucher': 'Entrée coucher', 'bureau': 'Bureau',
+  'commerce': 'Commerce', 'terrain': 'Terrain', 'entrepot': 'Entrepôt',
 };
 const MOD_LABELS: Record<string, { label: string; color: string; bg: string }> = {
   approuve:   { label: 'Publié',     color: '#16A34A', bg: '#F0FDF4' },
@@ -74,10 +67,39 @@ function readClaim(convId: number): { name: string; at: number } | null {
     const raw = localStorage.getItem(`${CLAIM_PREFIX}${convId}`);
     if (!raw) return null;
     const claim = JSON.parse(raw);
+    if (
+      typeof claim !== 'object' || claim === null ||
+      typeof claim.name !== 'string' || claim.name.length > 100 ||
+      typeof claim.at !== 'number'
+    ) { localStorage.removeItem(`${CLAIM_PREFIX}${convId}`); return null; }
     if (Date.now() - claim.at > CLAIM_TTL_MS) { localStorage.removeItem(`${CLAIM_PREFIX}${convId}`); return null; }
     return claim;
   } catch { return null; }
 }
+
+/* ─── Icônes SVG ─────────────────────────────────────────────── */
+
+const IcoSend = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+  </svg>
+);
+const IcoTrash = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+    <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+  </svg>
+);
+const IcoBack = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="15 18 9 12 15 6"/>
+  </svg>
+);
+const IcoChevronRight = () => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--c-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="9 18 15 12 9 6"/>
+  </svg>
+);
 
 /* ─── ClientPopover ─────────────────────────────────────────── */
 
@@ -99,12 +121,51 @@ function ClientPopover({ user, onClose }: { user: any; onClose: () => void }) {
         <div style={{ width: 36, height: 36, borderRadius: '50%', flexShrink: 0, background: avatarColor(user?.id ?? 0), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff' }}>
           {initials(user)}
         </div>
-        <div>
-          <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--c-text)' }}>{displayName(user)}</div>
+        <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--c-text)' }}>{displayName(user)}</div>
+      </div>
+      {user?.email     && <div style={{ fontSize: 11, color: 'var(--c-muted)', marginBottom: 3 }}><strong style={{ color: 'var(--c-text)' }}>Email :</strong> {user.email}</div>}
+      {user?.telephone && <div style={{ fontSize: 11, color: 'var(--c-muted)' }}><strong style={{ color: 'var(--c-text)' }}>Tel :</strong> {user.telephone}</div>}
+    </div>
+  );
+}
+
+/* ─── ConfirmDeleteModal ─────────────────────────────────────── */
+
+function ConfirmDeleteModal({ onConfirm, onCancel }: { onConfirm: () => void; onCancel: () => void }) {
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(2px)',
+    }}
+      onClick={onCancel}
+    >
+      <div style={{
+        background: '#fff', borderRadius: 16, padding: '24px 28px', maxWidth: 360, width: '90%',
+        boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+      }}
+        onClick={e => e.stopPropagation()}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+          <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#FEF2F2', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+              <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+            </svg>
+          </div>
+          <div>
+            <div style={{ fontWeight: 800, fontSize: 14, color: 'var(--c-text)', marginBottom: 2 }}>Supprimer ce message ?</div>
+            <div style={{ fontSize: 12, color: 'var(--c-muted)' }}>L'utilisateur verra que le message a été supprimé.</div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+          <button onClick={onCancel} style={{ padding: '8px 18px', borderRadius: 8, border: '1px solid var(--c-border)', background: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: 'var(--c-text)' }}>
+            Annuler
+          </button>
+          <button onClick={onConfirm} style={{ padding: '8px 18px', borderRadius: 8, border: 'none', background: '#DC2626', cursor: 'pointer', fontSize: 13, fontWeight: 700, color: '#fff' }}>
+            Supprimer
+          </button>
         </div>
       </div>
-      {user?.email && <div style={{ fontSize: 11, color: 'var(--c-muted)', marginBottom: 3 }}><strong style={{ color: 'var(--c-text)' }}>Email :</strong> {user.email}</div>}
-      {user?.telephone && <div style={{ fontSize: 11, color: 'var(--c-muted)' }}><strong style={{ color: 'var(--c-text)' }}>Tel :</strong> {user.telephone}</div>}
     </div>
   );
 }
@@ -127,38 +188,51 @@ export default function SupervisionPage() {
   const [search, setSearch]               = useState('');
 
   /* — état personne sélectionnée — */
-  const [selectedPerson, setSelectedPerson]           = useState<{ type: 'commercial' | 'proprietaire'; data: any } | null>(null);
-  const [innerTab, setInnerTab]                       = useState<'conversations' | 'biens'>('conversations');
-  const [personConvs, setPersonConvs]                 = useState<any[]>([]);
-  const [personBiens, setPersonBiens]                 = useState<any[]>([]);
-  const [loadingPersonConvs, setLoadingPersonConvs]   = useState(false);
-  const [loadingPersonBiens, setLoadingPersonBiens]   = useState(false);
+  const [selectedPerson, setSelectedPerson] = useState<{ type: 'commercial' | 'proprietaire'; data: any } | null>(null);
+  const [innerTab, setInnerTab]           = useState<'conversations' | 'biens'>('conversations');
+  const [personConvs, setPersonConvs]     = useState<any[]>([]);
+  const [personBiens, setPersonBiens]     = useState<any[]>([]);
+  const [loadingPersonConvs, setLoadingPersonConvs] = useState(false);
+  const [loadingPersonBiens, setLoadingPersonBiens] = useState(false);
+
+  /* — persistance lectures — */
+  const readConvIds          = useRef<Set<number>>(getReadConvIds());
+  const activeCommercialIdsRef = useRef<Set<number>>(new Set());
 
   /* — état conversation — */
-  const [openConv, setOpenConv]         = useState<any | null>(null);
-  const [thread, setThread]             = useState<any[]>([]);
+  const [openConv, setOpenConv]     = useState<any | null>(null);
+  const [thread, setThread]         = useState<any[]>([]);
   const [loadingThread, setLoadingThread] = useState(false);
-  const [input, setInput]               = useState('');
-  const [sending, setSending]           = useState(false);
-  const [deletingMsg, setDeletingMsg]   = useState<number | null>(null);
-  const [hoveredMsg, setHoveredMsg]     = useState<number | null>(null);
-  const [claims, setClaims]             = useState<Record<number, { name: string; at: number }>>({});
-  const [popover, setPopover]           = useState<number | null>(null);
-  const [mobilePanel, setMobilePanel]   = useState<'list' | 'person' | 'thread'>('list');
+  const [input, setInput]           = useState('');
+  const [sending, setSending]       = useState(false);
+  const [deletingMsg, setDeletingMsg] = useState<number | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+  const [hoveredMsg, setHoveredMsg] = useState<number | null>(null);
+  const [claims, setClaims]         = useState<Record<number, { name: string; at: number }>>({});
+  const [popover, setPopover]       = useState<number | null>(null);
+  const [mobilePanel, setMobilePanel] = useState<'list' | 'person' | 'thread'>('list');
+  const [hoveredConvId, setHoveredConvId] = useState<number | null>(null);
 
   const bottomRef     = useRef<HTMLDivElement>(null);
+  const textareaRef   = useRef<HTMLTextAreaElement>(null);
   const listPollRef   = useRef<ReturnType<typeof setInterval> | null>(null);
   const threadPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   /* ── Load commerciaux ── */
   useEffect(() => {
     getCommerciaux.list()
-      .then(data => setCommerciaux(Array.isArray(data) ? data : (data?.data ?? [])))
+      .then(data => {
+        const list = Array.isArray(data) ? data : (data?.data ?? []);
+        const ids = list.map((c: any) => c.id);
+        activeCommercialIdsRef.current = new Set(ids);
+        setActiveCommercialIds(ids);
+        setCommerciaux(list);
+      })
       .catch(() => {})
       .finally(() => setLoadingLeft(false));
   }, []);
 
-  /* ── Load propriétaires depuis l'API quand onglet actif ── */
+  /* ── Load propriétaires ── */
   useEffect(() => {
     if (tab !== 'proprietaires') return;
     setLoadingProprios(true);
@@ -168,13 +242,20 @@ export default function SupervisionPage() {
       .finally(() => setLoadingProprios(false));
   }, [tab]);
 
-  /* ── Load all convs (unread + propriétaires) ── */
+  /* ── Load all convs ── */
   const loadAllConvs = useCallback(async (quiet = false) => {
     if (!quiet) setLoadingLeft(true);
     try {
       const res = await getMessages.supervision();
-      setAllConvs(res.data);
-      setTotalUnread(res.total_unread);
+      const data = res.data.map((c: any) =>
+        readConvIds.current.has(c.id) ? { ...c, unread_count: 0 } : c
+      );
+      const ids = activeCommercialIdsRef.current;
+      const total_unread = data
+        .filter((c: any) => !c.gestionnaire_id || ids.has(c.gestionnaire_id))
+        .reduce((s: number, c: any) => s + (c.unread_count ?? 0), 0);
+      setAllConvs(data);
+      setTotalUnread(total_unread);
     } catch { /**/ }
     finally { if (!quiet) setLoadingLeft(false); }
   }, []);
@@ -197,13 +278,17 @@ export default function SupervisionPage() {
       ? supervisionApi.getConversations(selectedPerson.data.id)
       : supervisionApi.getProprietaireConversations(selectedPerson.data.id);
     apiCall
-      .then(data => setPersonConvs(Array.isArray(data) ? data : (data?.data ?? [])))
+      .then(data => {
+        const list: any[] = Array.isArray(data) ? data : (data?.data ?? []);
+        const readIds = getReadConvIds();
+        setPersonConvs(list.map(c => readIds.has(c.id) ? { ...c, unread_count: 0 } : c));
+      })
       .catch(() => setPersonConvs([]))
       .finally(() => setLoadingPersonConvs(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPerson?.type, selectedPerson?.data?.id]);
 
-  /* ── Load biens quand onglet biens ── */
+  /* ── Load biens ── */
   useEffect(() => {
     if (!selectedPerson || selectedPerson.type !== 'commercial' || innerTab !== 'biens' || personBiens.length > 0) return;
     setLoadingPersonBiens(true);
@@ -233,6 +318,14 @@ export default function SupervisionPage() {
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [thread]);
 
+  /* Auto-resize textarea */
+  useEffect(() => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    ta.style.height = 'auto';
+    ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
+  }, [input]);
+
   /* ── Claims ── */
   const syncClaims = useCallback(() => {
     const result: Record<number, { name: string; at: number }> = {};
@@ -245,12 +338,14 @@ export default function SupervisionPage() {
     }
     setClaims(result);
   }, []);
+
   useEffect(() => {
     syncClaims();
     window.addEventListener('storage', syncClaims);
     return () => window.removeEventListener('storage', syncClaims);
   }, [syncClaims]);
 
+  /* ── Ouvrir une conversation ── */
   function openConversation(conv: any) {
     if (openConv) clearClaim(openConv.id);
     setOpenConv(conv);
@@ -260,51 +355,76 @@ export default function SupervisionPage() {
       setClaim(conv.id, adminName);
       syncClaims();
     }
+    markConvRead(conv.id);
+    readConvIds.current = new Set([...readConvIds.current, conv.id]);
     setPersonConvs(prev => prev.map(c => c.id === conv.id ? { ...c, unread_count: 0 } : c));
+    setAllConvs(prev => {
+      const updated = prev.map(c => c.id === conv.id ? { ...c, unread_count: 0 } : c);
+      const ids = activeCommercialIdsRef.current;
+      const newTotal = updated
+        .filter((c: any) => !c.gestionnaire_id || ids.has(c.gestionnaire_id))
+        .reduce((s: number, c: any) => s + (c.unread_count ?? 0), 0);
+      setTotalUnread(newTotal);
+      return updated;
+    });
   }
 
   useEffect(() => { return () => { if (openConv) clearClaim(openConv.id); }; }, [openConv?.id]);
 
+  /* ── Envoi message ── */
   async function handleSend() {
     if (!openConv || !input.trim() || sending || selectedPerson?.type === 'proprietaire') return;
     const text = input.trim();
+    if (text.length > MAX_MSG_LEN) return;
     setInput('');
     setSending(true);
     try {
       const msg = await supervisionApi.replyAsCommercial(openConv.id, text);
       setThread(prev => [...prev, msg]);
-      setPersonConvs(prev => prev.map(c => c.id === openConv.id ? { ...c, last_message: text, last_message_at: new Date().toISOString() } : c));
+      setPersonConvs(prev => prev.map(c => c.id === openConv.id
+        ? { ...c, last_message: text, last_message_at: new Date().toISOString() }
+        : c
+      ));
     } catch { setInput(text); }
     finally { setSending(false); }
   }
 
+  /* ── Suppression message ── */
   async function handleDeleteMessage(msgId: number) {
     if (!openConv) return;
-    if (!window.confirm('Supprimer ce message ? L\'utilisateur sera informé que son message a été supprimé par l\'administrateur.')) return;
     setDeletingMsg(msgId);
+    setConfirmDeleteId(null);
     try {
       await supervisionApi.deleteMessage(openConv.id, msgId);
       setThread(prev => prev.map(m => m.id === msgId ? { ...m, supprime_pour_tous: true } : m));
-    } catch { /**/ } finally { setDeletingMsg(null); }
+    } catch { /**/ }
+    finally { setDeletingMsg(null); }
   }
 
   /* ── Données dérivées ── */
 
-  // Unread par commercial
-  const commercialUnread: Record<number, number> = {};
-  allConvs.forEach(c => {
-    if (c.gestionnaire_id) commercialUnread[c.gestionnaire_id] = (commercialUnread[c.gestionnaire_id] ?? 0) + (c.unread_count ?? 0);
-  });
+  const commercialUnread = useMemo(() => {
+    const map: Record<number, number> = {};
+    allConvs.forEach(c => {
+      if (c.gestionnaire_id && activeCommercialIdsRef.current.has(c.gestionnaire_id))
+        map[c.gestionnaire_id] = (map[c.gestionnaire_id] ?? 0) + (c.unread_count ?? 0);
+    });
+    return map;
+  }, [allConvs]);
 
-  const q = search.toLowerCase();
-  const filteredCommerciaux = q
-    ? commerciaux.filter(c => displayName(c).toLowerCase().includes(q) || c.email?.toLowerCase().includes(q))
-    : commerciaux;
-  const filteredProprietaires = q
-    ? proprietairesFromApi.filter(p => displayName(p).toLowerCase().includes(q) || (p.email ?? '').toLowerCase().includes(q))
-    : proprietairesFromApi;
+  const filteredCommerciaux = useMemo(() => {
+    const q = search.toLowerCase();
+    return q ? commerciaux.filter(c => displayName(c).toLowerCase().includes(q) || c.email?.toLowerCase().includes(q)) : commerciaux;
+  }, [commerciaux, search]);
+
+  const filteredProprietaires = useMemo(() => {
+    const q = search.toLowerCase();
+    return q ? proprietairesFromApi.filter(p => displayName(p).toLowerCase().includes(q) || (p.email ?? '').toLowerCase().includes(q)) : proprietairesFromApi;
+  }, [proprietairesFromApi, search]);
 
   const isProprioView = selectedPerson?.type === 'proprietaire';
+  const charCount = input.length;
+  const nearLimit = charCount > MAX_MSG_LEN * 0.85;
 
   /* ─── Rendu ─────────────────────────────────────────────────── */
 
@@ -323,7 +443,7 @@ export default function SupervisionPage() {
           style={{
             display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8,
             border: '1px solid var(--c-border)', background: '#fff', color: 'var(--c-text)',
-            fontSize: 12, fontWeight: 600, cursor: 'pointer', marginRight: totalUnread > 0 ? 10 : 0,
+            fontSize: 12, fontWeight: 600, cursor: 'pointer',
           }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -335,7 +455,7 @@ export default function SupervisionPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#FEE2E2', borderRadius: 20, padding: '6px 14px', border: '1px solid #FECACA' }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#DC2626', animation: 'sup-pulse 1.5s ease-in-out infinite' }} />
             <span style={{ fontSize: 13, fontWeight: 800, color: '#DC2626' }}>
-              {totalUnread} message{totalUnread > 1 ? 's' : ''} non lu{totalUnread > 1 ? 's' : ''}
+              {totalUnread} non lu{totalUnread > 1 ? 's' : ''}
             </span>
           </div>
         )}
@@ -344,19 +464,19 @@ export default function SupervisionPage() {
       {/* Corps */}
       <div className="sup-layout-body" style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
 
-        {/* ═══ Panel gauche ═══ */}
+        {/* ═══ Panel gauche — liste ═══ */}
         <div
           className={`sup-panel-list${mobilePanel !== 'list' ? ' sup-panel-hidden' : ''}`}
           style={{ width: 300, flexShrink: 0, borderRight: '1px solid var(--c-border)', display: 'flex', flexDirection: 'column', background: '#fff' }}
         >
-
-          {/* Tabs commerciaux / propriétaires */}
+          {/* Tabs */}
           <div style={{ display: 'flex', borderBottom: '1px solid var(--c-border)' }}>
             {([
-              { key: 'commerciaux',   label: 'Commerciaux',   count: commerciaux.length,          unread: Object.values(commercialUnread).reduce((s, v) => s + v, 0) },
-              { key: 'proprietaires', label: 'Propriétaires', count: proprietairesFromApi.length,  unread: 0 },
+              { key: 'commerciaux',   label: 'Commerciaux',   count: commerciaux.length,         unread: Object.values(commercialUnread).reduce((s, v) => s + v, 0) },
+              { key: 'proprietaires', label: 'Propriétaires', count: proprietairesFromApi.length, unread: 0 },
             ] as const).map(t => (
-              <button key={t.key} onClick={() => { setTab(t.key); setSelectedPerson(null); setOpenConv(null); setSearch(''); }}
+              <button key={t.key}
+                onClick={() => { setTab(t.key); setSelectedPerson(null); setOpenConv(null); setSearch(''); }}
                 style={{
                   flex: 1, padding: '10px 6px', background: 'none', border: 'none', cursor: 'pointer',
                   fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
@@ -394,7 +514,7 @@ export default function SupervisionPage() {
             </div>
           </div>
 
-          {/* Liste */}
+          {/* Liste commerciaux / propriétaires */}
           <div style={{ flex: 1, overflowY: 'auto' }}>
             {tab === 'commerciaux' ? (
               loadingLeft ? (
@@ -405,7 +525,8 @@ export default function SupervisionPage() {
                 const isActive = selectedPerson?.type === 'commercial' && selectedPerson.data.id === c.id;
                 const unread = commercialUnread[c.id] ?? 0;
                 return (
-                  <div key={c.id} onClick={() => { setSelectedPerson({ type: 'commercial', data: c }); setMobilePanel('person'); }}
+                  <div key={c.id}
+                    onClick={() => { setSelectedPerson({ type: 'commercial', data: c }); setMobilePanel('person'); }}
                     style={{
                       padding: '11px 14px', borderBottom: '1px solid var(--c-border)', cursor: 'pointer',
                       background: isActive ? '#EFF6FF' : 'transparent',
@@ -436,9 +557,7 @@ export default function SupervisionPage() {
                           {c.nb_biens   > 0 && <span style={{ fontSize: 9, background: '#FFF7ED', color: '#D97706', borderRadius: 4, padding: '1px 5px', fontWeight: 700 }}>{c.nb_biens} biens</span>}
                         </div>
                       </div>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--c-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="9 18 15 12 9 6"/>
-                      </svg>
+                      <IcoChevronRight />
                     </div>
                   </div>
                 );
@@ -447,13 +566,12 @@ export default function SupervisionPage() {
               loadingProprios ? (
                 <div style={{ padding: 32, textAlign: 'center', color: 'var(--c-muted)', fontSize: 13 }}>Chargement…</div>
               ) : filteredProprietaires.length === 0 ? (
-                <div style={{ padding: 32, textAlign: 'center', color: 'var(--c-muted)', fontSize: 13 }}>
-                  Aucun propriétaire enregistré.
-                </div>
+                <div style={{ padding: 32, textAlign: 'center', color: 'var(--c-muted)', fontSize: 13 }}>Aucun propriétaire enregistré.</div>
               ) : filteredProprietaires.map(p => {
                 const isActive = selectedPerson?.type === 'proprietaire' && selectedPerson.data.id === p.id;
                 return (
-                  <div key={p.id} onClick={() => { setSelectedPerson({ type: 'proprietaire', data: p }); setMobilePanel('person'); }}
+                  <div key={p.id}
+                    onClick={() => { setSelectedPerson({ type: 'proprietaire', data: p }); setMobilePanel('person'); }}
                     style={{
                       padding: '11px 14px', borderBottom: '1px solid var(--c-border)', cursor: 'pointer',
                       background: isActive ? '#F5F3FF' : 'transparent',
@@ -469,13 +587,9 @@ export default function SupervisionPage() {
                         <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--c-text)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {displayName(p)}
                         </span>
-                        <div style={{ fontSize: 11, color: 'var(--c-muted)', marginTop: 2 }}>
-                          {p.email ?? '—'}
-                        </div>
+                        <div style={{ fontSize: 11, color: 'var(--c-muted)', marginTop: 2 }}>{p.email ?? '—'}</div>
                       </div>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--c-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="9 18 15 12 9 6"/>
-                      </svg>
+                      <IcoChevronRight />
                     </div>
                   </div>
                 );
@@ -489,9 +603,9 @@ export default function SupervisionPage() {
           className={`sup-panel-right${mobilePanel === 'list' ? ' sup-panel-hidden' : ''}`}
           style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--c-bg)' }}
         >
-
           {!selectedPerson ? (
-            /* État vide */
+
+            /* ── État vide ── */
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--c-muted)' }}>
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: 14, opacity: 0.4 }}>
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
@@ -504,14 +618,16 @@ export default function SupervisionPage() {
             </div>
 
           ) : openConv ? (
-            /* ─── Vue thread ─────────────────────────────────────── */
+
+            /* ── Vue thread ── */
             <>
+              {/* Header thread */}
               <div style={{ padding: '10px 16px', borderBottom: '1px solid var(--c-border)', background: '#fff', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-                <button onClick={() => { setOpenConv(null); if (openConv) clearClaim(openConv.id); setMobilePanel('person'); }}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-blue)', padding: 4 }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="15 18 9 12 15 6"/>
-                  </svg>
+                <button
+                  onClick={() => { setOpenConv(null); if (openConv) clearClaim(openConv.id); setMobilePanel('person'); }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-blue)', padding: 4, display: 'flex', alignItems: 'center' }}
+                >
+                  <IcoBack />
                 </button>
                 {(() => {
                   const convOther = isProprioView
@@ -530,30 +646,29 @@ export default function SupervisionPage() {
                           <ClientPopover user={convOther} onClose={() => setPopover(null)} />
                         )}
                       </div>
-                      <div>
+                      <div style={{ flex: 1 }}>
                         <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--c-text)' }}>
                           {displayName(convOther)}
                         </div>
-                        <div style={{ fontSize: 11, color: 'var(--c-muted)' }}>
-                          {convOther?.email ?? ''}
-                        </div>
+                        {convOther?.email && <div style={{ fontSize: 11, color: 'var(--c-muted)' }}>{convOther.email}</div>}
                       </div>
                     </>
                   );
                 })()}
-                <div style={{ marginLeft: 'auto' }}>
+                <div style={{ flexShrink: 0 }}>
                   {isProprioView ? (
                     <span style={{ fontSize: 11, color: '#7C3AED', fontWeight: 600, background: '#F5F3FF', borderRadius: 6, padding: '3px 8px', border: '1px solid #DDD6FE' }}>
-                      Vue seule — proprio-client
+                      Lecture seule
                     </span>
                   ) : (
                     <span style={{ fontSize: 11, color: '#D97706', fontWeight: 600, background: '#FEF3C7', borderRadius: 6, padding: '3px 8px', border: '1px solid #FDE68A' }}>
-                      Vous répondez en tant que {selectedPerson?.data?.prenom ?? 'commercial'}
+                      En tant que {selectedPerson?.data?.prenom ?? 'commercial'}
                     </span>
                   )}
                 </div>
               </div>
 
+              {/* Bulles */}
               <div style={{ flex: 1, overflowY: 'auto', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 4 }}>
                 {loadingThread ? (
                   <div style={{ textAlign: 'center', color: 'var(--c-muted)', fontSize: 13, paddingTop: 40 }}>Chargement…</div>
@@ -561,15 +676,14 @@ export default function SupervisionPage() {
                   <div style={{ textAlign: 'center', color: 'var(--c-muted)', fontSize: 13, paddingTop: 40 }}>Aucun message.</div>
                 ) : (
                   thread.map((msg: any, idx: number) => {
-                    const isStaff = msg.sender_role === 'staff' || msg.sender_role === 'gestionnaire';
-                    const isSystem = msg.type === 'systeme' || msg.sender_role === 'systeme';
+                    const isStaff      = msg.sender_role === 'staff' || msg.sender_role === 'gestionnaire';
+                    const isSystem     = msg.type === 'systeme' || msg.sender_role === 'systeme';
                     const isSuppressed = msg.supprime_pour_tous === true;
-                    const prevMsg = thread[idx - 1];
-                    const showDate = !prevMsg || !sameDay(prevMsg.created_at, msg.created_at);
-                    const showTrash = isProprioView && !isSuppressed && hoveredMsg === msg.id;
-                    // Résolution du nom par expediteur_id plutôt que par sender_role
-                    const expId = msg.expediteur_id ?? msg.sender_id;
-                    const senderUser = expId === openConv.user?.id
+                    const prevMsg      = thread[idx - 1];
+                    const showDate     = !prevMsg || !sameDay(prevMsg.created_at, msg.created_at);
+                    const showTrash    = !isSuppressed && hoveredMsg === msg.id;
+                    const expId        = msg.expediteur_id ?? msg.sender_id;
+                    const senderUser   = expId === openConv.user?.id
                       ? openConv.user
                       : expId === openConv.gestionnaire_user?.id
                         ? openConv.gestionnaire_user
@@ -577,7 +691,7 @@ export default function SupervisionPage() {
                     const senderName = displayName(senderUser);
                     return (
                       <div key={msg.id ?? idx}
-                        onMouseEnter={() => isProprioView && msg.id && setHoveredMsg(msg.id)}
+                        onMouseEnter={() => msg.id && setHoveredMsg(msg.id)}
                         onMouseLeave={() => setHoveredMsg(null)}
                       >
                         {showDate && (
@@ -589,33 +703,30 @@ export default function SupervisionPage() {
                           <div style={{ textAlign: 'center', margin: '4px 0', fontSize: 11, color: 'var(--c-muted)', fontStyle: 'italic' }}>{msg.contenu}</div>
                         ) : (
                           <div style={{ display: 'flex', justifyContent: isStaff ? 'flex-end' : 'flex-start', alignItems: 'flex-end', gap: 4, marginBottom: 2 }}>
-                            {/* Bouton supprimer à gauche des bulles droites (staff) */}
                             {showTrash && isStaff && (
                               <button
-                                onClick={() => handleDeleteMessage(msg.id)}
+                                onClick={() => setConfirmDeleteId(msg.id)}
                                 disabled={deletingMsg === msg.id}
                                 style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#DC2626', opacity: 0.7, flexShrink: 0 }}
                                 title="Supprimer ce message"
                               >
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
-                                </svg>
+                                <IcoTrash />
                               </button>
                             )}
-                            <div style={{ maxWidth: '70%' }}>
-                              {!isSystem && (
-                                <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--c-muted)', marginBottom: 2, textAlign: isStaff ? 'right' : 'left', paddingLeft: isStaff ? 0 : 4, paddingRight: isStaff ? 4 : 0 }}>
-                                  {senderName}
-                                </div>
-                              )}
+                            <div style={{ maxWidth: '72%' }}>
+                              <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--c-muted)', marginBottom: 2, textAlign: isStaff ? 'right' : 'left', paddingLeft: isStaff ? 0 : 4, paddingRight: isStaff ? 4 : 0 }}>
+                                {senderName}
+                              </div>
                               <div style={{
                                 background: isSuppressed ? 'var(--c-bg)' : (isStaff ? 'var(--c-blue)' : '#fff'),
                                 color: isSuppressed ? 'var(--c-muted)' : (isStaff ? '#fff' : 'var(--c-text)'),
                                 border: isSuppressed ? '1px dashed var(--c-border)' : (isStaff ? 'none' : '1px solid var(--c-border)'),
                                 borderRadius: isStaff ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                                padding: '8px 12px', fontSize: isSuppressed ? 12 : 13, lineHeight: 1.5,
+                                padding: '8px 12px', fontSize: isSuppressed ? 12 : 13, lineHeight: 1.55,
                                 boxShadow: isSuppressed ? 'none' : '0 1px 3px rgba(0,0,0,0.06)',
                                 fontStyle: isSuppressed ? 'italic' : 'normal',
+                                wordBreak: 'break-word',
+                                whiteSpace: 'pre-wrap',
                               }}>
                                 {isSuppressed ? 'Message supprimé par l\'administrateur' : msg.contenu}
                               </div>
@@ -623,17 +734,14 @@ export default function SupervisionPage() {
                                 {fmtDateTime(msg.created_at)}
                               </div>
                             </div>
-                            {/* Bouton supprimer à droite des bulles gauches (client) */}
                             {showTrash && !isStaff && (
                               <button
-                                onClick={() => handleDeleteMessage(msg.id)}
+                                onClick={() => setConfirmDeleteId(msg.id)}
                                 disabled={deletingMsg === msg.id}
                                 style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#DC2626', opacity: 0.7, flexShrink: 0 }}
                                 title="Supprimer ce message"
                               >
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
-                                </svg>
+                                <IcoTrash />
                               </button>
                             )}
                           </div>
@@ -645,6 +753,7 @@ export default function SupervisionPage() {
                 <div ref={bottomRef} />
               </div>
 
+              {/* Zone de saisie */}
               {isProprioView ? (
                 <div style={{ padding: '10px 16px', borderTop: '1px solid var(--c-border)', background: '#F5F3FF', display: 'flex', alignItems: 'center', gap: 8 }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -655,47 +764,63 @@ export default function SupervisionPage() {
                   </span>
                 </div>
               ) : (
-                <div style={{ padding: '10px 14px', borderTop: '1px solid var(--c-border)', background: '#fff', display: 'flex', gap: 8, alignItems: 'flex-end' }}>
-                  <input
-                    className="immo-form-input"
-                    style={{ flex: 1 }}
-                    placeholder={`Répondre en tant que ${selectedPerson?.data?.prenom ?? 'commercial'}…`}
-                    value={input}
-                    onChange={e => setInput(e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                    disabled={sending}
-                  />
-                  <button
-                    onClick={handleSend}
-                    disabled={!input.trim() || sending}
-                    style={{
-                      padding: '0 16px', height: 38, borderRadius: 8, border: 'none', cursor: 'pointer',
-                      background: !input.trim() || sending ? 'var(--c-border)' : 'var(--c-blue)',
-                      color: '#fff', fontWeight: 600, fontSize: 13, flexShrink: 0,
-                    }}
-                  >
-                    {sending ? '…' : 'Envoyer'}
-                  </button>
+                <div style={{ padding: '10px 14px', borderTop: '1px solid var(--c-border)', background: '#fff' }}>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+                    <textarea
+                      ref={textareaRef}
+                      className="immo-form-input"
+                      rows={1}
+                      style={{ flex: 1, resize: 'none', lineHeight: 1.5, minHeight: 38, maxHeight: 120, overflowY: 'auto', paddingTop: 9, paddingBottom: 9 }}
+                      placeholder={`Répondre en tant que ${selectedPerson?.data?.prenom ?? 'commercial'}…`}
+                      value={input}
+                      onChange={e => setInput(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
+                      }}
+                      disabled={sending}
+                    />
+                    <button
+                      onClick={handleSend}
+                      disabled={!input.trim() || sending}
+                      style={{
+                        width: 38, height: 38, borderRadius: 8, border: 'none', cursor: 'pointer', flexShrink: 0,
+                        background: !input.trim() || sending ? 'var(--c-border)' : 'var(--c-blue)',
+                        color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        transition: 'background 0.15s',
+                      }}
+                      title="Envoyer (Entrée)"
+                    >
+                      {sending
+                        ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'sup-spin 0.7s linear infinite' }}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                        : <IcoSend />
+                      }
+                    </button>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
+                    <span style={{ fontSize: 10, color: 'var(--c-muted)' }}>Entrée pour envoyer · Shift+Entrée pour sauter une ligne</span>
+                    {nearLimit && (
+                      <span style={{ fontSize: 10, color: charCount >= MAX_MSG_LEN ? '#DC2626' : '#D97706', fontWeight: 600 }}>
+                        {charCount}/{MAX_MSG_LEN}
+                      </span>
+                    )}
+                  </div>
                 </div>
               )}
             </>
 
           ) : (
-            /* ─── Vue profil + liste convs ─────────────────────── */
+
+            /* ── Vue profil + liste convs ── */
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#fff' }}>
 
               {/* Header profil */}
               <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--c-border)', flexShrink: 0 }}>
-                {/* Bouton retour mobile vers liste */}
                 <button
                   className="sup-back-btn"
                   onClick={() => { setSelectedPerson(null); setMobilePanel('list'); }}
                   style={{ display: 'none', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-blue)', padding: '0 0 10px 0', alignItems: 'center', gap: 4, fontSize: 13, fontWeight: 600 }}
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="15 18 9 12 15 6"/>
-                  </svg>
-                  Retour
+                  <IcoBack /> Retour
                 </button>
                 <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
                   <div style={{
@@ -774,19 +899,24 @@ export default function SupervisionPage() {
                   ) : personConvs.length === 0 ? (
                     <div style={{ padding: 32, textAlign: 'center', color: 'var(--c-muted)', fontSize: 13 }}>Aucune conversation.</div>
                   ) : personConvs.map((conv: any) => {
-                    // Pour un proprio, l'interlocuteur est le client si le proprio est gestionnaire,
-                    // ou le gestionnaire si le proprio est le client
                     const u = isProprioView
                       ? (conv.gestionnaire_id === selectedPerson?.data?.id ? conv.user : (conv.gestionnaire_user ?? conv.user))
                       : conv.user;
-                    const unread = conv.unread_count ?? 0;
-                    const claim = claims[conv.id];
+                    const unread   = conv.unread_count ?? 0;
+                    const claim    = claims[conv.id];
                     const claimOther = claim && claim.name !== adminName;
+                    const isOpen   = openConv?.id === conv.id;
                     return (
-                      <div key={conv.id} onClick={() => openConversation(conv)}
-                        style={{ padding: '12px 20px', borderBottom: '1px solid var(--c-border)', cursor: 'pointer', transition: 'background 0.1s' }}
-                        onMouseEnter={e => (e.currentTarget.style.background = 'var(--c-bg)')}
-                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                      <div key={conv.id}
+                        onClick={() => openConversation(conv)}
+                        onMouseEnter={() => setHoveredConvId(conv.id)}
+                        onMouseLeave={() => setHoveredConvId(null)}
+                        style={{
+                          padding: '12px 20px', borderBottom: '1px solid var(--c-border)', cursor: 'pointer',
+                          background: isOpen ? '#EFF6FF' : (hoveredConvId === conv.id ? 'var(--c-bg)' : 'transparent'),
+                          borderLeft: isOpen ? '3px solid var(--c-blue)' : '3px solid transparent',
+                          transition: 'background 0.1s',
+                        }}
                       >
                         <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
                           <div style={{ width: 38, height: 38, borderRadius: '50%', flexShrink: 0, background: u ? avatarColor(u.id ?? 0) : '#CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff' }}>
@@ -794,28 +924,34 @@ export default function SupervisionPage() {
                           </div>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 4 }}>
-                              <span style={{ fontWeight: unread > 0 ? 700 : 600, fontSize: 13, color: 'var(--c-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                              <span style={{ fontWeight: unread > 0 ? 800 : 600, fontSize: 13, color: 'var(--c-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
                                 {u ? displayName(u) : `Conv. #${conv.id}`}
                               </span>
                               <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}>
-                                {unread > 0 && <span style={{ background: '#DC2626', color: '#fff', borderRadius: '50%', minWidth: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, padding: '0 4px' }}>{unread}</span>}
-                                {conv.last_message_at && <span style={{ fontSize: 10, color: 'var(--c-muted)' }}>{fmtTime(conv.last_message_at)}</span>}
+                                {unread > 0 && (
+                                  <span style={{ background: '#DC2626', color: '#fff', borderRadius: '50%', minWidth: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, padding: '0 4px' }}>
+                                    {unread}
+                                  </span>
+                                )}
+                                {conv.last_message_at && (
+                                  <span style={{ fontSize: 10, color: 'var(--c-muted)', whiteSpace: 'nowrap' }}>
+                                    {fmtTime(conv.last_message_at)}
+                                  </span>
+                                )}
                               </div>
                             </div>
                             {conv.last_message && (
-                              <div style={{ fontSize: 11, color: 'var(--c-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2 }}>
+                              <div style={{ fontSize: 11, color: unread > 0 ? 'var(--c-text)' : 'var(--c-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2, fontWeight: unread > 0 ? 600 : 400 }}>
                                 {conv.last_message}
                               </div>
                             )}
                             {claimOther && (
                               <div style={{ fontSize: 10, color: '#D97706', fontWeight: 600, marginTop: 2 }}>
-                                {claim.name} répond…
+                                ✏️ {claim.name} répond…
                               </div>
                             )}
                           </div>
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--c-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ alignSelf: 'center', flexShrink: 0 }}>
-                            <polyline points="9 18 15 12 9 6"/>
-                          </svg>
+                          <IcoChevronRight />
                         </div>
                       </div>
                     );
@@ -833,7 +969,7 @@ export default function SupervisionPage() {
                   ) : personBiens.map((b: any) => {
                     const sousType = b.amenites?.sous_type;
                     const label = TYPE_LABEL_MAP[sousType] ?? TYPE_LABEL_MAP[b.type] ?? b.type;
-                    const mod = MOD_LABELS[b.statut_moderation] ?? { label: b.statut_moderation, color: '#6B7280', bg: '#F3F4F6' };
+                    const mod   = MOD_LABELS[b.statut_moderation] ?? { label: b.statut_moderation, color: '#6B7280', bg: '#F3F4F6' };
                     const proprio = b.amenites?.proprietaire_info;
                     return (
                       <div key={b.id} style={{ padding: '12px 20px', borderBottom: '1px solid var(--c-border)' }}>
@@ -863,10 +999,19 @@ export default function SupervisionPage() {
         </div>
       </div>
 
+      {/* Modal confirmation suppression */}
+      {confirmDeleteId !== null && (
+        <ConfirmDeleteModal
+          onConfirm={() => handleDeleteMessage(confirmDeleteId)}
+          onCancel={() => setConfirmDeleteId(null)}
+        />
+      )}
+
       {showPerformance && <PerformanceHebdoModal onClose={() => setShowPerformance(false)} />}
 
       <style>{`
-        @keyframes sup-pulse { 0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)} }
+        @keyframes sup-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.85)} }
+        @keyframes sup-spin  { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
       `}</style>
     </div>
   );
