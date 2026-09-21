@@ -39,7 +39,16 @@ export function setActiveCommercialIds(ids: number[]): void {
 
 export const getMessages = {
   conversations: (params?: any) =>
-    axios.get(`${BASE}/admin/conversations`, { ...auth(), params }).then(r => r.data),
+    axios.get(`${BASE}/admin/conversations`, { ...auth(), params }).then(r => {
+      const raw = r.data;
+      const readIds = getReadConvIds();
+      const data: any[] = (raw.data ?? raw).map((c: any) =>
+        readIds.has(c.id) ? { ...c, unread_count: 0 } : c
+      );
+      const total_unread = data.reduce((s: number, c: any) => s + (c.unread_count ?? 0), 0);
+      const result = Array.isArray(raw) ? data : { ...raw, data, total_unread };
+      return result;
+    }),
 
   thread: (id: number, params?: any) =>
     axios.get(`${BASE}/admin/conversations/${id}/messages`, { ...auth(), params }).then(r => r.data),

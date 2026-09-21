@@ -25,8 +25,10 @@ export default function Sidebar({
 
   const isConfigActive = location.pathname.startsWith('/configuration');
   const [configOpen, setConfigOpen] = useState(isConfigActive);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [unreadCount, setUnreadCount]       = useState(0);
+  const [msgUnreadCount, setMsgUnreadCount] = useState(0);
+  const pollRef    = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollMsgRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -50,6 +52,23 @@ export default function Sidebar({
       window.removeEventListener('conv-read', onConvRead);
     };
   }, [isAdmin]);
+
+  useEffect(() => {
+    const loadMsg = () =>
+      getMessages.conversations().then(r => {
+        const convs: any[] = Array.isArray(r) ? r : (r.data ?? []);
+        const count = convs.reduce((s: number, c: any) => s + (c.unread_count ?? 0), 0);
+        setMsgUnreadCount(count);
+      }).catch(() => {});
+    loadMsg();
+    pollMsgRef.current = setInterval(loadMsg, 20_000);
+    const onConvRead = () => loadMsg();
+    window.addEventListener('conv-read', onConvRead);
+    return () => {
+      if (pollMsgRef.current) clearInterval(pollMsgRef.current);
+      window.removeEventListener('conv-read', onConvRead);
+    };
+  }, []);
 
   const classes = [
     'immo-sidebar',
@@ -96,7 +115,12 @@ export default function Sidebar({
       <nav className="immo-nav">
         {navItems.map(({ to, label, Icon }) => {
           const isSupervision = to === '/supervision';
-          const badge = isSupervision && unreadCount > 0 ? unreadCount : 0;
+          const isMessages    = to === '/messages';
+          const badge = isSupervision && unreadCount > 0
+            ? unreadCount
+            : isMessages && msgUnreadCount > 0
+              ? msgUnreadCount
+              : 0;
           return (
             <NavLink
               key={to}
