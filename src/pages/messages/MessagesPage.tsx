@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { getMessages } from '../../api/getMessages';
+import { getMessages, markConvRead } from '../../api/getMessages';
 import { postMessage } from '../../api/postMessage';
 import { patchSlot } from '../../api/patchSlot';
 import { useAuth } from '../../context/AuthContext';
@@ -213,6 +213,8 @@ export default function MessagesPage() {
   const handleSelectConv = (id: number) => {
     setActiveId(id);
     setIsMobileThreadOpen(true);
+    markConvRead(id);
+    setConvs(prev => prev.map((c: any) => c.id === id ? { ...c, unread_count: 0 } : c));
   };
 
   const handleBackToList = () => {
