@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { postAdmins } from '../../api/postAdmins';
 
 function EyeIcon({ open }: { open: boolean }) {
@@ -25,6 +25,12 @@ export default function GestionAdminModal({ onClose, onCreated }: {
   const [showCfm, setShowCfm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
 
   const set = (field: any) => (e: any) => setForm(f => ({ ...f, [field]: e.target.value }));
 
@@ -79,7 +85,7 @@ export default function GestionAdminModal({ onClose, onCreated }: {
   );
 
   return (
-    <div className="immo-modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
+    <div className="immo-modal-backdrop" role="dialog" aria-modal="true" aria-label="Gérer un administrateur" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="immo-modal">
         <div className="immo-modal-title">Nouvel administrateur</div>
         <div className="immo-modal-sub">

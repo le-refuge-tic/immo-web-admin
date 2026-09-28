@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { patchAuth } from '../../api/patchAuth';
 
 export default function ProfilEditModal({ initial, onClose, onSaved }: {
@@ -9,6 +9,12 @@ export default function ProfilEditModal({ initial, onClose, onSaved }: {
   const [form, setForm]       = useState({ ...initial });
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
 
   const set = (field: any) => (e: any) => setForm((f: any) => ({ ...f, [field]: e.target.value }));
 
@@ -33,7 +39,7 @@ export default function ProfilEditModal({ initial, onClose, onSaved }: {
   };
 
   return (
-    <div className="immo-modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
+    <div className="immo-modal-backdrop" role="dialog" aria-modal="true" aria-label="Modifier le profil" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="immo-modal">
         <div className="immo-modal-title">Modifier mon profil</div>
         <div className="immo-modal-sub">Les modifications seront appliquées immédiatement.</div>

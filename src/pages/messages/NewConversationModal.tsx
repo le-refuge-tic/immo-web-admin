@@ -29,6 +29,7 @@ export default function NewConversationModal({ onClose, onCreated }: {
   const [users, setUsers]         = useState([] as any[]);
   const [loading, setLoading]     = useState(true);
   const [creating, setCreating]   = useState(null as any);
+  const [createError, setCreateError] = useState('');
 
   useEffect(() => {
     setLoading(true);
@@ -43,20 +44,27 @@ export default function NewConversationModal({ onClose, onCreated }: {
       .finally(() => setLoading(false));
   }, [roleTab, search]);
 
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
+
   const handleSelect = async (u: any) => {
     if (creating) return;
     setCreating(u.id);
+    setCreateError('');
     try {
       const conv = await postConversation.create(u.id);
       onCreated(conv);
     } catch (err: any) {
-      alert(err?.response?.data?.message ?? 'Impossible de créer la conversation.');
+      setCreateError(err?.response?.data?.message ?? 'Impossible de créer la conversation.');
       setCreating(null);
     }
   };
 
   return (
-    <div className="immo-modal-backdrop" onClick={onClose}>
+    <div className="immo-modal-backdrop" onClick={onClose} role="dialog" aria-modal="true" aria-label="Nouveau message">
       <div className="ncm-modal" onClick={e => e.stopPropagation()}>
 
         {/* Header */}
@@ -94,6 +102,12 @@ export default function NewConversationModal({ onClose, onCreated }: {
             </button>
           ))}
         </div>
+
+        {createError && (
+          <div style={{ margin: '0 0 12px', padding: '8px 12px', borderRadius: 8, background: 'var(--c-red-bg)', border: '1px solid #FECACA', color: 'var(--c-red)', fontSize: 12, fontWeight: 500 }}>
+            {createError}
+          </div>
+        )}
 
         {/* Liste des utilisateurs */}
         <div className="ncm-user-list">

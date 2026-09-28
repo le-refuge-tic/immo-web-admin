@@ -15,6 +15,7 @@
   --c-muted:       #64748B;
   --c-border:      #E2E8F0;
   --c-bg:          #F8FAFC;
+  --c-surface:     #F8FAFC;
   --sidebar-w:     16.25rem;
   --topbar-h:      4rem;
   --footer-h:      2.75rem;
@@ -41,7 +42,7 @@ body {
 .immo-app {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100dvh;
   overflow: hidden;
 }
 
@@ -952,6 +953,13 @@ body {
   align-items: start;
 }
 
+@media (max-width: 62rem) {
+  .detail-page-layout {
+    grid-template-columns: 1fr;
+  }
+  .detail-right { position: static; }
+}
+
 /* Colonne gauche */
 .detail-left { display: flex; flex-direction: column; gap: 1.25rem; }
 
@@ -1266,11 +1274,17 @@ body {
 }
 .mod-search-wrap input { border: none; background: transparent; outline: none; font-size: 0.8125rem; width: 11.25rem; color: var(--c-text); }
 
+.mod-table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .mod-table-header {
   display: grid;
   grid-template-columns: 1fr 6.25rem 10rem 7.5rem 8.75rem;
   padding: 0.625rem 1rem;
   border-bottom: 1px solid var(--c-border);
+  min-width: 37.5rem;
 }
 .mod-table-col {
   font-size: 0.625rem;
@@ -1287,6 +1301,7 @@ body {
   padding: 1rem 1rem;
   border-bottom: 1px solid #F8FAFC;
   transition: background 0.1s;
+  min-width: 37.5rem;
 }
 .mod-row:hover { background: var(--c-bg); }
 .mod-row.alert-row { background: #FFF5F5; border-left: 3px solid var(--c-orange); }
@@ -1717,8 +1732,6 @@ body {
   gap: 0.5rem;
   flex-wrap: wrap;
 }
-
-/* ─── PAGINATION ─────────────────────────────────────────── */
 
 /* ─── PAGINATION ─────────────────────────────────────────── */
 .immo-pagination {

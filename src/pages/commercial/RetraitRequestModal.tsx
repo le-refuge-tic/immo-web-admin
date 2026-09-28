@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { postRetrait } from '../../api/postRetrait';
 
 function formatFcfa(v: number) {
@@ -13,6 +13,12 @@ export default function RetraitRequestModal({ solde, onClose, onSuccess }: {
   const [nomTitulaire, setNomTitulaire]       = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
 
   const montantNum = Number(montant);
   const canSubmit = montantNum >= 500 && montantNum <= solde
@@ -33,7 +39,7 @@ export default function RetraitRequestModal({ solde, onClose, onSuccess }: {
   };
 
   return (
-    <div style={{
+    <div role="dialog" aria-modal="true" aria-label="Demande de retrait" style={{
       position: 'fixed', inset: 0, zIndex: 9999,
       background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,

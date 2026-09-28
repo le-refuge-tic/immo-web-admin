@@ -144,7 +144,7 @@ export default function Sidebar({
   ];
 
   return (
-    <aside className={classes}>
+    <aside id="immo-sidebar" className={classes} aria-label="Navigation principale">
       <nav className="immo-nav">
         {navItems.map(({ to, label, Icon }) => {
           const isSupervision = to === '/supervision';
@@ -193,6 +193,8 @@ export default function Sidebar({
             className={`immo-nav-item config-toggle${isConfigActive ? ' active' : ''}`}
             onClick={() => !minimized && setConfigOpen(o => !o)}
             title={minimized ? 'Configuration' : undefined}
+            aria-expanded={!minimized && configOpen}
+            aria-controls="config-submenu"
           >
             <SettingsIcon />
             <span className="immo-nav-label">Configuration</span>
@@ -202,7 +204,7 @@ export default function Sidebar({
           </button>
 
           {configOpen && !minimized && (
-            <div className="config-submenu">
+            <div id="config-submenu" className="config-submenu">
               {configSubs.map(({ to, label, Icon }) => (
                 <NavLink
                   key={to}

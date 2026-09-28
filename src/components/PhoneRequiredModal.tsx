@@ -93,7 +93,7 @@ export default function PhoneRequiredModal() {
   };
 
   return (
-    <div style={{
+    <div role="dialog" aria-modal="true" aria-label="Numéro de téléphone requis" style={{
       position: 'fixed', inset: 0, zIndex: 9999,
       background: 'rgba(0,0,0,0.55)',
       backdropFilter: 'blur(4px)',

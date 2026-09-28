@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { postAdmins } from '../../api/postAdmins';
 
 export default function ConfigCreateAdminModal({ onClose, onCreated }: {
@@ -8,6 +8,12 @@ export default function ConfigCreateAdminModal({ onClose, onCreated }: {
   const [form, setForm]       = useState({ nom: '', prenom: '', email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
@@ -27,7 +33,7 @@ export default function ConfigCreateAdminModal({ onClose, onCreated }: {
   const set = (field: any) => (e: any) => setForm(f => ({ ...f, [field]: e.target.value }));
 
   return (
-    <div className="immo-modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div className="immo-modal-backdrop" role="dialog" aria-modal="true" aria-label="Créer un administrateur" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="immo-modal">
         <div className="immo-modal-title">Nouvel administrateur</div>
         <div className="immo-modal-sub">Ce compte aura un accès complet à l'interface d'administration.</div>

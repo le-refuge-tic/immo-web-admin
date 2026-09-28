@@ -39,6 +39,12 @@ function ModerationModal({
 
   const isApprove = type === 'approuve';
 
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
+
   const canSubmit = isApprove
     ? fraisVisite.trim() !== '' && Number(fraisVisite) >= 0
     : motif.trim().length >= 5;
@@ -69,7 +75,7 @@ function ModerationModal({
   }
 
   return (
-    <div className="immo-modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
+    <div className="immo-modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()} role="dialog" aria-modal="true" aria-label={isApprove ? 'Approuver l\'annonce' : 'Rejeter l\'annonce'}>
       <div className="immo-modal">
         {/* Contexte du bien */}
         <div style={{
@@ -271,6 +277,7 @@ export default function ModerationPage() {
         </div>
 
         <div className="immo-card" style={{ padding: 0, overflow: 'hidden' }}>
+          <div className="mod-table-scroll">
           <div className="mod-table-header">
             <span className="mod-table-col">Bien</span>
             <span className="mod-table-col">Localisation</span>
@@ -334,6 +341,7 @@ export default function ModerationPage() {
                     className="btn-validate-circle"
                     onClick={() => setModal({ bien: b, type: 'approuve' })}
                     title="Approuver"
+                    aria-label="Approuver cette annonce"
                   >
                     <CheckIcon size={15} />
                   </button>
@@ -341,6 +349,7 @@ export default function ModerationPage() {
                     className="btn-reject-circle"
                     onClick={() => setModal({ bien: b, type: 'rejete' })}
                     title="Rejeter"
+                    aria-label="Rejeter cette annonce"
                   >
                     <XIcon size={14} />
                   </button>
@@ -348,6 +357,7 @@ export default function ModerationPage() {
               </div>
             ))
           )}
+          </div>{/* end mod-table-scroll */}
 
           <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--c-border)' }}>
             <span style={{ fontSize: 12, color: 'var(--c-muted)' }}>

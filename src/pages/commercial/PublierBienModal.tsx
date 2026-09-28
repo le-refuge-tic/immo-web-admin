@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { postBien } from '../../api/postBien';
 
 const TYPES = [
@@ -42,6 +42,12 @@ export default function PublierBienModal({ onClose, onCreated }: {
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
 
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
+
   const set = (k: string) => (e: any) => setForm(f => ({ ...f, [k]: e.target.value }));
 
   const handleSubmit = async (e: any) => {
@@ -77,7 +83,7 @@ export default function PublierBienModal({ onClose, onCreated }: {
   const sousList = SOUS_TYPES[form.type] ?? [];
 
   return (
-    <div className="immo-modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
+    <div className="immo-modal-backdrop" role="dialog" aria-modal="true" aria-label="Publier un bien" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="immo-modal" style={{ maxWidth: 560 }}>
         <div className="immo-modal-title">Publier un bien</div>
         <div className="immo-modal-sub">

@@ -1,8 +1,15 @@
+import { useEffect } from 'react';
 import ChangePasswordForm from '../../components/ChangePasswordForm';
 
 export default function ChangePasswordModal({ onClose }: { onClose: () => void }) {
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
+
   return (
-    <div style={{
+    <div role="dialog" aria-modal="true" aria-label="Changer le mot de passe" style={{
       position: 'fixed', inset: 0, zIndex: 9999,
       background: 'rgba(0,0,0,0.55)',
       backdropFilter: 'blur(4px)',

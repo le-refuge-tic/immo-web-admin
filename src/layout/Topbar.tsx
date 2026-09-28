@@ -32,7 +32,9 @@ export default function Topbar({
         className="immo-hamburger-btn"
         onClick={onToggleMobile}
         title={mobileOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
-        aria-label="Menu"
+        aria-label={mobileOpen ? 'Fermer le menu de navigation' : 'Ouvrir le menu de navigation'}
+        aria-expanded={mobileOpen}
+        aria-controls="immo-sidebar"
       >
         {mobileOpen ? (
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -89,7 +91,8 @@ export default function Topbar({
         <button
           className="immo-bell-btn"
           onClick={logout}
-          title="Déconnexion"
+          title="Se déconnecter"
+          aria-label="Se déconnecter"
           style={{ color: 'var(--c-red)' }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
