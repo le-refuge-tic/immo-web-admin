@@ -3541,8 +3541,8 @@ body {
   gap: 20px;
   align-items: flex-start;
 }
-.plaintes-list-panel  { flex: 1; min-width: 0; }
-.plaintes-detail-panel { width: 360px; flex-shrink: 0; }
+.plaintes-list-panel  { flex: 1; min-width: 0; overflow-x: auto; }
+.plaintes-detail-panel { width: 360px; flex-shrink: 0; overflow-x: auto; }
 
 @media (max-width: 48rem) {
   .plaintes-detail-panel { width: 100% !important; flex-shrink: unset; }

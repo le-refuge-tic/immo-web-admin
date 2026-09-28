@@ -176,6 +176,7 @@ export default function AnnonceEditPage() {
   const [autreQ, setAutreQ]             = useState('');
   const [qSearch, setQSearch]           = useState('');
   const [qOpen, setQOpen]               = useState(false);
+  const [hoveredQ, setHoveredQ]         = useState('');
   const [adresse, setAdresse]           = useState('');
   const qRef = useRef<HTMLDivElement>(null);
 
@@ -222,6 +223,7 @@ export default function AnnonceEditPage() {
 
   // Photos
   const [photos, setPhotos] = useState<PhotoState[]>([]);
+  const [confirmDeletePhotoId, setConfirmDeletePhotoId] = useState<number | null>(null);
 
   // Autres (options personnalisées)
   const [autrePrecision, setAutrePrecision] = useState<Record<string, string>>({});
@@ -371,9 +373,9 @@ export default function AnnonceEditPage() {
     }
   }
   async function handleDelete(photoId: number) {
-    if (!window.confirm('Supprimer cette photo ?')) return;
     await adminPhotos.remove(numId, photoId);
     setPhotos(prev => prev.filter(p => p.id !== photoId));
+    setConfirmDeletePhotoId(null);
   }
   async function handleCover(photoId: number) {
     await adminPhotos.setCover(numId, photoId);
@@ -550,10 +552,11 @@ export default function AnnonceEditPage() {
                     <div style={{ position:'absolute', top:'calc(100% + 4px)', left:0, right:0, background:'#fff', border:'2px solid #2563EB', borderRadius:8, maxHeight:240, overflowY:'auto', zIndex:100, boxShadow:'0 8px 24px rgba(0,0,0,.12)' }}>
                       {filteredQ.length === 0 && <div style={{ padding:'10px 12px', fontSize:12, color:'#64748B' }}>Aucun résultat pour "{qSearch}"</div>}
                       {filteredQ.slice(0, 80).map((q: string) => (
-                        <div key={q} onMouseDown={() => { setSelQ(q); setQOpen(false); setQSearch(''); }}
-                          style={{ padding:'8px 12px', fontSize:13, cursor:'pointer', color:'#0F172A', background: selQ===q?'#EFF6FF':'transparent', fontWeight: selQ===q?600:400 }}
-                          onMouseEnter={e => e.currentTarget.style.background='#F1F5F9'}
-                          onMouseLeave={e => e.currentTarget.style.background = selQ===q?'#EFF6FF':'transparent'}
+                        <div key={q}
+                          onMouseDown={() => { setSelQ(q); setQOpen(false); setQSearch(''); setHoveredQ(''); }}
+                          onMouseEnter={() => setHoveredQ(q)}
+                          onMouseLeave={() => setHoveredQ('')}
+                          style={{ padding:'8px 12px', fontSize:13, cursor:'pointer', color:'#0F172A', background: hoveredQ===q?'#F1F5F9':selQ===q?'#EFF6FF':'transparent', fontWeight: selQ===q?600:400 }}
                         >{q}</div>
                       ))}
                       {filteredQ.length > 80 && <div style={{ padding:'6px 12px', fontSize:11, color:'#64748B', borderTop:'1px solid #E2E8F0', fontStyle:'italic' }}>…{filteredQ.length - 80} autres — affinez la recherche</div>}
@@ -803,7 +806,14 @@ export default function AnnonceEditPage() {
                         {!ph.uploading && (
                           <div style={{ position:'absolute', bottom:0, left:0, right:0, display:'flex', gap:6, padding:8, background:'linear-gradient(to top,rgba(0,0,0,.5),transparent)' }}>
                             <button title="Photo principale" onClick={() => !ph.is_cover && handleCover(ph.id)} style={{ display:'flex', alignItems:'center', justifyContent:'center', width:30, height:30, borderRadius:6, border:'none', cursor:ph.is_cover?'default':'pointer', background:ph.is_cover?'#2563EB':'rgba(255,255,255,.85)', color:ph.is_cover?'#fff':'#64748B' }}><StarIcon/></button>
-                            <button title="Supprimer" onClick={() => handleDelete(ph.id)} style={{ display:'flex', alignItems:'center', justifyContent:'center', width:30, height:30, borderRadius:6, border:'none', cursor:'pointer', background:'rgba(255,255,255,.85)', color:'#DC2626', marginLeft:'auto' }}><TrashIcon size={12}/></button>
+                            {confirmDeletePhotoId === ph.id ? (
+                              <>
+                                <button title="Confirmer la suppression" onClick={() => handleDelete(ph.id)} style={{ display:'flex', alignItems:'center', justifyContent:'center', height:30, padding:'0 8px', borderRadius:6, border:'none', cursor:'pointer', background:'#DC2626', color:'#fff', fontSize:11, fontWeight:600, marginLeft:'auto' }}>Confirmer</button>
+                                <button title="Annuler" onClick={() => setConfirmDeletePhotoId(null)} style={{ display:'flex', alignItems:'center', justifyContent:'center', height:30, padding:'0 8px', borderRadius:6, border:'none', cursor:'pointer', background:'rgba(255,255,255,.85)', color:'#374151', fontSize:11 }}>✕</button>
+                              </>
+                            ) : (
+                              <button title="Supprimer" onClick={() => setConfirmDeletePhotoId(ph.id)} style={{ display:'flex', alignItems:'center', justifyContent:'center', width:30, height:30, borderRadius:6, border:'none', cursor:'pointer', background:'rgba(255,255,255,.85)', color:'#DC2626', marginLeft:'auto' }}><TrashIcon size={12}/></button>
+                            )}
                           </div>
                         )}
                       </div>

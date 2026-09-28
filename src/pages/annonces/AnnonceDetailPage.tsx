@@ -103,6 +103,7 @@ export default function AnnonceDetailPage() {
   const [motif, setMotif]       = useState('');
   const [conditions, setConditions] = useState('');
   const [fraisVisite, setFraisVisite] = useState('0');
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   // Édition proprietaire_info (super admin uniquement)
   const [editProprietaire, setEditProprietaire] = useState(false);
@@ -201,13 +202,13 @@ export default function AnnonceDetailPage() {
   }
 
   async function handleDelete() {
-    if (!confirm('Supprimer définitivement ce bien ? Cette action est irréversible.')) return;
     setSaving(true);
     try {
       await deleteAdminBien.byId(bien.id);
       navigate('/annonces');
     } finally {
       setSaving(false);
+      setConfirmDelete(false);
     }
   }
 
@@ -707,14 +708,39 @@ export default function AnnonceDetailPage() {
             )}
 
             <div className="detail-delete-zone">
-              <button
-                className="detail-btn detail-btn--delete"
-                onClick={handleDelete}
-                disabled={saving}
-              >
-                <TrashIcon size={14} />
-                Supprimer définitivement
-              </button>
+              {confirmDelete ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 16px', background: 'rgba(220,38,38,0.06)', borderRadius: 10, border: '1px solid rgba(220,38,38,0.25)' }}>
+                  <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#DC2626' }}>Supprimer définitivement ce bien ? Cette action est irréversible.</p>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                      className="detail-btn detail-btn--delete"
+                      onClick={handleDelete}
+                      disabled={saving}
+                      style={{ flex: 1 }}
+                    >
+                      <TrashIcon size={14} />
+                      {saving ? 'Suppression…' : 'Confirmer la suppression'}
+                    </button>
+                    <button
+                      className="detail-btn"
+                      onClick={() => setConfirmDelete(false)}
+                      disabled={saving}
+                      style={{ flex: 1 }}
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  className="detail-btn detail-btn--delete"
+                  onClick={() => setConfirmDelete(true)}
+                  disabled={saving}
+                >
+                  <TrashIcon size={14} />
+                  Supprimer définitivement
+                </button>
+              )}
             </div>
           </div>}
 
