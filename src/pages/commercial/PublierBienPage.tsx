@@ -284,6 +284,8 @@ export default function PublierBienPage() {
   const [photos, setPhotos]           = useState<File[]>([])
   const [video, setVideo]             = useState<File | null>(null)
   const [uploadProgress, setUploadProgress] = useState(0)
+  const [hoveredDropzone, setHoveredDropzone] = useState<string | null>(null)
+  const [hoveredQuartierIdx, setHoveredQuartierIdx] = useState<number | null>(null)
 
   // Étape 0
   const [typeBien, setTypeBien]               = useState('chambre_salon')
@@ -967,12 +969,12 @@ export default function PublierBienPage() {
                             ) : (
                               <p style={{ padding: '12px 16px', fontSize: 14, color: 'var(--c-muted)', margin: 0 }}>Commencez à taper…</p>
                             )
-                          ) : filteredQuartiers.map(q => (
+                          ) : filteredQuartiers.map((q, qi) => (
                             <button key={q.nom + q.arrondissement} type="button"
                               onMouseDown={() => selectQuartier(q.nom, q.arrondissement, q.ville)}
-                              style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', textAlign: 'left', fontSize: 14, color: 'var(--c-text)', background: 'none', border: 'none', borderBottom: '1px solid var(--c-border)', cursor: 'pointer' }}
-                              onMouseEnter={e => (e.currentTarget.style.background = 'var(--c-bg)')}
-                              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                              style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', textAlign: 'left', fontSize: 14, color: 'var(--c-text)', background: hoveredQuartierIdx === qi ? 'var(--c-bg)' : 'none', border: 'none', borderBottom: '1px solid var(--c-border)', cursor: 'pointer' }}
+                              onMouseEnter={() => setHoveredQuartierIdx(qi)}
+                              onMouseLeave={() => setHoveredQuartierIdx(null)}>
                               <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} style={{ color: 'var(--c-muted)', flexShrink: 0 }}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -1711,9 +1713,9 @@ export default function PublierBienPage() {
                 <p style={{ fontSize: 14, fontWeight: 700, marginBottom: 4, color: 'var(--c-text)' }}>Photos du bien</p>
                 <p style={{ fontSize: 12, marginBottom: 16, color: 'var(--c-muted)' }}>Maximum 5 photos (PNG, JPEG, WEBP) — les photos augmentent les visites de 3×</p>
                 {photos.length < 5 && (
-                  <label style={{ display: 'block', border: '2px dashed var(--c-border)', borderRadius: 16, padding: 32, textAlign: 'center', cursor: 'pointer', transition: 'border-color 0.15s' }}
-                    onMouseEnter={e => (e.currentTarget.style.borderColor = BLUE)}
-                    onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--c-border)')}>
+                  <label style={{ display: 'block', border: `2px dashed ${hoveredDropzone === 'photos' ? BLUE : 'var(--c-border)'}`, borderRadius: 16, padding: 32, textAlign: 'center', cursor: 'pointer', transition: 'border-color 0.15s' }}
+                    onMouseEnter={() => setHoveredDropzone('photos')}
+                    onMouseLeave={() => setHoveredDropzone(null)}>
                     <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
                       <svg width={40} height={40} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} style={{ color: 'var(--c-muted)' }}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -1782,9 +1784,9 @@ export default function PublierBienPage() {
                     </button>
                   </div>
                 ) : (
-                  <label style={{ display: 'block', border: '2px dashed var(--c-border)', borderRadius: 16, padding: 28, textAlign: 'center', cursor: 'pointer', transition: 'border-color 0.15s' }}
-                    onMouseEnter={e => (e.currentTarget.style.borderColor = BLUE)}
-                    onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--c-border)')}>
+                  <label style={{ display: 'block', border: `2px dashed ${hoveredDropzone === 'video' ? BLUE : 'var(--c-border)'}`, borderRadius: 16, padding: 28, textAlign: 'center', cursor: 'pointer', transition: 'border-color 0.15s' }}
+                    onMouseEnter={() => setHoveredDropzone('video')}
+                    onMouseLeave={() => setHoveredDropzone(null)}>
                     <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
                       <svg width={36} height={36} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} style={{ color: 'var(--c-muted)' }}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />

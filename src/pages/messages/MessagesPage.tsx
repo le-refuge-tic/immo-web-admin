@@ -112,6 +112,7 @@ export default function MessagesPage() {
   const [cpModalFor, setCpModalFor]     = useState<number | null>(null);
   const [slotActing, setSlotActing]     = useState<number | null>(null);
   const [isMobileThreadOpen, setIsMobileThreadOpen] = useState(false);
+  const [hoveredNewMsgBtn, setHoveredNewMsgBtn] = useState(false);
   const [toast, setToast]               = useState<string | null>(null);
   const bottomRef                       = useRef<HTMLDivElement>(null);
   const sendingRef                      = useRef(false);
@@ -345,12 +346,12 @@ export default function MessagesPage() {
             onClick={() => setShowNewModal(true)}
             style={{
               width: '100%', padding: '8px 0', borderRadius: 8, border: '1.5px dashed var(--c-border)',
-              background: 'transparent', color: 'var(--c-blue)', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              background: hoveredNewMsgBtn ? '#EFF6FF' : 'transparent', color: 'var(--c-blue)', fontSize: 13, fontWeight: 600, cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
               transition: 'all 0.15s',
             }}
-            onMouseEnter={e => (e.currentTarget.style.background = '#EFF6FF')}
-            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+            onMouseEnter={() => setHoveredNewMsgBtn(true)}
+            onMouseLeave={() => setHoveredNewMsgBtn(false)}
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>

@@ -543,6 +543,7 @@ function SupervisionModal({ commercial, onClose }: { commercial: any; onClose: (
   const [loadingConvs, setLoadingConvs] = useState(false);
   const [loadingBiens, setLoadingBiens] = useState(false);
   const [openConv, setOpenConv] = useState<any | null>(null);
+  const [hoveredConvId, setHoveredConvId] = useState<number | null>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [loadingMsgs, setLoadingMsgs] = useState(false);
   const [reply, setReply]       = useState('');
@@ -715,9 +716,10 @@ function SupervisionModal({ commercial, onClose }: { commercial: any; onClose: (
                   padding: '12px 24px', display: 'flex', alignItems: 'center', gap: 12,
                   borderBottom: '1px solid var(--c-border)', cursor: 'pointer',
                   transition: 'background 0.15s',
+                  background: hoveredConvId === conv.id ? 'var(--c-bg)' : 'transparent',
                 }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'var(--c-bg)')}
-                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                onMouseEnter={() => setHoveredConvId(conv.id)}
+                onMouseLeave={() => setHoveredConvId(null)}
                 >
                   <div style={{
                     width: 36, height: 36, borderRadius: '50%', flexShrink: 0,

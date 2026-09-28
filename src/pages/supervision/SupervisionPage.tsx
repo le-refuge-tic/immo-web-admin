@@ -196,6 +196,7 @@ export default function SupervisionPage() {
   const [personBiens, setPersonBiens]     = useState<any[]>([]);
   const [loadingPersonConvs, setLoadingPersonConvs] = useState(false);
   const [loadingPersonBiens, setLoadingPersonBiens] = useState(false);
+  const [hoveredBienId, setHoveredBienId] = useState<number | null>(null);
 
   /* — persistance lectures — */
   const readConvIds          = useRef<Set<number>>(getReadConvIds());
@@ -980,9 +981,9 @@ export default function SupervisionPage() {
                         role="button"
                         tabIndex={0}
                         onKeyDown={e => e.key === 'Enter' && navigate(`/annonces/${b.id}`)}
-                        style={{ padding: '12px 20px', borderBottom: '1px solid var(--c-border)', cursor: 'pointer', transition: 'background 0.15s' }}
-                        onMouseEnter={e => (e.currentTarget.style.background = 'var(--c-bg)')}
-                        onMouseLeave={e => (e.currentTarget.style.background = '')}
+                        style={{ padding: '12px 20px', borderBottom: '1px solid var(--c-border)', cursor: 'pointer', transition: 'background 0.15s', background: hoveredBienId === b.id ? 'var(--c-bg)' : '' }}
+                        onMouseEnter={() => setHoveredBienId(b.id)}
+                        onMouseLeave={() => setHoveredBienId(null)}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                           <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--c-text)' }}>{label}</span>
