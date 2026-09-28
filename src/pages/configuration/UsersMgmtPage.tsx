@@ -38,8 +38,11 @@ export default function UsersMgmtPage({ title, subtitle, roleFilter, emptyLabel 
   const [search, setSearch]         = useState('');
   const [actifFilter, setActifFilter] = useState('');
   const [page, setPage]             = useState(1);
-  const [togglingId, setTogglingId] = useState(null as any);
-  const [deletingId, setDeletingId] = useState(null as any);
+  const [togglingId, setTogglingId]     = useState(null as any);
+  const [deletingId, setDeletingId]     = useState(null as any);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null as any);
+  const [toggleError, setToggleError]   = useState('');
+  const [deleteError, setDeleteError]   = useState('');
 
   const limit = 10;
 
@@ -70,26 +73,28 @@ export default function UsersMgmtPage({ title, subtitle, roleFilter, emptyLabel 
   const inactifs   = users.filter((u: any) => !u.actif).length;
 
   const handleToggleActif = async (u: any) => {
+    setToggleError('');
     setTogglingId(u.id);
     try {
       const updated = await patchAdminUser.update(u.id, { actif: !u.actif });
       setUsers(prev => prev.map((x: any) => x.id === u.id ? updated : x));
     } catch (err: any) {
-      alert(err?.response?.data?.message ?? 'Erreur');
+      setToggleError(err?.response?.data?.message ?? 'Erreur');
     } finally {
       setTogglingId(null);
     }
   };
 
   const handleDelete = async (u: any) => {
-    if (!confirm(`Supprimer définitivement ${u.prenom} ${u.nom} ?`)) return;
+    setDeleteError('');
     setDeletingId(u.id);
     try {
       await deleteAdminUser.byId(u.id);
       setUsers(prev => prev.filter((x: any) => x.id !== u.id));
       setTotal(t => t - 1);
+      setConfirmDeleteId(null);
     } catch (err: any) {
-      alert(err?.response?.data?.message ?? 'Erreur');
+      setDeleteError(err?.response?.data?.message ?? 'Erreur');
     } finally {
       setDeletingId(null);
     }
@@ -162,6 +167,13 @@ export default function UsersMgmtPage({ title, subtitle, roleFilter, emptyLabel 
           </select>
         </div>
 
+        {toggleError && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 8, background: '#FEF2F2', border: '1px solid #FECACA', marginBottom: 12, fontSize: 13, color: '#DC2626' }}>
+            {toggleError}
+            <button onClick={() => setToggleError('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#DC2626', fontSize: 16, lineHeight: 1, padding: '0 4px' }}>✕</button>
+          </div>
+        )}
+
         <div className="mgmt-table-wrap">
           <div className="mgmt-table-head">
             <div className="mgmt-table-col">Utilisateur</div>
@@ -216,18 +228,25 @@ export default function UsersMgmtPage({ title, subtitle, roleFilter, emptyLabel 
                     </button>
                   </div>
                   <div className="mgmt-actions">
-                    <button
-                      className="btn-icon-sm danger"
-                      onClick={() => handleDelete(u)}
-                      disabled={deletingId === u.id}
-                      title="Supprimer cet utilisateur"
-                    >
-                      {deletingId === u.id ? (
-                        <span style={{ width: 12, height: 12, border: '2px solid currentColor', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite', display: 'block' }} />
-                      ) : (
+                    {confirmDeleteId === u.id ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'flex-end' }}>
+                        {deleteError && <span style={{ fontSize: 10, color: '#DC2626', maxWidth: 120, textAlign: 'right' }}>{deleteError}</span>}
+                        <div style={{ display: 'flex', gap: 4 }}>
+                          <button className="btn-icon-sm danger" onClick={() => handleDelete(u)} disabled={deletingId === u.id} style={{ padding: '2px 8px', fontSize: 11, fontWeight: 600, borderRadius: 5 }}>
+                            {deletingId === u.id ? '…' : 'Supprimer'}
+                          </button>
+                          <button className="btn-icon-sm" onClick={() => { setConfirmDeleteId(null); setDeleteError(''); }} style={{ padding: '2px 7px', fontSize: 11, borderRadius: 5 }}>✕</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        className="btn-icon-sm danger"
+                        onClick={() => setConfirmDeleteId(u.id)}
+                        title="Supprimer cet utilisateur"
+                      >
                         <TrashIcon size={14} />
-                      )}
-                    </button>
+                      </button>
+                    )}
                   </div>
                 </div>
               );

@@ -868,6 +868,8 @@ export default function GestionCommercialPage() {
   const [loading, setLoading]          = useState(true);
   const [showModal, setShowModal]      = useState(false);
   const [deletingId, setDeletingId]    = useState(null as any);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null as any);
+  const [deleteError, setDeleteError]  = useState('');
   const [clientsModal, setClientsModal]         = useState<any | null>(null);
   const [attribuerModal, setAttribuerModal]     = useState<any | null>(null);
   const [supervisionModal, setSupervisionModal] = useState<any | null>(null);
@@ -887,13 +889,14 @@ export default function GestionCommercialPage() {
   const handleCreated = (u: any) => setCommerciaux(c => [...c, u]);
 
   const handleDelete = async (commercial: any) => {
-    if (!confirm(`Supprimer le commercial ${commercial.prenom} ${commercial.nom} ?`)) return;
+    setDeleteError('');
     setDeletingId(commercial.id);
     try {
       await deleteCommerciaux.byId(commercial.id);
       setCommerciaux(c => c.filter((x: any) => x.id !== commercial.id));
+      setConfirmDeleteId(null);
     } catch (err: any) {
-      alert(err?.response?.data?.message ?? 'Erreur lors de la suppression');
+      setDeleteError(err?.response?.data?.message ?? 'Erreur lors de la suppression');
     } finally {
       setDeletingId(null);
     }
@@ -1098,16 +1101,24 @@ export default function GestionCommercialPage() {
                           </svg>
                         </button>
                         {!isMe && (
-                          <button className="btn-icon-sm danger" onClick={() => handleDelete(c)} disabled={deletingId === c.id} title="Supprimer ce commercial">
-                            {deletingId === c.id ? (
-                              <span style={{ width: 12, height: 12, border: '2px solid currentColor', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite', display: 'block' }} />
-                            ) : (
+                          confirmDeleteId === c.id ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'flex-end' }}>
+                              {deleteError && <span style={{ fontSize: 10, color: '#DC2626' }}>{deleteError}</span>}
+                              <div style={{ display: 'flex', gap: 4 }}>
+                                <button className="btn-icon-sm danger" onClick={() => handleDelete(c)} disabled={deletingId === c.id} style={{ padding: '2px 8px', fontSize: 11, fontWeight: 600, borderRadius: 5 }}>
+                                  {deletingId === c.id ? '…' : 'Supprimer'}
+                                </button>
+                                <button className="btn-icon-sm" onClick={() => { setConfirmDeleteId(null); setDeleteError(''); }} style={{ padding: '2px 7px', fontSize: 11, borderRadius: 5 }}>✕</button>
+                              </div>
+                            </div>
+                          ) : (
+                            <button className="btn-icon-sm danger" onClick={() => setConfirmDeleteId(c.id)} title="Supprimer ce commercial">
                               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                                 <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
                                 <path d="M10 11v6M14 11v6M9 6V4h6v2"/>
                               </svg>
-                            )}
-                          </button>
+                            </button>
+                          )
                         )}
                       </div>
                     )}

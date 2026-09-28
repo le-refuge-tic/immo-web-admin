@@ -11,6 +11,8 @@ export default function GestionAdminPage() {
   const [loading, setLoading]           = useState(true);
   const [showModal, setShowModal]       = useState(false);
   const [deletingId, setDeletingId]     = useState(null as any);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null as any);
+  const [deleteError, setDeleteError]   = useState('');
 
   useEffect(() => {
     getAdmins.list()
@@ -22,13 +24,14 @@ export default function GestionAdminPage() {
   const handleCreated = (u: any) => setAdmins(a => [...a, u]);
 
   const handleDelete = async (admin: any) => {
-    if (!confirm(`Supprimer l'administrateur ${admin.prenom} ${admin.nom} ?`)) return;
+    setDeleteError('');
     setDeletingId(admin.id);
     try {
       await deleteAdmins.byId(admin.id);
       setAdmins(a => a.filter((x: any) => x.id !== admin.id));
+      setConfirmDeleteId(null);
     } catch (err: any) {
-      alert(err?.response?.data?.message ?? 'Erreur lors de la suppression');
+      setDeleteError(err?.response?.data?.message ?? 'Erreur lors de la suppression');
     } finally {
       setDeletingId(null);
     }
@@ -133,16 +136,24 @@ export default function GestionAdminPage() {
                     </div>
                     <GestionAdminRoleBadge role={a.role_principal} />
                     {canDelete ? (
-                      <button className="btn-icon-sm danger" onClick={() => handleDelete(a)} disabled={deletingId === a.id} title="Supprimer cet administrateur" style={{ flexShrink: 0 }}>
-                        {deletingId === a.id ? (
-                          <span style={{ width: 12, height: 12, border: '2px solid currentColor', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite', display: 'block' }} />
-                        ) : (
+                      confirmDeleteId === a.id ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-end', flexShrink: 0 }}>
+                          {deleteError && <span style={{ fontSize: 11, color: '#DC2626' }}>{deleteError}</span>}
+                          <div style={{ display: 'flex', gap: 6 }}>
+                            <button className="btn-icon-sm danger" onClick={() => handleDelete(a)} disabled={deletingId === a.id} style={{ padding: '2px 10px', fontSize: 11, fontWeight: 600, borderRadius: 6 }}>
+                              {deletingId === a.id ? '…' : 'Supprimer'}
+                            </button>
+                            <button className="btn-icon-sm" onClick={() => { setConfirmDeleteId(null); setDeleteError(''); }} style={{ padding: '2px 8px', fontSize: 11, borderRadius: 6 }}>Annuler</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button className="btn-icon-sm danger" onClick={() => setConfirmDeleteId(a.id)} title="Supprimer cet administrateur" style={{ flexShrink: 0 }}>
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                             <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
                             <path d="M10 11v6M14 11v6M9 6V4h6v2"/>
                           </svg>
-                        )}
-                      </button>
+                        </button>
+                      )
                     ) : (
                       <div style={{ width: 30 }} />
                     )}

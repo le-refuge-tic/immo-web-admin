@@ -63,6 +63,7 @@ export default function GestionLiaisonsPage() {
   const [form, setForm]         = useState({ date_debut: '', jour_echeance: '10', loyer_prepaye_mois: '0', notes: '' });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError]       = useState('');
+  const [confirmRejetId, setConfirmRejetId] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -97,8 +98,8 @@ export default function GestionLiaisonsPage() {
   }
 
   async function handleRejeter(d: Demande) {
-    if (!window.confirm(`Rejeter la demande de ${d.locataire?.prenom} ${d.locataire?.nom} ?`)) return;
     await getDemandes.rejeter(d.id);
+    setConfirmRejetId(null);
     load();
   }
 
@@ -187,13 +188,20 @@ export default function GestionLiaisonsPage() {
                         >
                           ✓ Valider
                         </button>
-                        <button
-                          className="immo-btn immo-btn-sm"
-                          style={{ background: '#EF4444', color: '#fff', border: 'none' }}
-                          onClick={() => handleRejeter(d)}
-                        >
-                          ✗ Rejeter
-                        </button>
+                        {confirmRejetId === d.id ? (
+                          <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                            <button className="immo-btn immo-btn-sm" style={{ background: '#EF4444', color: '#fff', border: 'none' }} onClick={() => handleRejeter(d)}>Confirmer</button>
+                            <button className="immo-btn immo-btn-sm" onClick={() => setConfirmRejetId(null)}>Annuler</button>
+                          </div>
+                        ) : (
+                          <button
+                            className="immo-btn immo-btn-sm"
+                            style={{ background: '#EF4444', color: '#fff', border: 'none' }}
+                            onClick={() => setConfirmRejetId(d.id)}
+                          >
+                            ✗ Rejeter
+                          </button>
+                        )}
                       </div>
                     )}
                   </td>
