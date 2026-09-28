@@ -493,7 +493,7 @@ export default function AnnonceEditPage() {
             <>
               <div style={CARD}>
                 <SectionTitle>Type de bien</SectionTitle>
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8 }}>
+                <div className="edit-type-grid" style={{ gap:8 }}>
                   {TYPE_OPTIONS.map(o => {
                     const active = typeLabel === o.label;
                     return <button key={o.label} type="button" onClick={() => setTypeLabel(o.label)} style={{ padding:'10px 8px', borderRadius:8, fontSize:12.5, fontWeight:active?700:400, cursor:'pointer', textAlign:'center', border:active?'2px solid #2563EB':'1.5px solid #E2E8F0', background:active?'#EFF6FF':'#fff', color:active?'#1D4ED8':'#64748B', boxShadow:active?'0 0 0 3px rgba(37,99,235,.1)':'none', transition:'all .12s' }}>{o.label}</button>;
@@ -599,7 +599,7 @@ export default function AnnonceEditPage() {
                   <p style={{ fontSize:12, color:'#64748B', margin:'0 0 16px', lineHeight:1.5 }}>Remplissez les dimensions après vérification sur site. Superficie en m², longueur / largeur en mètres. Laissez vide ce qui n'a pas été mesuré.</p>
                   <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
                     {pieces.map((p, i) => (
-                      <div key={p.id} style={{ display:'grid', gridTemplateColumns:'2fr 1fr 1fr 1fr', gap:10, padding:14, background:'#F8FAFC', borderRadius:8, border:'1px solid #E2E8F0' }}>
+                      <div key={p.id} className="edit-piece-row" style={{ gap:10, padding:14, background:'#F8FAFC', borderRadius:8, border:'1px solid #E2E8F0' }}>
                         <div><label style={{ fontSize:11, fontWeight:600, color:'#64748B', display:'block', marginBottom:5 }}>Pièce</label><SInput value={p.nom} onChange={e => setPieces(ps => ps.map((x,j) => j===i?{...x,nom:e.target.value}:x))} /></div>
                         <div><label style={{ fontSize:11, fontWeight:600, color:'#64748B', display:'block', marginBottom:5 }}>Superficie (m²)</label><SInput type="number" min="0" step="0.5" placeholder="—" value={p.surface} onChange={e => setPieces(ps => ps.map((x,j) => j===i?{...x,surface:e.target.value}:x))} /></div>
                         <div><label style={{ fontSize:11, fontWeight:600, color:'#64748B', display:'block', marginBottom:5 }}>Longueur (m)</label><SInput type="number" min="0" step="0.1" placeholder="Optionnel" value={p.longueur} onChange={e => setPieces(ps => ps.map((x,j) => j===i?{...x,longueur:e.target.value}:x))} /></div>

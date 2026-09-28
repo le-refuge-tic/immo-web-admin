@@ -480,7 +480,7 @@ export default function AnnonceDetailPage() {
                 {adresseGps && (
                   <div className="detail-info-row">
                     <span>Adresse (GPS)</span>
-                    <strong style={{ textAlign: 'right', maxWidth: '60%' }}>{adresseGps}</strong>
+                    <strong style={{ textAlign: 'right', maxWidth: '60%', wordBreak: 'break-word' }}>{adresseGps}</strong>
                   </div>
                 )}
               </div>
@@ -526,7 +526,7 @@ export default function AnnonceDetailPage() {
               </div>
               {editProprietaire && isSuperAdmin ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  <div className="form-grid-2" style={{ gap: 8 }}>
                     <div>
                       <label className="detail-form-label">Prénom *</label>
                       <input className="immo-form-input" value={propPrenom} onChange={e => setPropPrenom(e.target.value)} placeholder="Prénom" />

@@ -3903,10 +3903,22 @@ body {
 
 .pb-err { font-size: 0.75rem; color: var(--c-red); margin-top: 0.25rem; }
 
+/* Responsive 2-col form grid (used in detail/edit pages) */
+.form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; }
+
+/* Responsive 3-col type grid */
+.edit-type-grid { display: grid; grid-template-columns: repeat(3, 1fr); }
+
+/* Responsive 4-col piece row grid */
+.edit-piece-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; }
+
 @media (max-width: 48rem) {
   .pb-page { padding: 0.875rem; }
   .pb-type-grid { grid-template-columns: repeat(2, 1fr); }
   .pb-step-label { display: none; }
   .pb-nav { flex-wrap: wrap; }
   .pb-nav-back, .pb-nav-next { flex: 1; min-width: 0; }
+  .form-grid-2 { grid-template-columns: 1fr; }
+  .edit-type-grid { grid-template-columns: repeat(2, 1fr); }
+  .edit-piece-row { grid-template-columns: 1fr 1fr; }
 }
