@@ -7,7 +7,7 @@ import terrainImg     from '../../assets/login/terrain.jpg';
 import logoUrl        from '../../assets/logo_complet.jpeg';
 
 export default function LoginPage() {
-  const { login, isAuthenticated, isLoading } = useAuth();
+  const { login, isAuthenticated } = useAuth();
 
   const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
