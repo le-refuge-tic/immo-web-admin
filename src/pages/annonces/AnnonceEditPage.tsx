@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getAdminBien } from '../../api/getAdminBien';
 import { patchAdminBien } from '../../api/patchAdminBien';
 import { adminPhotos } from '../../api/adminPhotos';
+import { useAuth } from '../../context/AuthContext';
 import {
   ChevronLeftIcon, CheckIcon, TrashIcon,
   HomeIcon, PinIcon, GridIcon, CardIcon, ImageIcon,
@@ -143,6 +144,9 @@ export default function AnnonceEditPage() {
   const { id }   = useParams();
   const navigate = useNavigate();
   const numId    = Number(id);
+  const { user } = useAuth();
+  const myRole   = user?.role_principal ?? user?.role;
+  const isCommercial = myRole === 'commercial';
 
   const [bien, setBien]           = useState<any>(null);
   const [loading, setLoading]     = useState(true);
@@ -372,6 +376,7 @@ export default function AnnonceEditPage() {
   const filteredQ = qSearch.trim() ? qList.filter((q: string) => q.toLowerCase().includes(qSearch.toLowerCase())) : qList;
   const amenites  = bien?.amenites ?? {};
   const isOwner   = bien?.user?.role === 'proprietaire';
+  const isLocked  = isCommercial && bien?.statut_moderation === 'approuve';
   const CARD: React.CSSProperties = { background:'#fff', border:'1px solid #E2E8F0', borderRadius:12, padding:'22px 24px', marginBottom:18 };
 
   // ── Loading / error states ───────────────────────────────────────────────────
@@ -383,7 +388,7 @@ export default function AnnonceEditPage() {
 
   if (loading) return (
     <>
-      <div style={TOP_STYLE}><button onClick={() => navigate(`/annonces/${id}`)} style={{ background:'none',border:'none',cursor:'pointer',color:'#64748B',fontSize:12,display:'flex',alignItems:'center',gap:5 }}><ChevronLeftIcon size={13}/> Retour</button></div>
+      <div style={TOP_STYLE}><button onClick={() => navigate(-1)} style={{ background:'none',border:'none',cursor:'pointer',color:'#64748B',fontSize:12,display:'flex',alignItems:'center',gap:5 }}><ChevronLeftIcon size={13}/> Retour</button></div>
       <div style={{ display:'flex',justifyContent:'center',alignItems:'center',height:'45vh',color:'#64748B' }}>Chargement…</div>
     </>
   );
@@ -398,21 +403,28 @@ export default function AnnonceEditPage() {
     <>
       {/* ── Topbar ─────────────────────────────────────────────────────────── */}
       <div style={TOP_STYLE}>
-        <button onClick={() => navigate(`/annonces/${id}`)} style={{ display:'flex',alignItems:'center',gap:5,background:'none',border:'none',cursor:'pointer',color:'#64748B',fontSize:12,padding:'5px 8px',borderRadius:6,fontWeight:500,flexShrink:0 }}>
+        <button onClick={() => navigate(-1)} style={{ display:'flex',alignItems:'center',gap:5,background:'none',border:'none',cursor:'pointer',color:'#64748B',fontSize:12,padding:'5px 8px',borderRadius:6,fontWeight:500,flexShrink:0 }}>
           <ChevronLeftIcon size={13}/> Retour
         </button>
         <div style={{ width:1,height:16,background:'#E2E8F0',flexShrink:0 }}/>
         <span style={{ fontSize:12,fontWeight:600,color:'#0F172A',flexShrink:0 }}>Bien #{id}</span>
         <div style={{ flex:1 }}/>
         {error && <span style={{ fontSize:11,color:'#EF4444',flexShrink:0,maxWidth:240,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{error}</span>}
-        <button
-          onClick={handleSave} disabled={saving}
-          style={{ display:'flex',alignItems:'center',gap:6,flexShrink:0,background:saved?'#16A34A':'#2563EB',color:'#fff',border:'none',borderRadius:8,padding:'10px 22px',fontSize:13,fontWeight:600,cursor:saving?'not-allowed':'pointer',opacity:saving?.7:1,transition:'background .2s',whiteSpace:'nowrap' }}
-        >
-          {saved ? <CheckIcon size={13}/> : <SaveIcon/>}
-          {saving ? 'Sauvegarde…' : saved ? 'Sauvegardé !' : 'Sauvegarder'}
-        </button>
+        {!isLocked && (
+          <button
+            onClick={handleSave} disabled={saving}
+            style={{ display:'flex',alignItems:'center',gap:6,flexShrink:0,background:saved?'#16A34A':'#2563EB',color:'#fff',border:'none',borderRadius:8,padding:'10px 22px',fontSize:13,fontWeight:600,cursor:saving?'not-allowed':'pointer',opacity:saving?.7:1,transition:'background .2s',whiteSpace:'nowrap' }}
+          >
+            {saved ? <CheckIcon size={13}/> : <SaveIcon/>}
+            {saving ? 'Sauvegarde…' : saved ? 'Sauvegardé !' : 'Sauvegarder'}
+          </button>
+        )}
       </div>
+      {isLocked && (
+        <div style={{ padding:'10px 24px', background:'#FEF3C7', borderBottom:'1px solid #FDE68A', fontSize:12.5, color:'#92400E' }}>
+          Ce bien est déjà approuvé : il ne peut plus être modifié depuis cette page. Contactez un administrateur si un changement est nécessaire.
+        </div>
+      )}
 
       {/* ── Corps : nav gauche + contenu ───────────────────────────────────── */}
       <div style={{ display:'flex', gap:0, alignItems:'flex-start' }}>

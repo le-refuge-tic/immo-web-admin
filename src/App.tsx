@@ -60,6 +60,7 @@ export default function App() {
             <Route path="annonces/:id/modifier" element={<AdminRoute><AnnonceEditPage /></AdminRoute>} />
             <Route path="commercial-dashboard" element={<CommercialDashboardPage />} />
             <Route path="mes-annonces"         element={<MesAnnoncesPage />} />
+            <Route path="mes-annonces/:id"     element={<AnnonceEditPage />} />
             <Route path="mes-visites"          element={<MesVisitesPage />} />
             <Route path="mes-clients"              element={<MesClientsPage />} />
             <Route path="portefeuille-commercial" element={<CommercialPortefeuillePage />} />
