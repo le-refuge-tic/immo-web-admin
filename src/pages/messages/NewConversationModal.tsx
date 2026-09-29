@@ -20,18 +20,33 @@ const ROLE_LABELS: any = {
   locataire:    'Locataire',
 };
 
-export default function NewConversationModal({ onClose, onCreated }: {
+export default function NewConversationModal({ onClose, onCreated, preselectedUser }: {
   onClose: () => void;
   onCreated: (conv: any) => void;
+  preselectedUser?: { id: number; prenom?: string; nom?: string; email?: string; role?: string } | null;
 }) {
   const [search, setSearch]       = useState('');
   const [roleTab, setRoleTab]     = useState('');
   const [users, setUsers]         = useState([] as any[]);
   const [loading, setLoading]     = useState(true);
-  const [creating, setCreating]   = useState(null as any);
+  const [creating, setCreating]   = useState<number | null>(null);
   const [createError, setCreateError] = useState('');
 
+  // Si un utilisateur est pré-sélectionné, créer la conversation immédiatement
   useEffect(() => {
+    if (!preselectedUser) return;
+    setCreating(preselectedUser.id);
+    postConversation.create(preselectedUser.id)
+      .then(conv => onCreated(conv))
+      .catch((err: any) => {
+        setCreateError(err?.response?.data?.message ?? 'Impossible de créer la conversation.');
+        setCreating(null);
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (preselectedUser) return; // pas besoin de charger la liste
     setLoading(true);
     getAdminUser.list({
       limit: 50,
@@ -42,7 +57,7 @@ export default function NewConversationModal({ onClose, onCreated }: {
       .then(res => setUsers(res.data ?? res))
       .catch(() => setUsers([]))
       .finally(() => setLoading(false));
-  }, [roleTab, search]);
+  }, [roleTab, search, preselectedUser]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -62,6 +77,27 @@ export default function NewConversationModal({ onClose, onCreated }: {
       setCreating(null);
     }
   };
+
+  // Écran de chargement pendant la création automatique depuis un client pré-sélectionné
+  if (preselectedUser && !createError) {
+    const name = [preselectedUser.prenom, preselectedUser.nom].filter(Boolean).join(' ') || preselectedUser.email || `#${preselectedUser.id}`;
+    return (
+      <div className="immo-modal-backdrop" onClick={onClose} role="dialog" aria-modal="true" aria-label="Ouverture de la conversation">
+        <div className="ncm-modal" onClick={e => e.stopPropagation()} style={{ textAlign: 'center', padding: '32px 24px' }}>
+          <div style={{ width: 48, height: 48, borderRadius: '50%', background: avatarColor(preselectedUser.id), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 700, color: '#fff', margin: '0 auto 16px' }}>
+            {initials(preselectedUser)}
+          </div>
+          <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--c-text)', marginBottom: 6 }}>
+            Ouverture de la conversation
+          </div>
+          <div style={{ fontSize: 13, color: 'var(--c-muted)', marginBottom: 20 }}>
+            avec <strong>{name}</strong>
+          </div>
+          <div className="msg-spinner" style={{ margin: '0 auto' }} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="immo-modal-backdrop" onClick={onClose} role="dialog" aria-modal="true" aria-label="Nouveau message">

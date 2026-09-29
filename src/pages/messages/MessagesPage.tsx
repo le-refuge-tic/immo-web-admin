@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { getMessages, markConvRead } from '../../api/getMessages';
 import { postMessage } from '../../api/postMessage';
 import { patchSlot } from '../../api/patchSlot';
@@ -99,6 +100,9 @@ function UserPopover({ user, onClose }: { user: any; onClose: () => void }) {
 
 export default function MessagesPage() {
   const { user: me }                    = useAuth();
+  const location                        = useLocation();
+  const preselectFromNav                = (location.state as any)?.preselect ?? null;
+
   const [convs, setConvs]               = useState<any[]>([]);
   const [activeId, setActiveId]         = useState<number | null>(null);
   const [messages, setMessages]         = useState<any[]>([]);
@@ -108,6 +112,7 @@ export default function MessagesPage() {
   const [loadingConvs, setLoadingConvs] = useState(true);
   const [loadingMsgs, setLoadingMsgs]   = useState(false);
   const [showNewModal, setShowNewModal] = useState(false);
+  const [preselectUser, setPreselectUser] = useState<any>(preselectFromNav);
   const [popover, setPopover]           = useState<{ user: any } | null>(null);
   const [cpModalFor, setCpModalFor]     = useState<number | null>(null);
   const [slotActing, setSlotActing]     = useState<number | null>(null);
@@ -140,6 +145,13 @@ export default function MessagesPage() {
   }, []);
 
   useEffect(() => { loadConvs(); }, [loadConvs]);
+
+  // Ouvrir automatiquement la conversation avec le client pré-sélectionné (depuis MesClients)
+  useEffect(() => {
+    if (!preselectFromNav) return;
+    setPreselectUser(preselectFromNav);
+    setShowNewModal(true);
+  }, [preselectFromNav]);
 
   const loadThread = useCallback(async (id: number) => {
     setLoadingMsgs(true);
@@ -556,7 +568,11 @@ export default function MessagesPage() {
 
       {/* Modal nouveau message */}
       {showNewModal && (
-        <NewConversationModal onClose={() => setShowNewModal(false)} onCreated={handleConvCreated} />
+        <NewConversationModal
+          onClose={() => { setShowNewModal(false); setPreselectUser(null); }}
+          onCreated={handleConvCreated}
+          preselectedUser={preselectUser}
+        />
       )}
 
       {/* Modal contre-proposition de créneau */}

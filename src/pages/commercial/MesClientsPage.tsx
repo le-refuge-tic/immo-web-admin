@@ -340,7 +340,7 @@ export default function MesClientsPage() {
                           {roleLabel}
                         </span>
                       )}
-                      <button onClick={() => navigate('/messages')} title="Messagerie"
+                      <button onClick={() => navigate('/messages', { state: { preselect: { id: c.id, prenom: c.prenom, nom: c.nom, email: c.email, role: c.role_principal ?? c.role } } })} title="Envoyer un message"
                         style={{
                           width: 34, height: 34, borderRadius: 8,
                           border: '1px solid var(--c-border)', background: 'var(--c-card)',
