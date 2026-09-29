@@ -16,6 +16,13 @@ const ROLE_LABELS: Record<string, string> = {
   client:       'Client',
 };
 
+const ROLE_COLORS: Record<string, { bg: string; color: string; border: string }> = {
+  prospect:     { bg: '#EFF6FF', color: '#1D4ED8', border: '#BFDBFE' },
+  locataire:    { bg: '#F5F3FF', color: '#7C3AED', border: '#DDD6FE' },
+  proprietaire: { bg: '#F0FDF4', color: '#15803D', border: '#BBF7D0' },
+  client:       { bg: '#FFFBEB', color: '#B45309', border: '#FDE68A' },
+};
+
 export default function MesClientsPage() {
   const { user: me }                    = useAuth();
   const navigate                        = useNavigate();
@@ -80,6 +87,54 @@ export default function MesClientsPage() {
     );
   });
 
+  const statCards = [
+    {
+      label: 'Propriétaires',
+      value: proprietaires.length,
+      iconBg: '#EFF6FF', iconColor: '#2563EB',
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      ),
+    },
+    {
+      label: 'Vérifiés',
+      value: nbVerifies,
+      iconBg: '#DCFCE7', iconColor: '#16A34A',
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+      ),
+    },
+    {
+      label: 'En attente',
+      value: nbEnAttente,
+      iconBg: '#FEF3C7', iconColor: '#D97706',
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+      ),
+    },
+    {
+      label: 'Clients assignés',
+      value: clients.length,
+      iconBg: '#F5F3FF', iconColor: '#7C3AED',
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+        </svg>
+      ),
+    },
+  ];
+
   return (
     <div className="immo-page">
 
@@ -93,24 +148,22 @@ export default function MesClientsPage() {
         </p>
       </div>
 
-      {/* ── KPI compteurs ── */}
+      {/* ── KPI cards ── */}
       {!loading && (
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-          <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 10, padding: '10px 18px', display: 'flex', flexDirection: 'column', gap: 2, minWidth: 140 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#15803D', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Vérifiés</span>
-            <span style={{ fontSize: 22, fontWeight: 800, color: '#15803D', lineHeight: 1 }}>{nbVerifies}</span>
-            <span style={{ fontSize: 10, color: '#16A34A' }}>propriétaires (bien approuvé)</span>
-          </div>
-          <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 10, padding: '10px 18px', display: 'flex', flexDirection: 'column', gap: 2, minWidth: 140 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#B45309', textTransform: 'uppercase', letterSpacing: '0.05em' }}>En attente</span>
-            <span style={{ fontSize: 22, fontWeight: 800, color: '#D97706', lineHeight: 1 }}>{nbEnAttente}</span>
-            <span style={{ fontSize: 10, color: '#D97706' }}>en attente de vérification</span>
-          </div>
-          <div style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 10, padding: '10px 18px', display: 'flex', flexDirection: 'column', gap: 2, minWidth: 140 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Assignés</span>
-            <span style={{ fontSize: 22, fontWeight: 800, color: 'var(--c-text)', lineHeight: 1 }}>{clients.length}</span>
-            <span style={{ fontSize: 10, color: 'var(--c-muted)' }}>clients assignés par admin</span>
-          </div>
+        <div className="stat-grid">
+          {statCards.map(s => (
+            <div className="stat-card" key={s.label}>
+              <div className="stat-card-top">
+                <div className="stat-icon-wrap" style={{ background: s.iconBg, color: s.iconColor }}>
+                  {s.icon}
+                </div>
+              </div>
+              <div>
+                <div className="stat-label">{s.label}</div>
+                <div className="stat-value">{s.value}</div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
@@ -161,38 +214,61 @@ export default function MesClientsPage() {
           <span style={{ width: 32, height: 32, border: '3px solid var(--c-border)', borderTopColor: 'var(--c-blue)', borderRadius: '50%', animation: 'spin 0.8s linear infinite', display: 'block' }} />
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: '52rem' }}>
 
-          {/* ═══ Section 1 : Propriétaires (biens publiés) ═══ */}
-          <div style={{ maxWidth: '52rem' }}>
+          {/* ═══ Section 1 : Propriétaires ═══ */}
+          <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-              <span style={{ fontWeight: 800, fontSize: 13, color: 'var(--c-text)' }}>Propriétaires</span>
-              <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>biens publiés par vous</span>
+              <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--c-text)' }}>Propriétaires</span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>biens publiés par vous</span>
               <span style={{ marginLeft: 'auto', background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 20, padding: '2px 10px', fontSize: 11, fontWeight: 700, color: 'var(--c-text)' }}>
                 {filteredProprios.length}
               </span>
             </div>
             <div className="immo-card" style={{ padding: 0, overflow: 'hidden' }}>
               {filteredProprios.length === 0 ? (
-                <div style={{ padding: '24px', textAlign: 'center', color: 'var(--c-muted)', fontSize: 13 }}>
+                <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--c-muted)', fontSize: 13 }}>
                   {search ? 'Aucun propriétaire ne correspond.' : 'Aucun propriétaire renseigné sur vos annonces.'}
                 </div>
               ) : (
                 filteredProprios.map((p: any, idx: number) => (
-                  <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '13px 20px', borderBottom: idx < filteredProprios.length - 1 ? '1px solid var(--c-border)' : 'none' }}>
-                    <div style={{ width: 40, height: 40, borderRadius: '50%', flexShrink: 0, background: '#7C3AED', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff' }}>
+                  <div key={idx} style={{
+                    display: 'flex', alignItems: 'center', gap: 14,
+                    padding: '14px 20px',
+                    borderBottom: idx < filteredProprios.length - 1 ? '1px solid var(--c-border)' : 'none',
+                    transition: 'background 0.12s',
+                  }}
+                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--c-bg)')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <div style={{
+                      width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
+                      background: '#7C3AED',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 14, fontWeight: 700, color: '#fff',
+                    }}>
                       {`${p.prenom?.[0] ?? ''}${p.nom?.[0] ?? ''}`.toUpperCase() || '?'}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--c-text)' }}>{`${p.prenom ?? ''} ${p.nom ?? ''}`.trim() || '—'}</div>
-                      {p.telephone && <div style={{ fontSize: 12, color: 'var(--c-muted)', marginTop: 1 }}>{p.telephone}</div>}
+                      <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--c-text)' }}>
+                        {`${p.prenom ?? ''} ${p.nom ?? ''}`.trim() || '—'}
+                      </div>
+                      {p.telephone && <div style={{ fontSize: 12, color: 'var(--c-muted)', marginTop: 2 }}>{p.telephone}</div>}
                       {p.email    && <div style={{ fontSize: 12, color: 'var(--c-muted)' }}>{p.email}</div>}
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
-                      <span style={{ padding: '3px 10px', borderRadius: 20, fontSize: 10, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', background: p.verifie ? '#F0FDF4' : '#FFFBEB', color: p.verifie ? '#15803D' : '#B45309', border: `1px solid ${p.verifie ? '#BBF7D0' : '#FDE68A'}`, flexShrink: 0 }}>
+                      <span style={{
+                        padding: '3px 10px', borderRadius: 20, fontSize: 10, fontWeight: 700,
+                        letterSpacing: '0.5px', textTransform: 'uppercase',
+                        background: p.verifie ? '#F0FDF4' : '#FFFBEB',
+                        color:      p.verifie ? '#15803D' : '#B45309',
+                        border: `1px solid ${p.verifie ? '#BBF7D0' : '#FDE68A'}`,
+                      }}>
                         {p.verifie ? 'Vérifié' : 'En attente'}
                       </span>
-                      <span style={{ fontSize: 10, color: 'var(--c-muted)' }}>{p.biens?.length ?? 0} bien{(p.biens?.length ?? 0) > 1 ? 's' : ''}</span>
+                      <span style={{ fontSize: 11, color: 'var(--c-muted)' }}>
+                        {p.biens?.length ?? 0} bien{(p.biens?.length ?? 0) > 1 ? 's' : ''}
+                      </span>
                     </div>
                   </div>
                 ))
@@ -201,10 +277,10 @@ export default function MesClientsPage() {
           </div>
 
           {/* ═══ Section 2 : Clients assignés ═══ */}
-          <div style={{ maxWidth: '52rem' }}>
+          <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-              <span style={{ fontWeight: 800, fontSize: 13, color: 'var(--c-text)' }}>Clients assignés</span>
-              <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>par votre responsable</span>
+              <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--c-text)' }}>Clients assignés</span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>par votre responsable</span>
               <span style={{ marginLeft: 'auto', background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 20, padding: '2px 10px', fontSize: 11, fontWeight: 700, color: 'var(--c-text)' }}>
                 {filtered.length}
               </span>
@@ -226,35 +302,62 @@ export default function MesClientsPage() {
                   </div>
                 </div>
               ) : (
-                <div>
-                  {filtered.map((c: any, idx: number) => {
-                    const role = c.role_principal ?? c.role ?? '';
-                    const roleLabel = ROLE_LABELS[role] ?? role;
-                    return (
-                      <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', borderBottom: idx < filtered.length - 1 ? '1px solid var(--c-border)' : 'none' }}>
-                        <div style={{ width: 42, height: 42, borderRadius: '50%', flexShrink: 0, background: avatarColor(c.id ?? 0), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, color: '#fff' }}>
-                          {initials(c)}
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--c-text)' }}>{displayName(c)}</div>
-                          {(c.prenom || c.nom) && c.email     && <div style={{ fontSize: 12, color: 'var(--c-muted)', marginTop: 1 }}>{c.email}</div>}
-                          {(c.prenom || c.nom) && c.telephone && <div style={{ fontSize: 12, color: 'var(--c-muted)' }}>{c.telephone}</div>}
-                        </div>
-                        {roleLabel && (
-                          <span style={{ padding: '3px 10px', borderRadius: 20, fontSize: 10, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', background: '#EFF6FF', color: '#1D4ED8', border: '1px solid #BFDBFE', flexShrink: 0 }}>
-                            {roleLabel}
-                          </span>
-                        )}
-                        <button onClick={() => navigate('/messages')} title="Messagerie"
-                          style={{ width: 34, height: 34, borderRadius: 8, border: '1px solid var(--c-border)', background: 'var(--c-card)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--c-blue)', flexShrink: 0 }}>
-                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                          </svg>
-                        </button>
+                filtered.map((c: any, idx: number) => {
+                  const role = c.role_principal ?? c.role ?? '';
+                  const roleLabel = ROLE_LABELS[role] ?? role;
+                  const roleStyle = ROLE_COLORS[role] ?? { bg: '#F1F5F9', color: '#64748B', border: '#E2E8F0' };
+                  return (
+                    <div key={c.id} style={{
+                      display: 'flex', alignItems: 'center', gap: 14,
+                      padding: '14px 20px',
+                      borderBottom: idx < filtered.length - 1 ? '1px solid var(--c-border)' : 'none',
+                      transition: 'background 0.12s',
+                    }}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'var(--c-bg)')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    >
+                      <div style={{
+                        width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
+                        background: avatarColor(c.id ?? 0),
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 14, fontWeight: 700, color: '#fff',
+                      }}>
+                        {initials(c)}
                       </div>
-                    );
-                  })}
-                </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--c-text)' }}>{displayName(c)}</div>
+                        {(c.prenom || c.nom) && c.email     && <div style={{ fontSize: 12, color: 'var(--c-muted)', marginTop: 2 }}>{c.email}</div>}
+                        {(c.prenom || c.nom) && c.telephone && <div style={{ fontSize: 12, color: 'var(--c-muted)' }}>{c.telephone}</div>}
+                      </div>
+                      {roleLabel && (
+                        <span style={{
+                          padding: '3px 10px', borderRadius: 20, fontSize: 10, fontWeight: 700,
+                          letterSpacing: '0.5px', textTransform: 'uppercase',
+                          background: roleStyle.bg, color: roleStyle.color,
+                          border: `1px solid ${roleStyle.border}`,
+                          flexShrink: 0,
+                        }}>
+                          {roleLabel}
+                        </span>
+                      )}
+                      <button onClick={() => navigate('/messages')} title="Messagerie"
+                        style={{
+                          width: 34, height: 34, borderRadius: 8,
+                          border: '1px solid var(--c-border)', background: 'var(--c-card)',
+                          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          color: 'var(--c-blue)', flexShrink: 0,
+                          transition: 'background 0.12s, border-color 0.12s',
+                        }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#EFF6FF'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--c-blue)'; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--c-card)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--c-border)'; }}
+                      >
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        </svg>
+                      </button>
+                    </div>
+                  );
+                })
               )}
             </div>
           </div>
