@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef, type FormEvent } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { blockInvalidNumberKey } from '../../utils/inputNumbers';
 import { getCommerciaux } from '../../api/getCommerciaux';
 import { deleteCommerciaux } from '../../api/deleteCommerciaux';
 import { postCommercialBonus } from '../../api/postCommercialBonus';
@@ -162,8 +163,9 @@ function BonusCommercialModal({ commercial, onClose }: { commercial: any; onClos
             <div className="immo-form-field" style={{ marginBottom: 14 }}>
               <label className="immo-form-label">Montant (FCFA) *</label>
               <input
-                className="immo-form-input" type="number" min={1} step={100}
+                className="immo-form-input" type="number" min={1} max={99999999} step={100}
                 value={montant} onChange={e => setMontant(e.target.value)}
+                onKeyDown={e => blockInvalidNumberKey(e, true)}
                 placeholder="Ex: 5000" autoFocus disabled={loading} required
               />
             </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getDemandes } from '../../api/getDemandes';
+import { blockInvalidNumberKey } from '../../utils/inputNumbers';
 
 type Demande = {
   id: number;
@@ -245,9 +246,10 @@ export default function GestionLiaisonsPage() {
                   Jour d'échéance (défaut : 10)
                 </label>
                 <input
-                  type="number" min={1} max={28}
+                  type="number" min={1} max={28} step={1}
                   value={form.jour_echeance}
                   onChange={e => setForm(f => ({ ...f, jour_echeance: e.target.value }))}
+                  onKeyDown={e => blockInvalidNumberKey(e, true)}
                   style={{ width: '100%', padding: '9px 12px', border: '1px solid #E0E0E0', borderRadius: 10, fontSize: 13, boxSizing: 'border-box' }}
                 />
               </div>
@@ -256,9 +258,10 @@ export default function GestionLiaisonsPage() {
                   Mois de loyer prépayé
                 </label>
                 <input
-                  type="number" min={0} max={12}
+                  type="number" min={0} max={12} step={1}
                   value={form.loyer_prepaye_mois}
                   onChange={e => setForm(f => ({ ...f, loyer_prepaye_mois: e.target.value }))}
+                  onKeyDown={e => blockInvalidNumberKey(e, true)}
                   style={{ width: '100%', padding: '9px 12px', border: '1px solid #E0E0E0', borderRadius: 10, fontSize: 13, boxSizing: 'border-box' }}
                 />
               </div>

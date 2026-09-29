@@ -3,6 +3,7 @@ import {
   SearchIcon, CheckIcon, XIcon, HomeIcon, AlertIcon,
   ChevronLeftIcon, ChevronRightIcon,
 } from '../../components/Icons';
+import { blockInvalidNumberKey } from '../../utils/inputNumbers';
 import { getAdminBien } from '../../api/getAdminBien';
 import { patchAdminBien } from '../../api/patchAdminBien';
 import ModerationRisqueLabel from './ModerationRisqueLabel';
@@ -130,10 +131,12 @@ function ModerationModal({
                   className="immo-form-input"
                   type="number"
                   min={0}
+                  max={999999}
                   step={500}
                   placeholder="ex : 2000"
                   value={fraisVisite}
                   onChange={e => setFraisVisite(e.target.value)}
+                  onKeyDown={e => blockInvalidNumberKey(e, true)}
                   required
                   autoFocus
                   style={{ paddingRight: 52 }}

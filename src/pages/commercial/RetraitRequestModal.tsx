@@ -1,5 +1,6 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { postRetrait } from '../../api/postRetrait';
+import { blockInvalidNumberKey } from '../../utils/inputNumbers';
 
 function formatFcfa(v: number) {
   return new Intl.NumberFormat('fr-FR').format(Math.round(v)) + ' FCFA';
@@ -66,6 +67,7 @@ export default function RetraitRequestModal({ solde, onClose, onSuccess }: {
               step={100}
               value={montant}
               onChange={e => { setMontant(e.target.value); setError(''); }}
+              onKeyDown={e => blockInvalidNumberKey(e, true)}
               placeholder="Minimum 500 FCFA"
               autoFocus
               disabled={loading}

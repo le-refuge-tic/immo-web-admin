@@ -3,6 +3,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { postBien } from '../../api/postBien'
 import { BENIN_LOCATION_DATA } from '../../data/beninLocations'
+import { blockInvalidNumberKey } from '../../utils/inputNumbers'
 import { getGeocoding } from '../../api/getGeocoding'
 import { getQuartiers } from '../../api/getQuartiers'
 
@@ -225,7 +226,7 @@ function NumberPicker({ presets, unit, value, isCustom, onPick, onCustomStart, c
         <Chip label="Saisir" active={isCustom} onClick={onCustomStart} />
       </div>
       {isCustom && (
-        <input type="number" value={customText} onChange={e => onCustomText(e.target.value)} placeholder="Nombre"
+        <input type="number" min="0" max="9999" step="1" value={customText} onChange={e => onCustomText(e.target.value)} onKeyDown={e => blockInvalidNumberKey(e, true)} placeholder="Nombre"
           style={{ marginTop: 10, width: '100%', borderRadius: 10, padding: '10px 16px', fontSize: 14, outline: 'none', border: `1px solid ${BLUE}`, background: 'var(--c-bg)', color: 'var(--c-text)', boxSizing: 'border-box' }} />
       )}
     </div>
@@ -235,7 +236,7 @@ function NumberPicker({ presets, unit, value, isCustom, onPick, onCustomStart, c
 function MoneyInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
   return (
     <div style={{ position: 'relative' }}>
-      <input type="number" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder ?? '0'}
+      <input type="number" min="0" max="999999999" step="1" value={value} onChange={e => onChange(e.target.value)} onKeyDown={e => blockInvalidNumberKey(e, true)} placeholder={placeholder ?? '0'}
         style={{ width: '100%', borderRadius: 10, padding: '12px 56px 12px 16px', fontSize: 14, outline: 'none', border: '1px solid var(--c-border)', background: 'var(--c-bg)', color: 'var(--c-text)', transition: 'border-color 0.15s', boxSizing: 'border-box' }}
         onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
         onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
@@ -1093,7 +1094,7 @@ export default function PublierBienPage() {
               <Card>
                 <Section title="Superficie" required />
                 <div style={{ display: 'flex', gap: 10 }}>
-                  <input type="number" value={superficieTerrain} onChange={e => setSuperficieTerrain(e.target.value)}
+                  <input type="number" min="0" max={superficieUnite === 'ha' ? 999999 : 9999999999} step={superficieUnite === 'ha' ? 0.01 : 1} value={superficieTerrain} onChange={e => setSuperficieTerrain(e.target.value)} onKeyDown={e => blockInvalidNumberKey(e, superficieUnite !== 'ha')}
                     placeholder={superficieUnite === 'ha' ? 'Ex: 2.5' : 'Ex: 25000'}
                     style={{ ...baseInput, flex: 1, minWidth: 0 }}
                     onFocus={e => (e.currentTarget.style.borderColor = BLUE)}

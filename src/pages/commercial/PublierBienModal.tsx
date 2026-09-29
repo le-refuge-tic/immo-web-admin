@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { postBien } from '../../api/postBien';
+import { blockInvalidNumberKey, blockInvalidCoordKey } from '../../utils/inputNumbers';
 
 const TYPES = [
   { value: 'maison',        label: 'Maison / Villa' },
@@ -140,7 +141,7 @@ export default function PublierBienModal({ onClose, onCreated }: {
             </div>
             <div className="immo-form-field">
               <label className="immo-form-label">Prix (FCFA) *</label>
-              <input className="immo-form-input" type="number" min="0" value={form.prix} onChange={set('prix')} required placeholder="ex. 80000" />
+              <input className="immo-form-input" type="number" min="0" max="999999999" step="1" value={form.prix} onChange={set('prix')} onKeyDown={e => blockInvalidNumberKey(e, true)} required placeholder="ex. 80000" />
             </div>
           </div>
 
@@ -162,11 +163,11 @@ export default function PublierBienModal({ onClose, onCreated }: {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             <div className="immo-form-field">
               <label className="immo-form-label">Latitude</label>
-              <input className="immo-form-input" type="number" step="any" value={form.latitude} onChange={set('latitude')} placeholder="6.3654" />
+              <input className="immo-form-input" type="number" step="any" min="-90" max="90" value={form.latitude} onChange={set('latitude')} onKeyDown={blockInvalidCoordKey} placeholder="6.3654" />
             </div>
             <div className="immo-form-field">
               <label className="immo-form-label">Longitude</label>
-              <input className="immo-form-input" type="number" step="any" value={form.longitude} onChange={set('longitude')} placeholder="2.4183" />
+              <input className="immo-form-input" type="number" step="any" min="-180" max="180" value={form.longitude} onChange={set('longitude')} onKeyDown={blockInvalidCoordKey} placeholder="2.4183" />
             </div>
           </div>
 
