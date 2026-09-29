@@ -112,7 +112,7 @@ export default function UtilisateursPage() {
         <div className="immo-search-wrap">
           <SearchIcon />
           <input
-            placeholder="Rechercher par nom, email…"
+            placeholder="Rechercher par nom, email, téléphone…"
             value={search}
             onChange={handleSearch}
           />
