@@ -180,15 +180,7 @@ export default function Sidebar({
                   }}>{badge > 99 ? '99+' : badge}</span>
                 )}
               </span>
-              <span className="immo-nav-label">
-                {label}
-                {badge > 0 && !minimized && (
-                  <span style={{
-                    marginLeft: 6, background: '#DC2626', color: '#fff',
-                    borderRadius: 20, padding: '1px 6px', fontSize: 10, fontWeight: 800,
-                  }}>{badge}</span>
-                )}
-              </span>
+              <span className="immo-nav-label">{label}</span>
             </NavLink>
           );
         })}
