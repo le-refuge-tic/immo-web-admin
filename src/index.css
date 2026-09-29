@@ -2499,7 +2499,7 @@ body.lp-page #root { height: auto; min-height: 100dvh; overflow: visible; }
    ══════════════════════════════════════════════════════════ */
 
 .lp-root {
-  height: 100%;
+  min-height: 100dvh;
   display: grid;
   grid-template-columns: 55% 45%;
   overflow: hidden;
