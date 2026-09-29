@@ -6,6 +6,7 @@ import { getGeocoding } from '../../api/getGeocoding';
 import { deleteAdminBien } from '../../api/deleteAdminBien';
 import { ChevronLeftIcon, PinIcon, TrashIcon, EditIcon } from '../../components/Icons';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 
 // ── Labels lisibles pour les champs amenites ────────────────────────────────
 const AMENITE_FIELD_GROUPS = [
@@ -89,6 +90,7 @@ export default function AnnonceDetailPage() {
   const navigate     = useNavigate();
   const location     = useLocation();
   const { user }     = useAuth();
+  const showToast    = useToast();
   const backTo       = (location.state as any)?.from === 'mes-annonces' ? '/mes-annonces' : '/annonces';
   const userRole     = user?.role_principal ?? user?.role;
   const isCommercial = userRole === 'commercial';
@@ -150,6 +152,13 @@ export default function AnnonceDetailPage() {
       ]
     : [];
 
+  const MODERATION_LABELS: Record<string, string> = {
+    approuve:     'Bien approuvé et publié.',
+    rejete:       'Bien rejeté.',
+    conditionnel: 'Bien passé en conditionnel.',
+    en_attente:   'Approbation révoquée.',
+  };
+
   async function handleModerate(statut: string, extra?: any) {
     setSaving(true);
     try {
@@ -160,6 +169,9 @@ export default function AnnonceDetailPage() {
       setAction(null);
       setMotif('');
       setConditions('');
+      showToast(MODERATION_LABELS[statut] ?? 'Statut mis à jour.', statut === 'rejete' ? 'error' : statut === 'conditionnel' ? 'info' : 'success');
+    } catch {
+      showToast('Une erreur est survenue.', 'error');
     } finally {
       setSaving(false);
     }
@@ -182,6 +194,9 @@ export default function AnnonceDetailPage() {
       });
       setBien((prev: any) => ({ ...prev, ...updated }));
       setEditProprietaire(false);
+      showToast('Informations propriétaire enregistrées.');
+    } catch {
+      showToast('Impossible d\'enregistrer les modifications.', 'error');
     } finally {
       setSaving(false);
     }
@@ -198,6 +213,9 @@ export default function AnnonceDetailPage() {
       setBien(updated);
       setFraisVisite(String(updated.frais_visite ?? 0));
       setAction(null);
+      showToast('Bien approuvé et publié.');
+    } catch {
+      showToast('Une erreur est survenue.', 'error');
     } finally {
       setSaving(false);
     }
@@ -207,7 +225,10 @@ export default function AnnonceDetailPage() {
     setSaving(true);
     try {
       await deleteAdminBien.byId(bien.id);
+      showToast('Bien supprimé définitivement.', 'info');
       navigate(backTo);
+    } catch {
+      showToast('Impossible de supprimer ce bien.', 'error');
     } finally {
       setSaving(false);
       setConfirmDelete(false);

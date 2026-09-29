@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { patchAuth } from '../api/patchAuth';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
 type Props = {
   onSuccess: () => void;
@@ -94,6 +95,7 @@ function SubmitBtn({ loading, disabled, children }: { loading: boolean; disabled
 
 export default function ChangePasswordForm({ onSuccess, submitLabel = 'Valider le nouveau mot de passe' }: Props) {
   const { user } = useAuth();
+  const showToast = useToast();
   const [step, setStep]                       = useState<Step>('form');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword]         = useState('');
@@ -128,6 +130,7 @@ export default function ChangePasswordForm({ onSuccess, submitLabel = 'Valider l
       setLoading(true);
       try {
         await patchAuth.changePassword(currentPassword, newPassword);
+        showToast('Mot de passe mis à jour avec succès.');
         onSuccess();
       } catch (err: any) {
         setError(err?.response?.data?.message ?? 'Impossible de changer le mot de passe.');
@@ -167,6 +170,7 @@ export default function ChangePasswordForm({ onSuccess, submitLabel = 'Valider l
     }
     try {
       await patchAuth.changePassword(currentPassword, newPassword);
+      showToast('Mot de passe mis à jour avec succès.');
       onSuccess();
     } catch (err: any) {
       setError(err?.response?.data?.message ?? 'Impossible de changer le mot de passe.');
