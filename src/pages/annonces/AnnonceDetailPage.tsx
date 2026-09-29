@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { getAdminBien } from '../../api/getAdminBien';
 import { patchAdminBien } from '../../api/patchAdminBien';
 import { getGeocoding } from '../../api/getGeocoding';
@@ -85,9 +85,11 @@ function formatDate(iso: string) {
 }
 
 export default function AnnonceDetailPage() {
-  const { id }   = useParams();
-  const navigate = useNavigate();
-  const { user } = useAuth();
+  const { id }       = useParams();
+  const navigate     = useNavigate();
+  const location     = useLocation();
+  const { user }     = useAuth();
+  const backTo       = (location.state as any)?.from === 'mes-annonces' ? '/mes-annonces' : '/annonces';
   const userRole     = user?.role_principal ?? user?.role;
   const isCommercial = userRole === 'commercial';
   const isSuperAdmin = userRole === 'super_admin';
@@ -205,7 +207,7 @@ export default function AnnonceDetailPage() {
     setSaving(true);
     try {
       await deleteAdminBien.byId(bien.id);
-      navigate('/annonces');
+      navigate(backTo);
     } finally {
       setSaving(false);
       setConfirmDelete(false);
@@ -224,7 +226,7 @@ export default function AnnonceDetailPage() {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: '1rem' }}>
         <div style={{ color: 'var(--c-red)', fontWeight: 600 }}>{error}</div>
-        <button className="detail-back-btn" onClick={() => navigate('/annonces')}>
+        <button className="detail-back-btn" onClick={() => navigate(backTo)}>
           <ChevronLeftIcon size={16} /> Retour aux annonces
         </button>
       </div>
@@ -240,7 +242,7 @@ export default function AnnonceDetailPage() {
     <>
       {/* ── Topbar ── */}
       <div className="immo-topbar">
-        <button className="detail-back-btn" onClick={() => navigate('/annonces')}>
+        <button className="detail-back-btn" onClick={() => navigate(backTo)}>
           <ChevronLeftIcon size={16} />
           Retour aux annonces
         </button>

@@ -336,7 +336,9 @@ export default function MesAnnoncesPage() {
               const sc = STATUS_CARD[b.statut_moderation];
               return (
                 <div key={b.id} style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid var(--c-border)', background: 'var(--c-card)', display: 'flex', flexDirection: 'column', transition: 'box-shadow 0.15s', cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}
-                  onClick={() => navigate(`/mes-annonces/${b.id}`)}>
+                  onClick={() => b.statut_moderation === 'approuve'
+                    ? navigate(`/mes-annonces/${b.id}`, { state: { from: 'mes-annonces' } })
+                    : navigate(`/mes-annonces/${b.id}/modifier`)}>
                   {/* Photo */}
                   <div style={{ position: 'relative', height: 160, background: 'var(--c-border)', flexShrink: 0 }}>
                     {cover ? (
