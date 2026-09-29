@@ -84,6 +84,8 @@ export default function UtilisateursPage() {
       await deleteAdminUser.byId(id);
       setConfirmId(null);
       await load();
+    } catch (err: any) {
+      alert(err?.response?.data?.message ?? 'Erreur lors de la suppression.');
     } finally {
       setDeletingId(null);
     }
