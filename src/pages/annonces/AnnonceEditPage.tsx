@@ -107,6 +107,20 @@ function Toggle({ label, value, onChange }: { label: string; value: boolean | nu
     </div>
   );
 }
+function PieceCounter({ label, value, onInc, onDec, min = 0 }: { label: string; value: number; onInc: () => void; onDec: () => void; min?: number }) {
+  return (
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 0', borderBottom:'1px solid #E2E8F0' }}>
+      <span style={{ fontSize:13, color:'#0F172A' }}>{label}</span>
+      <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+        <button type="button" disabled={value <= min} onClick={onDec}
+          style={{ width:28, height:28, borderRadius:7, display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700, border:'1px solid #E2E8F0', background:'#fff', color:'#0F172A', cursor: value<=min?'not-allowed':'pointer', opacity: value<=min?0.4:1 }}>−</button>
+        <span style={{ width:20, textAlign:'center', fontWeight:700, color:'#0F172A' }}>{value}</span>
+        <button type="button" onClick={onInc}
+          style={{ width:28, height:28, borderRadius:7, display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700, background:'#EFF6FF', color:'#2563EB', border:'none', cursor:'pointer' }}>+</button>
+      </div>
+    </div>
+  );
+}
 function TagPicker({ label, preset, value, onChange }: { label: string; preset: string[]; value: string[]; onChange: (v: string[]) => void }) {
   const [custom, setCustom] = useState('');
   const toggle = (t: string) => onChange(value.includes(t) ? value.filter(x => x !== t) : [...value, t]);
@@ -192,6 +206,7 @@ export default function AnnonceEditPage() {
   const [nbVeh, setNbVeh]               = useState('');
   const [armoiresCh, setArmoiresCh]     = useState<boolean | null>(null);
   const [nbVoisins, setNbVoisins]       = useState('');
+  const [echeanceMois, setEcheanceMois] = useState('');
 
   // Réseaux
   const [elec, setElec]             = useState('non');
@@ -243,6 +258,7 @@ export default function AnnonceEditPage() {
         setParking(a.parking??null); setParkingCap(a.parking_capacite!=null?String(a.parking_capacite):'');
         setAccesVeh(a.acces_vehicule??null); setNbVeh(a.nb_vehicules!=null?String(a.nb_vehicules):'');
         setArmoiresCh(a.armoires_chambre??null); setNbVoisins(a.nb_voisins!=null?String(a.nb_voisins):'');
+        setEcheanceMois(a.echeance_mois!=null?String(a.echeance_mois):'');
 
         const autreMap: Record<string, string> = {};
         const setChip = (
@@ -296,6 +312,7 @@ export default function AnnonceEditPage() {
         sa(k, v === 'autre' ? (autrePrecision[field] || 'autre') : v);
       };
       if (dbST) sa('sous_type', dbST);
+      if (echeanceMois) sa('echeance_mois', Number(echeanceMois));
       sa('sanitaire', sanitaire); sa('chambre_couloir', couloir);
       chip('finition', finition, 'finition');
       chip('type_cuisine', typeCuisine, 'cuisine');
@@ -329,7 +346,7 @@ export default function AnnonceEditPage() {
         type: dbType, description: description||undefined, prix: prix ? Number(prix) : undefined,
         localisation: { ville:villeVal, quartier:quartierVal||undefined, adresse:adresse||undefined },
         amenites: ame,
-        pieces: pieces.map(p => ({ id:p.id, nom:p.nom, surface:p.surface!==''?Number(p.surface):null, longueur:p.longueur!==''?Number(p.longueur):null, largeur:p.largeur!==''?Number(p.largeur):null })),
+        pieces: pieces.map(p => ({ id:p.id > 0 ? p.id : undefined, nom:p.nom, surface:p.surface!==''?Number(p.surface):null, longueur:p.longueur!==''?Number(p.longueur):null, largeur:p.largeur!==''?Number(p.largeur):null })),
       };
       if      (dbType==='maison')                              payload.details_maison  = { superficie:superficie?Number(superficie):0, cloture:cloture??false };
       else if (dbType==='terrain')                             payload.details_terrain = { superficie:superficie?Number(superficie):0, cloture:cloture??false };
@@ -377,6 +394,15 @@ export default function AnnonceEditPage() {
   const amenites  = bien?.amenites ?? {};
   const isOwner   = bien?.user?.role === 'proprietaire';
   const isLocked  = isCommercial && bien?.statut_moderation === 'approuve';
+
+  // Compteurs de pièces (mode simplifié commercial — identique à la création) :
+  // les lignes détaillées (superficie/longueur/largeur) restent gérées par l'admin.
+  const pieceCount = (nom: string) => pieces.filter(p => p.nom === nom).length;
+  const addPiece = (nom: string) => setPieces(ps => [...ps, { id: -(Date.now() + Math.random()), nom, surface: '', longueur: '', largeur: '' }]);
+  const removePiece = (nom: string) => setPieces(ps => {
+    const lastIdx = [...ps].map(p => p.nom).lastIndexOf(nom);
+    return lastIdx === -1 ? ps : ps.filter((_, i) => i !== lastIdx);
+  });
   const CARD: React.CSSProperties = { background:'#fff', border:'1px solid #E2E8F0', borderRadius:12, padding:'22px 24px', marginBottom:18 };
 
   // ── Loading / error states ───────────────────────────────────────────────────
@@ -550,7 +576,21 @@ export default function AnnonceEditPage() {
           {/* ═══ CONFORT ═══ */}
           {activeTab === 'Confort' && (
             <>
-              {pieces.length > 0 && (
+              {isCommercial ? (
+                <div style={CARD}>
+                  <SectionTitle>Nombre de pièces</SectionTitle>
+                  <div style={{ display:'flex', flexDirection:'column' }}>
+                    <PieceCounter label="Chambres" value={pieceCount('Chambre')} min={1}
+                      onInc={() => addPiece('Chambre')} onDec={() => removePiece('Chambre')} />
+                    <PieceCounter label="Salons" value={pieceCount('Salon')}
+                      onInc={() => addPiece('Salon')} onDec={() => removePiece('Salon')} />
+                    <PieceCounter label="Cuisines" value={pieceCount('Cuisine')}
+                      onInc={() => addPiece('Cuisine')} onDec={() => removePiece('Cuisine')} />
+                    <PieceCounter label="Douches" value={pieceCount('Salle de bain')}
+                      onInc={() => addPiece('Salle de bain')} onDec={() => removePiece('Salle de bain')} />
+                  </div>
+                </div>
+              ) : pieces.length > 0 && (
                 <div style={CARD}>
                   <SectionTitle>Composition des pièces</SectionTitle>
                   <p style={{ fontSize:12, color:'#64748B', margin:'0 0 16px', lineHeight:1.5 }}>Remplissez les dimensions après vérification sur site. Superficie en m², longueur / largeur en mètres. Laissez vide ce qui n'a pas été mesuré.</p>
@@ -587,26 +627,30 @@ export default function AnnonceEditPage() {
                         <SInput type="number" min="0" placeholder="Ex : 4" value={nbVoisins} onChange={e => setNbVoisins(e.target.value)} />
                       </Field>
                     )}
-                    <Toggle label="Arrière-cour" value={arriereCour} onChange={setArriereCour} />
+                    {!isCommercial && <Toggle label="Arrière-cour" value={arriereCour} onChange={setArriereCour} />}
                   </div>
                 )}
-                <Toggle label="Boyerie (chambre domestique)" value={boyerie} onChange={setBoyerie} />
-                {boyerie && (
-                  <div style={{ paddingLeft:16, paddingTop:8, paddingBottom:4 }}>
-                    <Field label="Type de boyerie">
-                      <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
-                        {BOYERIE_OPTS.map(o => <Chip key={o.value} label={o.label} active={boyerieType===o.value} onClick={() => setBoyerieType(boyerieType===o.value?'':o.value)} />)}
-                        <Chip label="Autre (à préciser)" active={boyerieType==='autre'} onClick={() => setBoyerieType(boyerieType==='autre'?'':'autre')} />
-                      </div>
-                      {boyerieType==='autre' && <SInput style={{ marginTop:8 }} placeholder="Précisez…" value={autrePrecision.boyerie_type??''} onChange={e => setAutrePrecision(p=>({...p, boyerie_type:e.target.value}))} />}
-                    </Field>
-                  </div>
-                )}
-                <Toggle label="Parking" value={parking} onChange={setParking} />
-                {parking && <div style={{ paddingLeft:16, paddingTop:8, paddingBottom:4 }}><Field label="Capacité (nb véhicules)"><SInput type="number" min="1" placeholder="Ex : 2" value={parkingCap} onChange={e => setParkingCap(e.target.value)} /></Field></div>}
                 <Toggle label="Accès véhicule (portail suffisamment large)" value={accesVeh} onChange={setAccesVeh} />
                 {accesVeh && <div style={{ paddingLeft:16, paddingTop:8, paddingBottom:4 }}><Field label="Nb de véhicules pouvant entrer"><SInput type="number" min="1" placeholder="Ex : 1" value={nbVeh} onChange={e => setNbVeh(e.target.value)} /></Field></div>}
-                {isSmall && <Toggle label="Armoires encastrées dans la chambre" value={armoiresCh} onChange={setArmoiresCh} />}
+                {!isCommercial && (
+                  <>
+                    <Toggle label="Boyerie (chambre domestique)" value={boyerie} onChange={setBoyerie} />
+                    {boyerie && (
+                      <div style={{ paddingLeft:16, paddingTop:8, paddingBottom:4 }}>
+                        <Field label="Type de boyerie">
+                          <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+                            {BOYERIE_OPTS.map(o => <Chip key={o.value} label={o.label} active={boyerieType===o.value} onClick={() => setBoyerieType(boyerieType===o.value?'':o.value)} />)}
+                            <Chip label="Autre (à préciser)" active={boyerieType==='autre'} onClick={() => setBoyerieType(boyerieType==='autre'?'':'autre')} />
+                          </div>
+                          {boyerieType==='autre' && <SInput style={{ marginTop:8 }} placeholder="Précisez…" value={autrePrecision.boyerie_type??''} onChange={e => setAutrePrecision(p=>({...p, boyerie_type:e.target.value}))} />}
+                        </Field>
+                      </div>
+                    )}
+                    <Toggle label="Parking" value={parking} onChange={setParking} />
+                    {parking && <div style={{ paddingLeft:16, paddingTop:8, paddingBottom:4 }}><Field label="Capacité (nb véhicules)"><SInput type="number" min="1" placeholder="Ex : 2" value={parkingCap} onChange={e => setParkingCap(e.target.value)} /></Field></div>}
+                    {isSmall && <Toggle label="Armoires encastrées dans la chambre" value={armoiresCh} onChange={setArmoiresCh} />}
+                  </>
+                )}
               </div>
 
               <div style={CARD}>
@@ -685,11 +729,13 @@ export default function AnnonceEditPage() {
                 </Field>
               </div>
 
-              <div style={CARD}>
-                <SectionTitle>Voisinage & Équipements</SectionTitle>
-                <TagPicker label="Points d'intérêt à proximité" preset={VOISINAGE_PRESET} value={voisinage} onChange={setVoisinage} />
-                <div style={{ marginTop:4 }}><TagPicker label="Équipements inclus" preset={EQUIPEMENT_PRESET} value={equips} onChange={setEquips} /></div>
-              </div>
+              {!isCommercial && (
+                <div style={CARD}>
+                  <SectionTitle>Voisinage & Équipements</SectionTitle>
+                  <TagPicker label="Points d'intérêt à proximité" preset={VOISINAGE_PRESET} value={voisinage} onChange={setVoisinage} />
+                  <div style={{ marginTop:4 }}><TagPicker label="Équipements inclus" preset={EQUIPEMENT_PRESET} value={equips} onChange={setEquips} /></div>
+                </div>
+              )}
             </>
           )}
 
@@ -705,13 +751,16 @@ export default function AnnonceEditPage() {
                 ['Caution eau',         amenites.caution_eau!=null ? `${Number(amenites.caution_eau).toLocaleString('fr-FR')} FCFA` : '—'],
                 ['Caution électricité', amenites.caution_elec!=null ? `${Number(amenites.caution_elec).toLocaleString('fr-FR')} FCFA` : '—'],
                 ['Frais de visite',     bien.frais_visite!=null ? `${Number(bien.frais_visite).toLocaleString('fr-FR')} FCFA` : '—'],
-                ['Échéance paiement',   amenites.echeance_mois!=null ? `${amenites.echeance_mois} mois` : '—'],
               ] as [string,string][]).map(([lbl,val]) => (
                 <div key={lbl} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'11px 0', borderBottom:'1px solid #E2E8F0' }}>
                   <span style={{ fontSize:13, color:'#64748B' }}>{lbl}</span>
                   <span style={{ fontSize:13, fontWeight:600, color:'#0F172A' }}>{val}</span>
                 </div>
               ))}
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'11px 0', borderBottom:'1px solid #E2E8F0', gap:12 }}>
+                <span style={{ fontSize:13, color:'#64748B', flexShrink:0 }}>Échéance paiement (jour du mois)</span>
+                <SInput type="number" min="1" max="31" placeholder="Ex : 5" value={echeanceMois} onChange={e => setEcheanceMois(e.target.value)} style={{ maxWidth:120, textAlign:'right' }} />
+              </div>
               <div style={{ marginTop:16, padding:14, background:'#F0F9FF', borderRadius:8, border:'1px solid #BAE6FD' }}>
                 <p style={{ fontSize:12, color:'#075985', margin:0, lineHeight:1.7 }}>
                   <strong>Commission</strong>
