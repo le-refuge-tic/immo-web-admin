@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import villaImg       from '../../assets/login/villa.jpg';
 import appartementImg from '../../assets/login/appartement.jpg';
@@ -7,8 +7,7 @@ import terrainImg     from '../../assets/login/terrain.jpg';
 import logoUrl        from '../../assets/logo_complet.jpeg';
 
 export default function LoginPage() {
-  const { login, isAuthenticated } = useAuth();
-  const navigate = useNavigate();
+  const { login, isAuthenticated, isLoading } = useAuth();
 
   const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
@@ -21,10 +20,8 @@ export default function LoginPage() {
     return () => { document.body.classList.remove('lp-page'); };
   }, []);
 
-  if (isAuthenticated) {
-    navigate('/', { replace: true });
-    return null;
-  }
+  if (isLoading) return null;
+  if (isAuthenticated) return <Navigate to="/" replace />;
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
@@ -32,7 +29,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login({ email, password });
-      navigate('/', { replace: true });
+      // La redirection est gérée par <Navigate> quand isAuthenticated devient true
     } catch (err: any) {
       const msg = err?.response?.data?.message;
       setError(msg || 'Email ou mot de passe incorrect.');
