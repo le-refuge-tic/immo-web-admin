@@ -270,7 +270,7 @@ export default function PublierBienPage() {
   const navigate = useNavigate()
 
   const proprietaireInfo = (() => {
-    try { return JSON.parse(sessionStorage.getItem('proprietaire_info') ?? 'null') } catch { return null }
+    try { return JSON.parse(localStorage.getItem('proprietaire_info') ?? 'null') } catch { return null }
   })()
 
   const DRAFT_KEY = 'publier_bien_draft'
@@ -403,14 +403,14 @@ export default function PublierBienPage() {
   }
 
   const saveDraft = useCallback(() => {
-    try { sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draftState)) } catch { /* quota */ }
+    try { localStorage.setItem(DRAFT_KEY, JSON.stringify(draftState)) } catch { /* quota */ }
   }, [JSON.stringify(draftState)]) // eslint-disable-line
 
   useEffect(() => { saveDraft() }, [saveDraft])
 
   // Restauration au montage
   useEffect(() => {
-    const raw = sessionStorage.getItem(DRAFT_KEY)
+    const raw = localStorage.getItem(DRAFT_KEY)
     if (!raw) return
     try {
       const d = JSON.parse(raw)
@@ -738,8 +738,8 @@ export default function PublierBienPage() {
         getQuartiers.proposer(quartier.trim(), ville || undefined, arrondissement || undefined).catch(() => {})
       }
 
-      sessionStorage.removeItem('proprietaire_info')
-      sessionStorage.removeItem(DRAFT_KEY)
+      localStorage.removeItem('proprietaire_info')
+      localStorage.removeItem(DRAFT_KEY)
       setCreated(true)
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Erreur lors de la création')
