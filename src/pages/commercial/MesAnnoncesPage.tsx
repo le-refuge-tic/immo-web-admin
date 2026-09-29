@@ -134,7 +134,7 @@ export default function MesAnnoncesPage() {
 
   useEffect(() => {
     try {
-      const d = sessionStorage.getItem(DRAFT_KEY);
+      const d = localStorage.getItem(DRAFT_KEY);
       setHasDraft(!!d);
     } catch { /* ignore */ }
   }, []);
@@ -390,7 +390,7 @@ export default function MesAnnoncesPage() {
       <ProprietaireInfoModal
         onClose={() => setShowProprietaireModal(false)}
         onConfirm={(info) => {
-          sessionStorage.setItem('proprietaire_info', JSON.stringify(info));
+          localStorage.setItem('proprietaire_info', JSON.stringify(info));
           setShowProprietaireModal(false);
           navigate('/publier-bien');
         }}
