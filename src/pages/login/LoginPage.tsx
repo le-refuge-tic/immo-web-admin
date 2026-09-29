@@ -20,7 +20,6 @@ export default function LoginPage() {
     return () => { document.body.classList.remove('lp-page'); };
   }, []);
 
-  if (isLoading) return null;
   if (isAuthenticated) return <Navigate to="/" replace />;
 
   const handleSubmit = async (e: any) => {
