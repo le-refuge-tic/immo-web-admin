@@ -34,15 +34,12 @@ body {
   height: 100dvh;
 }
 
-/* body.lp-page permet le scroll sur la page de login (mobile) */
-body.lp-page {
-  overflow: auto;
-  height: auto;
-  min-height: 100dvh;
-}
+/* Pas de modification de body pour lp-page — le scroll est géré par #root */
 
 #root { height: 100dvh; overflow: hidden; }
-body.lp-page #root { height: auto; min-height: 100dvh; overflow: visible; }
+
+/* Sur la page login, #root laisse lp-root gérer son propre scroll */
+body.lp-page #root { overflow: auto; }
 
 /* ─── LAYOUT ─────────────────────────────────────────────── */
 
@@ -2502,7 +2499,7 @@ body.lp-page #root { height: auto; min-height: 100dvh; overflow: visible; }
   min-height: 100dvh;
   display: grid;
   grid-template-columns: 55% 45%;
-  overflow: hidden;
+  grid-template-rows: 1fr;
 }
 
 /* ── Panneau gauche — fond sombre, photos en relief ── */
@@ -2796,9 +2793,7 @@ body.lp-page #root { height: auto; min-height: 100dvh; overflow: visible; }
 @media (max-width: 56.25rem) {
   .lp-root {
     grid-template-columns: 1fr;
-    height: auto;
     min-height: 100dvh;
-    overflow-y: auto;
   }
   .lp-left  { display: none; }
   .lp-right {
@@ -2806,7 +2801,6 @@ body.lp-page #root { height: auto; min-height: 100dvh; overflow: visible; }
     padding: 2.5rem 1.75rem;
     align-items: flex-start;
     padding-top: 5rem;
-    overflow-y: auto;
   }
 }
 
