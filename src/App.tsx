@@ -17,6 +17,7 @@ import GestionProspectPage from './pages/configuration/GestionProspectPage';
 import GestionLocatairePage from './pages/configuration/GestionLocatairePage';
 import GestionAdminPage from './pages/configuration/GestionAdminPage';
 import GestionCommercialPage from './pages/configuration/GestionCommercialPage';
+import GestionEquipesPage from './pages/configuration/GestionEquipesPage';
 import LoyersPage    from './pages/loyers/LoyersPage';
 import FinancesPage  from './pages/finances/FinancesPage';
 import FeedbacksPage from './pages/feedbacks/FeedbacksPage';
@@ -29,6 +30,7 @@ import PublierBienPage         from './pages/commercial/PublierBienPage';
 import CommercialDashboardPage    from './pages/commercial/CommercialDashboardPage';
 import CommercialPortefeuillePage from './pages/commercial/CommercialPortefeuillePage';
 import MesClientsPage             from './pages/commercial/MesClientsPage';
+import MonEquipePage              from './pages/commercial/MonEquipePage';
 import SupervisionPage         from './pages/supervision/SupervisionPage';
 import PlaintesPage            from './pages/plaintes/PlaintesPage';
 import ModerationPage          from './pages/moderation/ModerationPage';
@@ -63,6 +65,7 @@ export default function App() {
             <Route path="mes-annonces/:id"     element={<AnnonceEditPage />} />
             <Route path="mes-visites"          element={<MesVisitesPage />} />
             <Route path="mes-clients"              element={<MesClientsPage />} />
+            <Route path="mon-equipe"               element={<MonEquipePage />} />
             <Route path="portefeuille-commercial" element={<CommercialPortefeuillePage />} />
             <Route path="publier-bien"         element={<PublierBienPage />} />
             <Route path="messages"     element={<MessagesPage />} />
@@ -82,6 +85,7 @@ export default function App() {
               <Route index element={<Navigate to="profil" replace />} />
               <Route path="profil"          element={<ProfilPage />} />
               <Route path="commerciaux"     element={<AdminRoute><GestionCommercialPage /></AdminRoute>} />
+              <Route path="equipes"         element={<AdminRoute><GestionEquipesPage /></AdminRoute>} />
               <Route path="proprietaires"   element={<AdminRoute><GestionProprietairePage /></AdminRoute>} />
               <Route path="prospects"       element={<AdminRoute><GestionProspectPage /></AdminRoute>} />
               <Route path="locataires"      element={<AdminRoute><GestionLocatairePage /></AdminRoute>} />

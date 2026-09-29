@@ -115,6 +115,7 @@ export default function Sidebar({
       { to: '/mes-annonces', label: 'Mes annonces',    Icon: ListingsIcon   },
       { to: '/mes-visites',  label: 'Mes visites',     Icon: VisitIcon      },
       { to: '/mes-clients',  label: 'Mes clients',     Icon: ClientsIcon    },
+      { to: '/mon-equipe',   label: 'Mon équipe',      Icon: UsersIcon      },
     ] : []),
     { to: '/messages',     label: 'Messages',           Icon: MessageIcon    },
     ...(isAdmin ? [
@@ -134,6 +135,7 @@ export default function Sidebar({
     { to: '/configuration/profil', label: 'Mon profil', Icon: UserIcon },
     ...(isAdmin ? [
       { to: '/configuration/commerciaux',    label: 'Commerciaux',    Icon: UsersIcon    },
+      { to: '/configuration/equipes',        label: 'Équipes',        Icon: UsersIcon    },
       { to: '/configuration/proprietaires',  label: 'Propriétaires',  Icon: BuildingIcon },
       { to: '/configuration/prospects',      label: 'Prospects',      Icon: UsersIcon    },
       { to: '/configuration/locataires',     label: 'Locataires',     Icon: KeyIcon      },
