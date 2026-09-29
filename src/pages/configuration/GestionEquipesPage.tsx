@@ -67,20 +67,21 @@ export default function GestionEquipesPage() {
   const [equipes, setEquipes]         = useState<Equipe[]>([]);
   const [commerciaux, setCommerciaux] = useState<any[]>([]);
   const [loading, setLoading]         = useState(true);
+  const [loadError, setLoadError]     = useState('');
   const [showModal, setShowModal]     = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
-    try {
-      const [eqs, coms] = await Promise.all([equipesApi.list(), getCommerciaux.list()]);
-      setEquipes(eqs);
-      setCommerciaux(coms);
-    } catch {
-      setEquipes([]); setCommerciaux([]);
-    } finally {
-      setLoading(false);
-    }
+    const errors: string[] = [];
+    const [eqs, coms] = await Promise.all([
+      equipesApi.list().catch((e: any) => { errors.push(e?.response?.data?.message ?? 'Chargement des équipes impossible.'); return []; }),
+      getCommerciaux.list().catch((e: any) => { errors.push(e?.response?.data?.message ?? 'Chargement des commerciaux impossible.'); return []; }),
+    ]);
+    setEquipes(eqs);
+    setCommerciaux(coms);
+    setLoadError(errors.join(' '));
+    setLoading(false);
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -109,6 +110,14 @@ export default function GestionEquipesPage() {
       </div>
 
       <div className="immo-page">
+        {loadError && (
+          <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8, padding: '10px 16px', fontSize: 13, color: '#DC2626', fontWeight: 500, marginBottom: 16 }}>
+            {loadError}{' '}
+            <button onClick={load} style={{ background: 'none', border: 'none', color: '#DC2626', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>
+              Réessayer
+            </button>
+          </div>
+        )}
         {loading ? (
           <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--c-muted)' }}>Chargement…</div>
         ) : equipes.length === 0 ? (
