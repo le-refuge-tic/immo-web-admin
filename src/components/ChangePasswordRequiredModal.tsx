@@ -14,13 +14,15 @@ export default function ChangePasswordRequiredModal() {
       position: 'fixed', inset: 0, zIndex: 9999,
       background: 'rgba(0,0,0,0.55)',
       backdropFilter: 'blur(4px)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
       padding: 16,
+      overflowY: 'auto',
     }}>
       <div style={{
         background: '#ffffff', border: '1px solid #E2E8F0',
         borderRadius: 16, padding: '36px 32px', width: '100%', maxWidth: 420,
         boxShadow: '0 24px 64px rgba(0,0,0,0.22)',
+        margin: 'auto',
       }}>
         <div style={{
           width: 52, height: 52, borderRadius: 14,

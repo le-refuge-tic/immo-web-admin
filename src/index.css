@@ -34,7 +34,15 @@ body {
   height: 100dvh;
 }
 
+/* body.lp-page permet le scroll sur la page de login (mobile) */
+body.lp-page {
+  overflow: auto;
+  height: auto;
+  min-height: 100dvh;
+}
+
 #root { height: 100dvh; overflow: hidden; }
+body.lp-page #root { height: auto; min-height: 100dvh; overflow: visible; }
 
 /* ─── LAYOUT ─────────────────────────────────────────────── */
 
@@ -209,7 +217,7 @@ body {
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
-  scrollbar-gutter: stable;
+  /* scrollbar-gutter non supporté sur Chrome mobile — retiré */
 }
 
 /* ─── NAVBAR (sticky dans la zone scroll) ────────────────── */
@@ -2239,10 +2247,15 @@ body {
   -webkit-backdrop-filter: blur(10px);
   z-index: 500;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   padding: 1rem;
+  overflow-y: auto;
   animation: fadeIn 0.18s ease;
+}
+
+.immo-modal-backdrop > .immo-modal {
+  margin: auto;
 }
 
 .immo-modal {
@@ -2781,13 +2794,19 @@ body {
 }
 
 @media (max-width: 56.25rem) {
-  .lp-root { grid-template-columns: 1fr; }
+  .lp-root {
+    grid-template-columns: 1fr;
+    height: auto;
+    min-height: 100dvh;
+    overflow-y: auto;
+  }
   .lp-left  { display: none; }
   .lp-right {
-    min-height: 100%;
+    min-height: 100dvh;
     padding: 2.5rem 1.75rem;
     align-items: flex-start;
     padding-top: 5rem;
+    overflow-y: auto;
   }
 }
 

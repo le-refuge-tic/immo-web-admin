@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import villaImg       from '../../assets/login/villa.jpg';
@@ -15,6 +15,11 @@ export default function LoginPage() {
   const [showPwd,  setShowPwd]  = useState(false);
   const [error,    setError]    = useState('');
   const [loading,  setLoading]  = useState(false);
+
+  useEffect(() => {
+    document.body.classList.add('lp-page');
+    return () => { document.body.classList.remove('lp-page'); };
+  }, []);
 
   if (isAuthenticated) {
     navigate('/', { replace: true });
