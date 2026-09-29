@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getMesBiens } from '../../api/getMesBiens';
+import { markBiensAsSeen } from '../../layout/Sidebar';
 
 /* ─── Helpers ─────────────────────────────────────────────── */
 
@@ -143,7 +144,9 @@ export default function MesAnnoncesPage() {
     setLoading(true);
     try {
       const data = await getMesBiens.list();
-      setBiens(data ?? []);
+      const list = data ?? [];
+      setBiens(list);
+      markBiensAsSeen(list);
     } catch {
       setBiens([]);
     } finally {
