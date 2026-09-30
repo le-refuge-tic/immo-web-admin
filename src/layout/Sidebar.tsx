@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import { getMessages, getActiveCommercialIds } from '../api/getMessages';
 import { getAdminStats } from '../api/getAdminStats';
 import { getQuartiers } from '../api/getQuartiers';
+import { verificationsApi } from '../api/verificationsApi';
 import axios from 'axios';
 
 const BASE_SIDEBAR = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api/v1';
@@ -36,6 +37,7 @@ export default function Sidebar({
   const [moderationCount, setModerationCount] = useState(0);
   const [quartiersCount, setQuartiersCount]   = useState(0);
   const [retraitsCount, setRetraitsCount]     = useState(0);
+  const [verificationsCount, setVerificationsCount] = useState(0);
   const pollRef      = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollMsgRef   = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollBadgeRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -84,15 +86,17 @@ export default function Sidebar({
     if (!isAdmin) return;
     const loadBadges = async () => {
       try {
-        const [stats, quartiers, retraitsRes] = await Promise.all([
+        const [stats, quartiers, retraitsRes, verifications] = await Promise.all([
           getAdminStats.get(),
           getQuartiers.lister('en_attente'),
           axios.get(`${BASE_SIDEBAR}/retraits/admin?statut=en_attente`, authSidebar()),
+          verificationsApi.list(),
         ]);
         setModerationCount(stats?.biens_en_attente ?? 0);
         setQuartiersCount(Array.isArray(quartiers) ? quartiers.length : 0);
         const rd = retraitsRes.data;
         setRetraitsCount(Array.isArray(rd) ? rd.length : (rd?.data?.length ?? 0));
+        setVerificationsCount(Array.isArray(verifications) ? verifications.length : 0);
       } catch { /**/ }
     };
     loadBadges();
@@ -111,6 +115,7 @@ export default function Sidebar({
     ...(isCommercial ? [{ to: '/commercial-dashboard', label: 'Tableau de bord',  Icon: GridIcon     }] : []),
     ...(isAdmin ? [{ to: '/annonces', label: 'Annonces', Icon: HomeIcon }] : []),
     ...(isAdmin ? [{ to: '/moderation', label: 'Modération', Icon: AlertIcon }] : []),
+    ...(isAdmin ? [{ to: '/verifications', label: 'Vérifications', Icon: ShieldIcon }] : []),
     ...(isCommercial ? [
       { to: '/mes-annonces', label: 'Mes annonces',    Icon: ListingsIcon   },
       { to: '/mes-visites',  label: 'Mes visites',     Icon: VisitIcon      },
@@ -150,6 +155,7 @@ export default function Sidebar({
           const isModeration  = to === '/moderation';
           const isQuartiers   = to === '/quartiers';
           const isRetraits    = to === '/retraits';
+          const isVerifications = to === '/verifications';
           const badge = isSupervision && unreadCount > 0
             ? unreadCount
             : isMessages && msgUnreadCount > 0
@@ -160,7 +166,9 @@ export default function Sidebar({
                   ? quartiersCount
                   : isRetraits && retraitsCount > 0
                     ? retraitsCount
-                    : 0;
+                    : isVerifications && verificationsCount > 0
+                      ? verificationsCount
+                      : 0;
           return (
             <NavLink
               key={to}
