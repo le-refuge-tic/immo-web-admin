@@ -1284,6 +1284,27 @@ body.lp-page #root { overflow: auto; }
   -webkit-overflow-scrolling: touch;
 }
 
+.immo-select {
+  height: 2.25rem;
+  border: 1px solid var(--c-border);
+  border-radius: 0.5rem;
+  padding: 0 1.875rem 0 0.75rem;
+  font-size: 0.8125rem;
+  font-family: inherit;
+  color: var(--c-text);
+  background-color: #fff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23697386' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.immo-select:hover   { border-color: var(--c-text); }
+.immo-select:focus   { border-color: var(--c-blue); }
+
 .mod-table-header {
   display: grid;
   grid-template-columns: 1fr 6.25rem 10rem 7.5rem 8.75rem;
