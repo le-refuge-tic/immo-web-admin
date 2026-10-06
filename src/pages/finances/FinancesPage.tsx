@@ -170,7 +170,7 @@ export default function FinancesPage() {
 
         {/* Vue tableau frais (desktop) */}
         <div className="immo-card ut-desktop-only" style={{ padding: 0, overflow: 'hidden', marginBottom: 20, overflowX: 'auto' }}>
-          <div className="mod-table-header" style={{ gridTemplateColumns: '1.2fr 1.2fr 1fr 1fr 1fr' }}>
+          <div className="mod-table-header" style={{ gridTemplateColumns: '1.2fr 1.2fr 1fr 1fr 1fr', minWidth: 560 }}>
             <span className="mod-table-col">Client</span>
             <span className="mod-table-col">Bien</span>
             <span className="mod-table-col">Montant</span>
@@ -182,7 +182,7 @@ export default function FinancesPage() {
           ) : fvItems.length === 0 ? (
             <div style={{ padding: '32px 20px', textAlign: 'center', color: 'var(--c-muted)' }}>Aucun frais de visite enregistré.</div>
           ) : fvItems.map((t: any) => (
-            <div className="mod-row" key={t.id} style={{ gridTemplateColumns: '1.2fr 1.2fr 1fr 1fr 1fr' }}>
+            <div className="mod-row" key={t.id} style={{ gridTemplateColumns: '1.2fr 1.2fr 1fr 1fr 1fr', minWidth: 560 }}>
               <div style={{ fontSize: 13 }}>{t.client ? `${t.client.prenom} ${t.client.nom}` : '—'}</div>
               <div style={{ fontSize: 12 }}>
                 <div>{t.bien ? (TYPE_BIEN_LABELS[t.bien.type] ?? t.bien.type) : '—'}</div>

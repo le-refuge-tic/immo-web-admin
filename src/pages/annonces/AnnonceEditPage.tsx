@@ -456,10 +456,10 @@ export default function AnnonceEditPage() {
       )}
 
       {/* ── Corps : nav gauche + contenu ───────────────────────────────────── */}
-      <div style={{ display:'flex', gap:0, alignItems:'flex-start' }}>
+      <div className="edit-layout" style={{ display:'flex', gap:0, alignItems:'flex-start' }}>
 
         {/* Navigation latérale */}
-        <nav style={{ width:220, flexShrink:0, borderRight:'1px solid #E2E8F0', background:'#fff', padding:'16px 0', position:'sticky', top:52, alignSelf:'flex-start', maxHeight:'calc(100vh - 52px)', overflowY:'auto' }}>
+        <nav className="edit-nav" style={{ width:220, flexShrink:0, borderRight:'1px solid #E2E8F0', background:'#fff', padding:'16px 0', position:'sticky', top:52, alignSelf:'flex-start', maxHeight:'calc(100vh - 52px)', overflowY:'auto' }}>
           {TABS.map(tab => {
             const active = activeTab === tab;
             return (
