@@ -197,7 +197,7 @@ export default function AnnoncesPage() {
                       <img src={cover.url} alt={b.type} />
                     ) : (
                       <div style={{
-                        width: '100%', height: '100%', background: '#E2E8F0',
+                        width: '100%', height: '100%', background: 'var(--c-surface-2)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         color: 'var(--c-muted)', fontSize: 13,
                       }}>

@@ -37,7 +37,7 @@ function NouvelleEquipeModal({ commerciauxDispo, onClose, onCreated }: {
     <div className="immo-modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="immo-modal" style={{ maxWidth: 440 }}>
         <div className="immo-modal-title" style={{ marginBottom: 16 }}>Nouvelle équipe</div>
-        {error && <div style={{ marginBottom: 12, fontSize: 13, color: '#DC2626' }}>{error}</div>}
+        {error && <div style={{ marginBottom: 12, fontSize: 13, color: 'var(--s-red)' }}>{error}</div>}
         <div className="immo-form-field" style={{ marginBottom: 14 }}>
           <label className="immo-form-label">Premier commercial</label>
           <select className="immo-select" style={{ width: '100%' }} value={membre1} onChange={e => setMembre1(e.target.value)}>
@@ -111,9 +111,9 @@ export default function GestionEquipesPage() {
 
       <div className="immo-page">
         {loadError && (
-          <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8, padding: '10px 16px', fontSize: 13, color: '#DC2626', fontWeight: 500, marginBottom: 16 }}>
+          <div style={{ background: 'var(--t-red-bg)', border: '1px solid var(--t-red-bd)', borderRadius: 8, padding: '10px 16px', fontSize: 13, color: 'var(--s-red)', fontWeight: 500, marginBottom: 16 }}>
             {loadError}{' '}
-            <button onClick={load} style={{ background: 'none', border: 'none', color: '#DC2626', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>
+            <button onClick={load} style={{ background: 'none', border: 'none', color: 'var(--s-red)', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>
               Réessayer
             </button>
           </div>
@@ -134,11 +134,11 @@ export default function GestionEquipesPage() {
                   </span>
                   {confirmDeleteId === eq.id ? (
                     <div style={{ display: 'flex', gap: 8 }}>
-                      <button onClick={() => handleDelete(eq.id)} style={{ fontSize: 11, fontWeight: 700, color: '#DC2626', background: 'none', border: 'none', cursor: 'pointer' }}>Confirmer</button>
+                      <button onClick={() => handleDelete(eq.id)} style={{ fontSize: 11, fontWeight: 700, color: 'var(--s-red)', background: 'none', border: 'none', cursor: 'pointer' }}>Confirmer</button>
                       <button onClick={() => setConfirmDeleteId(null)} style={{ fontSize: 11, color: 'var(--c-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>Annuler</button>
                     </div>
                   ) : (
-                    <button onClick={() => setConfirmDeleteId(eq.id)} style={{ fontSize: 11, color: '#DC2626', background: 'none', border: 'none', cursor: 'pointer' }}>Dissoudre</button>
+                    <button onClick={() => setConfirmDeleteId(eq.id)} style={{ fontSize: 11, color: 'var(--s-red)', background: 'none', border: 'none', cursor: 'pointer' }}>Dissoudre</button>
                   )}
                 </div>
                 {eq.membres.map(m => (

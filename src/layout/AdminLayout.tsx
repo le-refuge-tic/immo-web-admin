@@ -8,7 +8,11 @@ import ChangePasswordRequiredModal, { useChangePasswordRequired } from '../compo
 export default function AdminLayout() {
   const passwordChangeRequired = useChangePasswordRequired();
   const phoneRequired = usePhoneRequired();
-  const [minimized, setMinimized] = useState(false);
+  // Tablette (48–64rem) : sidebar réduite aux icônes par défaut pour laisser
+  // la place au contenu ; le bouton de la topbar permet toujours de l'agrandir.
+  const [minimized, setMinimized] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia?.('(min-width: 48.01rem) and (max-width: 64rem)').matches,
+  );
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
 

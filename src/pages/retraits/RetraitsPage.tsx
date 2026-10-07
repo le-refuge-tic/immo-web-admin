@@ -46,7 +46,7 @@ function StatutBadge({ statut }: { statut: string }) {
     <span style={{
       padding: '3px 10px', borderRadius: 20,
       background: (STATUT_COLORS[statut] ?? '#9ca3af') + '18',
-      color: STATUT_COLORS[statut] ?? '#9ca3af',
+      color: STATUT_COLORS[statut] ?? 'var(--c-muted)',
       fontWeight: 700, fontSize: 12, whiteSpace: 'nowrap',
     }}>
       {STATUT_LABELS[statut] ?? statut}
@@ -149,7 +149,7 @@ export default function RetraitsPage() {
 
   if (!user || !['admin', 'super_admin'].includes(user.role_principal ?? user.role)) {
     return (
-      <div style={{ padding: 40, textAlign: 'center', color: '#6b7280' }}>
+      <div style={{ padding: 40, textAlign: 'center', color: 'var(--c-muted)' }}>
         <p style={{ fontSize: 18, fontWeight: 600 }}>Accès réservé aux administrateurs</p>
       </div>
     );
@@ -181,9 +181,9 @@ export default function RetraitsPage() {
             <button key={s} onClick={() => setFiltreStatut(s)}
               style={{
                 padding: '6px 16px', borderRadius: 20, border: '1.5px solid',
-                borderColor: filtreStatut === s ? '#1a3a6b' : '#e5e7eb',
+                borderColor: filtreStatut === s ? '#1a3a6b' : 'var(--c-border)',
                 background: filtreStatut === s ? '#1a3a6b' : 'var(--c-card)',
-                color: filtreStatut === s ? '#fff' : '#374151',
+                color: filtreStatut === s ? '#fff' : 'var(--c-text)',
                 fontWeight: 600, fontSize: 13, cursor: 'pointer',
               }}
             >
@@ -193,9 +193,9 @@ export default function RetraitsPage() {
         </div>
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 60, color: '#9ca3af' }}>Chargement…</div>
+          <div style={{ textAlign: 'center', padding: 60, color: 'var(--c-muted)' }}>Chargement…</div>
         ) : retraits.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 60, color: '#9ca3af', fontSize: 15 }}>Aucune demande de retrait</div>
+          <div style={{ textAlign: 'center', padding: 60, color: 'var(--c-muted)', fontSize: 15 }}>Aucune demande de retrait</div>
         ) : (
           <>
             {/* ── Vue tableau (desktop) ── */}
@@ -221,13 +221,13 @@ export default function RetraitsPage() {
                       <tr key={r.id} style={{ borderBottom: isLast ? 'none' : '1px solid var(--c-border)', verticalAlign: 'top' }}>
                         <td style={{ padding: '14px 16px' }}>
                           <div style={{ fontWeight: 600 }}>{nom}</div>
-                          {r.user?.email && <div style={{ color: '#9ca3af', fontSize: 12 }}>{r.user.email}</div>}
+                          {r.user?.email && <div style={{ color: 'var(--c-muted)', fontSize: 12 }}>{r.user.email}</div>}
                         </td>
                         <td style={{ padding: '14px 16px', fontWeight: 700, color: '#1a3a6b' }}>{fmtMontant(Number(r.montant))}</td>
-                        <td style={{ padding: '14px 16px', color: '#6b7280' }}>{walletLabel(r.wallet?.type ?? '')}</td>
+                        <td style={{ padding: '14px 16px', color: 'var(--c-muted)' }}>{walletLabel(r.wallet?.type ?? '')}</td>
                         <td style={{ padding: '14px 16px' }}>
                           <div style={{ fontFamily: 'monospace', letterSpacing: 1 }}>{r.numero_telephone}</div>
-                          {r.nom_titulaire && <div style={{ color: '#6b7280', fontSize: 12, marginTop: 2 }}>{r.nom_titulaire}</div>}
+                          {r.nom_titulaire && <div style={{ color: 'var(--c-muted)', fontSize: 12, marginTop: 2 }}>{r.nom_titulaire}</div>}
                         </td>
                         <td style={{ padding: '14px 16px' }}>
                           <StatutBadge statut={r.statut} />
@@ -237,20 +237,20 @@ export default function RetraitsPage() {
                             </div>
                           )}
                           {r.statut === 'rejete' && r.motif_rejet && (
-                            <div style={{ marginTop: 4, fontSize: 12, color: '#ef4444' }}>{r.motif_rejet}</div>
+                            <div style={{ marginTop: 4, fontSize: 12, color: 'var(--s-red)' }}>{r.motif_rejet}</div>
                           )}
                         </td>
-                        <td style={{ padding: '14px 16px', color: '#6b7280', fontSize: 12, whiteSpace: 'nowrap' }}>{fmtDate(r.created_at)}</td>
+                        <td style={{ padding: '14px 16px', color: 'var(--c-muted)', fontSize: 12, whiteSpace: 'nowrap' }}>{fmtDate(r.created_at)}</td>
                         <td style={{ padding: '14px 16px', fontSize: 12, whiteSpace: 'nowrap' }}>
                           {r.validateur ? (
                             <>
-                              <div style={{ fontWeight: 600, color: '#374151' }}>{[r.validateur.prenom, r.validateur.nom].filter(Boolean).join(' ')}</div>
-                              <div style={{ color: '#9ca3af' }}>{r.validateur.role === 'super_admin' ? 'Super Admin' : 'Admin'}{r.valide_le ? ` · ${fmtDate(r.valide_le)}` : ''}</div>
+                              <div style={{ fontWeight: 600, color: 'var(--c-text)' }}>{[r.validateur.prenom, r.validateur.nom].filter(Boolean).join(' ')}</div>
+                              <div style={{ color: 'var(--c-muted)' }}>{r.validateur.role === 'super_admin' ? 'Super Admin' : 'Admin'}{r.valide_le ? ` · ${fmtDate(r.valide_le)}` : ''}</div>
                             </>
-                          ) : <span style={{ color: '#9ca3af' }}>—</span>}
+                          ) : <span style={{ color: 'var(--c-muted)' }}>—</span>}
                         </td>
                         <td style={{ padding: '14px 16px' }}>
-                          {!pending && <span style={{ color: '#9ca3af', fontSize: 12 }}>—</span>}
+                          {!pending && <span style={{ color: 'var(--c-muted)', fontSize: 12 }}>—</span>}
                           {pending && !isRejecting && !isSendingProof && (
                             isManuel ? (
                               <div style={{ display: 'flex', gap: 8 }}>
@@ -259,7 +259,7 @@ export default function RetraitsPage() {
                                   Marquer envoyé
                                 </button>
                                 <button onClick={() => setRejectingId(r.id)} disabled={isActing}
-                                  style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: '#fee2e2', color: '#ef4444', fontWeight: 600, fontSize: 13, cursor: isActing ? 'not-allowed' : 'pointer' }}>
+                                  style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: 'var(--t-red-bg)', color: 'var(--s-red)', fontWeight: 600, fontSize: 13, cursor: isActing ? 'not-allowed' : 'pointer' }}>
                                   Rejeter
                                 </button>
                               </div>
@@ -270,23 +270,23 @@ export default function RetraitsPage() {
                                   {isActing ? '…' : 'Valider'}
                                 </button>
                                 <button onClick={() => setRejectingId(r.id)} disabled={isActing}
-                                  style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: '#fee2e2', color: '#ef4444', fontWeight: 600, fontSize: 13, cursor: isActing ? 'not-allowed' : 'pointer' }}>
+                                  style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: 'var(--t-red-bg)', color: 'var(--s-red)', fontWeight: 600, fontSize: 13, cursor: isActing ? 'not-allowed' : 'pointer' }}>
                                   Rejeter
                                 </button>
                               </div>
-                            ) : <span style={{ color: '#9ca3af', fontSize: 12 }}>Réservé au Super Admin</span>
+                            ) : <span style={{ color: 'var(--c-muted)', fontSize: 12 }}>Réservé au Super Admin</span>
                           )}
                           {pending && isRejecting && (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 200 }}>
                               <input placeholder="Motif (optionnel)" value={motifRejet} onChange={e => setMotifRejet(e.target.value)}
-                                style={{ padding: '6px 10px', borderRadius: 8, border: '1.5px solid #e5e7eb', fontSize: 13 }} />
+                                style={{ padding: '6px 10px', borderRadius: 8, border: '1.5px solid var(--c-border)', fontSize: 13 }} />
                               <div style={{ display: 'flex', gap: 6 }}>
                                 <button onClick={() => rejeter(r.id, isManuel)} disabled={isActing}
                                   style={{ flex: 1, padding: '6px 0', borderRadius: 8, border: 'none', background: '#ef4444', color: '#fff', fontWeight: 600, fontSize: 13, cursor: isActing ? 'not-allowed' : 'pointer', opacity: isActing ? 0.7 : 1 }}>
                                   {isActing ? '…' : 'Confirmer rejet'}
                                 </button>
                                 <button onClick={() => { setRejectingId(null); setMotifRejet(''); }}
-                                  style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #e5e7eb', background: 'var(--c-card)', fontSize: 13, cursor: 'pointer' }}>✕</button>
+                                  style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid var(--c-border)', background: 'var(--c-card)', fontSize: 13, cursor: 'pointer' }}>✕</button>
                               </div>
                             </div>
                           )}
@@ -299,7 +299,7 @@ export default function RetraitsPage() {
                                   {isActing ? '…' : 'Confirmer'}
                                 </button>
                                 <button onClick={() => { setSendingProofId(null); setProofFile(null); }}
-                                  style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #e5e7eb', background: 'var(--c-card)', fontSize: 13, cursor: 'pointer' }}>✕</button>
+                                  style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid var(--c-border)', background: 'var(--c-card)', fontSize: 13, cursor: 'pointer' }}>✕</button>
                               </div>
                             </div>
                           )}
@@ -343,7 +343,7 @@ export default function RetraitsPage() {
                       <a href={r.preuve_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: '#1a3a6b', fontWeight: 600, display: 'block', marginBottom: 6 }}>Voir la preuve</a>
                     )}
                     {r.statut === 'rejete' && r.motif_rejet && (
-                      <div style={{ fontSize: 12, color: '#ef4444', marginBottom: 6 }}>{r.motif_rejet}</div>
+                      <div style={{ fontSize: 12, color: 'var(--s-red)', marginBottom: 6 }}>{r.motif_rejet}</div>
                     )}
 
                     <div className="ut-card-footer" style={{ marginTop: 4 }}>
@@ -365,7 +365,7 @@ export default function RetraitsPage() {
                               Marquer envoyé
                             </button>
                             <button onClick={() => setRejectingId(r.id)} disabled={isActing}
-                              style={{ flex: 1, padding: '8px', borderRadius: 8, border: 'none', background: '#fee2e2', color: '#ef4444', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+                              style={{ flex: 1, padding: '8px', borderRadius: 8, border: 'none', background: 'var(--t-red-bg)', color: 'var(--s-red)', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
                               Rejeter
                             </button>
                           </>
@@ -376,12 +376,12 @@ export default function RetraitsPage() {
                               {isActing ? '…' : 'Valider'}
                             </button>
                             <button onClick={() => setRejectingId(r.id)} disabled={isActing}
-                              style={{ flex: 1, padding: '8px', borderRadius: 8, border: 'none', background: '#fee2e2', color: '#ef4444', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+                              style={{ flex: 1, padding: '8px', borderRadius: 8, border: 'none', background: 'var(--t-red-bg)', color: 'var(--s-red)', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
                               Rejeter
                             </button>
                           </>
                         ) : (
-                          <span style={{ fontSize: 12, color: '#9ca3af' }}>Réservé au Super Admin</span>
+                          <span style={{ fontSize: 12, color: 'var(--c-muted)' }}>Réservé au Super Admin</span>
                         )}
                       </div>
                     )}

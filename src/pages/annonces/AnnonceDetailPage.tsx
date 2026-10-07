@@ -733,7 +733,7 @@ export default function AnnonceDetailPage() {
             <div className="detail-delete-zone">
               {confirmDelete ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 16px', background: 'rgba(220,38,38,0.06)', borderRadius: 10, border: '1px solid rgba(220,38,38,0.25)' }}>
-                  <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#DC2626' }}>Supprimer définitivement ce bien ? Cette action est irréversible.</p>
+                  <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--s-red)' }}>Supprimer définitivement ce bien ? Cette action est irréversible.</p>
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button
                       className="detail-btn detail-btn--delete"

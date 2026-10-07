@@ -204,7 +204,7 @@ export default function MesClientsPage() {
 
       {/* ── Erreur ── */}
       {error && (
-        <div style={{ padding: '10px 16px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, fontSize: 13, color: '#DC2626' }}>
+        <div style={{ padding: '10px 16px', background: 'var(--t-red-bg)', border: '1px solid var(--t-red-bd)', borderRadius: 10, fontSize: 13, color: 'var(--s-red)' }}>
           {error}
         </div>
       )}
@@ -260,8 +260,8 @@ export default function MesClientsPage() {
                       <span style={{
                         padding: '3px 10px', borderRadius: 20, fontSize: 10, fontWeight: 700,
                         letterSpacing: '0.5px', textTransform: 'uppercase',
-                        background: p.verifie ? '#F0FDF4' : '#FFFBEB',
-                        color:      p.verifie ? '#15803D' : '#B45309',
+                        background: p.verifie ? 'var(--t-green-bg)' : 'var(--t-yellow-bg)',
+                        color:      p.verifie ? 'var(--s-green)' : 'var(--s-yellow)',
                         border: `1px solid ${p.verifie ? '#BBF7D0' : '#FDE68A'}`,
                       }}>
                         {p.verifie ? 'Vérifié' : 'En attente'}

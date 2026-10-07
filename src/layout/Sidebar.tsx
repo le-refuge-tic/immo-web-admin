@@ -60,8 +60,6 @@ export default function Sidebar({
   const isSuperAdmin = role === 'super_admin';
   const isCommercial = role === 'commercial';
 
-  const isConfigActive = location.pathname.startsWith('/configuration');
-  const [configOpen, setConfigOpen] = useState(isConfigActive);
   const [unreadCount, setUnreadCount]         = useState(0);
   const [msgUnreadCount, setMsgUnreadCount]   = useState(0);
   const [moderationCount, setModerationCount] = useState(0);
@@ -196,32 +194,51 @@ export default function Sidebar({
     mobileOpen ? 'mobile-open' : '',
   ].filter(Boolean).join(' ');
 
-  const navItems = [
-    ...(isAdmin      ? [{ to: '/dashboard',           label: 'Tableau de bord',  Icon: GridIcon     }] : []),
-    ...(isCommercial ? [{ to: '/commercial-dashboard', label: 'Tableau de bord',  Icon: GridIcon     }] : []),
-    ...(isAdmin ? [{ to: '/annonces', label: 'Annonces', Icon: HomeIcon }] : []),
-    ...(isAdmin ? [{ to: '/moderation', label: 'Modération', Icon: AlertIcon }] : []),
+  type IconType = React.ComponentType<{ size?: number }>;
+  type NavItem = { to: string; label: string; Icon: IconType };
+  type NavGroup = { id: string; label: string; Icon: IconType; items: NavItem[] };
+
+  // Menu regroupé par domaine (règle des 7 ± 2 entrées visibles) : seul le
+  // groupe de la page courante est ouvert, les badges remontent sur l'en-tête
+  // d'un groupe fermé. Les commerciaux gardent une liste courte, non groupée.
+  const groups: NavGroup[] = isAdmin ? [
+    { id: 'pilotage', label: 'Pilotage', Icon: GridIcon, items: [
+      { to: '/dashboard',   label: 'Tableau de bord',    Icon: GridIcon },
+      { to: '/supervision', label: 'Suivi des échanges', Icon: ShieldIcon },
+    ] },
+    { id: 'annonces', label: 'Annonces', Icon: HomeIcon, items: [
+      { to: '/annonces',   label: 'Toutes les annonces', Icon: HomeIcon },
+      { to: '/moderation', label: 'Modération',          Icon: AlertIcon },
+      { to: '/quartiers',  label: 'Quartiers',           Icon: BuildingIcon },
+    ] },
+    { id: 'relation', label: 'Relation client', Icon: MessageIcon, items: [
+      { to: '/messages',     label: 'Messages',     Icon: MessageIcon },
+      { to: '/reclamations', label: 'Réclamations', Icon: FlagIcon },
+      { to: '/feedbacks',    label: 'Feedbacks',    Icon: StarIcon },
+    ] },
+    { id: 'utilisateurs', label: 'Utilisateurs', Icon: UsersIcon, items: [
+      { to: '/utilisateurs', label: 'Tous les utilisateurs', Icon: UsersIcon },
+      { to: '/liaisons',     label: 'Liaisons gestion',      Icon: KeyIcon },
+    ] },
+    { id: 'finances', label: 'Finances', Icon: TrendingUpIcon, items: [
+      { to: '/finances', label: 'Vue d\'ensemble', Icon: TrendingUpIcon },
+      { to: '/loyers',   label: 'Loyers',          Icon: FileTextIcon },
+      { to: '/retraits', label: 'Retraits MoMo',   Icon: WithdrawIcon },
+    ] },
+  ] : [];
+
+  const flatItems: NavItem[] = isAdmin ? [] : [
     ...(isCommercial ? [
-      { to: '/mes-annonces', label: 'Mes annonces',    Icon: ListingsIcon   },
-      { to: '/mes-visites',  label: 'Mes visites',     Icon: VisitIcon      },
-      { to: '/mes-clients',  label: 'Mes clients',     Icon: ClientsIcon    },
-      { to: '/mon-equipe',   label: 'Mon équipe',      Icon: UsersIcon      },
+      { to: '/commercial-dashboard', label: 'Tableau de bord', Icon: GridIcon     },
+      { to: '/mes-annonces',         label: 'Mes annonces',    Icon: ListingsIcon },
+      { to: '/mes-visites',          label: 'Mes visites',     Icon: VisitIcon    },
+      { to: '/mes-clients',          label: 'Mes clients',     Icon: ClientsIcon  },
+      { to: '/mon-equipe',           label: 'Mon équipe',      Icon: UsersIcon    },
     ] : []),
-    { to: '/messages',     label: 'Messages',           Icon: MessageIcon    },
-    ...(isAdmin ? [
-      { to: '/supervision',  label: 'Suivi des échanges', Icon: ShieldIcon   },
-      { to: '/utilisateurs', label: 'Utilisateurs',    Icon: UsersIcon      },
-      { to: '/loyers',       label: 'Loyers',          Icon: FileTextIcon   },
-      { to: '/liaisons',     label: 'Liaisons gestion',Icon: KeyIcon        },
-      { to: '/finances',     label: 'Finances',        Icon: TrendingUpIcon },
-      { to: '/feedbacks',    label: 'Feedbacks',       Icon: StarIcon       },
-      { to: '/reclamations', label: 'Réclamations',    Icon: FlagIcon       },
-    ] : []),
-    ...(isAdmin ? [{ to: '/retraits', label: 'Retraits MoMo', Icon: WithdrawIcon }] : []),
-    ...(isAdmin ? [{ to: '/quartiers', label: 'Quartiers', Icon: HomeIcon }] : []),
+    { to: '/messages', label: 'Messages', Icon: MessageIcon },
   ];
 
-  const configSubs = [
+  const configSubs: NavItem[] = [
     { to: '/configuration/profil', label: 'Mon profil', Icon: UserIcon },
     ...(isAdmin ? [
       { to: '/configuration/commerciaux',    label: 'Commerciaux',    Icon: UsersIcon    },
@@ -232,85 +249,81 @@ export default function Sidebar({
     ] : []),
     ...(isSuperAdmin ? [{ to: '/configuration/administrateurs', label: 'Administrateurs', Icon: ShieldIcon }] : []),
   ];
+  const allGroups: NavGroup[] = [...groups, { id: 'configuration', label: 'Configuration', Icon: SettingsIcon, items: configSubs }];
+
+  const badgeFor = (to: string) => ({
+    '/supervision':  unreadCount,
+    '/messages':     msgUnreadCount,
+    '/moderation':   moderationCount,
+    '/quartiers':    quartiersCount,
+    '/retraits':     retraitsCount,
+    '/mes-annonces': annoncesChanges,
+  } as Record<string, number>)[to] ?? 0;
+
+  const isPathActive = (to: string) => location.pathname === to || location.pathname.startsWith(to + '/');
+  const activeGroupId = allGroups.find(g => g.items.some(i => isPathActive(i.to)))?.id;
+  // Choix explicites de l'utilisateur ; sans choix, seul le groupe de la page courante est ouvert.
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+  const isGroupOpen = (id: string) => openGroups[id] ?? id === activeGroupId;
+
+  const badgeEl = (n: number, inline = false) => n > 0 ? (
+    <span className={`immo-nav-badge${inline ? ' immo-nav-badge--inline' : ''}`}>{n > 99 ? '99+' : n}</span>
+  ) : null;
+
+  const renderItem = ({ to, label, Icon }: NavItem) => {
+    const badge = badgeFor(to);
+    return (
+      <NavLink
+        key={to}
+        to={to}
+        title={minimized ? label : undefined}
+        className={({ isActive }) => `immo-nav-item${isActive ? ' active' : ''}`}
+      >
+        <span style={{ position: 'relative', display: 'inline-flex' }}>
+          <Icon />
+          {badgeEl(badge)}
+        </span>
+        <span className="immo-nav-label">{label}</span>
+      </NavLink>
+    );
+  };
 
   return (
     <aside id="immo-sidebar" className={classes} aria-label="Navigation principale">
       <nav className="immo-nav">
-        {navItems.map(({ to, label, Icon }) => {
-          const isSupervision  = to === '/supervision';
-          const isMessages     = to === '/messages';
-          const isModeration   = to === '/moderation';
-          const isQuartiers    = to === '/quartiers';
-          const isRetraits     = to === '/retraits';
-          const isMesAnnonces  = to === '/mes-annonces';
-          const badge = isSupervision && unreadCount > 0
-            ? unreadCount
-            : isMessages && msgUnreadCount > 0
-              ? msgUnreadCount
-              : isModeration && moderationCount > 0
-                ? moderationCount
-                : isQuartiers && quartiersCount > 0
-                  ? quartiersCount
-                  : isRetraits && retraitsCount > 0
-                    ? retraitsCount
-                    : isMesAnnonces && annoncesChanges > 0
-                      ? annoncesChanges
-                      : 0;
+        {flatItems.map(renderItem)}
+
+        {/* Mode réduit (icônes seules) : toutes les entrées à plat, sans en-têtes de groupe */}
+        {minimized ? allGroups.map(g => (
+          <div key={g.id} className="immo-nav-sep">{g.items.map(renderItem)}</div>
+        )) : allGroups.map(g => {
+          const open = isGroupOpen(g.id);
+          const groupBadge = g.items.reduce((s, i) => s + badgeFor(i.to), 0);
+          const hasActive = g.id === activeGroupId;
+          const GIcon = g.Icon;
           return (
-            <NavLink
-              key={to}
-              to={to}
-              title={minimized ? label : undefined}
-              className={({ isActive }) => `immo-nav-item${isActive ? ' active' : ''}`}
-            >
-              <span style={{ position: 'relative', display: 'inline-flex' }}>
-                <Icon />
-                {badge > 0 && (
-                  <span style={{
-                    position: 'absolute', top: -5, right: -6,
-                    background: '#DC2626', color: '#fff',
-                    borderRadius: '50%', minWidth: 15, height: 15,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 9, fontWeight: 800, padding: '0 3px', lineHeight: 1,
-                  }}>{badge > 99 ? '99+' : badge}</span>
-                )}
-              </span>
-              <span className="immo-nav-label">{label}</span>
-            </NavLink>
+            <div key={g.id} className="config-group">
+              <button
+                className={`immo-nav-item config-toggle${hasActive ? ' active' : ''}`}
+                onClick={() => setOpenGroups(o => ({ ...o, [g.id]: !open }))}
+                aria-expanded={open}
+                aria-controls={`nav-group-${g.id}`}
+              >
+                <GIcon />
+                <span className="immo-nav-label">{g.label}</span>
+                {!open && badgeEl(groupBadge, true)}
+                <span className={`config-chevron${open ? ' open' : ''}`}>
+                  <ChevronDownIcon />
+                </span>
+              </button>
+              {open && (
+                <div id={`nav-group-${g.id}`} className="config-submenu">
+                  {g.items.map(renderItem)}
+                </div>
+              )}
+            </div>
           );
         })}
-
-        {/* Configuration collapsible */}
-        <div className="config-group">
-          <button
-            className={`immo-nav-item config-toggle${isConfigActive ? ' active' : ''}`}
-            onClick={() => !minimized && setConfigOpen(o => !o)}
-            title={minimized ? 'Configuration' : undefined}
-            aria-expanded={!minimized && configOpen}
-            aria-controls="config-submenu"
-          >
-            <SettingsIcon />
-            <span className="immo-nav-label">Configuration</span>
-            <span className={`config-chevron${configOpen ? ' open' : ''}`}>
-              <ChevronDownIcon />
-            </span>
-          </button>
-
-          {configOpen && !minimized && (
-            <div id="config-submenu" className="config-submenu">
-              {configSubs.map(({ to, label, Icon }) => (
-                <NavLink
-                  key={to}
-                  to={to}
-                  className={({ isActive }) => `immo-nav-item${isActive ? ' active' : ''}`}
-                >
-                  <Icon />
-                  <span className="immo-nav-label">{label}</span>
-                </NavLink>
-              ))}
-            </div>
-          )}
-        </div>
 
         {/* Téléchargement de l'app mobile (APK) — visible seulement si l'URL est configurée */}
         {import.meta.env.VITE_APK_URL && (

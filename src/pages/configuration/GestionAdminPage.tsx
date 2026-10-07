@@ -53,7 +53,7 @@ export default function GestionAdminPage() {
       <div className="immo-page">
         <div className="mgmt-stats">
           <div className="mgmt-stat-card">
-            <div className="mgmt-stat-icon" style={{ background: '#EFF6FF' }}>
+            <div className="mgmt-stat-icon" style={{ background: 'var(--t-blue-bg)' }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
               </svg>
@@ -64,7 +64,7 @@ export default function GestionAdminPage() {
             </div>
           </div>
           <div className="mgmt-stat-card">
-            <div className="mgmt-stat-icon" style={{ background: '#FFF7ED' }}>
+            <div className="mgmt-stat-icon" style={{ background: 'var(--t-orange-bg)' }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
               </svg>
@@ -75,7 +75,7 @@ export default function GestionAdminPage() {
             </div>
           </div>
           <div className="mgmt-stat-card">
-            <div className="mgmt-stat-icon" style={{ background: '#F0FDF4' }}>
+            <div className="mgmt-stat-icon" style={{ background: 'var(--t-green-bg)' }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
                 <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
@@ -138,7 +138,7 @@ export default function GestionAdminPage() {
                     {canDelete ? (
                       confirmDeleteId === a.id ? (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-end', flexShrink: 0 }}>
-                          {deleteError && <span style={{ fontSize: 11, color: '#DC2626' }}>{deleteError}</span>}
+                          {deleteError && <span style={{ fontSize: 11, color: 'var(--s-red)' }}>{deleteError}</span>}
                           <div style={{ display: 'flex', gap: 6 }}>
                             <button className="btn-icon-sm danger" onClick={() => handleDelete(a)} disabled={deletingId === a.id} style={{ padding: '2px 10px', fontSize: 11, fontWeight: 600, borderRadius: 6 }}>
                               {deletingId === a.id ? '…' : 'Supprimer'}
@@ -165,7 +165,7 @@ export default function GestionAdminPage() {
         </div>
 
         <div className="immo-card" style={{ padding: '14px 20px', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-          <div style={{ width: 34, height: 34, borderRadius: 8, background: '#FFF7ED', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div style={{ width: 34, height: 34, borderRadius: 8, background: 'var(--t-orange-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
               <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>

@@ -140,7 +140,7 @@ export default function NewConversationModal({ onClose, onCreated, preselectedUs
         </div>
 
         {createError && (
-          <div style={{ margin: '0 0 12px', padding: '8px 12px', borderRadius: 8, background: 'var(--c-red-bg)', border: '1px solid #FECACA', color: 'var(--c-red)', fontSize: 12, fontWeight: 500 }}>
+          <div style={{ margin: '0 0 12px', padding: '8px 12px', borderRadius: 8, background: 'var(--c-red-bg)', border: '1px solid var(--t-red-bd)', color: 'var(--c-red)', fontSize: 12, fontWeight: 500 }}>
             {createError}
           </div>
         )}

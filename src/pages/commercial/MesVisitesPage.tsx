@@ -348,7 +348,7 @@ export default function MesVisitesPage() {
                           {peutConfirmer && (
                             <button
                               className="btn-table-action"
-                              style={{ background: '#DCFCE7', color: '#166534', border: '1px solid #BBF7D0' }}
+                              style={{ background: 'var(--t-green-bg)', color: '#166534', border: '1px solid var(--t-green-bd)' }}
                               onClick={() => handleConfirmer(v)}
                               disabled={isActing}
                               title="Confirmer"
@@ -359,7 +359,7 @@ export default function MesVisitesPage() {
                           {peutContreProposer && (
                             <button
                               className="btn-table-action"
-                              style={{ background: '#FEF9C3', color: '#854D0E', border: '1px solid #FDE68A' }}
+                              style={{ background: '#FEF9C3', color: '#854D0E', border: '1px solid var(--t-yellow-bd)' }}
                               onClick={() => setCpModal(v.id)}
                               disabled={isActing}
                               title="Contre-proposer une date"
@@ -370,7 +370,7 @@ export default function MesVisitesPage() {
                           {peutEffectuee && (
                             <button
                               className="btn-table-action"
-                              style={{ background: '#EFF6FF', color: '#1D4ED8', border: '1px solid #BFDBFE' }}
+                              style={{ background: 'var(--t-blue-bg)', color: 'var(--s-blue)', border: '1px solid var(--t-blue-bd)' }}
                               onClick={() => handleEffectuee(v)}
                               disabled={isActing}
                               title="Marquer effectuée"

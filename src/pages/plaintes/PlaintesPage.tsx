@@ -117,7 +117,7 @@ export default function PlaintesPage() {
                       style={{
                         padding: '14px 20px', borderBottom: idx < plaintes.length - 1 ? '1px solid var(--c-border)' : 'none',
                         cursor: 'pointer', transition: 'background 0.1s',
-                        background: isSelected ? '#EFF6FF' : 'transparent',
+                        background: isSelected ? 'var(--t-blue-bg)' : 'transparent',
                         borderLeft: isSelected ? '3px solid var(--c-blue)' : '3px solid transparent',
                       }}
                     >

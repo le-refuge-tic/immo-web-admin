@@ -80,7 +80,7 @@ function ModerationModal({
       <div className="immo-modal">
         {/* Contexte du bien */}
         <div style={{
-          background: isApprove ? 'var(--c-green-bg, #F0FDF4)' : 'var(--c-red-bg)',
+          background: isApprove ? 'var(--c-green-bg, var(--t-green-bg))' : 'var(--c-red-bg)',
           border: `1px solid ${isApprove ? 'var(--c-green, #16A34A)' : 'var(--c-red)'}`,
           borderRadius: 10,
           padding: '10px 14px',
@@ -91,7 +91,7 @@ function ModerationModal({
         }}>
           <span style={{ fontSize: 20 }}>{isApprove ? '✅' : '❌'}</span>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: isApprove ? 'var(--c-green, #16A34A)' : 'var(--c-red)' }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: isApprove ? 'var(--c-green, var(--s-green))' : 'var(--c-red)' }}>
               {isApprove ? 'Approuver cette annonce' : 'Rejeter cette annonce'}
             </div>
             <div style={{ fontSize: 12, color: 'var(--c-muted)', marginTop: 2 }}>
@@ -115,7 +115,7 @@ function ModerationModal({
         {error && (
           <div style={{
             background: 'var(--c-red-bg)', color: 'var(--c-red)',
-            border: '1px solid #FECACA', borderRadius: 8,
+            border: '1px solid var(--t-red-bd)', borderRadius: 8,
             padding: '9px 13px', fontSize: 12, fontWeight: 500, marginBottom: 14,
           }}>
             {error}

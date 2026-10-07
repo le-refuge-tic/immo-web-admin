@@ -103,7 +103,7 @@ export default function CommercialPortefeuillePage() {
                   <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--c-text)' }}>{formatFcfa(r.montant)}</div>
                   <div style={{ fontSize: 11, color: 'var(--c-muted)' }}>{formatDate(r.created_at)}</div>
                   {r.statut === 'rejete' && r.motif_rejet && (
-                    <div style={{ fontSize: 11, color: '#DC2626', marginTop: 2 }}>{r.motif_rejet}</div>
+                    <div style={{ fontSize: 11, color: 'var(--s-red)', marginTop: 2 }}>{r.motif_rejet}</div>
                   )}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>

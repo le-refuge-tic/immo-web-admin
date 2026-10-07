@@ -122,7 +122,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => { setSessionToken(''); setCode(''); setError(''); }}
-                style={{ marginTop: 8, background: 'none', border: 'none', padding: 0, color: '#2563EB', fontSize: 13, cursor: 'pointer' }}
+                style={{ marginTop: 8, background: 'none', border: 'none', padding: 0, color: 'var(--s-blue)', fontSize: 13, cursor: 'pointer' }}
               >
                 ← Modifier l'e-mail ou le mot de passe
               </button>

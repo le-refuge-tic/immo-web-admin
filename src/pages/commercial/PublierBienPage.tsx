@@ -776,7 +776,7 @@ export default function PublierBienPage() {
   return (
     <>
     {/* ── Sticky header : progression + proprio ── */}
-    <div style={{ position: 'sticky', top: 0, zIndex: 20, background: '#fff', borderBottom: '1px solid var(--c-border)' }}>
+    <div style={{ position: 'sticky', top: 0, zIndex: 20, background: 'var(--c-card)', borderBottom: '1px solid var(--c-border)' }}>
       <div style={{ maxWidth: PW, width: '100%', margin: '0 auto', padding: '10px 16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
           <button onClick={() => step > 0 ? setStep(s => s - 1) : navigate('/mes-annonces')}
@@ -815,7 +815,7 @@ export default function PublierBienPage() {
 
       {error && (
         <div style={{ borderRadius: 10, padding: '12px 16px', border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.08)', marginBottom: 16 }}>
-          <p style={{ fontSize: 14, color: '#EF4444', margin: 0 }}>{error}</p>
+          <p style={{ fontSize: 14, color: 'var(--s-red)', margin: 0 }}>{error}</p>
         </div>
       )}
 
@@ -897,7 +897,7 @@ export default function PublierBienPage() {
                         <div style={{ width: 112 }}>
                           <MoneyInput value={t.prix} onChange={v => setTarifsAutres(a => a.map((x, idx) => idx === i ? { ...x, prix: v } : x))} />
                         </div>
-                        <button type="button" onClick={() => setTarifsAutres(a => a.filter((_, idx) => idx !== i))} style={{ color: '#EF4444' }}>✕</button>
+                        <button type="button" onClick={() => setTarifsAutres(a => a.filter((_, idx) => idx !== i))} style={{ color: 'var(--s-red)' }}>✕</button>
                       </div>
                     ))}
                     <button type="button" onClick={() => setTarifsAutres(a => [...a, { label: '', prix: '' }])}
@@ -948,7 +948,7 @@ export default function PublierBienPage() {
                         <circle cx={11} cy={11} r={8} /><path strokeLinecap="round" d="M21 21l-4.35-4.35" />
                       </svg>
                       {quartierInputFocused && dropdownRect && (
-                        <div style={{ position: 'fixed', top: dropdownRect.top, left: dropdownRect.left, width: dropdownRect.width, zIndex: 9999, background: '#fff', borderColor: 'var(--c-border)', border: '1px solid var(--c-border)', borderRadius: 12, maxHeight: 260, overflowY: 'auto' }}>
+                        <div style={{ position: 'fixed', top: dropdownRect.top, left: dropdownRect.left, width: dropdownRect.width, zIndex: 9999, background: 'var(--c-card)', borderColor: 'var(--c-border)', border: '1px solid var(--c-border)', borderRadius: 12, maxHeight: 260, overflowY: 'auto' }}>
                           {filteredQuartiers.length === 0 ? (
                             quartierSearch.trim() ? (
                               <button type="button" onMouseDown={() => {
@@ -1042,7 +1042,7 @@ export default function PublierBienPage() {
                     style={{
                       display: 'flex', alignItems: 'center', gap: 8, padding: '11px 18px',
                       borderRadius: 12, border: `1px solid ${adressePositionAJour ? 'rgba(72,199,116,0.45)' : 'var(--c-border)'}`,
-                      background: adressePositionAJour ? 'rgba(72,199,116,0.09)' : '#fff',
+                      background: adressePositionAJour ? 'rgba(72,199,116,0.09)' : 'var(--c-card)',
                       color: adressePositionAJour ? '#48C774' : BLUE,
                       fontSize: 13, fontWeight: 700, cursor: geocoding || !quartier.trim() ? 'not-allowed' : 'pointer',
                       opacity: !quartier.trim() ? 0.5 : 1,
@@ -1066,7 +1066,7 @@ export default function PublierBienPage() {
                     <div style={{ marginTop: 8, fontSize: 12, color: 'var(--c-muted)' }}>{adresseNormalisee}</div>
                   )}
                   {geocodeError && (
-                    <div style={{ marginTop: 8, fontSize: 12, color: '#DC2626' }}>
+                    <div style={{ marginTop: 8, fontSize: 12, color: 'var(--s-red)' }}>
                       {geocodeError} Vous pouvez continuer sans — la position sera approximative.
                     </div>
                   )}
@@ -1170,11 +1170,11 @@ export default function PublierBienPage() {
                         <input value={d.label}
                           onChange={e => setDetailsSupplementaires(arr => arr.map((x, idx) => idx === i ? { ...x, label: e.target.value } : x))}
                           placeholder="Ex: Distance de la route" style={{ flex: 1, fontSize: 14, fontWeight: 600, outline: 'none', background: 'transparent', border: 'none', color: 'var(--c-text)' }} />
-                        <button type="button" onClick={() => setDetailsSupplementaires(arr => arr.filter((_, idx) => idx !== i))} style={{ color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
+                        <button type="button" onClick={() => setDetailsSupplementaires(arr => arr.filter((_, idx) => idx !== i))} style={{ color: 'var(--s-red)', background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
                       </div>
                       <input value={d.valeur}
                         onChange={e => setDetailsSupplementaires(arr => arr.map((x, idx) => idx === i ? { ...x, valeur: e.target.value } : x))}
-                        placeholder="Ex: 50 mètres" style={{ width: '100%', borderRadius: 8, padding: '8px 12px', fontSize: 14, outline: 'none', background: '#fff', color: 'var(--c-text)', border: '1px solid var(--c-border)', boxSizing: 'border-box' }} />
+                        placeholder="Ex: 50 mètres" style={{ width: '100%', borderRadius: 8, padding: '8px 12px', fontSize: 14, outline: 'none', background: 'var(--c-card)', color: 'var(--c-text)', border: '1px solid var(--c-border)', boxSizing: 'border-box' }} />
                     </div>
                   ))}
                   <button type="button" onClick={() => setDetailsSupplementaires(arr => [...arr, { label: '', valeur: '' }])}
@@ -1599,7 +1599,7 @@ export default function PublierBienPage() {
                         <div style={{ width: 112 }}>
                           <MoneyInput value={f.prix} onChange={v => setAutresFrais(a => a.map((x, idx) => idx === i ? { ...x, prix: v } : x))} />
                         </div>
-                        <button type="button" onClick={() => setAutresFrais(a => a.filter((_, idx) => idx !== i))} style={{ color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
+                        <button type="button" onClick={() => setAutresFrais(a => a.filter((_, idx) => idx !== i))} style={{ color: 'var(--s-red)', background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
                       </div>
                     ))}
                     <button type="button" onClick={() => setAutresFrais(a => [...a, { label: '', prix: '' }])}

@@ -96,7 +96,7 @@ export default function GestionAdminModal({ onClose, onCreated }: {
         {error && (
           <div style={{
             background: 'var(--c-red-bg)', color: 'var(--c-red)',
-            border: '1px solid #FECACA', borderRadius: 8,
+            border: '1px solid var(--t-red-bd)', borderRadius: 8,
             padding: '9px 13px', fontSize: 12, fontWeight: 500, marginBottom: 14,
           }}>
             {error}
