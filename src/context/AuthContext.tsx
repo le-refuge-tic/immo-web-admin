@@ -25,12 +25,24 @@ export function AuthProvider({ children }: { children: any }) {
       .finally(() => setLoading(false));
   }, []);
 
-  const login = async (payload: any) => {
-    const tokens = await postAuth.login(payload);
+  const storeSession = async (tokens: { access_token: string; refresh_token: string }) => {
     localStorage.setItem('access_token', tokens.access_token);
     localStorage.setItem('refresh_token', tokens.refresh_token);
     const profile = await getAuth.profile();
     setUser(profile);
+  };
+
+  // 2FA : /auth/login envoie un code SMS et renvoie { requires_otp, session_token } ;
+  // les jetons ne sont délivrés qu'après /auth/otp/verify.
+  const login = async (payload: any) => {
+    const res = await postAuth.login(payload);
+    if (res?.requires_otp) return { requiresOtp: true, sessionToken: res.session_token };
+    await storeSession(res);
+    return { requiresOtp: false };
+  };
+
+  const verifyOtp = async (sessionToken: string, code: string) => {
+    await storeSession(await postAuth.verifyOtp(sessionToken, code));
   };
 
   const logout = async () => {
@@ -46,7 +58,7 @@ export function AuthProvider({ children }: { children: any }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout, refreshUser, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, isLoading, login, verifyOtp, logout, refreshUser, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );
