@@ -1014,6 +1014,7 @@ export default function GestionCommercialPage() {
                         {isMe && <span className="admin-you-badge">MOI</span>}
                       </div>
                       <div className="admin-info-email">{c.email ?? '—'}</div>
+                      <div className="admin-info-email" style={{ marginTop: 1 }}>{c.telephone ?? '—'}</div>
                       {/* Stats mini */}
                       <div style={{ display: 'flex', gap: 10, marginTop: 6, flexWrap: 'wrap' }}>
                         <span style={{
@@ -1039,15 +1040,27 @@ export default function GestionCommercialPage() {
                       </div>
                     </div>
 
-                    {/* Badge rôle */}
-                    <span style={{
-                      display: 'inline-flex', alignItems: 'center', gap: 4, alignSelf: 'center',
-                      padding: '3px 9px', borderRadius: 20, fontSize: 10, fontWeight: 700,
-                      letterSpacing: '0.5px', textTransform: 'uppercase',
-                      background: '#F0FDF4', color: '#16A34A', border: '1px solid #BBF7D0',
-                    }}>
-                      Commercial
-                    </span>
+                    {/* Badges rôle + statut */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-end', alignSelf: 'center', flexShrink: 0 }}>
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 4,
+                        padding: '3px 9px', borderRadius: 20, fontSize: 10, fontWeight: 700,
+                        letterSpacing: '0.5px', textTransform: 'uppercase',
+                        background: '#F0FDF4', color: '#16A34A', border: '1px solid #BBF7D0',
+                      }}>
+                        Commercial
+                      </span>
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 4,
+                        padding: '3px 9px', borderRadius: 20, fontSize: 10, fontWeight: 700,
+                        letterSpacing: '0.5px', textTransform: 'uppercase',
+                        background: c.actif ? '#EFF6FF' : '#FEF2F2',
+                        color: c.actif ? '#2563EB' : '#DC2626',
+                        border: `1px solid ${c.actif ? '#BFDBFE' : '#FECACA'}`,
+                      }}>
+                        {c.actif ? 'Actif' : 'Inactif'}
+                      </span>
+                    </div>
 
                     {/* Actions supervision */}
                     {canManage && (
