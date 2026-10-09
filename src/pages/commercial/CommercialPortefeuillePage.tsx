@@ -139,7 +139,7 @@ export default function CommercialPortefeuillePage() {
               style={{
                 padding: '5px 14px', borderRadius: 999, fontSize: 12, fontWeight: 600, cursor: 'pointer',
                 border: '1px solid',
-                background: filterTx === k ? 'var(--c-blue)' : 'transparent',
+                background: filterTx === k ? 'var(--c-blue-solid)' : 'transparent',
                 color: filterTx === k ? '#fff' : 'var(--c-muted)',
                 borderColor: filterTx === k ? 'var(--c-blue)' : 'var(--c-border)',
               }}>

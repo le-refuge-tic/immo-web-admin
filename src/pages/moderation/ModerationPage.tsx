@@ -181,7 +181,7 @@ function ModerationModal({
               type="submit"
               className="btn-submit"
               disabled={!canSubmit || loading}
-              style={!isApprove ? { background: 'var(--c-red)', borderColor: 'var(--c-red)' } : undefined}
+              style={!isApprove ? { background: 'var(--c-red-solid)', borderColor: 'var(--c-red)' } : undefined}
             >
               {loading ? (
                 <>

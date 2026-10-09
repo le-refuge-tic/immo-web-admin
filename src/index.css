@@ -31,6 +31,10 @@
   --s-green:       #15803D;
   --s-yellow:      #B45309;
   --s-violet:      #7C3AED;
+  /* Remplissages sous texte blanc : identiques en clair et en sombre (contraste ≥ 4,5:1) */
+  --c-blue-solid:  #2563EB;
+  --c-red-solid:   #DC2626;
+  --c-green-solid: #15803D;
   --sidebar-w:     16.25rem;
   --topbar-h:      4rem;
   --footer-h:      2.75rem;
@@ -381,7 +385,7 @@ body.lp-page #root { overflow: auto; }
 .immo-avatar-sq {
   width: 2.25rem;
   height: 2.25rem;
-  background: var(--c-blue);
+  background: var(--c-blue-solid);
   color: #fff;
   border-radius: 0.5rem;
   display: flex;
@@ -552,7 +556,7 @@ body.lp-page #root { overflow: auto; }
   cursor: pointer;
   flex-shrink: 0;
 }
-.action-circle.ok  { background: var(--c-green); color: #fff; }
+.action-circle.ok  { background: var(--c-green-solid); color: #fff; }
 .action-circle.ko  { background: var(--c-red-bg); color: var(--c-red); border: 1.5px solid var(--c-red); }
 
 .verif-more {
@@ -782,7 +786,7 @@ body.lp-page #root { overflow: auto; }
   white-space: nowrap;
 }
 .pill:hover { border-color: var(--c-blue); color: var(--c-blue); }
-.pill.active-blue { background: var(--c-blue); border-color: var(--c-blue); color: #fff; font-weight: 600; }
+.pill.active-blue { background: var(--c-blue-solid); border-color: var(--c-blue); color: #fff; font-weight: 600; }
 .pill.active-orange { border-color: var(--c-orange); color: var(--c-orange); font-weight: 600; }
 
 .annonce-grid {
@@ -861,7 +865,7 @@ body.lp-page #root { overflow: auto; }
   color: #fff;
   letter-spacing: 0.01875rem;
 }
-.badge-statut.actif     { background: var(--c-green); }
+.badge-statut.actif     { background: var(--c-green-solid); }
 .badge-statut.en_attente { background: var(--c-yellow); }
 
 .annonce-body {
@@ -920,7 +924,7 @@ body.lp-page #root { overflow: auto; }
 
 .btn-primary-immo {
   flex: 1;
-  background: var(--c-blue);
+  background: var(--c-blue-solid);
   color: #fff;
   border: none;
   border-radius: 0.5rem;
@@ -935,7 +939,7 @@ body.lp-page #root { overflow: auto; }
 
 .btn-validate-immo {
   flex: 1;
-  background: var(--c-green);
+  background: var(--c-green-solid);
   color: #fff;
   border: none;
   border-radius: 0.5rem;
@@ -1168,7 +1172,7 @@ body.lp-page #root { overflow: auto; }
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: var(--c-blue);
+  background: var(--c-blue-solid);
   color: #fff;
   font-size: 0.875rem;
   font-weight: 700;
@@ -1312,7 +1316,7 @@ body.lp-page #root { overflow: auto; }
   border: none;
   transition: all 0.12s;
 }
-.mod-tab.active { background: var(--c-blue); color: #fff; }
+.mod-tab.active { background: var(--c-blue-solid); color: #fff; }
 .mod-tab.inactive { background: var(--c-card); color: var(--c-muted); border: 1.5px solid var(--c-border); }
 
 .mod-search-wrap {
@@ -1441,7 +1445,7 @@ body.lp-page #root { overflow: auto; }
 
 .btn-validate-circle {
   width: 2.125rem; height: 2.125rem;
-  background: var(--c-green);
+  background: var(--c-green-solid);
   border: none; border-radius: 0.5rem;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; color: #fff;
@@ -1832,7 +1836,7 @@ body.lp-page #root { overflow: auto; }
   color: var(--c-text);
 }
 .page-btn:hover { border-color: var(--c-blue); color: var(--c-blue); }
-.page-btn.active { background: var(--c-blue); border-color: var(--c-blue); color: #fff; font-weight: 600; }
+.page-btn.active { background: var(--c-blue-solid); border-color: var(--c-blue); color: #fff; font-weight: 600; }
 .page-btn:disabled { opacity: 0.4; cursor: default; }
 
 /* ─── BUTTON ORANGE MAIN ─────────────────────────────────── */
@@ -1854,7 +1858,7 @@ body.lp-page #root { overflow: auto; }
 .btn-orange-main:hover { background: var(--c-orange-dark); }
 
 .btn-blue-main {
-  background: var(--c-blue);
+  background: var(--c-blue-solid);
   color: #fff;
   border: none;
   border-radius: 0.5rem;
@@ -1931,7 +1935,7 @@ body.lp-page #root { overflow: auto; }
 }
 .config-submenu .immo-nav-item.active::after {
   left: -1rem;
-  background: var(--c-blue);
+  background: var(--c-blue-solid);
 }
 
 .immo-sidebar--min .config-chevron { display: none; }
@@ -2279,7 +2283,7 @@ body.lp-page #root { overflow: auto; }
   width: 2.375rem;
   height: 2.375rem;
   border-radius: 0.625rem;
-  background: var(--c-blue);
+  background: var(--c-blue-solid);
   color: #fff;
   display: flex;
   align-items: center;
@@ -2402,7 +2406,7 @@ body.lp-page #root { overflow: auto; }
   height: 2.5rem;
   padding: 0 1.25rem;
   border: none;
-  background: var(--c-blue);
+  background: var(--c-blue-solid);
   border-radius: 0.5rem;
   font-size: 0.8125rem;
   font-weight: 700;
@@ -2606,7 +2610,7 @@ body.lp-page #root { overflow: auto; }
 .lp-brand-icon {
   width: 2.75rem;
   height: 2.75rem;
-  background: var(--c-blue);
+  background: var(--c-blue-solid);
   border-radius: 0.75rem;
   display: flex;
   align-items: center;
@@ -2813,7 +2817,7 @@ body.lp-page #root { overflow: auto; }
 .lp-btn-submit {
   width: 100%;
   height: 3.25rem;
-  background: var(--c-blue);
+  background: var(--c-blue-solid);
   color: #fff;
   border: none;
   border-radius: 0.625rem;
@@ -2919,7 +2923,7 @@ body.lp-page #root { overflow: auto; }
 }
 
 .msg-conv-count-badge {
-  background: var(--c-blue);
+  background: var(--c-blue-solid);
   color: #fff;
   font-size: 0.6875rem;
   font-weight: 700;
@@ -3026,7 +3030,7 @@ body.lp-page #root { overflow: auto; }
   white-space: nowrap;
 }
 .msg-unread-badge {
-  background: var(--c-blue);
+  background: var(--c-blue-solid);
   color: #fff;
   font-size: 0.625rem;
   font-weight: 700;
@@ -3087,7 +3091,7 @@ body.lp-page #root { overflow: auto; }
 .msg-online-dot {
   width: 0.5rem;
   height: 0.5rem;
-  background: var(--c-green);
+  background: var(--c-green-solid);
   border-radius: 50%;
   flex-shrink: 0;
   box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2);
@@ -3156,7 +3160,7 @@ body.lp-page #root { overflow: auto; }
   box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 .msg-bubble.mine {
-  background: var(--c-blue);
+  background: var(--c-blue-solid);
   color: #fff;
   border-bottom-right-radius: 0.3125rem;
 }
@@ -3368,7 +3372,7 @@ body.lp-page #root { overflow: auto; }
   width: 2.625rem;
   height: 2.625rem;
   border-radius: 50%;
-  background: var(--c-blue);
+  background: var(--c-blue-solid);
   border: none;
   display: flex;
   align-items: center;
@@ -3406,7 +3410,7 @@ body.lp-page #root { overflow: auto; }
   justify-content: center;
   gap: 0.5rem;
   padding: 0.625rem 1rem;
-  background: var(--c-blue);
+  background: var(--c-blue-solid);
   color: #fff;
   border: none;
   border-radius: 0.625rem;
@@ -3712,7 +3716,7 @@ body.lp-page #root { overflow: auto; }
   background: var(--c-border);
   transition: background .3s;
 }
-.pb-step-connector--done { background: var(--c-blue); }
+.pb-step-connector--done { background: var(--c-blue-solid); }
 .pb-step-circle {
   width: 2rem;
   height: 2rem;
@@ -3724,8 +3728,8 @@ body.lp-page #root { overflow: auto; }
   font-weight: 700;
   transition: all .2s;
 }
-.pb-step-circle--done   { background: var(--c-blue); color: #fff; }
-.pb-step-circle--active { background: var(--c-blue); color: #fff; box-shadow: 0 0 0 3px rgba(37,99,235,.15); }
+.pb-step-circle--done   { background: var(--c-blue-solid); color: #fff; }
+.pb-step-circle--active { background: var(--c-blue-solid); color: #fff; box-shadow: 0 0 0 3px rgba(37,99,235,.15); }
 .pb-step-circle--future { background: var(--c-card); border: 2px solid var(--c-border); color: var(--c-muted); }
 .pb-step-label {
   font-size: 0.6rem;
@@ -3769,7 +3773,7 @@ body.lp-page #root { overflow: auto; }
 }
 .pb-type-btn:hover { border-color: var(--t-blue-bd); }
 .pb-type-btn.pb-type-active { border-color: var(--c-blue); background: var(--t-blue-bg); }
-.pb-type-btn.pb-type-active::before { background: var(--c-blue); }
+.pb-type-btn.pb-type-active::before { background: var(--c-blue-solid); }
 .pb-type-name {
   font-size: 0.8125rem;
   font-weight: 700;
@@ -3808,7 +3812,7 @@ body.lp-page #root { overflow: auto; }
 .pb-choice-check {
   width: 1.125rem; height: 1.125rem;
   border-radius: 50%;
-  background: var(--c-blue);
+  background: var(--c-blue-solid);
   color: #fff;
   display: flex;
   align-items: center;
@@ -3972,7 +3976,7 @@ body.lp-page #root { overflow: auto; }
   padding: 0.6875rem 1.75rem;
   border: none;
   border-radius: 0.5rem;
-  background: var(--c-blue);
+  background: var(--c-blue-solid);
   font-size: 0.875rem;
   font-weight: 700;
   color: #fff;

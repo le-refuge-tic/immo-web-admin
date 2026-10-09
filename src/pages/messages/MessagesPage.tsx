@@ -518,7 +518,7 @@ export default function MessagesPage() {
                       <div style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start', marginBottom: 2 }}>
                         <div style={{ maxWidth: '70%' }}>
                           <div style={{
-                            background: isMine ? 'var(--c-blue)' : 'var(--c-card)',
+                            background: isMine ? 'var(--c-blue-solid)' : 'var(--c-card)',
                             color: isMine ? '#fff' : 'var(--c-text)',
                             border: isMine ? 'none' : '1px solid var(--c-border)',
                             borderRadius: isMine ? '16px 16px 4px 16px' : '16px 16px 16px 4px',

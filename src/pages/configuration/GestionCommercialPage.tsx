@@ -341,7 +341,7 @@ function AttribuerClientModal({
                     disabled={assigning === u.id}
                     style={{
                       padding: '5px 12px', borderRadius: 6, fontSize: 12, fontWeight: 600,
-                      background: 'var(--c-blue)', color: '#fff', border: 'none', cursor: 'pointer', flexShrink: 0,
+                      background: 'var(--c-blue-solid)', color: '#fff', border: 'none', cursor: 'pointer', flexShrink: 0,
                     }}
                   >
                     {assigning === u.id ? '…' : 'Attribuer'}
@@ -462,7 +462,7 @@ function DirectChatModal({ commercial, me, onClose }: { commercial: any; me: any
                         </div>
                       )}
                       <div style={{
-                        background: isMine ? 'var(--c-blue)' : 'var(--c-card)',
+                        background: isMine ? 'var(--c-blue-solid)' : 'var(--c-card)',
                         color: isMine ? '#fff' : 'var(--c-text)',
                         border: isMine ? 'none' : '1px solid var(--c-border)',
                         borderRadius: isMine ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
@@ -500,7 +500,7 @@ function DirectChatModal({ commercial, me, onClose }: { commercial: any; me: any
             disabled={!input.trim() || sending || loading}
             style={{
               padding: '0 16px', height: 38, borderRadius: 8, border: 'none',
-              background: !input.trim() || sending ? 'var(--c-border)' : 'var(--c-blue)',
+              background: !input.trim() || sending ? 'var(--c-border)' : 'var(--c-blue-solid)',
               color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer', flexShrink: 0,
             }}
           >
@@ -778,7 +778,7 @@ function SupervisionModal({ commercial, onClose }: { commercial: any; onClose: (
                     <div key={m.id} style={{ display: 'flex', justifyContent: isGest ? 'flex-end' : 'flex-start' }}>
                       <div style={{
                         maxWidth: '72%', padding: '8px 12px', borderRadius: isGest ? '12px 12px 2px 12px' : '12px 12px 12px 2px',
-                        background: isGest ? 'var(--c-blue)' : 'var(--c-bg)',
+                        background: isGest ? 'var(--c-blue-solid)' : 'var(--c-bg)',
                         border: isGest ? 'none' : '1px solid var(--c-border)',
                         color: isGest ? '#fff' : 'var(--c-text)',
                         fontSize: 13, lineHeight: 1.5,
@@ -809,7 +809,7 @@ function SupervisionModal({ commercial, onClose }: { commercial: any; onClose: (
                   disabled={sending || !reply.trim()}
                   style={{
                     padding: '0 16px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                    background: 'var(--c-blue)', color: '#fff', fontWeight: 600, fontSize: 13,
+                    background: 'var(--c-blue-solid)', color: '#fff', fontWeight: 600, fontSize: 13,
                     opacity: sending || !reply.trim() ? 0.5 : 1,
                   }}
                 >

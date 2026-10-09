@@ -19,7 +19,7 @@ export default function ModerationRisqueLabel({ b }: { b: any }) {
   }
   return (
     <>
-      <div className="risk-dot" style={{ background: 'var(--c-green)' }} />
+      <div className="risk-dot" style={{ background: 'var(--c-green-solid)' }} />
       <span className="risk-label minimal">MINIMAL</span>
     </>
   );

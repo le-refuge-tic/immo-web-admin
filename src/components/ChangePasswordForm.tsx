@@ -203,7 +203,7 @@ export default function ChangePasswordForm({ onSuccess, submitLabel = 'Valider l
           {(['form', 'otp'] as Step[]).map((s) => (
             <div key={s} style={{
               height: 3, flex: 1, borderRadius: 2,
-              background: s === 'otp' ? 'var(--c-blue)' : '#16A34A',
+              background: s === 'otp' ? 'var(--c-blue-solid)' : '#16A34A',
               transition: 'background 0.2s',
             }} />
           ))}
@@ -283,7 +283,7 @@ export default function ChangePasswordForm({ onSuccess, submitLabel = 'Valider l
         {(['form', 'otp'] as Step[]).map((s) => (
           <div key={s} style={{
             height: 3, flex: 1, borderRadius: 2,
-            background: s === 'form' ? 'var(--c-blue)' : 'var(--c-border)',
+            background: s === 'form' ? 'var(--c-blue-solid)' : 'var(--c-border)',
             transition: 'background 0.2s',
           }} />
         ))}

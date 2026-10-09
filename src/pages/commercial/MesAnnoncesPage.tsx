@@ -281,7 +281,7 @@ export default function MesAnnoncesPage() {
                   <button key={opt.key} onClick={() => setFilterType(opt.key)} style={{
                     padding: '5px 13px', borderRadius: 20, fontSize: 12, fontWeight: active ? 700 : 500,
                     border: `1.5px solid ${active ? 'var(--c-blue)' : 'var(--c-border)'}`,
-                    background: active ? 'var(--c-blue)' : 'transparent',
+                    background: active ? 'var(--c-blue-solid)' : 'transparent',
                     color: active ? '#fff' : 'var(--c-muted)',
                     cursor: 'pointer', transition: 'all 0.15s',
                   }}>
@@ -300,7 +300,7 @@ export default function MesAnnoncesPage() {
                 <button key={opt.key} onClick={() => setFilterStatus(opt.key)} style={{
                   padding: '5px 13px', borderRadius: 20, fontSize: 12, fontWeight: active ? 700 : 500,
                   border: `1.5px solid ${active ? 'var(--c-blue)' : 'var(--c-border)'}`,
-                  background: active ? 'var(--c-blue)' : 'transparent',
+                  background: active ? 'var(--c-blue-solid)' : 'transparent',
                   color: active ? '#fff' : 'var(--c-muted)',
                   cursor: 'pointer', transition: 'all 0.15s',
                 }}>

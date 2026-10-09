@@ -132,7 +132,7 @@ export default function PhoneRequiredModal() {
             <div key={s} style={{
               height: 3, flex: 1, borderRadius: 2,
               background: step === s || (s === 'phone' && step === 'otp')
-                ? 'var(--c-blue)' : 'var(--c-border)',
+                ? 'var(--c-blue-solid)' : 'var(--c-border)',
               transition: 'background 0.2s',
             }} />
           ))}

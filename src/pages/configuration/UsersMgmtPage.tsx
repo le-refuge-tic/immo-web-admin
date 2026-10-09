@@ -268,7 +268,7 @@ export default function UsersMgmtPage({ title, subtitle, roleFilter, emptyLabel 
                   style={{
                     width: 32, height: 32, borderRadius: 8, border: '1.5px solid',
                     borderColor: p === page ? 'var(--c-blue)' : 'var(--c-border)',
-                    background: p === page ? 'var(--c-blue)' : 'var(--c-card)',
+                    background: p === page ? 'var(--c-blue-solid)' : 'var(--c-card)',
                     color: p === page ? '#fff' : 'var(--c-text)',
                     fontWeight: p === page ? 700 : 500,
                     fontSize: 12, cursor: 'pointer',

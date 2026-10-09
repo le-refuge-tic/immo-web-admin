@@ -721,7 +721,7 @@ export default function SupervisionPage() {
                                 {senderName}
                               </div>
                               <div style={{
-                                background: isSuppressed ? 'var(--c-bg)' : (isStaff ? 'var(--c-blue)' : '#fff'),
+                                background: isSuppressed ? 'var(--c-bg)' : (isStaff ? 'var(--c-blue-solid)' : '#fff'),
                                 color: isSuppressed ? 'var(--c-muted)' : (isStaff ? '#fff' : 'var(--c-text)'),
                                 border: isSuppressed ? '1px dashed var(--c-border)' : (isStaff ? 'none' : '1px solid var(--c-border)'),
                                 borderRadius: isStaff ? '16px 16px 4px 16px' : '16px 16px 16px 4px',

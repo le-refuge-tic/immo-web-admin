@@ -66,7 +66,7 @@ export default function QuartiersPage() {
               style={{
                 padding: '7px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer',
                 border: '1px solid var(--c-border)',
-                background: filtre === f.v ? 'var(--c-blue)' : 'var(--c-card)',
+                background: filtre === f.v ? 'var(--c-blue-solid)' : 'var(--c-card)',
                 color: filtre === f.v ? '#fff' : 'var(--c-text)',
               }}>
               {f.l}

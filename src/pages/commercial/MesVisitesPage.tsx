@@ -276,7 +276,7 @@ export default function MesVisitesPage() {
               {!loading && s.key && count > 0 && (
                 <span style={{
                   fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 10,
-                  background: isActive ? 'var(--c-blue)' : 'var(--c-border)',
+                  background: isActive ? 'var(--c-blue-solid)' : 'var(--c-border)',
                   color: isActive ? '#fff' : 'var(--c-muted)',
                 }}>{count}</span>
               )}
