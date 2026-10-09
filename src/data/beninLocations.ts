@@ -45,11 +45,4 @@ export function getQuartiersByVille(ville: string): string[] {
 }
 
 // Quartiers filtrés par arrondissement
-export function getQuartiersByArrondissement(ville: string, arr: string): string[] {
-  return BENIN_LOCATION_DATA[ville]?.[arr] ?? [];
-}
-
 // Arrondissements pour une ville
-export function getArrondissements(ville: string): string[] {
-  return Object.keys(BENIN_LOCATION_DATA[ville] ?? {});
-}

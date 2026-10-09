@@ -13,7 +13,7 @@ const auth = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('
 /** Filet de sécurité si le WebSocket est coupé ; les mises à jour normales arrivent par événements. */
 const POLL_MS = 30_000;
 /** Événement à émettre après une action qui change un compteur (modération, retrait, quartier…). */
-export const BADGES_REFRESH_EVENT = 'badges-refresh';
+const BADGES_REFRESH_EVENT = 'badges-refresh';
 
 export function refreshSidebarBadges() {
   window.dispatchEvent(new CustomEvent(BADGES_REFRESH_EVENT));
