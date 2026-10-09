@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { commerciauxApi } from '../../api/getClientsCommercial';
 import { supervisionApi } from '../../api/commercialSupervisionApi';
+import { apiMessage } from '../../utils/apiMessage';
 
 const COLORS = ['#2563EB', '#7C3AED', '#DB2777', '#D97706', '#16A34A', '#0891B2', '#DC2626', '#0284C7'];
 function avatarColor(id: number) { return COLORS[Math.abs(id ?? 0) % COLORS.length]; }
@@ -46,7 +47,7 @@ export default function MesClientsPage() {
       setProprietairesData(propData);
     } catch (err: any) {
       const status = err?.response?.status;
-      const msg = err?.response?.data?.message;
+      const msg = apiMessage(err);
       setError(status === 403
         ? 'Accès refusé — contactez votre responsable.'
         : (msg ?? 'Impossible de charger vos clients.'));

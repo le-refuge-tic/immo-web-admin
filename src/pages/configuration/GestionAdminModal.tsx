@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { postAdmins } from '../../api/postAdmins';
+import { apiMessage } from '../../utils/apiMessage';
 
 function EyeIcon({ open }: { open: boolean }) {
   return open ? (
@@ -48,7 +49,7 @@ export default function GestionAdminModal({ onClose, onCreated }: {
       onCreated(res.user);
       onClose();
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Une erreur est survenue');
+      setError(apiMessage(err) ?? 'Une erreur est survenue');
     } finally {
       setLoading(false);
     }

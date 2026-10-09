@@ -3,6 +3,7 @@ import { getAdminUser } from '../../api/getAdminUser';
 import { patchAdminUser } from '../../api/patchAdminUser';
 import { deleteAdminUser } from '../../api/deleteAdminUser';
 import { SearchIcon, TrashIcon } from '../../components/Icons';
+import { apiMessage } from '../../utils/apiMessage';
 
 const AVATAR_COLORS = ['#2563EB', '#7C3AED', '#DB2777', '#D97706', '#16A34A'];
 
@@ -79,7 +80,7 @@ export default function UsersMgmtPage({ title, subtitle, roleFilter, emptyLabel 
       const updated = await patchAdminUser.update(u.id, { actif: !u.actif });
       setUsers(prev => prev.map((x: any) => x.id === u.id ? updated : x));
     } catch (err: any) {
-      setToggleError(err?.response?.data?.message ?? 'Erreur');
+      setToggleError(apiMessage(err) ?? 'Erreur');
     } finally {
       setTogglingId(null);
     }
@@ -94,7 +95,7 @@ export default function UsersMgmtPage({ title, subtitle, roleFilter, emptyLabel 
       setTotal(t => t - 1);
       setConfirmDeleteId(null);
     } catch (err: any) {
-      setDeleteError(err?.response?.data?.message ?? 'Erreur');
+      setDeleteError(apiMessage(err) ?? 'Erreur');
     } finally {
       setDeletingId(null);
     }

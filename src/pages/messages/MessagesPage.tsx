@@ -7,6 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useChatSocket } from '../../hooks/useChatSocket';
 import NewConversationModal from './NewConversationModal';
 import ContrePropositionModal from './ContrePropositionModal';
+import { apiMessage } from '../../utils/apiMessage';
 
 /* ─── Helpers ─────────────────────────────────────────────────── */
 
@@ -210,7 +211,7 @@ export default function MessagesPage() {
       }
       setCpModalFor(null);
     } catch (err: any) {
-      showToast(err?.response?.data?.message ?? 'Erreur lors de la réponse au créneau.');
+      showToast(apiMessage(err) ?? 'Erreur lors de la réponse au créneau.');
     } finally {
       setSlotActing(null);
     }

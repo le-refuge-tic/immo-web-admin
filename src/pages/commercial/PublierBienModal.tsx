@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { postBien } from '../../api/postBien';
 import { blockInvalidNumberKey, blockInvalidCoordKey } from '../../utils/inputNumbers';
+import { apiMessage } from '../../utils/apiMessage';
 
 const TYPES = [
   { value: 'maison',        label: 'Maison / Villa' },
@@ -75,7 +76,7 @@ export default function PublierBienModal({ onClose, onCreated }: {
       onCreated(res);
       onClose();
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Une erreur est survenue');
+      setError(apiMessage(err) ?? 'Une erreur est survenue');
     } finally {
       setLoading(false);
     }

@@ -3,6 +3,7 @@ import { SearchIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon } from '../../
 import { getAdminUser } from '../../api/getAdminUser';
 import { patchAdminUser } from '../../api/patchAdminUser';
 import { deleteAdminUser } from '../../api/deleteAdminUser';
+import { apiMessage } from '../../utils/apiMessage';
 
 const TABS = [
   { key: '',             label: 'Tous'          },
@@ -85,7 +86,7 @@ export default function UtilisateursPage() {
       setConfirmId(null);
       await load();
     } catch (err: any) {
-      alert(err?.response?.data?.message ?? 'Erreur lors de la suppression.');
+      alert(apiMessage(err) ?? 'Erreur lors de la suppression.');
     } finally {
       setDeletingId(null);
     }

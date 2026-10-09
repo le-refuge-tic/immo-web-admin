@@ -4,6 +4,7 @@ import { getAdmins } from '../../api/getAdmins';
 import { deleteAdmins } from '../../api/deleteAdmins';
 import GestionAdminModal from './GestionAdminModal';
 import GestionAdminRoleBadge from './GestionAdminRoleBadge';
+import { apiMessage } from '../../utils/apiMessage';
 
 export default function GestionAdminPage() {
   const { user: me }                    = useAuth();
@@ -31,7 +32,7 @@ export default function GestionAdminPage() {
       setAdmins(a => a.filter((x: any) => x.id !== admin.id));
       setConfirmDeleteId(null);
     } catch (err: any) {
-      setDeleteError(err?.response?.data?.message ?? 'Erreur lors de la suppression');
+      setDeleteError(apiMessage(err) ?? 'Erreur lors de la suppression');
     } finally {
       setDeletingId(null);
     }

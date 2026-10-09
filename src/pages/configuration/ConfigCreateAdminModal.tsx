@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { postAdmins } from '../../api/postAdmins';
+import { apiMessage } from '../../utils/apiMessage';
 
 export default function ConfigCreateAdminModal({ onClose, onCreated }: {
   onClose: () => void;
@@ -24,7 +25,7 @@ export default function ConfigCreateAdminModal({ onClose, onCreated }: {
       onCreated(res.user);
       onClose();
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Une erreur est survenue');
+      setError(apiMessage(err) ?? 'Une erreur est survenue');
     } finally {
       setLoading(false);
     }

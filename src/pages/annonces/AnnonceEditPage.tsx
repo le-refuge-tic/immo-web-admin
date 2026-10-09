@@ -10,6 +10,7 @@ import {
   HomeIcon, PinIcon, GridIcon, CardIcon, ImageIcon,
 } from '../../components/Icons';
 import { BENIN_VILLES, getQuartiersByVille, ALL_QUARTIERS } from '../../data/beninLocations';
+import { apiMessage } from '../../utils/apiMessage';
 
 // ── Icônes SVG locales ────────────────────────────────────────────────────────
 const SaveIcon = () => (
@@ -357,7 +358,7 @@ export default function AnnonceEditPage() {
 
       await patchAdminBien.update(numId, payload);
       setSaved(true); setTimeout(() => setSaved(false), 2500);
-    } catch (e: any) { setError(e?.response?.data?.message ?? 'Erreur lors de la sauvegarde.'); }
+    } catch (e: any) { setError(apiMessage(e) ?? 'Erreur lors de la sauvegarde.'); }
     finally { setSaving(false); }
   }
 

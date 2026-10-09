@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getCommerciaux } from '../../api/getCommerciaux';
 import { equipesApi, type Equipe } from '../../api/getEquipes';
+import { apiMessage } from '../../utils/apiMessage';
 
 /* ─── Helpers ─────────────────────────────────────────────── */
 
@@ -27,7 +28,7 @@ function NouvelleEquipeModal({ commerciauxDispo, onClose, onCreated }: {
       onCreated();
       onClose();
     } catch (e: any) {
-      setError(e?.response?.data?.message ?? 'Erreur lors de la création.');
+      setError(apiMessage(e) ?? 'Erreur lors de la création.');
     } finally {
       setSaving(false);
     }
@@ -75,8 +76,8 @@ export default function GestionEquipesPage() {
     setLoading(true);
     const errors: string[] = [];
     const [eqs, coms] = await Promise.all([
-      equipesApi.list().catch((e: any) => { errors.push(e?.response?.data?.message ?? 'Chargement des équipes impossible.'); return []; }),
-      getCommerciaux.list().catch((e: any) => { errors.push(e?.response?.data?.message ?? 'Chargement des commerciaux impossible.'); return []; }),
+      equipesApi.list().catch((e: any) => { errors.push(apiMessage(e) ?? 'Chargement des équipes impossible.'); return []; }),
+      getCommerciaux.list().catch((e: any) => { errors.push(apiMessage(e) ?? 'Chargement des commerciaux impossible.'); return []; }),
     ]);
     setEquipes(eqs);
     setCommerciaux(coms);

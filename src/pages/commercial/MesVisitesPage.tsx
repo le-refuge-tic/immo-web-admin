@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { getMesVisites } from '../../api/getMesVisites';
 import { patchVisite } from '../../api/patchVisite';
 import { CalendarIcon, CheckCircleIcon } from '../../components/Icons';
+import { apiMessage } from '../../utils/apiMessage';
 
 /* ─── Helpers ─────────────────────────────────────────────── */
 
@@ -142,7 +143,7 @@ export default function MesVisitesPage() {
       const updated = await action();
       setVisites(prev => prev.map(v => v.id === visitId ? { ...v, ...updated } : v));
     } catch (err: any) {
-      showToast(err?.response?.data?.message ?? 'Une erreur est survenue.');
+      showToast(apiMessage(err) ?? 'Une erreur est survenue.');
     } finally {
       setActing(null);
     }

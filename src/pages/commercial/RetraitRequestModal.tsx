@@ -1,6 +1,7 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { postRetrait } from '../../api/postRetrait';
 import { blockInvalidNumberKey } from '../../utils/inputNumbers';
+import { apiMessage } from '../../utils/apiMessage';
 
 function formatFcfa(v: number) {
   return new Intl.NumberFormat('fr-FR').format(Math.round(v)) + ' FCFA';
@@ -34,7 +35,7 @@ export default function RetraitRequestModal({ solde, onClose, onSuccess }: {
       await postRetrait.demander(montantNum, 'commission_commerciale', numeroTelephone.trim(), nomTitulaire.trim());
       onSuccess();
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Impossible de créer la demande de retrait.');
+      setError(apiMessage(err) ?? 'Impossible de créer la demande de retrait.');
       setLoading(false);
     }
   };

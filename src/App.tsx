@@ -35,6 +35,7 @@ import MonEquipePage              from './pages/commercial/MonEquipePage';
 import SupervisionPage         from './pages/supervision/SupervisionPage';
 import PlaintesPage            from './pages/plaintes/PlaintesPage';
 import ModerationPage          from './pages/moderation/ModerationPage';
+import NotFoundPage from './pages/errors/NotFoundPage';
 
 function DefaultRedirect() {
   const { user } = useAuth();
@@ -94,8 +95,8 @@ export default function App() {
               <Route path="locataires"      element={<AdminRoute><GestionLocatairePage /></AdminRoute>} />
               <Route path="administrateurs" element={<SuperAdminRoute><GestionAdminPage /></SuperAdminRoute>} />
             </Route>
+            <Route path="*" element={<NotFoundPage />} />
           </Route>
-          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         </ToastProvider>
       </AuthProvider>

@@ -7,6 +7,7 @@ import { refreshSidebarBadges } from '../../hooks/useSidebarBadges';
 import ModerationRisqueLabel from './ModerationRisqueLabel';
 import ModerationDetail from './ModerationDetail';
 import { MOTIFS_REFUS, TYPE_LABELS, formatPrix, auteurNom } from './moderationChecks';
+import { apiMessage } from '../../utils/apiMessage';
 
 const LIMIT = 10;
 const SEARCH_DEBOUNCE_MS = 350;
@@ -64,8 +65,8 @@ function ModerationModal({
       onDone();
       onClose();
     } catch (err: any) {
-      const msg = err?.response?.data?.message;
-      setError(typeof msg === 'string' ? msg : 'La décision n’a pas pu être enregistrée. Vérifiez votre connexion et réessayez.');
+      const msg = apiMessage(err);
+      setError(msg || 'La décision n’a pas pu être enregistrée. Vérifiez votre connexion et réessayez.');
       setLoading(false);
     }
   }

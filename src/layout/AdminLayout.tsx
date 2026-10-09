@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
+import { pageTitle } from './pageTitles';
 import Topbar from './Topbar';
 import Sidebar from './Sidebar';
 import PhoneRequiredModal, { usePhoneRequired } from '../components/PhoneRequiredModal';
@@ -15,6 +16,7 @@ export default function AdminLayout() {
   );
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  useEffect(() => { document.title = pageTitle(location.pathname); }, [location.pathname]);
 
   useEffect(() => {
     setMobileOpen(false);

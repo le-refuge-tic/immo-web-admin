@@ -12,6 +12,7 @@ import { getMessages } from '../../api/getMessages';
 import { postMessage } from '../../api/postMessage';
 import { useChatSocket } from '../../hooks/useChatSocket';
 import GestionCommercialModal from './GestionCommercialModal';
+import { apiMessage } from '../../utils/apiMessage';
 
 /* ─── Helpers ─────────────────────────────────────────────── */
 
@@ -127,7 +128,7 @@ function BonusCommercialModal({ commercial, onClose }: { commercial: any; onClos
       await postCommercialBonus.accorder(commercial.id, Number(montant), motif.trim());
       setSuccess(true);
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Erreur lors de l\'attribution du bonus.');
+      setError(apiMessage(err) ?? 'Erreur lors de l\'attribution du bonus.');
     } finally {
       setLoading(false);
     }
@@ -246,7 +247,7 @@ function AttribuerClientModal({
       setSuccess(userId);
       onSuccess();
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Erreur lors de l\'attribution.');
+      setError(apiMessage(err) ?? 'Erreur lors de l\'attribution.');
     } finally {
       setAssigning(null);
     }
@@ -900,7 +901,7 @@ export default function GestionCommercialPage() {
       setCommerciaux(c => c.filter((x: any) => x.id !== commercial.id));
       setConfirmDeleteId(null);
     } catch (err: any) {
-      setDeleteError(err?.response?.data?.message ?? 'Erreur lors de la suppression');
+      setDeleteError(apiMessage(err) ?? 'Erreur lors de la suppression');
     } finally {
       setDeletingId(null);
     }

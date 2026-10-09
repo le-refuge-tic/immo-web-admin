@@ -4168,3 +4168,11 @@ body.lp-page #root { overflow: auto; }
   .mod-kpi { min-width: 0; padding: 0.5rem 0.75rem; }
   .mod-kpi b { font-size: 1.05rem; }
 }
+
+/* ─── PAGE 404 ─────────────────────────────────────────────── */
+.not-found { max-width: 32rem; margin: 3rem auto; padding: 2rem; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0.75rem; }
+.not-found-code { font-size: 4rem; font-weight: 800; line-height: 1; letter-spacing: -0.04em; color: var(--c-blue); }
+.not-found-title { margin: 0; font-size: 1.25rem; color: var(--c-text); }
+.not-found-text { margin: 0; font-size: 0.875rem; color: var(--c-muted); line-height: 1.6; }
+.not-found-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; margin-top: 0.5rem; }
+.not-found-actions .btn-submit { text-decoration: none; display: inline-flex; align-items: center; }

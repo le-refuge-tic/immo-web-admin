@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { patchAuth } from '../api/patchAuth';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { apiMessage } from '../utils/apiMessage';
 
 type Props = {
   onSuccess: () => void;
@@ -133,7 +134,7 @@ export default function ChangePasswordForm({ onSuccess, submitLabel = 'Valider l
         showToast('Mot de passe mis à jour avec succès.');
         onSuccess();
       } catch (err: any) {
-        setError(err?.response?.data?.message ?? 'Impossible de changer le mot de passe.');
+        setError(apiMessage(err) ?? 'Impossible de changer le mot de passe.');
         setLoading(false);
       }
       return;
@@ -146,7 +147,7 @@ export default function ChangePasswordForm({ onSuccess, submitLabel = 'Valider l
       setStep('otp');
       startCountdown();
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Impossible d\'envoyer le code SMS.');
+      setError(apiMessage(err) ?? 'Impossible d\'envoyer le code SMS.');
     } finally {
       setLoading(false);
     }
@@ -164,7 +165,7 @@ export default function ChangePasswordForm({ onSuccess, submitLabel = 'Valider l
     try {
       await patchAuth.verifyPhoneOtp(sessionToken, otp, phone);
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Code incorrect ou expiré.');
+      setError(apiMessage(err) ?? 'Code incorrect ou expiré.');
       setLoading(false);
       return;
     }
@@ -173,7 +174,7 @@ export default function ChangePasswordForm({ onSuccess, submitLabel = 'Valider l
       showToast('Mot de passe mis à jour avec succès.');
       onSuccess();
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Impossible de changer le mot de passe.');
+      setError(apiMessage(err) ?? 'Impossible de changer le mot de passe.');
       setLoading(false);
     }
   };
@@ -188,7 +189,7 @@ export default function ChangePasswordForm({ onSuccess, submitLabel = 'Valider l
       setSessionToken(res.session_token);
       startCountdown();
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Erreur lors du renvoi.');
+      setError(apiMessage(err) ?? 'Erreur lors du renvoi.');
     } finally {
       setLoading(false);
     }

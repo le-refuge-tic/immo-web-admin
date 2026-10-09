@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getDemandes } from '../../api/getDemandes';
 import { blockInvalidNumberKey } from '../../utils/inputNumbers';
+import { apiMessage } from '../../utils/apiMessage';
 
 type Demande = {
   id: number;
@@ -92,7 +93,7 @@ export default function GestionLiaisonsPage() {
       setSelected(null);
       load();
     } catch (e: any) {
-      setError(e?.response?.data?.message ?? 'Erreur serveur');
+      setError(apiMessage(e) ?? 'Erreur serveur');
     } finally {
       setSubmitting(false);
     }

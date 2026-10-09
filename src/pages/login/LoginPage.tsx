@@ -5,6 +5,7 @@ import villaImg       from '../../assets/login/villa.jpg';
 import appartementImg from '../../assets/login/appartement.jpg';
 import terrainImg     from '../../assets/login/terrain.jpg';
 import logoUrl        from '../../assets/logo_complet.jpeg';
+import { apiMessage } from '../../utils/apiMessage';
 
 export default function LoginPage() {
   const { login, verifyOtp, isAuthenticated } = useAuth();
@@ -37,9 +38,9 @@ export default function LoginPage() {
       }
       // La redirection est gérée par <Navigate> quand isAuthenticated devient true
     } catch (err: any) {
-      const msg = err?.response?.data?.message;
+      const msg = apiMessage(err);
       const fallback = sessionToken ? 'Code invalide ou expiré.' : 'Email ou mot de passe incorrect.';
-      setError(Array.isArray(msg) ? msg[0] : (msg || fallback));
+      setError(msg || fallback);
     } finally {
       setLoading(false);
     }

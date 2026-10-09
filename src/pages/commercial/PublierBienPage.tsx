@@ -6,6 +6,7 @@ import { BENIN_LOCATION_DATA } from '../../data/beninLocations'
 import { blockInvalidNumberKey } from '../../utils/inputNumbers'
 import { getGeocoding } from '../../api/getGeocoding'
 import { getQuartiers } from '../../api/getQuartiers'
+import { apiMessage } from '../../utils/apiMessage';
 
 // ─── Quartiers — même structure que immo-web-user ─────────────────────────────
 type Quartier = { nom: string; arrondissement: string; ville: string }
@@ -560,7 +561,7 @@ export default function PublierBienPage() {
       setAdresseVerifiee(adresse)
     } catch (err: any) {
       setLatitude(null); setLongitude(null); setAdresseNormalisee('')
-      setGeocodeError(err?.response?.data?.message ?? 'Adresse introuvable, précisez-la et réessayez.')
+      setGeocodeError(apiMessage(err) ?? 'Adresse introuvable, précisez-la et réessayez.')
     } finally {
       setGeocoding(false)
     }
@@ -745,7 +746,7 @@ export default function PublierBienPage() {
       localStorage.removeItem(DRAFT_KEY)
       setCreated(true)
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'Erreur lors de la création')
+      setError(apiMessage(err) || 'Erreur lors de la création')
       setSubmitting(false)
     }
   }

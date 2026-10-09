@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { patchAuth } from '../api/patchAuth';
 import { useAuth } from '../context/AuthContext';
+import { apiMessage } from '../utils/apiMessage';
 
 const ROLES_CONCERNES = ['commercial', 'admin', 'super_admin'];
 
@@ -47,7 +48,7 @@ export default function PhoneRequiredModal() {
       setStep('otp');
       startCountdown();
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Impossible d\'envoyer le code SMS.');
+      setError(apiMessage(err) ?? 'Impossible d\'envoyer le code SMS.');
     } finally {
       setLoading(false);
     }
@@ -64,7 +65,7 @@ export default function PhoneRequiredModal() {
     try {
       await patchAuth.verifyPhoneOtp(sessionToken, otp, phone.trim());
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Code incorrect ou expiré.');
+      setError(apiMessage(err) ?? 'Code incorrect ou expiré.');
       setLoading(false);
       return;
     }
@@ -86,7 +87,7 @@ export default function PhoneRequiredModal() {
       setSessionToken(res.session_token);
       startCountdown();
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Erreur lors du renvoi.');
+      setError(apiMessage(err) ?? 'Erreur lors du renvoi.');
     } finally {
       setLoading(false);
     }

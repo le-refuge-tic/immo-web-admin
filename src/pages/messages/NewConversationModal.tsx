@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { getAdminUser } from '../../api/getAdminUser';
 import { postConversation } from '../../api/postConversation';
 import { SearchIcon, XIcon } from '../../components/Icons';
+import { apiMessage } from '../../utils/apiMessage';
 
 const COLORS = ['#2563EB', '#7C3AED', '#DB2777', '#D97706', '#16A34A', '#0891B2'];
 function avatarColor(id: number) { return COLORS[Math.abs(id) % COLORS.length]; }
@@ -39,7 +40,7 @@ export default function NewConversationModal({ onClose, onCreated, preselectedUs
     postConversation.create(preselectedUser.id)
       .then(conv => onCreated(conv))
       .catch((err: any) => {
-        setCreateError(err?.response?.data?.message ?? 'Impossible de créer la conversation.');
+        setCreateError(apiMessage(err) ?? 'Impossible de créer la conversation.');
         setCreating(null);
       });
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -73,7 +74,7 @@ export default function NewConversationModal({ onClose, onCreated, preselectedUs
       const conv = await postConversation.create(u.id);
       onCreated(conv);
     } catch (err: any) {
-      setCreateError(err?.response?.data?.message ?? 'Impossible de créer la conversation.');
+      setCreateError(apiMessage(err) ?? 'Impossible de créer la conversation.');
       setCreating(null);
     }
   };
