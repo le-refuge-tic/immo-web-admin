@@ -76,9 +76,9 @@ export default function FeedbacksPage() {
 
       <div className="immo-page">
         {loadError && (
-          <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8, padding: '10px 16px', fontSize: 13, color: '#DC2626', fontWeight: 500, marginBottom: 12 }}>
+          <div style={{ background: 'var(--t-red-bg)', border: '1px solid var(--t-red-bd)', borderRadius: 8, padding: '10px 16px', fontSize: 13, color: 'var(--s-red)', fontWeight: 500, marginBottom: 12 }}>
             Erreur lors du chargement des feedbacks.{' '}
-            <button onClick={load} style={{ background: 'none', border: 'none', color: '#DC2626', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>
+            <button onClick={load} style={{ background: 'none', border: 'none', color: 'var(--s-red)', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>
               Réessayer
             </button>
           </div>
@@ -124,7 +124,7 @@ export default function FeedbacksPage() {
                   {TYPE_LABELS[f.type]}
                 </span>
                 {f.probleme_meteo && (
-                  <span title="Signalement dégât météo" style={{ color: '#DC2626', fontSize: 14 }}>⚠️</span>
+                  <span title="Signalement dégât météo" style={{ color: 'var(--s-red)', fontSize: 14 }}>⚠️</span>
                 )}
               </div>
               <div><FeedbackStars note={f.note} /></div>
@@ -173,7 +173,7 @@ export default function FeedbacksPage() {
                     }}>
                       {TYPE_LABELS[f.type]}
                     </span>
-                    {f.probleme_meteo && <span style={{ color: '#DC2626' }}>⚠️</span>}
+                    {f.probleme_meteo && <span style={{ color: 'var(--s-red)' }}>⚠️</span>}
                   </div>
                   <FeedbackStars note={f.note} />
                 </div>

@@ -70,7 +70,7 @@ export default function PlaintesPage() {
             <button key={s} onClick={() => { setFilterStatut(s); load(s); }}
               style={{
                 padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                background: filterStatut === s ? 'var(--c-blue)' : 'var(--c-card)',
+                background: filterStatut === s ? 'var(--c-blue-solid)' : 'var(--c-card)',
                 color: filterStatut === s ? '#fff' : 'var(--c-muted)',
                 border: `1px solid ${filterStatut === s ? 'var(--c-blue)' : 'var(--c-border)'}`,
               }}
@@ -117,7 +117,7 @@ export default function PlaintesPage() {
                       style={{
                         padding: '14px 20px', borderBottom: idx < plaintes.length - 1 ? '1px solid var(--c-border)' : 'none',
                         cursor: 'pointer', transition: 'background 0.1s',
-                        background: isSelected ? '#EFF6FF' : 'transparent',
+                        background: isSelected ? 'var(--t-blue-bg)' : 'transparent',
                         borderLeft: isSelected ? '3px solid var(--c-blue)' : '3px solid transparent',
                       }}
                     >

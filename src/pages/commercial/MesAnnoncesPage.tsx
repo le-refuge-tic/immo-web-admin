@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getMesBiens } from '../../api/getMesBiens';
-import { markBiensAsSeen } from '../../layout/Sidebar';
+import { markBiensAsSeen } from '../../hooks/useSidebarBadges';
+import { useAuth } from '../../context/AuthContext';
 
 /* ─── Helpers ─────────────────────────────────────────────── */
 
@@ -126,6 +127,7 @@ const STATUS_CARD: Record<string, { label: string; bg: string; color: string; sh
 
 export default function MesAnnoncesPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [biens, setBiens]       = useState<any[]>([]);
   const [loading, setLoading]   = useState(true);
   const [showProprietaireModal, setShowProprietaireModal] = useState(false);
@@ -146,7 +148,7 @@ export default function MesAnnoncesPage() {
       const data = await getMesBiens.list();
       const list = data ?? [];
       setBiens(list);
-      markBiensAsSeen(list);
+      markBiensAsSeen(user?.id, list);
     } catch {
       setBiens([]);
     } finally {
@@ -279,7 +281,7 @@ export default function MesAnnoncesPage() {
                   <button key={opt.key} onClick={() => setFilterType(opt.key)} style={{
                     padding: '5px 13px', borderRadius: 20, fontSize: 12, fontWeight: active ? 700 : 500,
                     border: `1.5px solid ${active ? 'var(--c-blue)' : 'var(--c-border)'}`,
-                    background: active ? 'var(--c-blue)' : 'transparent',
+                    background: active ? 'var(--c-blue-solid)' : 'transparent',
                     color: active ? '#fff' : 'var(--c-muted)',
                     cursor: 'pointer', transition: 'all 0.15s',
                   }}>
@@ -298,7 +300,7 @@ export default function MesAnnoncesPage() {
                 <button key={opt.key} onClick={() => setFilterStatus(opt.key)} style={{
                   padding: '5px 13px', borderRadius: 20, fontSize: 12, fontWeight: active ? 700 : 500,
                   border: `1.5px solid ${active ? 'var(--c-blue)' : 'var(--c-border)'}`,
-                  background: active ? 'var(--c-blue)' : 'transparent',
+                  background: active ? 'var(--c-blue-solid)' : 'transparent',
                   color: active ? '#fff' : 'var(--c-muted)',
                   cursor: 'pointer', transition: 'all 0.15s',
                 }}>

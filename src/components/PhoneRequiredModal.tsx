@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { patchAuth } from '../api/patchAuth';
 import { useAuth } from '../context/AuthContext';
+import { apiMessage } from '../utils/apiMessage';
 
 const ROLES_CONCERNES = ['commercial', 'admin', 'super_admin'];
 
@@ -47,7 +48,7 @@ export default function PhoneRequiredModal() {
       setStep('otp');
       startCountdown();
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Impossible d\'envoyer le code SMS.');
+      setError(apiMessage(err) ?? 'Impossible d\'envoyer le code SMS.');
     } finally {
       setLoading(false);
     }
@@ -64,7 +65,7 @@ export default function PhoneRequiredModal() {
     try {
       await patchAuth.verifyPhoneOtp(sessionToken, otp, phone.trim());
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Code incorrect ou expiré.');
+      setError(apiMessage(err) ?? 'Code incorrect ou expiré.');
       setLoading(false);
       return;
     }
@@ -86,7 +87,7 @@ export default function PhoneRequiredModal() {
       setSessionToken(res.session_token);
       startCountdown();
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Erreur lors du renvoi.');
+      setError(apiMessage(err) ?? 'Erreur lors du renvoi.');
     } finally {
       setLoading(false);
     }
@@ -102,7 +103,7 @@ export default function PhoneRequiredModal() {
       overflowY: 'auto',
     }}>
       <div style={{
-        background: '#ffffff', border: '1px solid #E2E8F0',
+        background: 'var(--c-card)', border: '1px solid var(--c-border)',
         borderRadius: 16, padding: '36px 32px', width: '100%', maxWidth: 420,
         boxShadow: '0 24px 64px rgba(0,0,0,0.22)',
         margin: 'auto',
@@ -110,7 +111,7 @@ export default function PhoneRequiredModal() {
         {/* Icône */}
         <div style={{
           width: 52, height: 52, borderRadius: 14,
-          background: step === 'phone' ? '#EFF6FF' : '#F0FDF4',
+          background: step === 'phone' ? 'var(--t-blue-bg)' : 'var(--t-green-bg)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20,
           transition: 'background 0.2s',
         }}>
@@ -131,7 +132,7 @@ export default function PhoneRequiredModal() {
             <div key={s} style={{
               height: 3, flex: 1, borderRadius: 2,
               background: step === s || (s === 'phone' && step === 'otp')
-                ? 'var(--c-blue)' : 'var(--c-border)',
+                ? 'var(--c-blue-solid)' : 'var(--c-border)',
               transition: 'background 0.2s',
             }} />
           ))}
@@ -139,20 +140,20 @@ export default function PhoneRequiredModal() {
 
         {step === 'phone' ? (
           <>
-            <h2 style={{ fontSize: 18, fontWeight: 800, color: '#0F172A', marginBottom: 8 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 800, color: 'var(--c-text)', marginBottom: 8 }}>
               Renseignez votre numéro
             </h2>
-            <p style={{ fontSize: 13, color: '#374151', lineHeight: 1.6, marginBottom: 24 }}>
+            <p style={{ fontSize: 13, color: 'var(--c-text)', lineHeight: 1.6, marginBottom: 24 }}>
               Un code de vérification vous sera envoyé par SMS pour confirmer votre numéro professionnel.
             </p>
             <form onSubmit={handleSendOtp}>
               <div className="immo-form-field" style={{ marginBottom: 16 }}>
-                <label className="immo-form-label" style={{ color: '#0F172A' }}>Numéro de téléphone *</label>
+                <label className="immo-form-label" style={{ color: 'var(--c-text)' }}>Numéro de téléphone *</label>
                 <div style={{ display: 'flex', alignItems: 'stretch', gap: 0 }}>
                   <span style={{
                     display: 'flex', alignItems: 'center', padding: '0 12px',
-                    background: '#F1F5F9', border: '1px solid var(--c-border)', borderRight: 'none',
-                    borderRadius: '10px 0 0 10px', color: '#0F172A', fontSize: 14, fontWeight: 600,
+                    background: 'var(--c-surface-2)', border: '1px solid var(--c-border)', borderRight: 'none',
+                    borderRadius: '10px 0 0 10px', color: 'var(--c-text)', fontSize: 14, fontWeight: 600,
                   }}>
                     +229
                   </span>
@@ -167,7 +168,7 @@ export default function PhoneRequiredModal() {
                     autoFocus
                     disabled={loading}
                     required
-                    style={{ background: '#F8FAFC', color: '#0F172A', borderRadius: '0 10px 10px 0', flex: 1 }}
+                    style={{ background: 'var(--c-surface-2)', color: 'var(--c-text)', borderRadius: '0 10px 10px 0', flex: 1 }}
                   />
                 </div>
               </div>
@@ -179,11 +180,11 @@ export default function PhoneRequiredModal() {
           </>
         ) : (
           <>
-            <h2 style={{ fontSize: 18, fontWeight: 800, color: '#0F172A', marginBottom: 8 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 800, color: 'var(--c-text)', marginBottom: 8 }}>
               Vérifiez votre numéro
             </h2>
-            <p style={{ fontSize: 13, color: '#374151', lineHeight: 1.6, marginBottom: 24 }}>
-              Entrez le code à 6 chiffres envoyé au <strong style={{ color: '#0F172A' }}>+{phone}</strong>.
+            <p style={{ fontSize: 13, color: 'var(--c-text)', lineHeight: 1.6, marginBottom: 24 }}>
+              Entrez le code à 6 chiffres envoyé au <strong style={{ color: 'var(--c-text)' }}>+{phone}</strong>.
               <button
                 type="button"
                 onClick={() => { setStep('phone'); setError(''); setOtp(''); }}
@@ -194,7 +195,7 @@ export default function PhoneRequiredModal() {
             </p>
             <form onSubmit={handleVerify}>
               <div className="immo-form-field" style={{ marginBottom: 16 }}>
-                <label className="immo-form-label" style={{ color: '#0F172A' }}>Code de vérification *</label>
+                <label className="immo-form-label" style={{ color: 'var(--c-text)' }}>Code de vérification *</label>
                 <input
                   className="immo-form-input"
                   type="text"
@@ -206,7 +207,7 @@ export default function PhoneRequiredModal() {
                   autoFocus
                   disabled={loading}
                   required
-                  style={{ letterSpacing: '0.3em', fontSize: 20, textAlign: 'center', background: '#F8FAFC', color: '#0F172A' }}
+                  style={{ letterSpacing: '0.3em', fontSize: 20, textAlign: 'center', background: 'var(--c-surface-2)', color: 'var(--c-text)' }}
                 />
               </div>
               {error && <ErrorBox message={error} />}
@@ -241,8 +242,8 @@ function ErrorBox({ message }: { message: string }) {
   return (
     <div style={{
       marginBottom: 14, padding: '8px 12px',
-      background: '#FEF2F2', border: '1px solid #FECACA',
-      borderRadius: 8, fontSize: 12, color: '#DC2626',
+      background: 'var(--t-red-bg)', border: '1px solid var(--t-red-bd)',
+      borderRadius: 8, fontSize: 12, color: 'var(--s-red)',
     }}>
       {message}
     </div>

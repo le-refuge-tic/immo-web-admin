@@ -3,6 +3,7 @@ import { SearchIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon } from '../../
 import { getAdminUser } from '../../api/getAdminUser';
 import { patchAdminUser } from '../../api/patchAdminUser';
 import { deleteAdminUser } from '../../api/deleteAdminUser';
+import { apiMessage } from '../../utils/apiMessage';
 
 const TABS = [
   { key: '',             label: 'Tous'          },
@@ -85,7 +86,7 @@ export default function UtilisateursPage() {
       setConfirmId(null);
       await load();
     } catch (err: any) {
-      alert(err?.response?.data?.message ?? 'Erreur lors de la suppression.');
+      alert(apiMessage(err) ?? 'Erreur lors de la suppression.');
     } finally {
       setDeletingId(null);
     }
@@ -122,9 +123,9 @@ export default function UtilisateursPage() {
       <div className="immo-page">
 
         {loadError && (
-          <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8, padding: '10px 16px', fontSize: 13, color: '#DC2626', fontWeight: 500 }}>
+          <div style={{ background: 'var(--t-red-bg)', border: '1px solid var(--t-red-bd)', borderRadius: 8, padding: '10px 16px', fontSize: 13, color: 'var(--s-red)', fontWeight: 500 }}>
             Erreur lors du chargement des utilisateurs.{' '}
-            <button onClick={load} style={{ background: 'none', border: 'none', color: '#DC2626', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>
+            <button onClick={load} style={{ background: 'none', border: 'none', color: 'var(--s-red)', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>
               Réessayer
             </button>
           </div>
@@ -178,7 +179,7 @@ export default function UtilisateursPage() {
                       </div>
                     </td>
                     <td>
-                      <span className="ut-role-badge" style={{ color: rc?.color ?? '#64748B', background: rc?.bg ?? '#F1F5F9' }}>
+                      <span className="ut-role-badge" style={{ color: rc?.color ?? 'var(--c-muted)', background: rc?.bg ?? 'var(--c-surface-2)' }}>
                         {rc?.label ?? u.role}
                       </span>
                     </td>
@@ -238,7 +239,7 @@ export default function UtilisateursPage() {
                     {u.telephone && <div className="ut-card-phone">{u.telephone}</div>}
                   </div>
                   <div className="ut-card-right">
-                    <span className="ut-role-badge" style={{ color: rc?.color ?? '#64748B', background: rc?.bg ?? '#F1F5F9' }}>
+                    <span className="ut-role-badge" style={{ color: rc?.color ?? 'var(--c-muted)', background: rc?.bg ?? 'var(--c-surface-2)' }}>
                       {rc?.label ?? u.role}
                     </span>
                   </div>

@@ -92,13 +92,13 @@ export default function DashboardPage() {
       <div className="immo-page">
         {statsError && (
           <div style={{
-            background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8,
-            padding: '10px 16px', fontSize: 13, color: '#DC2626', fontWeight: 500,
+            background: 'var(--t-red-bg)', border: '1px solid var(--t-red-bd)', borderRadius: 8,
+            padding: '10px 16px', fontSize: 13, color: 'var(--s-red)', fontWeight: 500,
           }}>
             Impossible de charger les statistiques. Vérifiez votre connexion et&nbsp;
             <button
               onClick={() => { setStatsError(false); getAdminStats.get().then(setStats).catch(() => setStatsError(true)); }}
-              style={{ background: 'none', border: 'none', color: '#DC2626', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
+              style={{ background: 'none', border: 'none', color: 'var(--s-red)', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
             >
               réessayer
             </button>.
@@ -201,7 +201,7 @@ export default function DashboardPage() {
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             padding: '18px 24px', borderRadius: 14, cursor: 'pointer',
-            background: totalUnread > 0 ? '#FEF2F2' : 'var(--c-card, #fff)',
+            background: totalUnread > 0 ? 'var(--t-red-bg)' : 'var(--c-card, var(--c-card))',
             border: `1.5px solid ${totalUnread > 0 ? '#FECACA' : 'var(--c-border)'}`,
             transition: 'all 0.18s',
           }}
@@ -209,9 +209,9 @@ export default function DashboardPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
             <div style={{
               width: 44, height: 44, borderRadius: 12, flexShrink: 0,
-              background: totalUnread > 0 ? '#FEE2E2' : '#EFF6FF',
+              background: totalUnread > 0 ? 'var(--t-red-bg)' : 'var(--t-blue-bg)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: totalUnread > 0 ? '#DC2626' : '#2563EB',
+              color: totalUnread > 0 ? 'var(--s-red)' : 'var(--s-blue)',
             }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -221,7 +221,7 @@ export default function DashboardPage() {
               </svg>
             </div>
             <div>
-              <div style={{ fontWeight: 800, fontSize: 15, color: totalUnread > 0 ? '#DC2626' : 'var(--c-text)' }}>
+              <div style={{ fontWeight: 800, fontSize: 15, color: totalUnread > 0 ? 'var(--s-red)' : 'var(--c-text)' }}>
                 Suivi des échanges
               </div>
               <div style={{ fontSize: 12, color: 'var(--c-muted)', marginTop: 2 }}>

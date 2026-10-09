@@ -17,7 +17,7 @@ export default function ChangePasswordModal({ onClose }: { onClose: () => void }
       padding: 16,
     }} onClick={onClose}>
       <div style={{
-        background: '#ffffff', border: '1px solid #E2E8F0',
+        background: 'var(--c-card)', border: '1px solid var(--c-border)',
         borderRadius: 16, padding: '36px 32px', width: '100%', maxWidth: 420,
         boxShadow: '0 24px 64px rgba(0,0,0,0.22)', position: 'relative',
       }} onClick={e => e.stopPropagation()}>
@@ -27,7 +27,7 @@ export default function ChangePasswordModal({ onClose }: { onClose: () => void }
           aria-label="Fermer"
           style={{
             position: 'absolute', top: 16, right: 16, background: 'none', border: 'none',
-            cursor: 'pointer', color: '#94A3B8', padding: 4, lineHeight: 0,
+            cursor: 'pointer', color: 'var(--c-muted)', padding: 4, lineHeight: 0,
           }}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -37,7 +37,7 @@ export default function ChangePasswordModal({ onClose }: { onClose: () => void }
 
         <div style={{
           width: 52, height: 52, borderRadius: 14,
-          background: '#EFF6FF',
+          background: 'var(--t-blue-bg)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20,
         }}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -46,10 +46,10 @@ export default function ChangePasswordModal({ onClose }: { onClose: () => void }
           </svg>
         </div>
 
-        <h2 style={{ fontSize: 18, fontWeight: 800, color: '#0F172A', marginBottom: 8 }}>
+        <h2 style={{ fontSize: 18, fontWeight: 800, color: 'var(--c-text)', marginBottom: 8 }}>
           Changer le mot de passe
         </h2>
-        <p style={{ fontSize: 13, color: '#374151', lineHeight: 1.6, marginBottom: 24 }}>
+        <p style={{ fontSize: 13, color: 'var(--c-text)', lineHeight: 1.6, marginBottom: 24 }}>
           Entrez votre mot de passe actuel puis choisissez-en un nouveau.
         </p>
 

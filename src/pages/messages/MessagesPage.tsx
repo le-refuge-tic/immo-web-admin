@@ -7,6 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useChatSocket } from '../../hooks/useChatSocket';
 import NewConversationModal from './NewConversationModal';
 import ContrePropositionModal from './ContrePropositionModal';
+import { apiMessage } from '../../utils/apiMessage';
 
 /* ─── Helpers ─────────────────────────────────────────────────── */
 
@@ -73,7 +74,7 @@ function UserPopover({ user, onClose }: { user: any; onClose: () => void }) {
   return (
     <div ref={ref} style={{
       position: 'absolute', top: '100%', left: 0, zIndex: 400,
-      background: '#fff', border: '1px solid var(--c-border)', borderRadius: 12,
+      background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12,
       boxShadow: '0 8px 32px rgba(0,0,0,0.14)', padding: '14px 16px',
       minWidth: 220, marginTop: 8,
     }}>
@@ -84,7 +85,7 @@ function UserPopover({ user, onClose }: { user: any; onClose: () => void }) {
         <div>
           <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--c-text)' }}>{displayName(user)}</div>
           {role && (
-            <span style={{ fontSize: 10, fontWeight: 700, background: '#EFF6FF', color: '#1D4ED8', borderRadius: 20, padding: '1px 7px', display: 'inline-block', marginTop: 2 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, background: 'var(--t-blue-bg)', color: 'var(--s-blue)', borderRadius: 20, padding: '1px 7px', display: 'inline-block', marginTop: 2 }}>
               {ROLE_LABELS[role] ?? role}
             </span>
           )}
@@ -210,7 +211,7 @@ export default function MessagesPage() {
       }
       setCpModalFor(null);
     } catch (err: any) {
-      showToast(err?.response?.data?.message ?? 'Erreur lors de la réponse au créneau.');
+      showToast(apiMessage(err) ?? 'Erreur lors de la réponse au créneau.');
     } finally {
       setSlotActing(null);
     }
@@ -270,13 +271,13 @@ export default function MessagesPage() {
       )}
 
       {/* ═══ Panel gauche — liste ═══ */}
-      <div className="msg-conv-panel" style={{ width: 320, flexShrink: 0, borderRight: '1px solid var(--c-border)', display: 'flex', flexDirection: 'column', background: '#fff' }}>
+      <div className="msg-conv-panel" style={{ width: 320, flexShrink: 0, borderRight: '1px solid var(--c-border)', display: 'flex', flexDirection: 'column', background: 'var(--c-card)' }}>
 
         {/* Header */}
         <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--c-border)', display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontWeight: 800, fontSize: 15, color: 'var(--c-text)', flex: 1 }}>Messages</span>
           {convs.length > 0 && (
-            <span style={{ fontSize: 10, fontWeight: 800, background: '#F1F5F9', color: 'var(--c-muted)', borderRadius: 20, padding: '2px 7px' }}>
+            <span style={{ fontSize: 10, fontWeight: 800, background: 'var(--c-surface-2)', color: 'var(--c-muted)', borderRadius: 20, padding: '2px 7px' }}>
               {convs.length}
             </span>
           )}
@@ -314,7 +315,7 @@ export default function MessagesPage() {
               <div key={c.id} onClick={() => handleSelectConv(c.id)}
                 style={{
                   padding: '12px 14px', borderBottom: '1px solid var(--c-border)', cursor: 'pointer',
-                  background: isActive ? '#EFF6FF' : 'transparent',
+                  background: isActive ? 'var(--t-blue-bg)' : 'transparent',
                   borderLeft: isActive ? '3px solid var(--c-blue)' : '3px solid transparent',
                   transition: 'background 0.1s',
                 }}
@@ -335,7 +336,7 @@ export default function MessagesPage() {
                     </div>
                     <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 2 }}>
                       {role && (
-                        <span style={{ fontSize: 9, fontWeight: 700, background: '#F1F5F9', color: '#64748B', borderRadius: 3, padding: '1px 5px', textTransform: 'uppercase' as const, flexShrink: 0 }}>
+                        <span style={{ fontSize: 9, fontWeight: 700, background: 'var(--c-surface-2)', color: 'var(--c-muted)', borderRadius: 3, padding: '1px 5px', textTransform: 'uppercase' as const, flexShrink: 0 }}>
                           {ROLE_LABELS[role] ?? role}
                         </span>
                       )}
@@ -358,7 +359,7 @@ export default function MessagesPage() {
             onClick={() => setShowNewModal(true)}
             style={{
               width: '100%', padding: '8px 0', borderRadius: 8, border: '1.5px dashed var(--c-border)',
-              background: hoveredNewMsgBtn ? '#EFF6FF' : 'transparent', color: 'var(--c-blue)', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              background: hoveredNewMsgBtn ? 'var(--t-blue-bg)' : 'transparent', color: 'var(--c-blue)', fontSize: 13, fontWeight: 600, cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
               transition: 'all 0.15s',
             }}
@@ -386,7 +387,7 @@ export default function MessagesPage() {
         <div className="msg-thread" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
           {/* Header thread */}
-          <div style={{ padding: '12px 18px', borderBottom: '1px solid var(--c-border)', background: '#fff', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+          <div style={{ padding: '12px 18px', borderBottom: '1px solid var(--c-border)', background: 'var(--c-card)', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
             {/* Bouton retour mobile */}
             <button
               className="msg-back-btn"
@@ -460,7 +461,7 @@ export default function MessagesPage() {
                     ) : isSlot ? (
                       <div style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start', marginBottom: 2 }}>
                         <div style={{
-                          maxWidth: '78%', background: '#fff', border: `1.5px solid ${SLOT_STATUS[slotStatus]?.color ?? '#D97706'}55`,
+                          maxWidth: '78%', background: 'var(--c-card)', border: `1.5px solid ${SLOT_STATUS[slotStatus]?.color ?? '#D97706'}55`,
                           borderRadius: isMine ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
                           padding: '12px 14px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
                         }}>
@@ -478,7 +479,7 @@ export default function MessagesPage() {
                           </div>
                           <span style={{
                             fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 999,
-                            color: SLOT_STATUS[slotStatus]?.color ?? '#D97706',
+                            color: SLOT_STATUS[slotStatus]?.color ?? 'var(--s-yellow)',
                             background: `${SLOT_STATUS[slotStatus]?.color ?? '#D97706'}18`,
                           }}>
                             {SLOT_STATUS[slotStatus]?.label ?? slotStatus}
@@ -488,21 +489,21 @@ export default function MessagesPage() {
                               <button
                                 onClick={() => handleRepondreCreneau(m.id, 'accepted')}
                                 disabled={isSlotActing}
-                                style={{ flex: 1, padding: '6px 0', borderRadius: 8, border: 'none', background: '#DCFCE7', color: '#166534', fontSize: 12, fontWeight: 700, cursor: isSlotActing ? 'not-allowed' : 'pointer' }}
+                                style={{ flex: 1, padding: '6px 0', borderRadius: 8, border: 'none', background: 'var(--t-green-bg)', color: '#166534', fontSize: 12, fontWeight: 700, cursor: isSlotActing ? 'not-allowed' : 'pointer' }}
                               >
                                 Confirmer
                               </button>
                               <button
                                 onClick={() => setCpModalFor(m.id)}
                                 disabled={isSlotActing}
-                                style={{ flex: 1, padding: '6px 0', borderRadius: 8, border: 'none', background: '#EDE9FE', color: '#5B21B6', fontSize: 12, fontWeight: 700, cursor: isSlotActing ? 'not-allowed' : 'pointer' }}
+                                style={{ flex: 1, padding: '6px 0', borderRadius: 8, border: 'none', background: 'var(--t-violet-bg)', color: '#5B21B6', fontSize: 12, fontWeight: 700, cursor: isSlotActing ? 'not-allowed' : 'pointer' }}
                               >
                                 Contre-proposer
                               </button>
                               <button
                                 onClick={() => handleRepondreCreneau(m.id, 'declined')}
                                 disabled={isSlotActing}
-                                style={{ flex: 1, padding: '6px 0', borderRadius: 8, border: 'none', background: '#FEE2E2', color: '#991B1B', fontSize: 12, fontWeight: 700, cursor: isSlotActing ? 'not-allowed' : 'pointer' }}
+                                style={{ flex: 1, padding: '6px 0', borderRadius: 8, border: 'none', background: 'var(--t-red-bg)', color: '#991B1B', fontSize: 12, fontWeight: 700, cursor: isSlotActing ? 'not-allowed' : 'pointer' }}
                               >
                                 Refuser
                               </button>
@@ -517,7 +518,7 @@ export default function MessagesPage() {
                       <div style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start', marginBottom: 2 }}>
                         <div style={{ maxWidth: '70%' }}>
                           <div style={{
-                            background: isMine ? 'var(--c-blue)' : '#fff',
+                            background: isMine ? 'var(--c-blue-solid)' : 'var(--c-card)',
                             color: isMine ? '#fff' : 'var(--c-text)',
                             border: isMine ? 'none' : '1px solid var(--c-border)',
                             borderRadius: isMine ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
@@ -540,7 +541,7 @@ export default function MessagesPage() {
           </div>
 
           {/* Input */}
-          <div style={{ padding: '10px 14px', borderTop: '1px solid var(--c-border)', background: '#fff', display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
+          <div style={{ padding: '10px 14px', borderTop: '1px solid var(--c-border)', background: 'var(--c-card)', display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
             <input
               className="immo-form-input"
               style={{ flex: 1 }}

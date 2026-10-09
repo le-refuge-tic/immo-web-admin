@@ -3,6 +3,7 @@ import { getAdminUser } from '../../api/getAdminUser';
 import { patchAdminUser } from '../../api/patchAdminUser';
 import { deleteAdminUser } from '../../api/deleteAdminUser';
 import { SearchIcon, TrashIcon } from '../../components/Icons';
+import { apiMessage } from '../../utils/apiMessage';
 
 const AVATAR_COLORS = ['#2563EB', '#7C3AED', '#DB2777', '#D97706', '#16A34A'];
 
@@ -79,7 +80,7 @@ export default function UsersMgmtPage({ title, subtitle, roleFilter, emptyLabel 
       const updated = await patchAdminUser.update(u.id, { actif: !u.actif });
       setUsers(prev => prev.map((x: any) => x.id === u.id ? updated : x));
     } catch (err: any) {
-      setToggleError(err?.response?.data?.message ?? 'Erreur');
+      setToggleError(apiMessage(err) ?? 'Erreur');
     } finally {
       setTogglingId(null);
     }
@@ -94,7 +95,7 @@ export default function UsersMgmtPage({ title, subtitle, roleFilter, emptyLabel 
       setTotal(t => t - 1);
       setConfirmDeleteId(null);
     } catch (err: any) {
-      setDeleteError(err?.response?.data?.message ?? 'Erreur');
+      setDeleteError(apiMessage(err) ?? 'Erreur');
     } finally {
       setDeletingId(null);
     }
@@ -112,7 +113,7 @@ export default function UsersMgmtPage({ title, subtitle, roleFilter, emptyLabel 
       <div className="immo-page">
         <div className="mgmt-stats">
           <div className="mgmt-stat-card">
-            <div className="mgmt-stat-icon" style={{ background: '#EFF6FF' }}>
+            <div className="mgmt-stat-icon" style={{ background: 'var(--t-blue-bg)' }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
                 <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
@@ -124,7 +125,7 @@ export default function UsersMgmtPage({ title, subtitle, roleFilter, emptyLabel 
             </div>
           </div>
           <div className="mgmt-stat-card">
-            <div className="mgmt-stat-icon" style={{ background: '#F0FDF4' }}>
+            <div className="mgmt-stat-icon" style={{ background: 'var(--t-green-bg)' }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="20 6 9 17 4 12"/>
               </svg>
@@ -135,7 +136,7 @@ export default function UsersMgmtPage({ title, subtitle, roleFilter, emptyLabel 
             </div>
           </div>
           <div className="mgmt-stat-card">
-            <div className="mgmt-stat-icon" style={{ background: '#FEF2F2' }}>
+            <div className="mgmt-stat-icon" style={{ background: 'var(--t-red-bg)' }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
               </svg>
@@ -168,9 +169,9 @@ export default function UsersMgmtPage({ title, subtitle, roleFilter, emptyLabel 
         </div>
 
         {toggleError && (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 8, background: '#FEF2F2', border: '1px solid #FECACA', marginBottom: 12, fontSize: 13, color: '#DC2626' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 8, background: 'var(--t-red-bg)', border: '1px solid var(--t-red-bd)', marginBottom: 12, fontSize: 13, color: 'var(--s-red)' }}>
             {toggleError}
-            <button onClick={() => setToggleError('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#DC2626', fontSize: 16, lineHeight: 1, padding: '0 4px' }}>✕</button>
+            <button onClick={() => setToggleError('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--s-red)', fontSize: 16, lineHeight: 1, padding: '0 4px' }}>✕</button>
           </div>
         )}
 
@@ -230,7 +231,7 @@ export default function UsersMgmtPage({ title, subtitle, roleFilter, emptyLabel 
                   <div className="mgmt-actions">
                     {confirmDeleteId === u.id ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'flex-end' }}>
-                        {deleteError && <span style={{ fontSize: 10, color: '#DC2626', maxWidth: 120, textAlign: 'right' }}>{deleteError}</span>}
+                        {deleteError && <span style={{ fontSize: 10, color: 'var(--s-red)', maxWidth: 120, textAlign: 'right' }}>{deleteError}</span>}
                         <div style={{ display: 'flex', gap: 4 }}>
                           <button className="btn-icon-sm danger" onClick={() => handleDelete(u)} disabled={deletingId === u.id} style={{ padding: '2px 8px', fontSize: 11, fontWeight: 600, borderRadius: 5 }}>
                             {deletingId === u.id ? '…' : 'Supprimer'}
@@ -267,7 +268,7 @@ export default function UsersMgmtPage({ title, subtitle, roleFilter, emptyLabel 
                   style={{
                     width: 32, height: 32, borderRadius: 8, border: '1.5px solid',
                     borderColor: p === page ? 'var(--c-blue)' : 'var(--c-border)',
-                    background: p === page ? 'var(--c-blue)' : '#fff',
+                    background: p === page ? 'var(--c-blue-solid)' : 'var(--c-card)',
                     color: p === page ? '#fff' : 'var(--c-text)',
                     fontWeight: p === page ? 700 : 500,
                     fontSize: 12, cursor: 'pointer',

@@ -90,7 +90,7 @@ export default function PortefeuilleCard({ loading, portefeuille }: { loading: b
           <div style={{ height: 8, borderRadius: 999, background: 'rgba(255,255,255,0.25)', overflow: 'hidden' }}>
             {!loading && (
               <div style={{
-                height: '100%', borderRadius: 999, background: '#fff',
+                height: '100%', borderRadius: 999, background: 'var(--c-card)',
                 width: `${Math.min(portefeuille!.nb_biens_valides / 20, 1) * 100}%`,
                 transition: 'width 0.3s ease',
               }} />

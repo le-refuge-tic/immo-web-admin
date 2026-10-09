@@ -114,7 +114,7 @@ function ClientPopover({ user, onClose }: { user: any; onClose: () => void }) {
   return (
     <div ref={ref} style={{
       position: 'absolute', top: '100%', left: 0, zIndex: 300,
-      background: '#fff', border: '1px solid var(--c-border)', borderRadius: 12,
+      background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12,
       boxShadow: '0 8px 32px rgba(0,0,0,0.14)', padding: '14px 16px',
       minWidth: 220, marginTop: 6,
     }}>
@@ -141,13 +141,13 @@ function ConfirmDeleteModal({ onConfirm, onCancel }: { onConfirm: () => void; on
       onClick={onCancel}
     >
       <div style={{
-        background: '#fff', borderRadius: 16, padding: '24px 28px', maxWidth: 360, width: '90%',
+        background: 'var(--c-card)', borderRadius: 16, padding: '24px 28px', maxWidth: 360, width: '90%',
         boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
       }}
         onClick={e => e.stopPropagation()}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-          <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#FEF2F2', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--t-red-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
               <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
@@ -159,7 +159,7 @@ function ConfirmDeleteModal({ onConfirm, onCancel }: { onConfirm: () => void; on
           </div>
         </div>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-          <button onClick={onCancel} style={{ padding: '8px 18px', borderRadius: 8, border: '1px solid var(--c-border)', background: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: 'var(--c-text)' }}>
+          <button onClick={onCancel} style={{ padding: '8px 18px', borderRadius: 8, border: '1px solid var(--c-border)', background: 'var(--c-card)', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: 'var(--c-text)' }}>
             Annuler
           </button>
           <button onClick={onConfirm} style={{ padding: '8px 18px', borderRadius: 8, border: 'none', background: '#DC2626', cursor: 'pointer', fontSize: 13, fontWeight: 700, color: '#fff' }}>
@@ -445,7 +445,7 @@ export default function SupervisionPage() {
           onClick={() => setShowPerformance(true)}
           style={{
             display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8,
-            border: '1px solid var(--c-border)', background: '#fff', color: 'var(--c-text)',
+            border: '1px solid var(--c-border)', background: 'var(--c-card)', color: 'var(--c-text)',
             fontSize: 12, fontWeight: 600, cursor: 'pointer',
           }}
         >
@@ -455,9 +455,9 @@ export default function SupervisionPage() {
           Performance hebdomadaire
         </button>
         {totalUnread > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#FEE2E2', borderRadius: 20, padding: '6px 14px', border: '1px solid #FECACA' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--t-red-bg)', borderRadius: 20, padding: '6px 14px', border: '1px solid var(--t-red-bd)' }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#DC2626', animation: 'sup-pulse 1.5s ease-in-out infinite' }} />
-            <span style={{ fontSize: 13, fontWeight: 800, color: '#DC2626' }}>
+            <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--s-red)' }}>
               {totalUnread} non lu{totalUnread > 1 ? 's' : ''}
             </span>
           </div>
@@ -470,7 +470,7 @@ export default function SupervisionPage() {
         {/* ═══ Panel gauche — liste ═══ */}
         <div
           className={`sup-panel-list${mobilePanel !== 'list' ? ' sup-panel-hidden' : ''}`}
-          style={{ width: 300, flexShrink: 0, borderRight: '1px solid var(--c-border)', display: 'flex', flexDirection: 'column', background: '#fff' }}
+          style={{ width: 300, flexShrink: 0, borderRight: '1px solid var(--c-border)', display: 'flex', flexDirection: 'column', background: 'var(--c-card)' }}
         >
           {/* Tabs */}
           <div style={{ display: 'flex', borderBottom: '1px solid var(--c-border)' }}>
@@ -492,7 +492,7 @@ export default function SupervisionPage() {
                 {t.count > 0 && (
                   <span style={{
                     fontSize: 9, fontWeight: 800, padding: '1px 5px', borderRadius: 10,
-                    background: t.unread > 0 ? '#DC2626' : '#F1F5F9',
+                    background: t.unread > 0 ? '#DC2626' : 'var(--c-surface-2)',
                     color: t.unread > 0 ? '#fff' : 'var(--c-muted)',
                   }}>{t.count}</span>
                 )}
@@ -532,7 +532,7 @@ export default function SupervisionPage() {
                     onClick={() => { setSelectedPerson({ type: 'commercial', data: c }); setMobilePanel('person'); }}
                     style={{
                       padding: '11px 14px', borderBottom: '1px solid var(--c-border)', cursor: 'pointer',
-                      background: isActive ? '#EFF6FF' : 'transparent',
+                      background: isActive ? 'var(--t-blue-bg)' : 'transparent',
                       borderLeft: isActive ? '3px solid var(--c-blue)' : '3px solid transparent',
                       transition: 'background 0.1s',
                     }}
@@ -556,8 +556,8 @@ export default function SupervisionPage() {
                           {c.email ?? '—'}
                         </div>
                         <div style={{ display: 'flex', gap: 6, marginTop: 3 }}>
-                          {c.nb_clients > 0 && <span style={{ fontSize: 9, background: '#EFF6FF', color: '#2563EB', borderRadius: 4, padding: '1px 5px', fontWeight: 700 }}>{c.nb_clients} clients</span>}
-                          {c.nb_biens   > 0 && <span style={{ fontSize: 9, background: '#FFF7ED', color: '#D97706', borderRadius: 4, padding: '1px 5px', fontWeight: 700 }}>{c.nb_biens} biens</span>}
+                          {c.nb_clients > 0 && <span style={{ fontSize: 9, background: 'var(--t-blue-bg)', color: 'var(--s-blue)', borderRadius: 4, padding: '1px 5px', fontWeight: 700 }}>{c.nb_clients} clients</span>}
+                          {c.nb_biens   > 0 && <span style={{ fontSize: 9, background: 'var(--t-orange-bg)', color: 'var(--s-yellow)', borderRadius: 4, padding: '1px 5px', fontWeight: 700 }}>{c.nb_biens} biens</span>}
                         </div>
                       </div>
                       <IcoChevronRight />
@@ -577,7 +577,7 @@ export default function SupervisionPage() {
                     onClick={() => { setSelectedPerson({ type: 'proprietaire', data: p }); setMobilePanel('person'); }}
                     style={{
                       padding: '11px 14px', borderBottom: '1px solid var(--c-border)', cursor: 'pointer',
-                      background: isActive ? '#F5F3FF' : 'transparent',
+                      background: isActive ? 'var(--t-violet-bg)' : 'transparent',
                       borderLeft: isActive ? '3px solid #7C3AED' : '3px solid transparent',
                       transition: 'background 0.1s',
                     }}
@@ -625,7 +625,7 @@ export default function SupervisionPage() {
             /* ── Vue thread ── */
             <>
               {/* Header thread */}
-              <div style={{ padding: '10px 16px', borderBottom: '1px solid var(--c-border)', background: '#fff', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+              <div style={{ padding: '10px 16px', borderBottom: '1px solid var(--c-border)', background: 'var(--c-card)', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
                 <button
                   onClick={() => { setOpenConv(null); if (openConv) clearClaim(openConv.id); setMobilePanel('person'); }}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-blue)', padding: 4, display: 'flex', alignItems: 'center' }}
@@ -660,11 +660,11 @@ export default function SupervisionPage() {
                 })()}
                 <div style={{ flexShrink: 0 }}>
                   {isProprioView ? (
-                    <span style={{ fontSize: 11, color: '#7C3AED', fontWeight: 600, background: '#F5F3FF', borderRadius: 6, padding: '3px 8px', border: '1px solid #DDD6FE' }}>
+                    <span style={{ fontSize: 11, color: 'var(--s-violet)', fontWeight: 600, background: 'var(--t-violet-bg)', borderRadius: 6, padding: '3px 8px', border: '1px solid var(--t-violet-bd)' }}>
                       Lecture seule
                     </span>
                   ) : (
-                    <span style={{ fontSize: 11, color: '#D97706', fontWeight: 600, background: '#FEF3C7', borderRadius: 6, padding: '3px 8px', border: '1px solid #FDE68A' }}>
+                    <span style={{ fontSize: 11, color: 'var(--s-yellow)', fontWeight: 600, background: 'var(--t-yellow-bg)', borderRadius: 6, padding: '3px 8px', border: '1px solid var(--t-yellow-bd)' }}>
                       En tant que {selectedPerson?.data?.prenom ?? 'commercial'}
                     </span>
                   )}
@@ -710,7 +710,7 @@ export default function SupervisionPage() {
                               <button
                                 onClick={() => setConfirmDeleteId(msg.id)}
                                 disabled={deletingMsg === msg.id}
-                                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#DC2626', opacity: 0.7, flexShrink: 0 }}
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--s-red)', opacity: 0.7, flexShrink: 0 }}
                                 title="Supprimer ce message"
                               >
                                 <IcoTrash />
@@ -721,7 +721,7 @@ export default function SupervisionPage() {
                                 {senderName}
                               </div>
                               <div style={{
-                                background: isSuppressed ? 'var(--c-bg)' : (isStaff ? 'var(--c-blue)' : '#fff'),
+                                background: isSuppressed ? 'var(--c-bg)' : (isStaff ? 'var(--c-blue-solid)' : '#fff'),
                                 color: isSuppressed ? 'var(--c-muted)' : (isStaff ? '#fff' : 'var(--c-text)'),
                                 border: isSuppressed ? '1px dashed var(--c-border)' : (isStaff ? 'none' : '1px solid var(--c-border)'),
                                 borderRadius: isStaff ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
@@ -741,7 +741,7 @@ export default function SupervisionPage() {
                               <button
                                 onClick={() => setConfirmDeleteId(msg.id)}
                                 disabled={deletingMsg === msg.id}
-                                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#DC2626', opacity: 0.7, flexShrink: 0 }}
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--s-red)', opacity: 0.7, flexShrink: 0 }}
                                 title="Supprimer ce message"
                               >
                                 <IcoTrash />
@@ -758,16 +758,16 @@ export default function SupervisionPage() {
 
               {/* Zone de saisie */}
               {isProprioView ? (
-                <div style={{ padding: '10px 16px', borderTop: '1px solid var(--c-border)', background: '#F5F3FF', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ padding: '10px 16px', borderTop: '1px solid var(--c-border)', background: 'var(--t-violet-bg)', display: 'flex', alignItems: 'center', gap: 8 }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                   </svg>
-                  <span style={{ fontSize: 12, color: '#7C3AED', fontWeight: 600 }}>
+                  <span style={{ fontSize: 12, color: 'var(--s-violet)', fontWeight: 600 }}>
                     Lecture seule · survolez un message pour le supprimer
                   </span>
                 </div>
               ) : (
-                <div style={{ padding: '10px 14px', borderTop: '1px solid var(--c-border)', background: '#fff' }}>
+                <div style={{ padding: '10px 14px', borderTop: '1px solid var(--c-border)', background: 'var(--c-card)' }}>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
                     <textarea
                       ref={textareaRef}
@@ -802,7 +802,7 @@ export default function SupervisionPage() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
                     <span style={{ fontSize: 10, color: 'var(--c-muted)' }}>Entrée pour envoyer · Shift+Entrée pour sauter une ligne</span>
                     {nearLimit && (
-                      <span style={{ fontSize: 10, color: charCount >= MAX_MSG_LEN ? '#DC2626' : '#D97706', fontWeight: 600 }}>
+                      <span style={{ fontSize: 10, color: charCount >= MAX_MSG_LEN ? 'var(--s-red)' : 'var(--s-yellow)', fontWeight: 600 }}>
                         {charCount}/{MAX_MSG_LEN}
                       </span>
                     )}
@@ -814,7 +814,7 @@ export default function SupervisionPage() {
           ) : (
 
             /* ── Vue profil + liste convs ── */
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#fff' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--c-card)' }}>
 
               {/* Header profil */}
               <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--c-border)', flexShrink: 0 }}>
@@ -841,8 +841,8 @@ export default function SupervisionPage() {
                       </span>
                       <span style={{
                         fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20,
-                        background: isProprioView ? '#F5F3FF' : '#F0FDF4',
-                        color: isProprioView ? '#7C3AED' : '#16A34A',
+                        background: isProprioView ? 'var(--t-violet-bg)' : 'var(--t-green-bg)',
+                        color: isProprioView ? 'var(--s-violet)' : 'var(--s-green)',
                         border: `1px solid ${isProprioView ? '#DDD6FE' : '#BBF7D0'}`,
                         textTransform: 'uppercase' as const,
                       }}>
@@ -854,10 +854,10 @@ export default function SupervisionPage() {
                     )}
                     {!isProprioView && (
                       <div style={{ display: 'flex', gap: 10, marginTop: 6, flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: 11, color: 'var(--c-muted)', background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 20, padding: '2px 8px', fontWeight: 600 }}>
+                        <span style={{ fontSize: 11, color: 'var(--c-muted)', background: 'var(--t-blue-bg)', border: '1px solid var(--t-blue-bd)', borderRadius: 20, padding: '2px 8px', fontWeight: 600 }}>
                           {selectedPerson.data.nb_clients ?? 0} clients
                         </span>
-                        <span style={{ fontSize: 11, color: 'var(--c-muted)', background: '#FFF7ED', border: '1px solid #FED7AA', borderRadius: 20, padding: '2px 8px', fontWeight: 600 }}>
+                        <span style={{ fontSize: 11, color: 'var(--c-muted)', background: 'var(--t-orange-bg)', border: '1px solid var(--t-orange-bd)', borderRadius: 20, padding: '2px 8px', fontWeight: 600 }}>
                           {selectedPerson.data.nb_biens ?? 0} biens
                         </span>
                       </div>
@@ -888,7 +888,7 @@ export default function SupervisionPage() {
                       }}
                     >
                       {t.label}
-                      {t.count > 0 && <span style={{ marginLeft: 6, fontSize: 10, background: '#F1F5F9', color: 'var(--c-muted)', borderRadius: 20, padding: '1px 6px' }}>{t.count}</span>}
+                      {t.count > 0 && <span style={{ marginLeft: 6, fontSize: 10, background: 'var(--c-surface-2)', color: 'var(--c-muted)', borderRadius: 20, padding: '1px 6px' }}>{t.count}</span>}
                     </button>
                   ))}
                 </div>
@@ -916,7 +916,7 @@ export default function SupervisionPage() {
                         onMouseLeave={() => setHoveredConvId(null)}
                         style={{
                           padding: '12px 20px', borderBottom: '1px solid var(--c-border)', cursor: 'pointer',
-                          background: isOpen ? '#EFF6FF' : (hoveredConvId === conv.id ? 'var(--c-bg)' : 'transparent'),
+                          background: isOpen ? 'var(--t-blue-bg)' : (hoveredConvId === conv.id ? 'var(--c-bg)' : 'transparent'),
                           borderLeft: isOpen ? '3px solid var(--c-blue)' : '3px solid transparent',
                           transition: 'background 0.1s',
                         }}
@@ -949,7 +949,7 @@ export default function SupervisionPage() {
                               </div>
                             )}
                             {claimOther && (
-                              <div style={{ fontSize: 10, color: '#D97706', fontWeight: 600, marginTop: 2 }}>
+                              <div style={{ fontSize: 10, color: 'var(--s-yellow)', fontWeight: 600, marginTop: 2 }}>
                                 ✏️ {claim.name} répond…
                               </div>
                             )}
@@ -998,7 +998,7 @@ export default function SupervisionPage() {
                           {' · '}<strong style={{ color: 'var(--c-text)' }}>{new Intl.NumberFormat('fr-FR').format(b.prix)} FCFA</strong>
                         </div>
                         {proprio && (
-                          <div style={{ marginTop: 4, fontSize: 11, color: '#16A34A', background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 6, padding: '2px 8px', display: 'inline-block' }}>
+                          <div style={{ marginTop: 4, fontSize: 11, color: 'var(--s-green)', background: 'var(--t-green-bg)', border: '1px solid var(--t-green-bd)', borderRadius: 6, padding: '2px 8px', display: 'inline-block' }}>
                             Proprio : {proprio.prenom ?? ''} {proprio.nom ?? ''}{proprio.telephone ? ` · ${proprio.telephone}` : ''}
                           </div>
                         )}
