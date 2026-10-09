@@ -52,11 +52,12 @@ function getTypeLabel(dbType: string, dbSousType: string) {
 }
 
 // ── Options constantes ────────────────────────────────────────────────────────
-const FINITIONS = [
-  { value: 'ordinaire',     label: 'Ordinaire',           sub: 'Finitions simples, fonctionnelles' },
-  { value: 'semi_staffe',   label: 'Semi-Staffé',         sub: 'Salon staffé et carrelé, chambre simple' },
-  { value: 'staffe_carele', label: 'Staffé-Carrelé',      sub: 'Staff complet + carreaux modernes partout' },
-  { value: 'haut_standing', label: 'Haut Standing / VIP', sub: 'Baies vitrées, douche moderne, climatisation' },
+const STANDINGS = [
+  { value: 'sanitaire',             label: 'Sanitaire',             sub: '' },
+  { value: 'semi_sanitaire',        label: 'Semi sanitaire',        sub: '' },
+  { value: 'sanitaire_semi_staffe', label: 'Sanitaire semi-staffé', sub: '' },
+  { value: 'sanitaire_staffe',      label: 'Sanitaire staffé',      sub: '' },
+  { value: 'haut_standing_vip',     label: 'Haut Standing / VIP',   sub: 'Baies vitrées, douche moderne, climatisation' },
 ];
 const ELEC_OPTS   = [{ value:'non', label:'Aucune' }, { value:'sbee', label:'SBEE (compteur commun)' }, { value:'decompteur', label:'Décompteur (séparé)' }];
 const EAU_OPTS    = [{ value:'non', label:'Aucune' }, { value:'soneb', label:'SONEB' }, { value:'forage', label:'Forage' }];
@@ -194,9 +195,8 @@ export default function AnnonceEditPage() {
   const [pieces, setPieces] = useState<PieceState[]>([]);
 
   // Caractéristiques
-  const [sanitaire, setSanitaire]       = useState<boolean | null>(null);
   const [couloir, setCouloir]           = useState<boolean | null>(null);
-  const [finition, setFinition]         = useState('');
+  const [standing, setStanding]         = useState('');
   const [typeCuisine, setTypeCuisine]   = useState('');
   const [cour, setCour]                 = useState<boolean | null>(null);
   const [typeCour, setTypeCour]         = useState('');
@@ -256,7 +256,7 @@ export default function AnnonceEditPage() {
 
         setPieces((b.pieces ?? []).map((p: any) => ({ id:p.id, nom:p.nom??'', surface:'', longueur:'', largeur:'' })));
 
-        setSanitaire(a.sanitaire??null); setCouloir(a.chambre_couloir??null);
+        setCouloir(a.chambre_couloir??null);
         setCour(a.cour??null); setArriereCour(a.arriere_cour??null);
         setBoyerie(a.boyerie??null);
         setParking(a.parking??null); setParkingCap(a.parking_capacite!=null?String(a.parking_capacite):'');
@@ -273,7 +273,7 @@ export default function AnnonceEditPage() {
           if (known.includes(raw)) { setter(raw); }
           else { setter('autre'); autreMap[field] = raw; }
         };
-        setChip(setFinition,    a.finition,       FINITIONS.map(f=>f.value), 'finition');
+        setChip(setStanding,    a.standing,       STANDINGS.map(f=>f.value), 'standing');
         setChip(setTypeCuisine, a.type_cuisine,   CUISINE_OPTS.map(o=>o.value), 'cuisine');
         setChip(setTypeCour,    a.type_cour,      ['commune','privee'], 'type_cour');
         setChip(setBoyerieType, a.boyerie_type,   BOYERIE_OPTS.map(o=>o.value), 'boyerie_type');
@@ -317,8 +317,9 @@ export default function AnnonceEditPage() {
       };
       if (dbST) sa('sous_type', dbST);
       if (echeanceMois) sa('echeance_mois', Number(echeanceMois));
-      sa('sanitaire', sanitaire); sa('chambre_couloir', couloir);
-      chip('finition', finition, 'finition');
+      sa('chambre_couloir', couloir);
+      sa('standing', standing);
+      if (standing === 'autre') sa('standing_autre', autrePrecision['standing'] || '');
       chip('type_cuisine', typeCuisine, 'cuisine');
       sa('cour', cour);
       if (cour) {
@@ -614,7 +615,6 @@ export default function AnnonceEditPage() {
 
               <div style={CARD}>
                 <SectionTitle>Caractéristiques</SectionTitle>
-                <Toggle label="Sanitaire" value={sanitaire} onChange={setSanitaire} />
                 {isSmall && <Toggle label="Maison à couloir" value={couloir} onChange={setCouloir} />}
                 <Toggle label="Cour" value={cour} onChange={setCour} />
                 {cour && (
@@ -659,19 +659,19 @@ export default function AnnonceEditPage() {
               </div>
 
               <div style={CARD}>
-                <SectionTitle>Finition</SectionTitle>
+                <SectionTitle>Standing</SectionTitle>
                 <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                  {FINITIONS.map(o => {
-                    const active = finition === o.value;
-                    return <button key={o.value} type="button" onClick={() => setFinition(active?'':o.value)} style={{ display:'flex', flexDirection:'column', alignItems:'flex-start', padding:'11px 14px', borderRadius:8, cursor:'pointer', textAlign:'left', width:'100%', border:active?'2px solid #2563EB':'1.5px solid var(--c-border)', background:active?'var(--t-blue-bg)':'var(--c-card)', transition:'all .12s' }}>
+                  {STANDINGS.map(o => {
+                    const active = standing === o.value;
+                    return <button key={o.value} type="button" onClick={() => setStanding(active?'':o.value)} style={{ display:'flex', flexDirection:'column', alignItems:'flex-start', padding:'11px 14px', borderRadius:8, cursor:'pointer', textAlign:'left', width:'100%', border:active?'2px solid #2563EB':'1.5px solid var(--c-border)', background:active?'var(--t-blue-bg)':'var(--c-card)', transition:'all .12s' }}>
                       <span style={{ fontSize:13, fontWeight:600, color:active?'var(--s-blue)':'var(--c-text)' }}>{o.label}</span>
                       <span style={{ fontSize:11, color:'var(--c-muted)', marginTop:2 }}>{o.sub}</span>
                     </button>;
                   })}
-                  {(() => { const active = finition==='autre'; return (
-                    <button type="button" onClick={() => setFinition(active?'':'autre')} style={{ display:'flex', flexDirection:'column', alignItems:'flex-start', padding:'11px 14px', borderRadius:8, cursor:'pointer', textAlign:'left', width:'100%', border:active?'2px solid #2563EB':'1.5px solid var(--c-border)', background:active?'var(--t-blue-bg)':'var(--c-card)', transition:'all .12s' }}>
+                  {(() => { const active = standing==='autre'; return (
+                    <button type="button" onClick={() => setStanding(active?'':'autre')} style={{ display:'flex', flexDirection:'column', alignItems:'flex-start', padding:'11px 14px', borderRadius:8, cursor:'pointer', textAlign:'left', width:'100%', border:active?'2px solid #2563EB':'1.5px solid var(--c-border)', background:active?'var(--t-blue-bg)':'var(--c-card)', transition:'all .12s' }}>
                       <span style={{ fontSize:13, fontWeight:600, color:active?'var(--s-blue)':'var(--c-text)' }}>Autre (à préciser)</span>
-                      {active && <SInput style={{ marginTop:8 }} placeholder="Décrivez la finition…" value={autrePrecision.finition??''} onChange={e => setAutrePrecision(p=>({...p, finition:e.target.value}))} onClick={ev => ev.stopPropagation()} />}
+                      {active && <SInput style={{ marginTop:8 }} placeholder="Décrivez le standing…" value={autrePrecision.standing??''} onChange={e => setAutrePrecision(p=>({...p, standing:e.target.value}))} onClick={ev => ev.stopPropagation()} />}
                     </button>
                   ); })()}
                 </div>

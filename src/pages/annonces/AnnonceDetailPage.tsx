@@ -9,6 +9,14 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 
 // ── Labels lisibles pour les champs amenites ────────────────────────────────
+const STANDING_LABELS: Record<string, string> = {
+  sanitaire: 'Sanitaire',
+  semi_sanitaire: 'Semi sanitaire',
+  sanitaire_semi_staffe: 'Sanitaire semi-staffé',
+  sanitaire_staffe: 'Sanitaire staffé',
+  haut_standing_vip: 'Haut Standing / VIP',
+}
+
 const AMENITE_FIELD_GROUPS = [
   {
     title: 'Caractéristiques',
@@ -16,7 +24,7 @@ const AMENITE_FIELD_GROUPS = [
       { key: 'parking',          label: 'Parking',            fmt: (v: any, a: any) => v ? (a.parking_capacite ? `Oui — ×${a.parking_capacite}` : 'Oui') : 'Non' },
       { key: 'cour',             label: 'Cour',               fmt: (v: any) => v ? 'Oui' : 'Non' },
       { key: 'boyerie',          label: 'Boyerie',            fmt: (v: any) => v ? 'Oui' : 'Non' },
-      { key: 'sanitaire',        label: 'Sanitaires',         fmt: (v: any) => v == null ? null : (v ? 'Intérieur' : 'Extérieur') },
+      { key: 'standing',         label: 'Standing',           fmt: (v: any, a: any) => STANDING_LABELS[v] ?? (v === 'autre' ? (a.standing_autre || 'Autre') : null) },
       { key: 'chambre_couloir',  label: 'Maison à couloir',   fmt: (v: any) => v == null ? null : (v ? 'Oui' : 'Non') },
       { key: 'acces_vehicule',   label: 'Accès véhicule',     fmt: (v: any, a: any) => v == null ? null : (v ? (a.nb_vehicules ? `Oui — ${a.nb_vehicules} véh.` : 'Oui') : 'Non') },
     ],
@@ -27,7 +35,6 @@ const AMENITE_FIELD_GROUPS = [
       { key: 'electricite_label', label: 'Électricité', fmt: (v: any) => v || null },
       { key: 'eau_label',         label: 'Eau',         fmt: (v: any) => v || null },
       { key: 'cuisine_label',     label: 'Cuisine',     fmt: (v: any) => v || null },
-      { key: 'finition_label',    label: 'Finition',    fmt: (v: any) => v || null },
     ],
   },
   {
