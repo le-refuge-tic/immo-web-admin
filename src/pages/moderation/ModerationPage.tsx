@@ -121,9 +121,10 @@ function ModerationModal({
         <form onSubmit={handleSubmit}>
           {isApprove ? (
             <div className="immo-form-field">
-              <label className="immo-form-label">Frais de visite (FCFA) *</label>
+              <label className="immo-form-label" htmlFor="mod-frais">Frais de visite (FCFA) *</label>
               <div style={{ position: 'relative' }}>
                 <input
+                  id="mod-frais"
                   className="immo-form-input"
                   type="number"
                   min={0}
@@ -150,7 +151,7 @@ function ModerationModal({
             </div>
           ) : (
             <div className="immo-form-field">
-              <label className="immo-form-label">Motif de refus *</label>
+              <label className="immo-form-label" htmlFor="mod-motif">Motif de refus *</label>
               <div className="mod-motifs" role="group" aria-label="Motifs fréquents">
                 {MOTIFS_REFUS.map(m => (
                   <button key={m} type="button" className="mod-motif-chip" onClick={() => setMotif(prev => (prev.trim() ? `${prev.trim()} ${m}` : m))}>
@@ -159,6 +160,7 @@ function ModerationModal({
                 ))}
               </div>
               <textarea
+                id="mod-motif"
                 className="immo-form-input"
                 rows={3}
                 placeholder="Ex : Photos manquantes, description insuffisante, localisation imprécise…"
@@ -214,6 +216,8 @@ export default function ModerationPage() {
   const [showDetailMobile, setShowDetailMobile] = useState(false);
   const [modal, setModal] = useState<{ bien: any; type: ActionType } | null>(null);
   const listRef = useRef<HTMLUListElement>(null);
+  // Numéro de la dernière requête : une réponse plus ancienne arrivée après coup est ignorée.
+  const requestIdRef = useRef(0);
 
   // Recherche envoyée à l'API (et non filtrée sur la seule page affichée).
   useEffect(() => {
@@ -222,6 +226,7 @@ export default function ModerationPage() {
   }, [search]);
 
   const load = useCallback(async () => {
+    const requestId = ++requestIdRef.current;
     setLoading(true);
     setLoadError('');
     try {
@@ -229,15 +234,18 @@ export default function ModerationPage() {
         getAdminBien.list({ statut_moderation: 'en_attente', limit: LIMIT, page, ...(query ? { search: query } : {}) }),
         getAdminBien.moderationStats().catch(() => null),
       ]);
+      if (requestId !== requestIdRef.current) return;
       const list: any[] = res.data ?? [];
       setBiens(list);
       setTotal(res.total ?? 0);
       if (st) setStats(st);
       setSelectedId(prev => (list.some(b => b.id === prev) ? prev : (list[0]?.id ?? null)));
     } catch {
-      setLoadError('Impossible de charger la file de modération. Vérifiez votre connexion puis réessayez.');
+      if (requestId === requestIdRef.current) {
+        setLoadError('Impossible de charger la file de modération. Vérifiez votre connexion puis réessayez.');
+      }
     } finally {
-      setLoading(false);
+      if (requestId === requestIdRef.current) setLoading(false);
     }
   }, [page, query]);
 
@@ -258,11 +266,16 @@ export default function ModerationPage() {
   // Raccourcis clavier : ↑/↓ pour naviguer, A pour approuver, R pour rejeter.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (modal || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (modal || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+      // Une autre fenêtre est ouverte (ex. téléphone requis) : pas de raccourci derrière elle.
+      if (document.querySelector('[aria-modal="true"]')) return;
       const el = e.target as HTMLElement;
-      if (el.closest('input, textarea, select, [contenteditable="true"]')) return;
+      if (el.closest('input, textarea, select, [contenteditable="true"], [role="dialog"]')) return;
+      const inQueue = !!listRef.current?.contains(el);
+      // Liens et boutons hors de la file gardent leur comportement clavier normal.
+      if (!inQueue && el !== document.body && el.closest('a, button')) return;
       if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-        if (!biens.length) return;
+        if (!biens.length || (!inQueue && el !== document.body)) return;
         e.preventDefault();
         const idx = biens.findIndex(b => b.id === selectedId);
         const next = biens[Math.min(biens.length - 1, Math.max(0, idx + (e.key === 'ArrowDown' ? 1 : -1)))];
