@@ -33,10 +33,10 @@ export default class ErrorBoundary extends Component<Props, State> {
     ].join('\n');
 
     return (
-      <div role="alert" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, background: '#F8FAFC' }}>
-        <div style={{ width: '100%', maxWidth: 480, background: '#fff', border: '1px solid #E2E8F0', borderRadius: 12, padding: 24 }}>
-          <h1 style={{ fontSize: 20, margin: '0 0 8px', color: '#0F172A' }}>Une erreur est survenue</h1>
-          <p style={{ fontSize: 14, color: '#475569', margin: '0 0 20px' }}>
+      <div role="alert" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, background: 'var(--c-bg)' }}>
+        <div style={{ width: '100%', maxWidth: 480, background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: 24 }}>
+          <h1 style={{ fontSize: 20, margin: '0 0 8px', color: 'var(--c-text)' }}>Une erreur est survenue</h1>
+          <p style={{ fontSize: 14, color: 'var(--c-muted)', margin: '0 0 20px' }}>
             L'affichage de cette page a échoué. Rechargez la page ; si le problème
             persiste, faites une capture du détail ci-dessous et envoyez-la à l'équipe.
           </p>
@@ -46,13 +46,13 @@ export default class ErrorBoundary extends Component<Props, State> {
               Recharger la page
             </button>
             <button type="button" onClick={() => { window.location.href = '/'; }}
-              style={{ flex: '1 1 auto', padding: '10px 16px', border: '1px solid #CBD5E1', borderRadius: 8, background: '#fff', color: '#0F172A', cursor: 'pointer' }}>
+              style={{ flex: '1 1 auto', padding: '10px 16px', border: '1px solid var(--c-border)', borderRadius: 8, background: 'var(--c-card)', color: 'var(--c-text)', cursor: 'pointer' }}>
               Retour à l'accueil
             </button>
           </div>
           <details>
-            <summary style={{ fontSize: 13, color: '#64748B', cursor: 'pointer' }}>Détail technique</summary>
-            <pre style={{ marginTop: 8, padding: 12, background: '#F1F5F9', borderRadius: 8, fontSize: 11, whiteSpace: 'pre-wrap', wordBreak: 'break-word', color: '#334155' }}>
+            <summary style={{ fontSize: 13, color: 'var(--c-muted)', cursor: 'pointer' }}>Détail technique</summary>
+            <pre style={{ marginTop: 8, padding: 12, background: 'var(--c-surface-2)', borderRadius: 8, fontSize: 11, whiteSpace: 'pre-wrap', wordBreak: 'break-word', color: 'var(--c-text)' }}>
               {details}
             </pre>
           </details>
