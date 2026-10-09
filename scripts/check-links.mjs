@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+/* Script en ligne de commande : la sortie console est voulue. */
+/* eslint-disable no-console */
 // Vérifie que chaque lien interne du code (navigate('/…'), to="/…", href="/…",
 // path: '/…') correspond à une route déclarée dans src/App.tsx.
 // Usage : node scripts/check-links.mjs   (code de sortie 1 si un lien est mort)
