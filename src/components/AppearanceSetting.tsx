@@ -12,6 +12,16 @@ const OPTIONS: { value: ThemePreference; label: string }[] = [
 export default function AppearanceSetting() {
   const { preference, setPreference } = useTheme();
   const labelId = useId();
+  // Radiogroup ARIA : une seule option tabulable, flèches pour changer d'option.
+  const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const delta = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0;
+    if (!delta) return;
+    e.preventDefault();
+    const i = OPTIONS.findIndex(o => o.value === preference);
+    const next = OPTIONS[(i + delta + OPTIONS.length) % OPTIONS.length];
+    setPreference(next.value);
+    e.currentTarget.querySelector<HTMLButtonElement>(`[data-value="${next.value}"]`)?.focus();
+  };
   return (
     <div className="immo-card appearance-card">
       <div className="appearance-head">
@@ -27,13 +37,15 @@ export default function AppearanceSetting() {
           </div>
         </div>
       </div>
-      <div role="radiogroup" aria-labelledby={labelId} className="appearance-seg">
+      <div role="radiogroup" aria-labelledby={labelId} className="appearance-seg" onKeyDown={onKeyDown}>
         {OPTIONS.map(o => (
           <button
             key={o.value}
             type="button"
             role="radio"
             aria-checked={preference === o.value}
+            tabIndex={preference === o.value ? 0 : -1}
+            data-value={o.value}
             className={preference === o.value ? 'is-active' : ''}
             onClick={() => setPreference(o.value)}
           >

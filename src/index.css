@@ -4101,3 +4101,5 @@ body.lp-page #root { overflow: auto; }
 .ut-tabs { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
 .ut-tabs::-webkit-scrollbar { display: none; }
 .ut-tab { flex-shrink: 0; white-space: nowrap; }
+
+.config-submenu[hidden] { display: none; }

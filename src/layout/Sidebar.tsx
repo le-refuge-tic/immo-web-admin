@@ -263,8 +263,13 @@ export default function Sidebar({
   const isPathActive = (to: string) => location.pathname === to || location.pathname.startsWith(to + '/');
   const activeGroupId = allGroups.find(g => g.items.some(i => isPathActive(i.to)))?.id;
   // Choix explicites de l'utilisateur ; sans choix, seul le groupe de la page courante est ouvert.
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+  // Les choix sont oubliés dès que la page courante change de groupe : le groupe
+  // de la nouvelle page s'ouvre toujours, les autres reprennent leur état par défaut.
+  const [overrides, setOverrides] = useState<{ forGroup?: string; map: Record<string, boolean> }>({ map: {} });
+  const openGroups = overrides.forGroup === activeGroupId ? overrides.map : {};
   const isGroupOpen = (id: string) => openGroups[id] ?? id === activeGroupId;
+  const toggleGroup = (id: string) =>
+    setOverrides({ forGroup: activeGroupId, map: { ...openGroups, [id]: !isGroupOpen(id) } });
 
   const badgeEl = (n: number, inline = false) => n > 0 ? (
     <span className={`immo-nav-badge${inline ? ' immo-nav-badge--inline' : ''}`}>{n > 99 ? '99+' : n}</span>
@@ -305,7 +310,7 @@ export default function Sidebar({
             <div key={g.id} className="config-group">
               <button
                 className={`immo-nav-item config-toggle${hasActive ? ' active' : ''}`}
-                onClick={() => setOpenGroups(o => ({ ...o, [g.id]: !open }))}
+                onClick={() => toggleGroup(g.id)}
                 aria-expanded={open}
                 aria-controls={`nav-group-${g.id}`}
               >
@@ -316,11 +321,9 @@ export default function Sidebar({
                   <ChevronDownIcon />
                 </span>
               </button>
-              {open && (
-                <div id={`nav-group-${g.id}`} className="config-submenu">
-                  {g.items.map(renderItem)}
-                </div>
-              )}
+              <div id={`nav-group-${g.id}`} className="config-submenu" hidden={!open}>
+                {open && g.items.map(renderItem)}
+              </div>
             </div>
           );
         })}
