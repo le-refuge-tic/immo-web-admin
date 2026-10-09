@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getQuartiers, type QuartierPropose } from '../../api/getQuartiers';
+import { refreshSidebarBadges } from '../../hooks/useSidebarBadges';
 
 const STATUT_LABEL: Record<string, string> = {
   en_attente: 'En attente', valide: 'Validé', rejete: 'Rejeté',
@@ -42,6 +43,7 @@ export default function QuartiersPage() {
       await refresh();
     } finally {
       setBusy(null);
+      refreshSidebarBadges();
     }
   };
 

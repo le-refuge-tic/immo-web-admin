@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   GridIcon, HomeIcon, UsersIcon, SettingsIcon, ShieldIcon, AlertIcon,
@@ -6,44 +6,7 @@ import {
   MessageIcon, WithdrawIcon, ListingsIcon, VisitIcon, ClientsIcon, FlagIcon,
 } from '../components/Icons';
 import { useAuth } from '../context/AuthContext';
-import { getMessages, getActiveCommercialIds } from '../api/getMessages';
-import { getAdminStats } from '../api/getAdminStats';
-import { getQuartiers } from '../api/getQuartiers';
-import { getMesBiens } from '../api/getMesBiens';
-import axios from 'axios';
-import { io } from 'socket.io-client';
-
-const BASE_SIDEBAR = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api/v1';
-const authSidebar = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` } });
-
-const SOCKET_BASE = (() => {
-  const base = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api/v1';
-  return base.replace(/\/api\/v1\/?$/, '');
-})();
-
-// ── Persistance des statuts vus pour les biens du commercial ──────────────────
-
-const BIENS_SEEN_KEY = 'commercial_biens_seen';
-
-function getSeenStatuts(): Record<number, string> {
-  try {
-    const raw = localStorage.getItem(BIENS_SEEN_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch { return {}; }
-}
-
-function saveSeenStatuts(map: Record<number, string>) {
-  try { localStorage.setItem(BIENS_SEEN_KEY, JSON.stringify(map)); } catch { /**/ }
-}
-
-export function markBiensAsSeen(biens: any[]) {
-  const map: Record<number, string> = {};
-  for (const b of biens) map[b.id] = b.statut_moderation;
-  saveSeenStatuts(map);
-  window.dispatchEvent(new CustomEvent('biens-seen'));
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
+import { useSidebarBadges } from '../hooks/useSidebarBadges';
 
 export default function Sidebar({
   minimized,
@@ -60,133 +23,7 @@ export default function Sidebar({
   const isSuperAdmin = role === 'super_admin';
   const isCommercial = role === 'commercial';
 
-  const [unreadCount, setUnreadCount]         = useState(0);
-  const [msgUnreadCount, setMsgUnreadCount]   = useState(0);
-  const [moderationCount, setModerationCount] = useState(0);
-  const [quartiersCount, setQuartiersCount]   = useState(0);
-  const [retraitsCount, setRetraitsCount]     = useState(0);
-  const [annoncesChanges, setAnnoncesChanges] = useState(0);
-  const pollRef         = useRef<ReturnType<typeof setInterval> | null>(null);
-  const pollMsgRef      = useRef<ReturnType<typeof setInterval> | null>(null);
-  const pollBadgeRef    = useRef<ReturnType<typeof setInterval> | null>(null);
-  const pollAnnoncesRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  // Badge supervision messages (admins uniquement)
-  useEffect(() => {
-    if (!isAdmin) return;
-    const load = () =>
-      getMessages.supervision().then(r => {
-        const activeIds = getActiveCommercialIds();
-        const convs: any[] = r.data ?? [];
-        const count = activeIds.size === 0
-          ? (r.total_unread ?? 0)
-          : convs
-              .filter((c: any) => !c.gestionnaire_id || activeIds.has(c.gestionnaire_id))
-              .reduce((s: number, c: any) => s + (c.unread_count ?? 0), 0);
-        setUnreadCount(count);
-      }).catch(() => {});
-    load();
-    pollRef.current = setInterval(load, 20_000);
-    const onConvRead = () => load();
-    window.addEventListener('conv-read', onConvRead);
-    return () => {
-      if (pollRef.current) clearInterval(pollRef.current);
-      window.removeEventListener('conv-read', onConvRead);
-    };
-  }, [isAdmin]);
-
-  // Badge messages non lus (tous les rôles) — polling + socket global
-  useEffect(() => {
-    const loadMsg = () =>
-      getMessages.conversations().then(r => {
-        const convs: any[] = Array.isArray(r) ? r : (r.data ?? []);
-        const count = convs.reduce((s: number, c: any) => s + (c.unread_count ?? 0), 0);
-        setMsgUnreadCount(count);
-      }).catch(() => {});
-    loadMsg();
-    pollMsgRef.current = setInterval(loadMsg, 20_000);
-
-    // Socket global pour mise à jour immédiate quand un message arrive
-    const token = localStorage.getItem('access_token');
-    let socket: ReturnType<typeof io> | null = null;
-    if (token) {
-      socket = io(`${SOCKET_BASE}/chat`, {
-        auth: { token },
-        transports: ['websocket'],
-        reconnection: true,
-        reconnectionDelay: 2000,
-      });
-      socket.on('message', () => { loadMsg(); });
-    }
-
-    const onConvRead = () => loadMsg();
-    window.addEventListener('conv-read', onConvRead);
-    return () => {
-      if (pollMsgRef.current) clearInterval(pollMsgRef.current);
-      window.removeEventListener('conv-read', onConvRead);
-      socket?.disconnect();
-    };
-  }, []);
-
-  // Badges modération / quartiers / retraits (admins uniquement)
-  useEffect(() => {
-    if (!isAdmin) return;
-    const loadBadges = async () => {
-      try {
-        const [stats, quartiers, retraitsRes] = await Promise.all([
-          getAdminStats.get(),
-          getQuartiers.lister('en_attente'),
-          axios.get(`${BASE_SIDEBAR}/retraits/admin?statut=en_attente`, authSidebar()),
-        ]);
-        setModerationCount(stats?.biens_en_attente ?? 0);
-        setQuartiersCount(Array.isArray(quartiers) ? quartiers.length : 0);
-        const rd = retraitsRes.data;
-        setRetraitsCount(Array.isArray(rd) ? rd.length : (rd?.data?.length ?? 0));
-      } catch { /**/ }
-    };
-    loadBadges();
-    pollBadgeRef.current = setInterval(loadBadges, 60_000);
-    return () => { if (pollBadgeRef.current) clearInterval(pollBadgeRef.current); };
-  }, [isAdmin]);
-
-  // Badge "Mes annonces" — biens dont le statut a changé depuis la dernière visite (commerciaux)
-  useEffect(() => {
-    if (!isCommercial) return;
-
-    const computeChanges = (biens: any[]) => {
-      const seen = getSeenStatuts();
-      // Si aucun bien jamais vu, on initialise silencieusement sans badge
-      if (Object.keys(seen).length === 0) {
-        const map: Record<number, string> = {};
-        for (const b of biens) map[b.id] = b.statut_moderation;
-        saveSeenStatuts(map);
-        setAnnoncesChanges(0);
-        return;
-      }
-      let changes = 0;
-      for (const b of biens) {
-        const prev = seen[b.id];
-        // Nouveau bien jamais vu OU statut différent du dernier vu
-        if (prev === undefined || prev !== b.statut_moderation) changes++;
-      }
-      setAnnoncesChanges(changes);
-    };
-
-    const load = () =>
-      getMesBiens.list().then((biens: any[]) => computeChanges(biens ?? [])).catch(() => {});
-
-    load();
-    pollAnnoncesRef.current = setInterval(load, 60_000);
-
-    // Quand l'utilisateur visite la page, effacer le badge
-    const onBiensSeen = () => { setAnnoncesChanges(0); };
-    window.addEventListener('biens-seen', onBiensSeen);
-
-    return () => {
-      if (pollAnnoncesRef.current) clearInterval(pollAnnoncesRef.current);
-      window.removeEventListener('biens-seen', onBiensSeen);
-    };
-  }, [isCommercial]);
+  const badges = useSidebarBadges({ isAdmin, isCommercial, userId: user?.id });
 
   const classes = [
     'immo-sidebar',
@@ -252,12 +89,12 @@ export default function Sidebar({
   const allGroups: NavGroup[] = [...groups, { id: 'configuration', label: 'Configuration', Icon: SettingsIcon, items: configSubs }];
 
   const badgeFor = (to: string) => ({
-    '/supervision':  unreadCount,
-    '/messages':     msgUnreadCount,
-    '/moderation':   moderationCount,
-    '/quartiers':    quartiersCount,
-    '/retraits':     retraitsCount,
-    '/mes-annonces': annoncesChanges,
+    '/supervision':  badges.supervision,
+    '/messages':     badges.messages,
+    '/moderation':   badges.moderation,
+    '/quartiers':    badges.quartiers,
+    '/retraits':     badges.retraits,
+    '/mes-annonces': badges.mesAnnonces,
   } as Record<string, number>)[to] ?? 0;
 
   const isPathActive = (to: string) => location.pathname === to || location.pathname.startsWith(to + '/');

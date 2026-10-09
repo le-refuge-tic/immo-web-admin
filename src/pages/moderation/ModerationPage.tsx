@@ -1,22 +1,15 @@
-import { useState, useEffect, useCallback } from 'react';
-import {
-  SearchIcon, CheckIcon, XIcon, HomeIcon, AlertIcon,
-  ChevronLeftIcon, ChevronRightIcon,
-} from '../../components/Icons';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { SearchIcon, ChevronLeftIcon, ChevronRightIcon } from '../../components/Icons';
 import { blockInvalidNumberKey } from '../../utils/inputNumbers';
 import { getAdminBien } from '../../api/getAdminBien';
 import { patchAdminBien } from '../../api/patchAdminBien';
+import { refreshSidebarBadges } from '../../hooks/useSidebarBadges';
 import ModerationRisqueLabel from './ModerationRisqueLabel';
+import ModerationDetail from './ModerationDetail';
+import { MOTIFS_REFUS, TYPE_LABELS, formatPrix, auteurNom } from './moderationChecks';
 
 const LIMIT = 10;
-
-const TYPE_LABELS: any = {
-  maison:        'Maison',
-  appart_vide:   'Appartement vide',
-  appart_meuble: 'Appartement meublé',
-  guesthouse:    'Guesthouse',
-  terrain:       'Terrain',
-};
+const SEARCH_DEBOUNCE_MS = 350;
 
 // ── Modal d'action (approbation ou refus) ───────────────────────────────────
 
@@ -33,7 +26,8 @@ function ModerationModal({
   onClose: () => void;
   onDone: () => void;
 }) {
-  const [fraisVisite, setFraisVisite] = useState('');
+  // Pré-rempli avec les frais déjà saisis par l'auteur, s'il y en a.
+  const [fraisVisite, setFraisVisite] = useState(bien.frais_visite != null ? String(bien.frais_visite) : '');
   const [motif, setMotif]             = useState('');
   const [loading, setLoading]         = useState(false);
   const [error, setError]             = useState('');
@@ -70,7 +64,8 @@ function ModerationModal({
       onDone();
       onClose();
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Une erreur est survenue.');
+      const msg = err?.response?.data?.message;
+      setError(typeof msg === 'string' ? msg : 'La décision n’a pas pu être enregistrée. Vérifiez votre connexion et réessayez.');
       setLoading(false);
     }
   }
@@ -155,6 +150,13 @@ function ModerationModal({
           ) : (
             <div className="immo-form-field">
               <label className="immo-form-label">Motif de refus *</label>
+              <div className="mod-motifs" role="group" aria-label="Motifs fréquents">
+                {MOTIFS_REFUS.map(m => (
+                  <button key={m} type="button" className="mod-motif-chip" onClick={() => setMotif(prev => (prev.trim() ? `${prev.trim()} ${m}` : m))}>
+                    {m}
+                  </button>
+                ))}
+              </div>
               <textarea
                 className="immo-form-input"
                 rows={3}
@@ -195,44 +197,87 @@ function ModerationModal({
 
 // ── Page principale ──────────────────────────────────────────────────────────
 
-export default function ModerationPage() {
-  const [biens, setBiens]               = useState([] as any[]);
-  const [total, setTotal]               = useState(0);
-  const [page, setPage]                 = useState(1);
-  const [search, setSearch]             = useState('');
-  const [loading, setLoading]           = useState(false);
-  const [totalEnAttente, setTotalEnAttente] = useState(0);
-  const [totalRejetes, setTotalRejetes]     = useState(0);
+type Stats = { en_attente: number; rejete: number; traitees_7j: number };
 
-  // Modal state : { bien, type } ou null
+export default function ModerationPage() {
+  const [biens, setBiens]       = useState<any[]>([]);
+  const [total, setTotal]       = useState(0);
+  const [page, setPage]         = useState(1);
+  const [search, setSearch]     = useState('');
+  const [query, setQuery]       = useState('');
+  const [loading, setLoading]   = useState(false);
+  const [loadError, setLoadError] = useState('');
+  const [stats, setStats]       = useState<Stats | null>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  // Téléphone : la file et le détail s'affichent l'un après l'autre.
+  const [showDetailMobile, setShowDetailMobile] = useState(false);
   const [modal, setModal] = useState<{ bien: any; type: ActionType } | null>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+
+  // Recherche envoyée à l'API (et non filtrée sur la seule page affichée).
+  useEffect(() => {
+    const t = setTimeout(() => { setQuery(search.trim()); setPage(1); }, SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(t);
+  }, [search]);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError('');
     try {
-      const [enAttente, rejetes] = await Promise.all([
-        getAdminBien.list({ statut_moderation: 'en_attente', limit: LIMIT, page }),
-        getAdminBien.list({ statut_moderation: 'rejete',     limit: 1,     page: 1 }),
+      const [res, st] = await Promise.all([
+        getAdminBien.list({ statut_moderation: 'en_attente', limit: LIMIT, page, ...(query ? { search: query } : {}) }),
+        getAdminBien.moderationStats().catch(() => null),
       ]);
-      setBiens(enAttente.data);
-      setTotal(enAttente.total);
-      setTotalEnAttente(enAttente.total);
-      setTotalRejetes(rejetes.total);
+      const list: any[] = res.data ?? [];
+      setBiens(list);
+      setTotal(res.total ?? 0);
+      if (st) setStats(st);
+      setSelectedId(prev => (list.some(b => b.id === prev) ? prev : (list[0]?.id ?? null)));
+    } catch {
+      setLoadError('Impossible de charger la file de modération. Vérifiez votre connexion puis réessayez.');
     } finally {
       setLoading(false);
     }
-  }, [page]);
+  }, [page, query]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    // Chargement différé : les setState arrivent hors du rendu de l'effet.
+    void Promise.resolve().then(load);
+  }, [load]);
 
-  const totalPages = Math.ceil(total / LIMIT);
+  const selected = biens.find(b => b.id === selectedId) ?? null;
+  const totalPages = Math.max(1, Math.ceil(total / LIMIT));
+  const aRisque = biens.filter(b => !b.photos?.length || !b.description).length;
 
-  const displayed = search
-    ? biens.filter((b: any) =>
-        b.localisation?.ville?.toLowerCase().includes(search.toLowerCase()) ||
-        b.type.toLowerCase().includes(search.toLowerCase()),
-      )
-    : biens;
+  const onDecision = useCallback(() => {
+    refreshSidebarBadges();
+    void load();
+  }, [load]);
+
+  // Raccourcis clavier : ↑/↓ pour naviguer, A pour approuver, R pour rejeter.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (modal || e.ctrlKey || e.metaKey || e.altKey) return;
+      const el = e.target as HTMLElement;
+      if (el.closest('input, textarea, select, [contenteditable="true"]')) return;
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        if (!biens.length) return;
+        e.preventDefault();
+        const idx = biens.findIndex(b => b.id === selectedId);
+        const next = biens[Math.min(biens.length - 1, Math.max(0, idx + (e.key === 'ArrowDown' ? 1 : -1)))];
+        setSelectedId(next.id);
+        listRef.current?.querySelector<HTMLElement>(`[data-id="${next.id}"]`)?.scrollIntoView({ block: 'nearest' });
+      } else if (selected && e.key.toLowerCase() === 'a') {
+        setModal({ bien: selected, type: 'approuve' });
+      } else if (selected && e.key.toLowerCase() === 'r') {
+        setModal({ bien: selected, type: 'rejete' });
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [biens, selectedId, selected, modal]);
+
+  const select = (id: number) => { setSelectedId(id); setShowDetailMobile(true); };
 
   return (
     <>
@@ -241,20 +286,21 @@ export default function ModerationPage() {
           bien={modal.bien}
           type={modal.type}
           onClose={() => setModal(null)}
-          onDone={load}
+          onDone={onDecision}
         />
       )}
 
       <div className="immo-topbar">
         <div className="immo-topbar-title">
-          <h1>File de Modération</h1>
+          <h1>Modération</h1>
           <p>Annonces en attente de validation</p>
         </div>
         <div className="immo-spacer" />
         <div className="mod-search-wrap">
           <SearchIcon />
           <input
-            placeholder="Filtrer par ville, type..."
+            placeholder="Ville, quartier, auteur ou n° d’annonce"
+            aria-label="Rechercher une annonce en attente"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -262,141 +308,82 @@ export default function ModerationPage() {
       </div>
 
       <div className="immo-page">
-        <div className="mod-stat-cards">
-          <div className="mod-stat-card">
-            <div>
-              <div className="mod-stat-label">En attente</div>
-              <div className="mod-stat-value">{totalEnAttente}</div>
-            </div>
-            <div className="mod-stat-icon"><HomeIcon size={24} /></div>
-          </div>
-          <div className="mod-stat-card urgent">
-            <div>
-              <div className="mod-stat-label">Rejetées</div>
-              <div className="mod-stat-value">{totalRejetes}</div>
-            </div>
-            <div className="mod-stat-icon"><AlertIcon size={24} /></div>
-          </div>
+        <div className="mod-kpis">
+          <div className="mod-kpi"><b>{stats?.en_attente ?? total}</b><span>en attente</span></div>
+          <div className="mod-kpi"><b>{aRisque}</b><span>sans photo ou description (cette page)</span></div>
+          <div className="mod-kpi"><b>{stats?.traitees_7j ?? '—'}</b><span>traitées sur 7 jours</span></div>
+          <div className="mod-kpi"><b>{stats?.rejete ?? '—'}</b><span>rejetées au total</span></div>
+          <div className="mod-shortcuts" aria-hidden="true"><kbd>↑</kbd><kbd>↓</kbd> naviguer · <kbd>A</kbd> approuver · <kbd>R</kbd> rejeter</div>
         </div>
 
-        <div className="immo-card" style={{ padding: 0, overflow: 'hidden' }}>
-          <div className="mod-table-scroll">
-          <div className="mod-table-header">
-            <span className="mod-table-col">Bien</span>
-            <span className="mod-table-col">Localisation</span>
-            <span className="mod-table-col">Auteur</span>
-            <span className="mod-table-col">Niveau risque</span>
-            <span className="mod-table-col">Actions</span>
+        {loadError ? (
+          <div className="immo-card mod-empty" role="alert">
+            <span>{loadError}</span>
+            <button type="button" className="btn-cancel" onClick={() => void load()}>Réessayer</button>
           </div>
-
-          {loading ? (
-            <div style={{ padding: '32px 20px', textAlign: 'center', color: 'var(--c-muted)' }}>Chargement…</div>
-          ) : displayed.length === 0 ? (
-            <div style={{ padding: '32px 20px', textAlign: 'center', color: 'var(--c-muted)' }}>Aucune annonce en attente de modération.</div>
-          ) : (
-            displayed.map((b: any) => (
-              <div className="mod-row" key={b.id}>
-                <div className="mod-detail-cell">
-                  <div className="mod-photo"><HomeIcon size={20} /></div>
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-                      <span className="mod-type-tag">{TYPE_LABELS[b.type] ?? b.type}</span>
-                      <span className="mod-type-name">
-                        {Number(b.prix).toLocaleString('fr-FR')} F
-                        {b.transaction === 'location' ? '/mois' : ''}
-                      </span>
-                    </div>
-                    {b.description && (
-                      <div className="mod-sub" style={{ maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {b.description}
-                      </div>
-                    )}
-                  </div>
+        ) : (
+          <div className={`mod-split${showDetailMobile ? ' show-detail' : ''}`}>
+            <div className="mod-queue-col">
+              {loading && biens.length === 0 ? (
+                <div className="immo-card mod-empty">Chargement…</div>
+              ) : biens.length === 0 ? (
+                <div className="immo-card mod-empty">
+                  {query ? `Aucune annonce en attente ne correspond à « ${query} ».` : 'Aucune annonce en attente. Tout est à jour.'}
                 </div>
+              ) : (
+                <ul className="mod-queue" ref={listRef} aria-label="Annonces en attente" aria-busy={loading}>
+                  {biens.map(b => {
+                    const cover = b.photos?.find((p: any) => p.is_cover)?.url ?? b.photos?.[0]?.url;
+                    const isSel = b.id === selectedId;
+                    return (
+                      <li key={b.id}>
+                        <button
+                          type="button"
+                          data-id={b.id}
+                          className={`mod-q${isSel ? ' is-selected' : ''}`}
+                          aria-current={isSel ? 'true' : undefined}
+                          onClick={() => select(b.id)}
+                        >
+                          {cover
+                            ? <img className="mod-q-thumb" src={cover} alt="" loading="lazy" />
+                            : <span className="mod-q-thumb mod-q-thumb--empty" aria-hidden="true" />}
+                          <span className="mod-q-body">
+                            <span className="mod-q-title">{TYPE_LABELS[b.type] ?? b.type} · {b.localisation?.quartier || b.localisation?.ville || '—'}</span>
+                            <span className="mod-sub">{formatPrix(b)} · {auteurNom(b)}</span>
+                          </span>
+                          <span className="mod-q-risk"><ModerationRisqueLabel b={b} /></span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
 
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 600 }}>{b.localisation?.ville ?? '—'}</div>
-                  <div style={{ fontSize: 11, color: 'var(--c-muted)' }}>{b.localisation?.quartier ?? ''}</div>
-                </div>
-
-                <div className="mod-agent-cell">
-                  <div className="agent-av" style={{ background: '#94A3B8' }}>
-                    {b.user ? `${b.user.nom[0]}${b.user.prenom[0]}`.toUpperCase() : `#${b.user_id}`}
-                  </div>
-                  <div>
-                    <div className="agent-name">
-                      {b.user ? `${b.user.nom} ${b.user.prenom}` : `Utilisateur #${b.user_id}`}
-                    </div>
-                    <div className="agent-status">
-                      {b.user?.role === 'proprietaire' || b.user?.role === 'detenteur'
-                        ? 'Propriétaire / Bailleur'
-                        : b.user?.role === 'demarcheur' ? 'Démarcheur' : 'Particulier'}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="risk-cell">
-                  <ModerationRisqueLabel b={b} />
-                </div>
-
-                <div className="mod-actions-cell">
-                  <button
-                    className="btn-validate-circle"
-                    onClick={() => setModal({ bien: b, type: 'approuve' })}
-                    title="Approuver"
-                    aria-label="Approuver cette annonce"
-                  >
-                    <CheckIcon size={15} />
-                  </button>
-                  <button
-                    className="btn-reject-circle"
-                    onClick={() => setModal({ bien: b, type: 'rejete' })}
-                    title="Rejeter"
-                    aria-label="Rejeter cette annonce"
-                  >
-                    <XIcon size={14} />
-                  </button>
+              <div className="mod-pager">
+                <span>{total === 0 ? '0 résultat' : `${(page - 1) * LIMIT + 1}–${Math.min(page * LIMIT, total)} sur ${total}`}</span>
+                <div className="immo-pagination">
+                  <button className="page-btn" disabled={page <= 1} onClick={() => setPage(p => p - 1)} aria-label="Page précédente"><ChevronLeftIcon /></button>
+                  <span className="mod-page-num">{page} / {totalPages}</span>
+                  <button className="page-btn" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} aria-label="Page suivante"><ChevronRightIcon /></button>
                 </div>
               </div>
-            ))
-          )}
-          </div>{/* end mod-table-scroll */}
+            </div>
 
-          <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--c-border)' }}>
-            <span style={{ fontSize: 12, color: 'var(--c-muted)' }}>
-              {total === 0 ? '0 résultat' : `${(page - 1) * LIMIT + 1}–${Math.min(page * LIMIT, total)} sur ${total}`}
-            </span>
-            <div className="immo-pagination">
-              <button className="page-btn" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}><ChevronLeftIcon /></button>
-              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map((p) => (
-                <button key={p} className={`page-btn ${page === p ? 'active' : ''}`} onClick={() => setPage(p)}>{p}</button>
-              ))}
-              <button className="page-btn" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}><ChevronRightIcon /></button>
+            <div className="mod-detail-col">
+              {selected ? (
+                <ModerationDetail
+                  key={selected.id}
+                  bien={selected}
+                  onApprove={() => setModal({ bien: selected, type: 'approuve' })}
+                  onReject={() => setModal({ bien: selected, type: 'rejete' })}
+                  onBack={() => setShowDetailMobile(false)}
+                />
+              ) : (
+                <div className="immo-card mod-empty">Sélectionnez une annonce pour l’examiner.</div>
+              )}
             </div>
           </div>
-        </div>
-
-        <div className="mod-footer-row">
-          <div className="regle-or-card">
-            <div className="regle-or-title">
-              <div className="regle-or-dot" />
-              Règle d'or Modération
-            </div>
-            <p className="regle-or-text">
-              "Toute annonce sans photos ou sans description doit être examinée avec attention
-              avant validation. Un bien sans preuve visuelle représente un risque élevé."
-            </p>
-          </div>
-          <div className="indices-card">
-            <div className="indices-title">Critères de validation</div>
-            {['Photos présentes (au moins 1)', 'Description renseignée', 'Localisation précise', 'Prix cohérent avec le marché'].map((label) => (
-              <div className="indice-row" key={label}>
-                <span>{label}</span>
-                <span className="badge-actif">VÉRIFIER</span>
-              </div>
-            ))}
-          </div>
-        </div>
+        )}
       </div>
     </>
   );

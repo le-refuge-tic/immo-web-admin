@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { refreshSidebarBadges } from '../../hooks/useSidebarBadges';
 
 const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api/v1';
 const auth = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` } });
@@ -100,6 +101,7 @@ export default function RetraitsPage() {
       showToast(e.message ?? 'Erreur lors de la validation', false);
     } finally {
       setActionId(null);
+      refreshSidebarBadges();
     }
   };
 
@@ -121,6 +123,7 @@ export default function RetraitsPage() {
       showToast(e.message ?? 'Erreur lors du rejet', false);
     } finally {
       setActionId(null);
+      refreshSidebarBadges();
     }
   };
 
@@ -144,6 +147,7 @@ export default function RetraitsPage() {
       showToast(e.message ?? "Erreur lors de l'envoi", false);
     } finally {
       setActionId(null);
+      refreshSidebarBadges();
     }
   };
 
