@@ -39,18 +39,13 @@ const TYPES_BIEN = [
   { key: 'boutique',      label: 'Boutique'        },
 ]
 
-const SANITAIRE_OPTS = [
-  { value: 'interieur',      label: 'Sanitaire',        sub: '' },
-  { value: 'semi_interieur', label: 'Semi sanitaire',   sub: '' },
-  { value: 'cour',           label: 'Non sanitaire',    sub: '' },
-  { value: 'autre',          label: 'Autre à préciser', sub: '' },
-]
-
-const FINITION_OPTS = [
-  { value: 'ordinaire',     label: 'Ordinaire',           sub: '' },
-  { value: 'staffe_carele', label: 'Staffé',              sub: '' },
-  { value: 'haut_standing', label: 'Haut Standing / VIP', sub: '' },
-  { value: 'villa',         label: 'Villa',               sub: '' },
+const STANDING_OPTS = [
+  { value: 'sanitaire',              label: 'Sanitaire',              sub: '' },
+  { value: 'semi_sanitaire',         label: 'Semi sanitaire',         sub: '' },
+  { value: 'sanitaire_semi_staffe',  label: 'Sanitaire semi-staffé',  sub: '' },
+  { value: 'sanitaire_staffe',       label: 'Sanitaire staffé',       sub: '' },
+  { value: 'haut_standing_vip',      label: 'Haut Standing / VIP',    sub: '' },
+  { value: 'autre',                  label: 'Autre à préciser',       sub: '' },
 ]
 
 const CUISINE_OPTS = [
@@ -294,20 +289,8 @@ export default function PublierBienPage() {
   const [typeTransaction, setTypeTransaction] = useState<'location' | 'vente'>('location')
   const [prix, setPrix]                       = useState('')
   const [estMeuble, setEstMeuble]             = useState(false)
-  const [sanitaire, setSanitaire]             = useState<string | null>(null)
-  const [sanitaireAutre, setSanitaireAutre]   = useState('')
-  const [finition, setFinition]               = useState<string | null>(null)
-
-  const onSelectSanitaire = (v: string) => {
-    setSanitaire(v)
-    if (v === 'interieur' && finition === 'ordinaire') setFinition(null)
-  }
-  const onSelectFinition = (v: string) => {
-    setFinition(v)
-    if (v === 'staffe_carele') setSanitaire('interieur')
-    else if (v === 'ordinaire') setSanitaire('cour')
-    else if (v === 'haut_standing' || v === 'villa') setSanitaire(null)
-  }
+  const [standing, setStanding]               = useState<string | null>(null)
+  const [standingAutre, setStandingAutre]     = useState('')
 
   const [prixLongSejour, setPrixLongSejour]           = useState('')
   const [prixSejourRestreint, setPrixSejourRestreint] = useState('')
@@ -390,7 +373,7 @@ export default function PublierBienPage() {
 
   // ── Persistance du brouillon ──────────────────────────────────────────────
   const draftState = {
-    step, typeBien, typeTransaction, prix, estMeuble, sanitaire, sanitaireAutre, finition,
+    step, typeBien, typeTransaction, prix, estMeuble, standing, standingAutre,
     prixLongSejour, prixSejourRestreint, prixHeure, tarifsAutres,
     ville, quartier, arrondissement, indicationAdresse, quartierSearch,
     latitude, longitude, adresseNormalisee, adresseVerifiee,
@@ -423,9 +406,8 @@ export default function PublierBienPage() {
       if (d.typeTransaction)           setTypeTransaction(d.typeTransaction)
       if (d.prix !== undefined)        setPrix(d.prix)
       if (d.estMeuble !== undefined)   setEstMeuble(d.estMeuble)
-      if (d.sanitaire !== undefined)   setSanitaire(d.sanitaire)
-      if (d.sanitaireAutre)            setSanitaireAutre(d.sanitaireAutre)
-      if (d.finition !== undefined)    setFinition(d.finition)
+      if (d.standing !== undefined)    setStanding(d.standing)
+      if (d.standingAutre)             setStandingAutre(d.standingAutre)
       if (d.prixLongSejour)            setPrixLongSejour(d.prixLongSejour)
       if (d.prixSejourRestreint)       setPrixSejourRestreint(d.prixSejourRestreint)
       if (d.prixHeure)                 setPrixHeure(d.prixHeure)
@@ -567,12 +549,7 @@ export default function PublierBienPage() {
     }
   }
 
-  const labelFinition  = (v: string) => ({ ordinaire: 'Ordinaire', staffe_carele: 'Staffé', haut_standing: 'Haut Standing / VIP', villa: 'Villa' } as Record<string,string>)[v] ?? v
-  const labelSanitaire = (v: string) =>
-    v === 'interieur'      ? 'Sanitaire' :
-    v === 'semi_interieur' ? 'Semi sanitaire' :
-    v === 'cour'           ? 'Non sanitaire' :
-    (sanitaireAutre.trim() || 'Autre à préciser')
+  const labelStanding = (v: string) => v === 'autre' ? (standingAutre.trim() || 'Autre à préciser') : (STANDING_OPTS.find(o => o.value === v)?.label ?? v)
   const labelCuisine   = (v: string) => v === 'separee_douche' ? 'Cuisine séparée de la douche' : v === 'americaine' ? 'Cuisine américaine' : (cuisineAutre.trim() || 'Autres')
   const labelCour      = (v: string) => v === 'entree_personnelle' ? 'Entrée personnelle' : 'Cour commune'
   const labelElec      = (v: string) => { const p = parsePrix(prixKwh); return v === 'sbee' ? 'SBEE' : v === 'decompteur' ? `Décompteur${p !== undefined ? ` (${Math.round(p)} FCFA/kWh)` : ''}` : 'Non' }
@@ -623,11 +600,8 @@ export default function PublierBienPage() {
       return a
     }
 
-    if (sanitaire === 'interieur')      a.sanitaire = true
-    if (sanitaire === 'semi_interieur') a.sanitaire_autre = 'Semi sanitaire'
-    if (sanitaire === 'cour')           a.sanitaire = false
-    if (sanitaire === 'autre' && sanitaireAutre.trim()) a.sanitaire_autre = sanitaireAutre.trim()
-    if (finition) a.finition = finition
+    if (standing) a.standing = standing
+    if (standing === 'autre' && standingAutre.trim()) a.standing_autre = standingAutre.trim()
     a.disponibilite = disponibilite
     if (equipementsBonus.length || equipementsAutre.trim()) a.equipements = [...equipementsBonus, ...(equipementsAutre.trim() ? [equipementsAutre.trim()] : [])]
     if (alentours.length || alentoursAutre.trim()) a.voisinage = [...alentours, ...(alentoursAutre.trim() ? [alentoursAutre.trim()] : [])]
@@ -844,17 +818,13 @@ export default function PublierBienPage() {
 
               {isSmallUnit && (
                 <Card>
-                  <Section title="Sanitaires" />
-                  <ChoiceList options={SANITAIRE_OPTS} value={sanitaire} onChange={onSelectSanitaire} onDeselect={() => setSanitaire(null)} />
-                  {sanitaire === 'autre' && (
-                    <input value={sanitaireAutre} onChange={e => setSanitaireAutre(e.target.value)}
-                      placeholder="Précisez la configuration des sanitaires"
+                  <Section title="Standing" />
+                  <ChoiceList options={STANDING_OPTS} value={standing} onChange={setStanding} onDeselect={() => setStanding(null)} />
+                  {standing === 'autre' && (
+                    <input value={standingAutre} onChange={e => setStandingAutre(e.target.value)}
+                      placeholder="Précisez le standing"
                       style={{ ...baseInput, marginTop: 8 }} />
                   )}
-                  <div style={{ marginTop: 20 }}>
-                    <Section title="Finition / Standing" />
-                    <ChoiceList options={FINITION_OPTS} value={finition} onChange={onSelectFinition} />
-                  </div>
                 </Card>
               )}
 
@@ -1290,19 +1260,15 @@ export default function PublierBienPage() {
               )}
               {!isSmallUnit && (
                 <Card>
-                  <Section title="Sanitaires" />
-                  <ChoiceList options={SANITAIRE_OPTS} value={sanitaire} onChange={onSelectSanitaire} onDeselect={() => setSanitaire(null)} />
-                  {sanitaire === 'autre' && (
-                    <input value={sanitaireAutre} onChange={e => setSanitaireAutre(e.target.value)}
-                      placeholder="Précisez la configuration des sanitaires"
+                  <Section title="Standing" />
+                  <ChoiceList options={STANDING_OPTS} value={standing} onChange={setStanding} onDeselect={() => setStanding(null)} />
+                  {standing === 'autre' && (
+                    <input value={standingAutre} onChange={e => setStandingAutre(e.target.value)}
+                      placeholder="Précisez le standing"
                       style={{ ...baseInput, marginTop: 8 }}
                       onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
                       onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
                   )}
-                  <div style={{ marginTop: 20 }}>
-                    <Section title="Finition / Standing" />
-                    <ChoiceList options={FINITION_OPTS} value={finition} onChange={onSelectFinition} />
-                  </div>
                 </Card>
               )}
               <Card>
@@ -1504,7 +1470,7 @@ export default function PublierBienPage() {
                   </div>
                 </Card>
               )}
-              {(!isSmallUnit || finition === 'haut_standing') && (
+              {(!isSmallUnit || standing === 'haut_standing_vip') && (
                 <>
                   <button type="button" onClick={() => setShowMoreOptions(v => !v)} style={{ fontSize: 14, fontWeight: 700, color: BLUE, background: 'none', border: 'none', cursor: 'pointer', padding: 0, textAlign: 'left' }}>
                     {showMoreOptions ? "Moins d'options" : "Plus d'options (facultatif)"}
@@ -1624,8 +1590,7 @@ export default function PublierBienPage() {
                 <p style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, color: 'var(--c-text)' }}>Récapitulatif de votre annonce</p>
                 <RecapSection title="Type de bien" items={[
                   TYPES_BIEN.find(t => t.key === typeBien)?.label ?? typeBien,
-                  ...(finition ? [labelFinition(finition)] : []),
-                  ...(sanitaire ? [labelSanitaire(sanitaire)] : []),
+                  ...(standing ? [labelStanding(standing)] : []),
                   ...(isMeuble ? ['Meublé / Guesthouse'] : []),
                 ]} />
                 <RecapSection title="Localisation" items={[
