@@ -11,9 +11,9 @@ function displayName(u: any) { return (u?.prenom || u?.nom) ? `${u?.prenom ?? ''
 function fmtDate(iso: string) { return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
 
 const STATUT_STYLES: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  en_attente: { label: 'En attente',  color: '#D97706', bg: '#FFFBEB', border: '#FDE68A' },
-  traitee:    { label: 'Traitée',     color: '#16A34A', bg: '#F0FDF4', border: '#BBF7D0' },
-  rejetee:    { label: 'Rejetée',     color: '#DC2626', bg: '#FEF2F2', border: '#FECACA' },
+  en_attente: { label: 'En attente',  color: 'var(--s-yellow)', bg: 'var(--t-yellow-bg)', border: 'var(--t-yellow-bd)' },
+  traitee:    { label: 'Traitée',     color: 'var(--s-green)', bg: 'var(--t-green-bg)', border: 'var(--t-green-bd)' },
+  rejetee:    { label: 'Rejetée',     color: 'var(--s-red)', bg: 'var(--t-red-bg)', border: 'var(--t-red-bd)' },
 };
 
 export default function PlaintesPage() {

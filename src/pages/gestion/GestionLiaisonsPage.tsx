@@ -286,7 +286,7 @@ export default function GestionLiaisonsPage() {
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
               <button
                 className="immo-btn"
-                style={{ background: '#F5F5F5', color: '#333', border: 'none' }}
+                style={{ background: 'var(--c-surface-2)', color: 'var(--c-text)', border: '1px solid var(--c-border)' }}
                 onClick={() => setSelected(null)}
                 disabled={submitting}
               >

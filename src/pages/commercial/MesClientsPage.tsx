@@ -18,10 +18,10 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 const ROLE_COLORS: Record<string, { bg: string; color: string; border: string }> = {
-  prospect:     { bg: '#EFF6FF', color: '#1D4ED8', border: '#BFDBFE' },
-  locataire:    { bg: '#F5F3FF', color: '#7C3AED', border: '#DDD6FE' },
-  proprietaire: { bg: '#F0FDF4', color: '#15803D', border: '#BBF7D0' },
-  client:       { bg: '#FFFBEB', color: '#B45309', border: '#FDE68A' },
+  prospect:     { bg: 'var(--t-blue-bg)', color: 'var(--s-blue)', border: 'var(--t-blue-bd)' },
+  locataire:    { bg: 'var(--t-violet-bg)', color: 'var(--s-violet)', border: 'var(--t-violet-bd)' },
+  proprietaire: { bg: 'var(--t-green-bg)', color: 'var(--s-green)', border: 'var(--t-green-bd)' },
+  client:       { bg: 'var(--t-yellow-bg)', color: 'var(--s-yellow)', border: 'var(--t-yellow-bd)' },
 };
 
 export default function MesClientsPage() {
@@ -306,7 +306,7 @@ export default function MesClientsPage() {
                 filtered.map((c: any, idx: number) => {
                   const role = c.role_principal ?? c.role ?? '';
                   const roleLabel = ROLE_LABELS[role] ?? role;
-                  const roleStyle = ROLE_COLORS[role] ?? { bg: '#F1F5F9', color: '#64748B', border: '#E2E8F0' };
+                  const roleStyle = ROLE_COLORS[role] ?? { bg: 'var(--c-surface-2)', color: 'var(--c-muted)', border: 'var(--c-border)' };
                   return (
                     <div key={c.id} style={{
                       display: 'flex', alignItems: 'center', gap: 14,

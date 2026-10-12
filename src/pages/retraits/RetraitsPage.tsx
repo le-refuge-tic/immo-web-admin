@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
+import { apiMessage } from '../../utils/apiMessage';
 import { useAuth } from '../../context/AuthContext';
 import { refreshSidebarBadges } from '../../hooks/useSidebarBadges';
 
@@ -78,8 +80,7 @@ export default function RetraitsPage() {
     setLoading(true);
     try {
       const params = filtreStatut ? `?statut=${filtreStatut}` : '';
-      const res = await fetch(`${BASE}/retraits/admin${params}`, auth() as any);
-      const data = await res.json();
+      const { data } = await axios.get(`${BASE}/retraits/admin${params}`, auth());
       setRetraits(Array.isArray(data) ? data : data.data ?? []);
     } catch {
       showToast('Erreur lors du chargement', false);
@@ -93,12 +94,11 @@ export default function RetraitsPage() {
   const valider = async (id: number) => {
     setActionId(id);
     try {
-      const res = await fetch(`${BASE}/retraits/admin/${id}/valider`, { method: 'PATCH', ...(auth() as any) });
-      if (!res.ok) { const err = await res.json(); throw new Error(err.message ?? 'Erreur'); }
+      await axios.patch(`${BASE}/retraits/admin/${id}/valider`, {}, auth());
       showToast('Retrait validé et envoyé avec succès');
       load();
-    } catch (e: any) {
-      showToast(e.message ?? 'Erreur lors de la validation', false);
+    } catch (e) {
+      showToast(apiMessage(e) ?? 'Erreur lors de la validation', false);
     } finally {
       setActionId(null);
       refreshSidebarBadges();
@@ -109,18 +109,13 @@ export default function RetraitsPage() {
     setActionId(id);
     try {
       const endpoint = manuel ? 'rejeter-manuel' : 'rejeter';
-      const res = await fetch(`${BASE}/retraits/admin/${id}/${endpoint}`, {
-        method: 'PATCH',
-        headers: { ...((auth() as any).headers), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ motif: motifRejet || undefined }),
-      });
-      if (!res.ok) { const err = await res.json(); throw new Error(err.message ?? 'Erreur'); }
+      await axios.patch(`${BASE}/retraits/admin/${id}/${endpoint}`, { motif: motifRejet || undefined }, auth());
       showToast('Retrait rejeté');
       setRejectingId(null);
       setMotifRejet('');
       load();
-    } catch (e: any) {
-      showToast(e.message ?? 'Erreur lors du rejet', false);
+    } catch (e) {
+      showToast(apiMessage(e) ?? 'Erreur lors du rejet', false);
     } finally {
       setActionId(null);
       refreshSidebarBadges();
@@ -133,18 +128,13 @@ export default function RetraitsPage() {
     try {
       const form = new FormData();
       form.append('preuve', proofFile);
-      const res = await fetch(`${BASE}/retraits/admin/${id}/marquer-envoye`, {
-        method: 'POST',
-        headers: { ...((auth() as any).headers) },
-        body: form,
-      });
-      if (!res.ok) { const err = await res.json(); throw new Error(err.message ?? 'Erreur'); }
+      await axios.post(`${BASE}/retraits/admin/${id}/marquer-envoye`, form, auth());
       showToast('Retrait marqué comme envoyé');
       setSendingProofId(null);
       setProofFile(null);
       load();
-    } catch (e: any) {
-      showToast(e.message ?? "Erreur lors de l'envoi", false);
+    } catch (e) {
+      showToast(apiMessage(e) ?? "Erreur lors de l'envoi", false);
     } finally {
       setActionId(null);
       refreshSidebarBadges();
@@ -227,7 +217,7 @@ export default function RetraitsPage() {
                           <div style={{ fontWeight: 600 }}>{nom}</div>
                           {r.user?.email && <div style={{ color: 'var(--c-muted)', fontSize: 12 }}>{r.user.email}</div>}
                         </td>
-                        <td style={{ padding: '14px 16px', fontWeight: 700, color: '#1a3a6b' }}>{fmtMontant(Number(r.montant))}</td>
+                        <td style={{ padding: '14px 16px', fontWeight: 700, color: 'var(--s-blue)' }}>{fmtMontant(Number(r.montant))}</td>
                         <td style={{ padding: '14px 16px', color: 'var(--c-muted)' }}>{walletLabel(r.wallet?.type ?? '')}</td>
                         <td style={{ padding: '14px 16px' }}>
                           <div style={{ fontFamily: 'monospace', letterSpacing: 1 }}>{r.numero_telephone}</div>
@@ -237,7 +227,7 @@ export default function RetraitsPage() {
                           <StatutBadge statut={r.statut} />
                           {r.statut === 'envoye' && r.preuve_url && (
                             <div style={{ marginTop: 6 }}>
-                              <a href={r.preuve_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: '#1a3a6b', fontWeight: 600 }}>Voir la preuve</a>
+                              <a href={r.preuve_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: 'var(--s-blue)', fontWeight: 600 }}>Voir la preuve</a>
                             </div>
                           )}
                           {r.statut === 'rejete' && r.motif_rejet && (
@@ -336,7 +326,7 @@ export default function RetraitsPage() {
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '8px 0' }}>
-                      <div style={{ fontWeight: 800, fontSize: 16, color: '#1a3a6b' }}>{fmtMontant(Number(r.montant))}</div>
+                      <div style={{ fontWeight: 800, fontSize: 16, color: 'var(--s-blue)' }}>{fmtMontant(Number(r.montant))}</div>
                       <div style={{ fontSize: 11, color: 'var(--c-muted)', textAlign: 'right' }}>
                         <div style={{ fontFamily: 'monospace' }}>{r.numero_telephone}</div>
                         {r.nom_titulaire && <div>{r.nom_titulaire}</div>}
@@ -344,7 +334,7 @@ export default function RetraitsPage() {
                     </div>
 
                     {r.statut === 'envoye' && r.preuve_url && (
-                      <a href={r.preuve_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: '#1a3a6b', fontWeight: 600, display: 'block', marginBottom: 6 }}>Voir la preuve</a>
+                      <a href={r.preuve_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: 'var(--s-blue)', fontWeight: 600, display: 'block', marginBottom: 6 }}>Voir la preuve</a>
                     )}
                     {r.statut === 'rejete' && r.motif_rejet && (
                       <div style={{ fontSize: 12, color: 'var(--s-red)', marginBottom: 6 }}>{r.motif_rejet}</div>

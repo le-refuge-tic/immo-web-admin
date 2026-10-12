@@ -349,7 +349,7 @@ export default function MesVisitesPage() {
                           {peutConfirmer && (
                             <button
                               className="btn-table-action"
-                              style={{ background: 'var(--t-green-bg)', color: '#166534', border: '1px solid var(--t-green-bd)' }}
+                              style={{ background: 'var(--t-green-bg)', color: 'var(--s-green)', border: '1px solid var(--t-green-bd)' }}
                               onClick={() => handleConfirmer(v)}
                               disabled={isActing}
                               title="Confirmer"
@@ -360,7 +360,7 @@ export default function MesVisitesPage() {
                           {peutContreProposer && (
                             <button
                               className="btn-table-action"
-                              style={{ background: '#FEF9C3', color: '#854D0E', border: '1px solid var(--t-yellow-bd)' }}
+                              style={{ background: 'var(--t-yellow-bg)', color: 'var(--s-yellow)', border: '1px solid var(--t-yellow-bd)' }}
                               onClick={() => setCpModal(v.id)}
                               disabled={isActing}
                               title="Contre-proposer une date"

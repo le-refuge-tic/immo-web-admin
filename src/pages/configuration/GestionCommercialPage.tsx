@@ -521,10 +521,10 @@ const TYPE_LABEL_MAP: Record<string, string> = {
   villa: 'Villa', duplex: 'Duplex / Grande prop.', maison_individuelle: 'Maison indiv.', appartement: 'Appartement',
 };
 const MOD_LABELS: Record<string, { label: string; color: string; bg: string }> = {
-  en_attente:   { label: 'En attente',  color: '#D97706', bg: '#FFFBEB' },
-  approuve:     { label: 'Publié',      color: '#16A34A', bg: '#F0FDF4' },
-  rejete:       { label: 'Rejeté',      color: '#DC2626', bg: '#FEF2F2' },
-  conditionnel: { label: 'Conditionnel',color: '#7C3AED', bg: '#F5F3FF' },
+  en_attente:   { label: 'En attente',  color: 'var(--s-yellow)', bg: 'var(--t-yellow-bg)' },
+  approuve:     { label: 'Publié',      color: 'var(--s-green)', bg: 'var(--t-green-bg)' },
+  rejete:       { label: 'Rejeté',      color: 'var(--s-red)', bg: 'var(--t-red-bg)' },
+  conditionnel: { label: 'Conditionnel',color: 'var(--s-violet)', bg: 'var(--t-violet-bg)' },
 };
 
 function fmtSemaine(raw: string) {
@@ -657,10 +657,10 @@ function SupervisionModal({ commercial, onClose }: { commercial: any; onClose: (
                   {/* Compteurs */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
                     {[
-                      { label: 'Biens publiés', value: compteurs?.total_publies ?? 0, color: '#7C3AED' },
-                      { label: 'En vérification', value: compteurs?.en_verification ?? 0, color: '#D97706' },
-                      { label: 'Validés', value: compteurs?.valides ?? 0, color: '#16A34A' },
-                      { label: 'Validés cette semaine', value: compteurs?.valides_semaine ?? 0, color: '#2563EB' },
+                      { label: 'Biens publiés', value: compteurs?.total_publies ?? 0, color: 'var(--s-violet)' },
+                      { label: 'En vérification', value: compteurs?.en_verification ?? 0, color: 'var(--s-yellow)' },
+                      { label: 'Validés', value: compteurs?.valides ?? 0, color: 'var(--s-green)' },
+                      { label: 'Validés cette semaine', value: compteurs?.valides_semaine ?? 0, color: 'var(--s-blue)' },
                     ].map(c => (
                       <div key={c.label} style={{ background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 10, padding: '12px 14px' }}>
                         <div style={{ fontSize: 24, fontWeight: 800, color: c.color }}>{c.value}</div>
@@ -830,7 +830,7 @@ function SupervisionModal({ commercial, onClose }: { commercial: any; onClose: (
               ) : biens.map((b: any) => {
                 const sousType = b.amenites?.sous_type;
                 const label = TYPE_LABEL_MAP[sousType] ?? TYPE_LABEL_MAP[b.type] ?? b.type;
-                const mod = MOD_LABELS[b.statut_moderation] ?? { label: b.statut_moderation, color: '#6B7280', bg: '#F3F4F6' };
+                const mod = MOD_LABELS[b.statut_moderation] ?? { label: b.statut_moderation, color: 'var(--c-muted)', bg: 'var(--c-surface-2)' };
                 const proprio = b.amenites?.proprietaire_info;
                 return (
                   <div key={b.id} style={{ padding: '12px 24px', borderBottom: '1px solid var(--c-border)', display: 'flex', alignItems: 'flex-start', gap: 12 }}>

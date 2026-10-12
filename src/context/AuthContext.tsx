@@ -32,8 +32,9 @@ export function AuthProvider({ children }: { children: any }) {
     setUser(profile);
   };
 
-  // 2FA : /auth/login envoie un code SMS et renvoie { requires_otp, session_token } ;
-  // les jetons ne sont délivrés qu'après /auth/otp/verify.
+  // 2FA : sur un nouvel appareil, puis au plus tous les 7 jours, /auth/login envoie
+  // un code SMS et renvoie { requires_otp, session_token } ; les jetons ne sont
+  // alors délivrés qu'après /auth/otp/verify. Sinon, ils arrivent directement.
   const login = async (payload: any) => {
     const res = await postAuth.login(payload);
     if (res?.requires_otp) return { requiresOtp: true, sessionToken: res.session_token };

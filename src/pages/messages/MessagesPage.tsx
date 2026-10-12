@@ -44,8 +44,8 @@ function fmtSlotDate(iso?: string) {
 }
 const SLOT_STATUS: Record<string, { label: string; color: string }> = {
   pending:   { label: 'En attente de réponse', color: '#D97706' },
-  accepted:  { label: 'Confirmé',              color: '#16A34A' },
-  declined:  { label: 'Refusé',                color: '#6B7280' },
+  accepted:  { label: 'Confirmé',              color: 'var(--s-green)' },
+  declined:  { label: 'Refusé',                color: 'var(--c-muted)' },
   countered: { label: 'Contre-proposé',        color: '#7C3AED' },
 };
 
@@ -489,14 +489,14 @@ export default function MessagesPage() {
                               <button
                                 onClick={() => handleRepondreCreneau(m.id, 'accepted')}
                                 disabled={isSlotActing}
-                                style={{ flex: 1, padding: '6px 0', borderRadius: 8, border: 'none', background: 'var(--t-green-bg)', color: '#166534', fontSize: 12, fontWeight: 700, cursor: isSlotActing ? 'not-allowed' : 'pointer' }}
+                                style={{ flex: 1, padding: '6px 0', borderRadius: 8, border: 'none', background: 'var(--t-green-bg)', color: 'var(--s-green)', fontSize: 12, fontWeight: 700, cursor: isSlotActing ? 'not-allowed' : 'pointer' }}
                               >
                                 Confirmer
                               </button>
                               <button
                                 onClick={() => setCpModalFor(m.id)}
                                 disabled={isSlotActing}
-                                style={{ flex: 1, padding: '6px 0', borderRadius: 8, border: 'none', background: 'var(--t-violet-bg)', color: '#5B21B6', fontSize: 12, fontWeight: 700, cursor: isSlotActing ? 'not-allowed' : 'pointer' }}
+                                style={{ flex: 1, padding: '6px 0', borderRadius: 8, border: 'none', background: 'var(--t-violet-bg)', color: 'var(--s-violet)', fontSize: 12, fontWeight: 700, cursor: isSlotActing ? 'not-allowed' : 'pointer' }}
                               >
                                 Contre-proposer
                               </button>

@@ -50,9 +50,9 @@ export function useToast() {
 /* ── Rendu des toasts ──────────────────────────────────────────── */
 
 const COLORS: Record<ToastType, { bg: string; border: string; icon: string; text: string }> = {
-  success: { bg: '#F0FDF4', border: '#86EFAC', icon: '#16A34A', text: '#14532D' },
-  error:   { bg: '#FEF2F2', border: '#FECACA', icon: '#DC2626', text: '#7F1D1D' },
-  info:    { bg: '#EFF6FF', border: '#BFDBFE', icon: '#2563EB', text: '#1E3A5F' },
+  success: { bg: 'var(--t-green-bg)', border: 'var(--t-green-bd)', icon: 'var(--s-green)', text: 'var(--s-green)' },
+  error:   { bg: 'var(--t-red-bg)', border: 'var(--t-red-bd)', icon: 'var(--s-red)', text: 'var(--s-red)' },
+  info:    { bg: 'var(--t-blue-bg)', border: 'var(--t-blue-bd)', icon: 'var(--s-blue)', text: 'var(--s-blue)' },
 };
 
 function ToastIcon({ type }: { type: ToastType }) {

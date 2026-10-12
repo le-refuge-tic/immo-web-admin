@@ -126,7 +126,7 @@ const formatFcfa = (v: number) => v > 0 ? `${Math.round(v).toLocaleString('fr-FR
 // ─── UI primitives (inline styles only — pas de Tailwind dans ce projet) ──────
 
 const S: Record<string, CSSProperties> = {
-  card: { background: '#fff', border: '1px solid var(--c-border)', borderRadius: 14, padding: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', marginBottom: 0 },
+  card: { background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 14, padding: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', marginBottom: 0 },
   row:  { display: 'flex', alignItems: 'center' },
   col:  { display: 'flex', flexDirection: 'column' },
   wrap: { display: 'flex', flexWrap: 'wrap', gap: 8 },
@@ -168,7 +168,7 @@ function ChoiceList({ options, value, onChange, disabledValues, onDeselect }: {
             style={{
               width: '100%', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8,
               padding: '12px 16px', borderRadius: 12, border: `2px solid ${isActive ? BLUE : 'var(--c-border)'}`,
-              background: isActive ? BLUE + '12' : 'var(--c-bg)',
+              background: isActive ? BLUE + '12' : 'var(--c-surface-2)',
               opacity: isDisabled ? 0.4 : 1, cursor: isDisabled ? 'not-allowed' : 'pointer',
               textAlign: 'left', transition: 'border-color 0.15s, background 0.15s',
             }}>
@@ -205,7 +205,7 @@ function Counter({ label, value, onChange, min = 0 }: {
       <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--c-text)' }}>{label}</span>
       <div style={{ ...S.row, gap: 12 }}>
         <button type="button" disabled={value <= min} onClick={() => onChange(value - 1)}
-          style={{ width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, border: '1px solid var(--c-border)', background: 'var(--c-bg)', color: 'var(--c-text)', cursor: value <= min ? 'not-allowed' : 'pointer', opacity: value <= min ? 0.4 : 1 }}>−</button>
+          style={{ width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, border: '1px solid var(--c-border)', background: 'var(--c-surface-2)', color: 'var(--c-text)', cursor: value <= min ? 'not-allowed' : 'pointer', opacity: value <= min ? 0.4 : 1 }}>−</button>
         <span style={{ width: 24, textAlign: 'center', fontWeight: 700, color: 'var(--c-text)' }}>{value}</span>
         <button type="button" onClick={() => onChange(value + 1)}
           style={{ width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, background: BLUE + '18', color: BLUE, border: 'none', cursor: 'pointer' }}>+</button>
@@ -228,7 +228,7 @@ function NumberPicker({ presets, unit, value, isCustom, onPick, onCustomStart, c
       </div>
       {isCustom && (
         <input type="number" min="0" max="9999" step="1" value={customText} onChange={e => onCustomText(e.target.value)} onKeyDown={e => blockInvalidNumberKey(e, true)} placeholder="Nombre"
-          style={{ marginTop: 10, width: '100%', borderRadius: 10, padding: '10px 16px', fontSize: 14, outline: 'none', border: `1px solid ${BLUE}`, background: 'var(--c-bg)', color: 'var(--c-text)', boxSizing: 'border-box' }} />
+          style={{ marginTop: 10, width: '100%', borderRadius: 10, padding: '10px 16px', fontSize: 14, outline: 'none', border: `1px solid ${BLUE}`, background: 'var(--c-surface-2)', color: 'var(--c-text)', boxSizing: 'border-box' }} />
       )}
     </div>
   )
@@ -238,7 +238,7 @@ function MoneyInput({ value, onChange, placeholder }: { value: string; onChange:
   return (
     <div style={{ position: 'relative' }}>
       <input type="number" min="0" max="999999999" step="1" value={value} onChange={e => onChange(e.target.value)} onKeyDown={e => blockInvalidNumberKey(e, true)} placeholder={placeholder ?? '0'}
-        style={{ width: '100%', borderRadius: 10, padding: '12px 56px 12px 16px', fontSize: 14, outline: 'none', border: '1px solid var(--c-border)', background: 'var(--c-bg)', color: 'var(--c-text)', transition: 'border-color 0.15s', boxSizing: 'border-box' }}
+        style={{ width: '100%', borderRadius: 10, padding: '12px 56px 12px 16px', fontSize: 14, outline: 'none', border: '1px solid var(--c-border)', background: 'var(--c-surface-2)', color: 'var(--c-text)', transition: 'border-color 0.15s', boxSizing: 'border-box' }}
         onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
         onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
       <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 12, fontWeight: 600, color: 'var(--c-muted)', pointerEvents: 'none' }}>FCFA</span>
@@ -248,7 +248,7 @@ function MoneyInput({ value, onChange, placeholder }: { value: string; onChange:
 
 const baseInput: CSSProperties = {
   width: '100%', borderRadius: 10, padding: '12px 16px', fontSize: 14, outline: 'none',
-  border: '1px solid var(--c-border)', background: 'var(--c-bg)', color: 'var(--c-text)',
+  border: '1px solid var(--c-border)', background: 'var(--c-surface-2)', color: 'var(--c-text)',
   boxSizing: 'border-box', transition: 'border-color 0.15s',
 }
 
@@ -781,7 +781,7 @@ export default function PublierBienPage() {
       <div style={{ maxWidth: PW, width: '100%', margin: '0 auto', padding: '10px 16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
           <button onClick={() => step > 0 ? setStep(s => s - 1) : navigate('/mes-annonces')}
-            style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', borderRadius: 7, fontSize: 11, fontWeight: 600, border: '1px solid var(--c-border)', background: 'var(--c-bg)', color: 'var(--c-muted)', cursor: 'pointer', flexShrink: 0 }}>
+            style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', borderRadius: 7, fontSize: 11, fontWeight: 600, border: '1px solid var(--c-border)', background: 'var(--c-surface-2)', color: 'var(--c-muted)', cursor: 'pointer', flexShrink: 0 }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
               <path d="M15 19l-7-7 7-7" />
             </svg>
@@ -974,7 +974,7 @@ export default function PublierBienPage() {
                           ) : filteredQuartiers.map((q, qi) => (
                             <button key={q.nom + q.arrondissement} type="button"
                               onMouseDown={() => selectQuartier(q.nom, q.arrondissement, q.ville)}
-                              style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', textAlign: 'left', fontSize: 14, color: 'var(--c-text)', background: hoveredQuartierIdx === qi ? 'var(--c-bg)' : 'none', border: 'none', borderBottom: '1px solid var(--c-border)', cursor: 'pointer' }}
+                              style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', textAlign: 'left', fontSize: 14, color: 'var(--c-text)', background: hoveredQuartierIdx === qi ? 'var(--c-surface-2)' : 'none', border: 'none', borderBottom: '1px solid var(--c-border)', cursor: 'pointer' }}
                               onMouseEnter={() => setHoveredQuartierIdx(qi)}
                               onMouseLeave={() => setHoveredQuartierIdx(null)}>
                               <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} style={{ color: 'var(--c-muted)', flexShrink: 0 }}>
@@ -1017,7 +1017,7 @@ export default function PublierBienPage() {
                 {quartier && !quartierManuel && arrondissement && (
                   <div>
                     <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 8, display: 'block', color: 'var(--c-muted)' }}>Arrondissement</label>
-                    <div style={{ padding: '12px 16px', borderRadius: 12, border: '1px solid var(--c-border)', fontSize: 14, fontWeight: 600, background: 'var(--c-bg)', color: 'var(--c-muted)' }}>
+                    <div style={{ padding: '12px 16px', borderRadius: 12, border: '1px solid var(--c-border)', fontSize: 14, fontWeight: 600, background: 'var(--c-surface-2)', color: 'var(--c-muted)' }}>
                       {arrondissement}
                     </div>
                   </div>
@@ -1100,7 +1100,7 @@ export default function PublierBienPage() {
                     style={{ ...baseInput, flex: 1, minWidth: 0 }}
                     onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
                     onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
-                  <div style={{ display: 'flex', borderRadius: 12, border: '1px solid var(--c-border)', padding: 4, flexShrink: 0, background: 'var(--c-bg)' }}>
+                  <div style={{ display: 'flex', borderRadius: 12, border: '1px solid var(--c-border)', padding: 4, flexShrink: 0, background: 'var(--c-surface-2)' }}>
                     {(['m2', 'ha'] as const).map(u => (
                       <button key={u} type="button"
                         onClick={() => {
@@ -1127,7 +1127,7 @@ export default function PublierBienPage() {
                   { value: 'ruelle', label: 'Dans la ruelle' },
                   { value: 'autre', label: 'Autre' },
                 ]} value={positionTerrain} onChange={setPositionTerrain} />
-                <label style={{ marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderRadius: 12, border: '1px solid var(--c-border)', cursor: 'pointer', background: 'var(--c-bg)' }}>
+                <label style={{ marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderRadius: 12, border: '1px solid var(--c-border)', cursor: 'pointer', background: 'var(--c-surface-2)' }}>
                   <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--c-text)' }}>Parcelle en angle de rue</span>
                   <input type="checkbox" checked={angleRue} onChange={e => setAngleRue(e.target.checked)} style={{ width: 20, height: 20, accentColor: BLUE }} />
                 </label>
@@ -1166,7 +1166,7 @@ export default function PublierBienPage() {
                 <p style={{ fontSize: 12, marginBottom: 12, color: 'var(--c-muted)' }}>Ajoutez toute information utile non couverte ci-dessus.</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {detailsSupplementaires.map((d, i) => (
-                    <div key={i} style={{ padding: 12, borderRadius: 12, border: '1px solid var(--c-border)', display: 'flex', flexDirection: 'column', gap: 8, background: 'var(--c-bg)' }}>
+                    <div key={i} style={{ padding: 12, borderRadius: 12, border: '1px solid var(--c-border)', display: 'flex', flexDirection: 'column', gap: 8, background: 'var(--c-surface-2)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <input value={d.label}
                           onChange={e => setDetailsSupplementaires(arr => arr.map((x, idx) => idx === i ? { ...x, label: e.target.value } : x))}
@@ -1410,7 +1410,7 @@ export default function PublierBienPage() {
                     const isActive = electricite === o.value
                     return (
                       <button key={o.value} type="button" onClick={() => setElectricite(o.value)}
-                        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '12px 16px', borderRadius: 12, border: `2px solid ${isActive ? BLUE : 'var(--c-border)'}`, textAlign: 'left', transition: 'all 0.15s', background: isActive ? BLUE + '18' : 'var(--c-bg)', cursor: 'pointer' }}>
+                        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '12px 16px', borderRadius: 12, border: `2px solid ${isActive ? BLUE : 'var(--c-border)'}`, textAlign: 'left', transition: 'all 0.15s', background: isActive ? BLUE + '18' : 'var(--c-surface-2)', cursor: 'pointer' }}>
                         <span>
                           <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: isActive ? BLUE : 'var(--c-text)' }}>{o.label}</span>
                           {o.sub && <span style={{ display: 'block', fontSize: 12, marginTop: 2, color: 'var(--c-muted)' }}>{o.sub}</span>}
@@ -1444,7 +1444,7 @@ export default function PublierBienPage() {
                     const isActive = eau === o.value
                     return (
                       <button key={o.value} type="button" onClick={() => setEau(o.value)}
-                        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '12px 16px', borderRadius: 12, border: `2px solid ${isActive ? BLUE : 'var(--c-border)'}`, textAlign: 'left', transition: 'all 0.15s', background: isActive ? BLUE + '18' : 'var(--c-bg)', cursor: 'pointer' }}>
+                        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '12px 16px', borderRadius: 12, border: `2px solid ${isActive ? BLUE : 'var(--c-border)'}`, textAlign: 'left', transition: 'all 0.15s', background: isActive ? BLUE + '18' : 'var(--c-surface-2)', cursor: 'pointer' }}>
                         <span>
                           <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: isActive ? BLUE : 'var(--c-text)' }}>{o.label}</span>
                           {o.sub && <span style={{ display: 'block', fontSize: 12, marginTop: 2, color: 'var(--c-muted)' }}>{o.sub}</span>}
@@ -1757,7 +1757,7 @@ export default function PublierBienPage() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4, color: 'var(--c-muted)' }}>
                       <span>Upload photos…</span><span>{uploadProgress}%</span>
                     </div>
-                    <div style={{ height: 8, borderRadius: 4, background: 'var(--c-bg)' }}>
+                    <div style={{ height: 8, borderRadius: 4, background: 'var(--c-surface-2)' }}>
                       <div style={{ height: '100%', borderRadius: 4, transition: 'width 0.3s', width: `${uploadProgress}%`, background: BLUE }} />
                     </div>
                   </div>
@@ -1771,7 +1771,7 @@ export default function PublierBienPage() {
                 </p>
                 <p style={{ fontSize: 12, marginBottom: 16, color: 'var(--c-muted)' }}>Maximum 1 vidéo (MP4 uniquement)</p>
                 {video ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 12, border: '1px solid var(--c-border)', background: 'var(--c-bg)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 12, border: '1px solid var(--c-border)', background: 'var(--c-surface-2)' }}>
                     <div style={{ width: 40, height: 40, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: BLUE + '20' }}>
                       <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} style={{ color: BLUE }}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />

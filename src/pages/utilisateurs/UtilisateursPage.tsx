@@ -14,10 +14,10 @@ const TABS = [
 ];
 
 const ROLE_CONFIG: any = {
-  prospect:     { label: 'Prospect',     color: '#2563EB', bg: '#EFF6FF' },
-  proprietaire: { label: 'Propriétaire', color: '#16A34A', bg: '#F0FDF4' },
-  demarcheur:   { label: 'Démarcheur',   color: '#D97706', bg: '#FFFBEB' },
-  locataire:    { label: 'Locataire',    color: '#7C3AED', bg: '#F5F3FF' },
+  prospect:     { label: 'Prospect',     color: 'var(--s-blue)', bg: 'var(--t-blue-bg)' },
+  proprietaire: { label: 'Propriétaire', color: 'var(--s-green)', bg: 'var(--t-green-bg)' },
+  demarcheur:   { label: 'Démarcheur',   color: 'var(--s-yellow)', bg: 'var(--t-yellow-bg)' },
+  locataire:    { label: 'Locataire',    color: 'var(--s-violet)', bg: 'var(--t-violet-bg)' },
 };
 
 const AVATAR_COLORS = ['#2563EB', '#7C3AED', '#DB2777', '#D97706', '#16A34A', '#0891B2'];

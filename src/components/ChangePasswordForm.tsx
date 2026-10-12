@@ -121,39 +121,36 @@ export default function ChangePasswordForm({ onSuccess, submitLabel = 'Valider l
     }), 1000);
   };
 
-  // Étape 1 : valider les mots de passe puis envoyer l'OTP
+  const terminer = () => {
+    showToast('Mot de passe mis à jour. Vos autres appareils ont été déconnectés.');
+    onSuccess();
+  };
+
+  // Étape 1 : vérifier le mot de passe actuel ; le serveur envoie un code SMS
+  // (sauf pour le changement imposé du mot de passe provisoire).
   const handleSubmitForm = async (e: FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
-    // Si pas de téléphone enregistré (ex. admin), on change directement sans OTP
-    if (!phone) {
-      setError('');
-      setLoading(true);
-      try {
-        await patchAuth.changePassword(currentPassword, newPassword);
-        showToast('Mot de passe mis à jour avec succès.');
-        onSuccess();
-      } catch (err: any) {
-        setError(apiMessage(err) ?? 'Impossible de changer le mot de passe.');
-        setLoading(false);
-      }
-      return;
-    }
     setError('');
     setLoading(true);
     try {
-      const res = await patchAuth.sendPhoneOtp(phone);
+      const res = await patchAuth.sendPasswordOtp(currentPassword);
+      if (!res.requires_otp || !res.session_token) {
+        await patchAuth.changePassword({ current_password: currentPassword, new_password: newPassword });
+        terminer();
+        return;
+      }
       setSessionToken(res.session_token);
       setStep('otp');
       startCountdown();
     } catch (err: any) {
-      setError(apiMessage(err) ?? 'Impossible d\'envoyer le code SMS.');
+      setError(apiMessage(err) ?? 'Impossible de changer le mot de passe.');
     } finally {
       setLoading(false);
     }
   };
 
-  // Étape 2 : vérifier l'OTP puis changer le mot de passe
+  // Étape 2 : changer le mot de passe avec le code reçu
   const handleVerifyOtp = async (e: FormEvent) => {
     e.preventDefault();
     if (otp.length !== 6) {
@@ -163,18 +160,15 @@ export default function ChangePasswordForm({ onSuccess, submitLabel = 'Valider l
     setLoading(true);
     setError('');
     try {
-      await patchAuth.verifyPhoneOtp(sessionToken, otp, phone);
+      await patchAuth.changePassword({
+        current_password: currentPassword,
+        new_password: newPassword,
+        session_token: sessionToken,
+        code: otp,
+      });
+      terminer();
     } catch (err: any) {
       setError(apiMessage(err) ?? 'Code incorrect ou expiré.');
-      setLoading(false);
-      return;
-    }
-    try {
-      await patchAuth.changePassword(currentPassword, newPassword);
-      showToast('Mot de passe mis à jour avec succès.');
-      onSuccess();
-    } catch (err: any) {
-      setError(apiMessage(err) ?? 'Impossible de changer le mot de passe.');
       setLoading(false);
     }
   };
@@ -185,8 +179,8 @@ export default function ChangePasswordForm({ onSuccess, submitLabel = 'Valider l
     setError('');
     setOtp('');
     try {
-      const res = await patchAuth.sendPhoneOtp(phone);
-      setSessionToken(res.session_token);
+      const res = await patchAuth.sendPasswordOtp(currentPassword);
+      if (res.session_token) setSessionToken(res.session_token);
       startCountdown();
     } catch (err: any) {
       setError(apiMessage(err) ?? 'Erreur lors du renvoi.');
@@ -224,7 +218,7 @@ export default function ChangePasswordForm({ onSuccess, submitLabel = 'Valider l
 
         <div style={{ fontSize: 13, color: 'var(--c-text)', lineHeight: 1.6, marginBottom: 20 }}>
           Un code de vérification a été envoyé au{' '}
-          <strong style={{ color: 'var(--c-text)' }}>+{phone}</strong>.{' '}
+          <strong style={{ color: 'var(--c-text)' }}>{phone.startsWith('+') ? phone : `+${phone}`}</strong>.{' '}
           <button
             type="button"
             onClick={() => { setStep('form'); setError(''); setOtp(''); }}

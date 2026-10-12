@@ -50,9 +50,9 @@ const TYPE_LABEL_MAP: Record<string, string> = {
   'commerce': 'Commerce', 'terrain': 'Terrain', 'entrepot': 'Entrepôt',
 };
 const MOD_LABELS: Record<string, { label: string; color: string; bg: string }> = {
-  approuve:   { label: 'Publié',     color: '#16A34A', bg: '#F0FDF4' },
-  en_attente: { label: 'En attente', color: '#D97706', bg: '#FFFBEB' },
-  rejete:     { label: 'Rejeté',     color: '#DC2626', bg: '#FEF2F2' },
+  approuve:   { label: 'Publié',     color: 'var(--s-green)', bg: 'var(--t-green-bg)' },
+  en_attente: { label: 'En attente', color: 'var(--s-yellow)', bg: 'var(--t-yellow-bg)' },
+  rejete:     { label: 'Rejeté',     color: 'var(--s-red)', bg: 'var(--t-red-bg)' },
 };
 
 /* ─── Claim helpers ─────────────────────────────────────────── */
@@ -721,7 +721,7 @@ export default function SupervisionPage() {
                                 {senderName}
                               </div>
                               <div style={{
-                                background: isSuppressed ? 'var(--c-bg)' : (isStaff ? 'var(--c-blue-solid)' : '#fff'),
+                                background: isSuppressed ? 'var(--c-bg)' : (isStaff ? 'var(--c-blue-solid)' : 'var(--c-card)'),
                                 color: isSuppressed ? 'var(--c-muted)' : (isStaff ? '#fff' : 'var(--c-text)'),
                                 border: isSuppressed ? '1px dashed var(--c-border)' : (isStaff ? 'none' : '1px solid var(--c-border)'),
                                 borderRadius: isStaff ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
@@ -972,7 +972,7 @@ export default function SupervisionPage() {
                   ) : personBiens.map((b: any) => {
                     const sousType = b.amenites?.sous_type;
                     const label = TYPE_LABEL_MAP[sousType] ?? TYPE_LABEL_MAP[b.type] ?? b.type;
-                    const mod   = MOD_LABELS[b.statut_moderation] ?? { label: b.statut_moderation, color: '#6B7280', bg: '#F3F4F6' };
+                    const mod   = MOD_LABELS[b.statut_moderation] ?? { label: b.statut_moderation, color: 'var(--c-muted)', bg: 'var(--c-surface-2)' };
                     const proprio = b.amenites?.proprietaire_info;
                     return (
                       <div

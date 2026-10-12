@@ -81,7 +81,7 @@ function Field({ label, children, hint }: { label: string; children: React.React
 }
 function SInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
   const [f, setF] = useState(false);
-  return <input {...props} style={{ width:'100%', boxSizing:'border-box', background:'var(--c-card)', border:`1.5px solid ${f ? '#2563EB' : '#E2E8F0'}`, borderRadius:8, padding:'9px 12px', fontSize:13, color:'var(--c-text)', outline:'none', transition:'border-color .15s', ...props.style }}
+  return <input {...props} style={{ width:'100%', boxSizing:'border-box', background:'var(--c-card)', border:`1.5px solid ${f ? 'var(--c-blue)' : 'var(--c-border)'}`, borderRadius:8, padding:'9px 12px', fontSize:13, color:'var(--c-text)', outline:'none', transition:'border-color .15s', ...props.style }}
     onFocus={e => { setF(true); props.onFocus?.(e); }} onBlur={e => { setF(false); props.onBlur?.(e); }} />;
 }
 function SSelect({ value, onChange, children }: { value: string; onChange: (v: string) => void; children: React.ReactNode }) {
@@ -407,13 +407,13 @@ export default function AnnonceEditPage() {
     const lastIdx = [...ps].map(p => p.nom).lastIndexOf(nom);
     return lastIdx === -1 ? ps : ps.filter((_, i) => i !== lastIdx);
   });
-  const CARD: React.CSSProperties = { background:'#fff', border:'1px solid #E2E8F0', borderRadius:12, padding:'22px 24px', marginBottom:18 };
+  const CARD: React.CSSProperties = { background:'var(--c-card)', border:'1px solid var(--c-border)', borderRadius:12, padding:'22px 24px', marginBottom:18 };
 
   // ── Loading / error states ───────────────────────────────────────────────────
   const TOP_STYLE: React.CSSProperties = {
     position:'sticky', top:0, zIndex:40,
     display:'flex', alignItems:'center', gap:10, padding:'0 24px', height:52,
-    borderBottom:'1px solid #E2E8F0', background:'#fff', boxShadow:'0 1px 0 #E2E8F0',
+    borderBottom:'1px solid var(--c-border)', background:'var(--c-card)', boxShadow:'0 1px 0 var(--c-border)',
   };
 
   if (loading) return (
@@ -766,8 +766,8 @@ export default function AnnonceEditPage() {
                 <span style={{ fontSize:13, color:'var(--c-muted)', flexShrink:0 }}>Échéance paiement (jour du mois)</span>
                 <SInput type="number" min="1" max="31" step="1" placeholder="Ex : 5" value={echeanceMois} onChange={e => setEcheanceMois(e.target.value)} onKeyDown={e => blockInvalidNumberKey(e, true)} style={{ maxWidth:120, textAlign:'right' }} />
               </div>
-              <div style={{ marginTop:16, padding:14, background:'#F0F9FF', borderRadius:8, border:'1px solid #BAE6FD' }}>
-                <p style={{ fontSize:12, color:'#075985', margin:0, lineHeight:1.7 }}>
+              <div style={{ marginTop:16, padding:14, background:'var(--t-blue-bg)', borderRadius:8, border:'1px solid var(--t-blue-bd)' }}>
+                <p style={{ fontSize:12, color:'var(--s-blue)', margin:0, lineHeight:1.7 }}>
                   <strong>Commission</strong>
                   {isOwner
                     ? <span> : 500 FCFA fixe (annonce propriétaire — lecture seule)</span>
