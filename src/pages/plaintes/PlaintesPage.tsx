@@ -11,9 +11,9 @@ function displayName(u: any) { return (u?.prenom || u?.nom) ? `${u?.prenom ?? ''
 function fmtDate(iso: string) { return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
 
 const STATUT_STYLES: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  en_attente: { label: 'En attente',  color: '#D97706', bg: '#FFFBEB', border: '#FDE68A' },
-  traitee:    { label: 'Traitée',     color: '#16A34A', bg: '#F0FDF4', border: '#BBF7D0' },
-  rejetee:    { label: 'Rejetée',     color: '#DC2626', bg: '#FEF2F2', border: '#FECACA' },
+  en_attente: { label: 'En attente',  color: 'var(--s-yellow)', bg: 'var(--t-yellow-bg)', border: 'var(--t-yellow-bd)' },
+  traitee:    { label: 'Traitée',     color: 'var(--s-green)', bg: 'var(--t-green-bg)', border: 'var(--t-green-bd)' },
+  rejetee:    { label: 'Rejetée',     color: 'var(--s-red)', bg: 'var(--t-red-bg)', border: 'var(--t-red-bd)' },
 };
 
 export default function PlaintesPage() {
@@ -70,7 +70,7 @@ export default function PlaintesPage() {
             <button key={s} onClick={() => { setFilterStatut(s); load(s); }}
               style={{
                 padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                background: filterStatut === s ? 'var(--c-blue)' : 'var(--c-card)',
+                background: filterStatut === s ? 'var(--c-blue-solid)' : 'var(--c-card)',
                 color: filterStatut === s ? '#fff' : 'var(--c-muted)',
                 border: `1px solid ${filterStatut === s ? 'var(--c-blue)' : 'var(--c-border)'}`,
               }}
@@ -117,7 +117,7 @@ export default function PlaintesPage() {
                       style={{
                         padding: '14px 20px', borderBottom: idx < plaintes.length - 1 ? '1px solid var(--c-border)' : 'none',
                         cursor: 'pointer', transition: 'background 0.1s',
-                        background: isSelected ? '#EFF6FF' : 'transparent',
+                        background: isSelected ? 'var(--t-blue-bg)' : 'transparent',
                         borderLeft: isSelected ? '3px solid var(--c-blue)' : '3px solid transparent',
                       }}
                     >

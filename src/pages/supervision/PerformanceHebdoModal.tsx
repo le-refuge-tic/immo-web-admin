@@ -13,6 +13,12 @@ export default function PerformanceHebdoModal({ onClose }: { onClose: () => void
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
+
+  useEffect(() => {
     getSupervisionPerformance.hebdo(8)
       .then(r => setRows(Array.isArray(r) ? r : []))
       .catch(() => setRows([]))
@@ -20,7 +26,7 @@ export default function PerformanceHebdoModal({ onClose }: { onClose: () => void
   }, []);
 
   return (
-    <div className="immo-modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
+    <div className="immo-modal-backdrop" role="dialog" aria-modal="true" aria-label="Performance hebdomadaire" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="immo-modal" style={{ maxWidth: 640 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
           <div>

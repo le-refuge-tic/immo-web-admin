@@ -70,9 +70,9 @@ export default function LoyersPage() {
 
       <div className="immo-page">
         {loadError && (
-          <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8, padding: '10px 16px', fontSize: 13, color: '#DC2626', fontWeight: 500 }}>
+          <div style={{ background: 'var(--t-red-bg)', border: '1px solid var(--t-red-bd)', borderRadius: 8, padding: '10px 16px', fontSize: 13, color: 'var(--s-red)', fontWeight: 500 }}>
             Erreur lors du chargement.{' '}
-            <button onClick={load} style={{ background: 'none', border: 'none', color: '#DC2626', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>
+            <button onClick={load} style={{ background: 'none', border: 'none', color: 'var(--s-red)', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>
               Réessayer
             </button>
           </div>
@@ -119,12 +119,12 @@ export default function LoyersPage() {
               </div>
               <div style={{ fontSize: 13 }}>{formatDate(l.date_echeance)}</div>
               <div><LoyersStatutBadge statut={l.statut} /></div>
-              <div style={{ fontSize: 13, color: l.jours_retard > 0 ? '#DC2626' : 'var(--c-muted)' }}>
+              <div style={{ fontSize: 13, color: l.jours_retard > 0 ? 'var(--s-red)' : 'var(--c-muted)' }}>
                 {l.jours_retard > 0 ? `${l.jours_retard}j` : '—'}
               </div>
               <div style={{ textAlign: 'center' }}>
                 {l.escalade_admin ? (
-                  <span style={{ fontSize: 11, background: '#FEF2F2', color: '#DC2626', padding: '2px 6px', borderRadius: 6, fontWeight: 700 }}>OUI</span>
+                  <span style={{ fontSize: 11, background: 'var(--t-red-bg)', color: 'var(--s-red)', padding: '2px 6px', borderRadius: 6, fontWeight: 700 }}>OUI</span>
                 ) : (
                   <span style={{ color: 'var(--c-muted)', fontSize: 12 }}>—</span>
                 )}
@@ -168,12 +168,12 @@ export default function LoyersPage() {
                   <div style={{ fontSize: 11, color: 'var(--c-muted)', marginTop: 2 }}>
                     Échéance : {formatDate(l.date_echeance)}
                     {l.jours_retard > 0 && (
-                      <span style={{ color: '#DC2626', marginLeft: 8, fontWeight: 700 }}>+{l.jours_retard}j retard</span>
+                      <span style={{ color: 'var(--s-red)', marginLeft: 8, fontWeight: 700 }}>+{l.jours_retard}j retard</span>
                     )}
                   </div>
                 </div>
                 {l.escalade_admin && (
-                  <span style={{ fontSize: 11, background: '#FEF2F2', color: '#DC2626', padding: '2px 8px', borderRadius: 6, fontWeight: 700 }}>Escaladé</span>
+                  <span style={{ fontSize: 11, background: 'var(--t-red-bg)', color: 'var(--s-red)', padding: '2px 8px', borderRadius: 6, fontWeight: 700 }}>Escaladé</span>
                 )}
               </div>
             </div>

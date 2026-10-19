@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { useAuth } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AdminRoute, SuperAdminRoute } from './components/RoleRoute';
 import AdminLayout from './layout/AdminLayout';
@@ -17,6 +18,7 @@ import GestionProspectPage from './pages/configuration/GestionProspectPage';
 import GestionLocatairePage from './pages/configuration/GestionLocatairePage';
 import GestionAdminPage from './pages/configuration/GestionAdminPage';
 import GestionCommercialPage from './pages/configuration/GestionCommercialPage';
+import GestionEquipesPage from './pages/configuration/GestionEquipesPage';
 import LoyersPage    from './pages/loyers/LoyersPage';
 import FinancesPage  from './pages/finances/FinancesPage';
 import FeedbacksPage from './pages/feedbacks/FeedbacksPage';
@@ -29,10 +31,12 @@ import PublierBienPage         from './pages/commercial/PublierBienPage';
 import CommercialDashboardPage    from './pages/commercial/CommercialDashboardPage';
 import CommercialPortefeuillePage from './pages/commercial/CommercialPortefeuillePage';
 import MesClientsPage             from './pages/commercial/MesClientsPage';
+import MonEquipePage              from './pages/commercial/MonEquipePage';
 import SupervisionPage         from './pages/supervision/SupervisionPage';
 import PlaintesPage            from './pages/plaintes/PlaintesPage';
 import ModerationPage          from './pages/moderation/ModerationPage';
 import VerificationsPage       from './pages/verifications/VerificationsPage';
+import NotFoundPage from './pages/errors/NotFoundPage';
 
 function DefaultRedirect() {
   const { user } = useAuth();
@@ -44,6 +48,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <ToastProvider>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route
@@ -60,9 +65,12 @@ export default function App() {
             <Route path="annonces/:id"      element={<AdminRoute><AnnonceDetailPage /></AdminRoute>} />
             <Route path="annonces/:id/modifier" element={<AdminRoute><AnnonceEditPage /></AdminRoute>} />
             <Route path="commercial-dashboard" element={<CommercialDashboardPage />} />
-            <Route path="mes-annonces"         element={<MesAnnoncesPage />} />
+            <Route path="mes-annonces"              element={<MesAnnoncesPage />} />
+            <Route path="mes-annonces/:id"          element={<AnnonceDetailPage />} />
+            <Route path="mes-annonces/:id/modifier" element={<AnnonceEditPage />} />
             <Route path="mes-visites"          element={<MesVisitesPage />} />
             <Route path="mes-clients"              element={<MesClientsPage />} />
+            <Route path="mon-equipe"               element={<MonEquipePage />} />
             <Route path="portefeuille-commercial" element={<CommercialPortefeuillePage />} />
             <Route path="publier-bien"         element={<PublierBienPage />} />
             <Route path="messages"     element={<MessagesPage />} />
@@ -83,14 +91,16 @@ export default function App() {
               <Route index element={<Navigate to="profil" replace />} />
               <Route path="profil"          element={<ProfilPage />} />
               <Route path="commerciaux"     element={<AdminRoute><GestionCommercialPage /></AdminRoute>} />
+              <Route path="equipes"         element={<AdminRoute><GestionEquipesPage /></AdminRoute>} />
               <Route path="proprietaires"   element={<AdminRoute><GestionProprietairePage /></AdminRoute>} />
               <Route path="prospects"       element={<AdminRoute><GestionProspectPage /></AdminRoute>} />
               <Route path="locataires"      element={<AdminRoute><GestionLocatairePage /></AdminRoute>} />
               <Route path="administrateurs" element={<SuperAdminRoute><GestionAdminPage /></SuperAdminRoute>} />
             </Route>
+            <Route path="*" element={<NotFoundPage />} />
           </Route>
-          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </ToastProvider>
       </AuthProvider>
     </BrowserRouter>
   );

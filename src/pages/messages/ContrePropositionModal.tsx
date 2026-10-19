@@ -1,9 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function ContrePropositionModal({ onClose, onConfirm }: { onClose: () => void; onConfirm: (date: string) => void }) {
   const [date, setDate] = useState('');
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
+
   return (
-    <div className="immo-modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
+    <div className="immo-modal-backdrop" role="dialog" aria-modal="true" aria-label="Contre-proposition" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="immo-modal" style={{ maxWidth: 380 }}>
         <div className="immo-modal-title">Contre-proposer une date</div>
         <div className="immo-form-field" style={{ marginTop: 16 }}>

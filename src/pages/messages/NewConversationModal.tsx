@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { getAdminUser } from '../../api/getAdminUser';
 import { postConversation } from '../../api/postConversation';
 import { SearchIcon, XIcon } from '../../components/Icons';
+import { apiMessage } from '../../utils/apiMessage';
 
 const COLORS = ['#2563EB', '#7C3AED', '#DB2777', '#D97706', '#16A34A', '#0891B2'];
 function avatarColor(id: number) { return COLORS[Math.abs(id) % COLORS.length]; }
@@ -20,17 +21,33 @@ const ROLE_LABELS: any = {
   locataire:    'Locataire',
 };
 
-export default function NewConversationModal({ onClose, onCreated }: {
+export default function NewConversationModal({ onClose, onCreated, preselectedUser }: {
   onClose: () => void;
   onCreated: (conv: any) => void;
+  preselectedUser?: { id: number; prenom?: string; nom?: string; email?: string; role?: string } | null;
 }) {
   const [search, setSearch]       = useState('');
   const [roleTab, setRoleTab]     = useState('');
   const [users, setUsers]         = useState([] as any[]);
   const [loading, setLoading]     = useState(true);
-  const [creating, setCreating]   = useState(null as any);
+  const [creating, setCreating]   = useState<number | null>(null);
+  const [createError, setCreateError] = useState('');
+
+  // Si un utilisateur est pré-sélectionné, créer la conversation immédiatement
+  useEffect(() => {
+    if (!preselectedUser) return;
+    setCreating(preselectedUser.id);
+    postConversation.create(preselectedUser.id)
+      .then(conv => onCreated(conv))
+      .catch((err: any) => {
+        setCreateError(apiMessage(err) ?? 'Impossible de créer la conversation.');
+        setCreating(null);
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
+    if (preselectedUser) return; // pas besoin de charger la liste
     setLoading(true);
     getAdminUser.list({
       limit: 50,
@@ -41,22 +58,50 @@ export default function NewConversationModal({ onClose, onCreated }: {
       .then(res => setUsers(res.data ?? res))
       .catch(() => setUsers([]))
       .finally(() => setLoading(false));
-  }, [roleTab, search]);
+  }, [roleTab, search, preselectedUser]);
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
 
   const handleSelect = async (u: any) => {
     if (creating) return;
     setCreating(u.id);
+    setCreateError('');
     try {
       const conv = await postConversation.create(u.id);
       onCreated(conv);
     } catch (err: any) {
-      alert(err?.response?.data?.message ?? 'Impossible de créer la conversation.');
+      setCreateError(apiMessage(err) ?? 'Impossible de créer la conversation.');
       setCreating(null);
     }
   };
 
+  // Écran de chargement pendant la création automatique depuis un client pré-sélectionné
+  if (preselectedUser && !createError) {
+    const name = [preselectedUser.prenom, preselectedUser.nom].filter(Boolean).join(' ') || preselectedUser.email || `#${preselectedUser.id}`;
+    return (
+      <div className="immo-modal-backdrop" onClick={onClose} role="dialog" aria-modal="true" aria-label="Ouverture de la conversation">
+        <div className="ncm-modal" onClick={e => e.stopPropagation()} style={{ textAlign: 'center', padding: '32px 24px' }}>
+          <div style={{ width: 48, height: 48, borderRadius: '50%', background: avatarColor(preselectedUser.id), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 700, color: '#fff', margin: '0 auto 16px' }}>
+            {initials(preselectedUser)}
+          </div>
+          <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--c-text)', marginBottom: 6 }}>
+            Ouverture de la conversation
+          </div>
+          <div style={{ fontSize: 13, color: 'var(--c-muted)', marginBottom: 20 }}>
+            avec <strong>{name}</strong>
+          </div>
+          <div className="msg-spinner" style={{ margin: '0 auto' }} />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="immo-modal-backdrop" onClick={onClose}>
+    <div className="immo-modal-backdrop" onClick={onClose} role="dialog" aria-modal="true" aria-label="Nouveau message">
       <div className="ncm-modal" onClick={e => e.stopPropagation()}>
 
         {/* Header */}
@@ -94,6 +139,12 @@ export default function NewConversationModal({ onClose, onCreated }: {
             </button>
           ))}
         </div>
+
+        {createError && (
+          <div style={{ margin: '0 0 12px', padding: '8px 12px', borderRadius: 8, background: 'var(--c-red-bg)', border: '1px solid var(--t-red-bd)', color: 'var(--c-red)', fontSize: 12, fontWeight: 500 }}>
+            {createError}
+          </div>
+        )}
 
         {/* Liste des utilisateurs */}
         <div className="ncm-user-list">

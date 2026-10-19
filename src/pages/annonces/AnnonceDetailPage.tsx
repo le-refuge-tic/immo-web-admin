@@ -1,13 +1,22 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { getAdminBien } from '../../api/getAdminBien';
 import { patchAdminBien } from '../../api/patchAdminBien';
 import { getGeocoding } from '../../api/getGeocoding';
 import { deleteAdminBien } from '../../api/deleteAdminBien';
 import { ChevronLeftIcon, PinIcon, TrashIcon, EditIcon } from '../../components/Icons';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 
 // ── Labels lisibles pour les champs amenites ────────────────────────────────
+const STANDING_LABELS: Record<string, string> = {
+  sanitaire: 'Sanitaire',
+  semi_sanitaire: 'Semi sanitaire',
+  sanitaire_semi_staffe: 'Sanitaire semi-staffé',
+  sanitaire_staffe: 'Sanitaire staffé',
+  haut_standing_vip: 'Haut Standing / VIP',
+}
+
 const AMENITE_FIELD_GROUPS = [
   {
     title: 'Caractéristiques',
@@ -15,7 +24,7 @@ const AMENITE_FIELD_GROUPS = [
       { key: 'parking',          label: 'Parking',            fmt: (v: any, a: any) => v ? (a.parking_capacite ? `Oui — ×${a.parking_capacite}` : 'Oui') : 'Non' },
       { key: 'cour',             label: 'Cour',               fmt: (v: any) => v ? 'Oui' : 'Non' },
       { key: 'boyerie',          label: 'Boyerie',            fmt: (v: any) => v ? 'Oui' : 'Non' },
-      { key: 'sanitaire',        label: 'Sanitaires',         fmt: (v: any) => v == null ? null : (v ? 'Intérieur' : 'Extérieur') },
+      { key: 'standing',         label: 'Standing',           fmt: (v: any, a: any) => STANDING_LABELS[v] ?? (v === 'autre' ? (a.standing_autre || 'Autre') : null) },
       { key: 'chambre_couloir',  label: 'Maison à couloir',   fmt: (v: any) => v == null ? null : (v ? 'Oui' : 'Non') },
       { key: 'acces_vehicule',   label: 'Accès véhicule',     fmt: (v: any, a: any) => v == null ? null : (v ? (a.nb_vehicules ? `Oui — ${a.nb_vehicules} véh.` : 'Oui') : 'Non') },
     ],
@@ -26,7 +35,6 @@ const AMENITE_FIELD_GROUPS = [
       { key: 'electricite_label', label: 'Électricité', fmt: (v: any) => v || null },
       { key: 'eau_label',         label: 'Eau',         fmt: (v: any) => v || null },
       { key: 'cuisine_label',     label: 'Cuisine',     fmt: (v: any) => v || null },
-      { key: 'finition_label',    label: 'Finition',    fmt: (v: any) => v || null },
     ],
   },
   {
@@ -85,9 +93,12 @@ function formatDate(iso: string) {
 }
 
 export default function AnnonceDetailPage() {
-  const { id }   = useParams();
-  const navigate = useNavigate();
-  const { user } = useAuth();
+  const { id }       = useParams();
+  const navigate     = useNavigate();
+  const location     = useLocation();
+  const { user }     = useAuth();
+  const showToast    = useToast();
+  const backTo       = (location.state as any)?.from === 'mes-annonces' ? '/mes-annonces' : '/annonces';
   const userRole     = user?.role_principal ?? user?.role;
   const isCommercial = userRole === 'commercial';
   const isSuperAdmin = userRole === 'super_admin';
@@ -103,6 +114,7 @@ export default function AnnonceDetailPage() {
   const [motif, setMotif]       = useState('');
   const [conditions, setConditions] = useState('');
   const [fraisVisite, setFraisVisite] = useState('0');
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   // Édition proprietaire_info (super admin uniquement)
   const [editProprietaire, setEditProprietaire] = useState(false);
@@ -147,6 +159,13 @@ export default function AnnonceDetailPage() {
       ]
     : [];
 
+  const MODERATION_LABELS: Record<string, string> = {
+    approuve:     'Bien approuvé et publié.',
+    rejete:       'Bien rejeté.',
+    conditionnel: 'Bien passé en conditionnel.',
+    en_attente:   'Approbation révoquée.',
+  };
+
   async function handleModerate(statut: string, extra?: any) {
     setSaving(true);
     try {
@@ -157,6 +176,9 @@ export default function AnnonceDetailPage() {
       setAction(null);
       setMotif('');
       setConditions('');
+      showToast(MODERATION_LABELS[statut] ?? 'Statut mis à jour.', statut === 'rejete' ? 'error' : statut === 'conditionnel' ? 'info' : 'success');
+    } catch {
+      showToast('Une erreur est survenue.', 'error');
     } finally {
       setSaving(false);
     }
@@ -179,6 +201,9 @@ export default function AnnonceDetailPage() {
       });
       setBien((prev: any) => ({ ...prev, ...updated }));
       setEditProprietaire(false);
+      showToast('Informations propriétaire enregistrées.');
+    } catch {
+      showToast('Impossible d\'enregistrer les modifications.', 'error');
     } finally {
       setSaving(false);
     }
@@ -195,19 +220,25 @@ export default function AnnonceDetailPage() {
       setBien(updated);
       setFraisVisite(String(updated.frais_visite ?? 0));
       setAction(null);
+      showToast('Bien approuvé et publié.');
+    } catch {
+      showToast('Une erreur est survenue.', 'error');
     } finally {
       setSaving(false);
     }
   }
 
   async function handleDelete() {
-    if (!confirm('Supprimer définitivement ce bien ? Cette action est irréversible.')) return;
     setSaving(true);
     try {
       await deleteAdminBien.byId(bien.id);
-      navigate('/annonces');
+      showToast('Bien supprimé définitivement.', 'info');
+      navigate(backTo);
+    } catch {
+      showToast('Impossible de supprimer ce bien.', 'error');
     } finally {
       setSaving(false);
+      setConfirmDelete(false);
     }
   }
 
@@ -223,7 +254,7 @@ export default function AnnonceDetailPage() {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: '1rem' }}>
         <div style={{ color: 'var(--c-red)', fontWeight: 600 }}>{error}</div>
-        <button className="detail-back-btn" onClick={() => navigate('/annonces')}>
+        <button className="detail-back-btn" onClick={() => navigate(backTo)}>
           <ChevronLeftIcon size={16} /> Retour aux annonces
         </button>
       </div>
@@ -239,7 +270,7 @@ export default function AnnonceDetailPage() {
     <>
       {/* ── Topbar ── */}
       <div className="immo-topbar">
-        <button className="detail-back-btn" onClick={() => navigate('/annonces')}>
+        <button className="detail-back-btn" onClick={() => navigate(backTo)}>
           <ChevronLeftIcon size={16} />
           Retour aux annonces
         </button>
@@ -479,7 +510,7 @@ export default function AnnonceDetailPage() {
                 {adresseGps && (
                   <div className="detail-info-row">
                     <span>Adresse (GPS)</span>
-                    <strong style={{ textAlign: 'right', maxWidth: '60%' }}>{adresseGps}</strong>
+                    <strong style={{ textAlign: 'right', maxWidth: '60%', wordBreak: 'break-word' }}>{adresseGps}</strong>
                   </div>
                 )}
               </div>
@@ -525,7 +556,7 @@ export default function AnnonceDetailPage() {
               </div>
               {editProprietaire && isSuperAdmin ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  <div className="form-grid-2" style={{ gap: 8 }}>
                     <div>
                       <label className="detail-form-label">Prénom *</label>
                       <input className="immo-form-input" value={propPrenom} onChange={e => setPropPrenom(e.target.value)} placeholder="Prénom" />
@@ -707,14 +738,39 @@ export default function AnnonceDetailPage() {
             )}
 
             <div className="detail-delete-zone">
-              <button
-                className="detail-btn detail-btn--delete"
-                onClick={handleDelete}
-                disabled={saving}
-              >
-                <TrashIcon size={14} />
-                Supprimer définitivement
-              </button>
+              {confirmDelete ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 16px', background: 'rgba(220,38,38,0.06)', borderRadius: 10, border: '1px solid rgba(220,38,38,0.25)' }}>
+                  <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--s-red)' }}>Supprimer définitivement ce bien ? Cette action est irréversible.</p>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                      className="detail-btn detail-btn--delete"
+                      onClick={handleDelete}
+                      disabled={saving}
+                      style={{ flex: 1 }}
+                    >
+                      <TrashIcon size={14} />
+                      {saving ? 'Suppression…' : 'Confirmer la suppression'}
+                    </button>
+                    <button
+                      className="detail-btn"
+                      onClick={() => setConfirmDelete(false)}
+                      disabled={saving}
+                      style={{ flex: 1 }}
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  className="detail-btn detail-btn--delete"
+                  onClick={() => setConfirmDelete(true)}
+                  disabled={saving}
+                >
+                  <TrashIcon size={14} />
+                  Supprimer définitivement
+                </button>
+              )}
             </div>
           </div>}
 

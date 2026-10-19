@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { postAdmins } from '../../api/postAdmins';
+import { apiMessage } from '../../utils/apiMessage';
 
 function EyeIcon({ open }: { open: boolean }) {
   return open ? (
@@ -26,6 +27,12 @@ export default function GestionAdminModal({ onClose, onCreated }: {
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
 
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
+
   const set = (field: any) => (e: any) => setForm(f => ({ ...f, [field]: e.target.value }));
 
   const handleSubmit = async (e: any) => {
@@ -42,7 +49,7 @@ export default function GestionAdminModal({ onClose, onCreated }: {
       onCreated(res.user);
       onClose();
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Une erreur est survenue');
+      setError(apiMessage(err) ?? 'Une erreur est survenue');
     } finally {
       setLoading(false);
     }
@@ -79,7 +86,7 @@ export default function GestionAdminModal({ onClose, onCreated }: {
   );
 
   return (
-    <div className="immo-modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
+    <div className="immo-modal-backdrop" role="dialog" aria-modal="true" aria-label="Gérer un administrateur" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="immo-modal">
         <div className="immo-modal-title">Nouvel administrateur</div>
         <div className="immo-modal-sub">
@@ -90,7 +97,7 @@ export default function GestionAdminModal({ onClose, onCreated }: {
         {error && (
           <div style={{
             background: 'var(--c-red-bg)', color: 'var(--c-red)',
-            border: '1px solid #FECACA', borderRadius: 8,
+            border: '1px solid var(--t-red-bd)', borderRadius: 8,
             padding: '9px 13px', fontSize: 12, fontWeight: 500, marginBottom: 14,
           }}>
             {error}

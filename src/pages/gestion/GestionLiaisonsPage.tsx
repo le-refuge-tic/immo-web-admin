@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getDemandes } from '../../api/getDemandes';
+import { blockInvalidNumberKey } from '../../utils/inputNumbers';
+import { apiMessage } from '../../utils/apiMessage';
 
 type Demande = {
   id: number;
@@ -63,6 +65,7 @@ export default function GestionLiaisonsPage() {
   const [form, setForm]         = useState({ date_debut: '', jour_echeance: '10', loyer_prepaye_mois: '0', notes: '' });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError]       = useState('');
+  const [confirmRejetId, setConfirmRejetId] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -90,15 +93,15 @@ export default function GestionLiaisonsPage() {
       setSelected(null);
       load();
     } catch (e: any) {
-      setError(e?.response?.data?.message ?? 'Erreur serveur');
+      setError(apiMessage(e) ?? 'Erreur serveur');
     } finally {
       setSubmitting(false);
     }
   }
 
   async function handleRejeter(d: Demande) {
-    if (!window.confirm(`Rejeter la demande de ${d.locataire?.prenom} ${d.locataire?.nom} ?`)) return;
     await getDemandes.rejeter(d.id);
+    setConfirmRejetId(null);
     load();
   }
 
@@ -126,9 +129,9 @@ export default function GestionLiaisonsPage() {
 
       <div className="immo-content">
         {loading ? (
-          <p style={{ color: '#9E9E9E', padding: 32 }}>Chargement…</p>
+          <p style={{ color: 'var(--c-muted)', padding: 32 }}>Chargement…</p>
         ) : demandes.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 64, color: '#9E9E9E' }}>
+          <div style={{ textAlign: 'center', padding: 64, color: 'var(--c-muted)' }}>
             <div style={{ fontSize: 48 }}>🔑</div>
             <p style={{ marginTop: 12 }}>Aucune demande {filtre === 'en_attente' ? 'en attente' : ''}</p>
           </div>
@@ -153,7 +156,7 @@ export default function GestionLiaisonsPage() {
                     <div style={{ fontWeight: 600 }}>
                       {d.locataire?.prenom} {d.locataire?.nom}
                     </div>
-                    <div style={{ fontSize: 12, color: '#9E9E9E' }}>
+                    <div style={{ fontSize: 12, color: 'var(--c-muted)' }}>
                       {d.locataire?.telephone}<br />{d.locataire?.email}
                     </div>
                   </td>
@@ -187,13 +190,20 @@ export default function GestionLiaisonsPage() {
                         >
                           ✓ Valider
                         </button>
-                        <button
-                          className="immo-btn immo-btn-sm"
-                          style={{ background: '#EF4444', color: '#fff', border: 'none' }}
-                          onClick={() => handleRejeter(d)}
-                        >
-                          ✗ Rejeter
-                        </button>
+                        {confirmRejetId === d.id ? (
+                          <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                            <button className="immo-btn immo-btn-sm" style={{ background: '#EF4444', color: '#fff', border: 'none' }} onClick={() => handleRejeter(d)}>Confirmer</button>
+                            <button className="immo-btn immo-btn-sm" onClick={() => setConfirmRejetId(null)}>Annuler</button>
+                          </div>
+                        ) : (
+                          <button
+                            className="immo-btn immo-btn-sm"
+                            style={{ background: '#EF4444', color: '#fff', border: 'none' }}
+                            onClick={() => setConfirmRejetId(d.id)}
+                          >
+                            ✗ Rejeter
+                          </button>
+                        )}
                       </div>
                     )}
                   </td>
@@ -212,11 +222,11 @@ export default function GestionLiaisonsPage() {
           display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999,
         }}>
           <div style={{
-            background: '#fff', borderRadius: 16, padding: 32, width: 'min(420px, 90vw)',
+            background: 'var(--c-card)', borderRadius: 16, padding: 32, width: 'min(420px, 90vw)',
             boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
           }}>
             <h2 style={{ margin: '0 0 4px', fontSize: 18 }}>Valider la liaison</h2>
-            <p style={{ margin: '0 0 20px', color: '#9E9E9E', fontSize: 13 }}>
+            <p style={{ margin: '0 0 20px', color: 'var(--c-muted)', fontSize: 13 }}>
               {selected.locataire?.prenom} {selected.locataire?.nom} →{' '}
               {sousTypeLabel(selected)} · {locAdresse(selected)}
             </p>
@@ -228,7 +238,7 @@ export default function GestionLiaisonsPage() {
               type="date"
               value={form.date_debut}
               onChange={e => setForm(f => ({ ...f, date_debut: e.target.value }))}
-              style={{ width: '100%', padding: '10px 14px', border: '1px solid #E0E0E0', borderRadius: 10, fontSize: 14, boxSizing: 'border-box', marginBottom: 14 }}
+              style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--c-border)', borderRadius: 10, fontSize: 14, boxSizing: 'border-box', marginBottom: 14 }}
             />
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
@@ -237,10 +247,11 @@ export default function GestionLiaisonsPage() {
                   Jour d'échéance (défaut : 10)
                 </label>
                 <input
-                  type="number" min={1} max={28}
+                  type="number" min={1} max={28} step={1}
                   value={form.jour_echeance}
                   onChange={e => setForm(f => ({ ...f, jour_echeance: e.target.value }))}
-                  style={{ width: '100%', padding: '9px 12px', border: '1px solid #E0E0E0', borderRadius: 10, fontSize: 13, boxSizing: 'border-box' }}
+                  onKeyDown={e => blockInvalidNumberKey(e, true)}
+                  style={{ width: '100%', padding: '9px 12px', border: '1px solid var(--c-border)', borderRadius: 10, fontSize: 13, boxSizing: 'border-box' }}
                 />
               </div>
               <div>
@@ -248,10 +259,11 @@ export default function GestionLiaisonsPage() {
                   Mois de loyer prépayé
                 </label>
                 <input
-                  type="number" min={0} max={12}
+                  type="number" min={0} max={12} step={1}
                   value={form.loyer_prepaye_mois}
                   onChange={e => setForm(f => ({ ...f, loyer_prepaye_mois: e.target.value }))}
-                  style={{ width: '100%', padding: '9px 12px', border: '1px solid #E0E0E0', borderRadius: 10, fontSize: 13, boxSizing: 'border-box' }}
+                  onKeyDown={e => blockInvalidNumberKey(e, true)}
+                  style={{ width: '100%', padding: '9px 12px', border: '1px solid var(--c-border)', borderRadius: 10, fontSize: 13, boxSizing: 'border-box' }}
                 />
               </div>
             </div>
@@ -263,18 +275,18 @@ export default function GestionLiaisonsPage() {
               value={form.notes}
               onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
               rows={2}
-              style={{ width: '100%', padding: '9px 12px', border: '1px solid #E0E0E0', borderRadius: 10, fontSize: 13, boxSizing: 'border-box', resize: 'vertical', marginBottom: 14 }}
+              style={{ width: '100%', padding: '9px 12px', border: '1px solid var(--c-border)', borderRadius: 10, fontSize: 13, boxSizing: 'border-box', resize: 'vertical', marginBottom: 14 }}
               placeholder="Conditions particulières, remarques…"
             />
 
             {error && (
-              <p style={{ color: '#EF4444', fontSize: 13, marginBottom: 12 }}>{error}</p>
+              <p style={{ color: 'var(--s-red)', fontSize: 13, marginBottom: 12 }}>{error}</p>
             )}
 
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
               <button
                 className="immo-btn"
-                style={{ background: '#F5F5F5', color: '#333', border: 'none' }}
+                style={{ background: 'var(--c-surface-2)', color: 'var(--c-text)', border: '1px solid var(--c-border)' }}
                 onClick={() => setSelected(null)}
                 disabled={submitting}
               >

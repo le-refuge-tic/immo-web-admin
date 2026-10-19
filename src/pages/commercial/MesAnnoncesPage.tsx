@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getMesBiens } from '../../api/getMesBiens';
+import { markBiensAsSeen } from '../../hooks/useSidebarBadges';
+import { useAuth } from '../../context/AuthContext';
 
 /* ─── Helpers ─────────────────────────────────────────────── */
 
@@ -125,6 +127,7 @@ const STATUS_CARD: Record<string, { label: string; bg: string; color: string; sh
 
 export default function MesAnnoncesPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [biens, setBiens]       = useState<any[]>([]);
   const [loading, setLoading]   = useState(true);
   const [showProprietaireModal, setShowProprietaireModal] = useState(false);
@@ -134,7 +137,7 @@ export default function MesAnnoncesPage() {
 
   useEffect(() => {
     try {
-      const d = sessionStorage.getItem(DRAFT_KEY);
+      const d = localStorage.getItem(DRAFT_KEY);
       setHasDraft(!!d);
     } catch { /* ignore */ }
   }, []);
@@ -143,7 +146,9 @@ export default function MesAnnoncesPage() {
     setLoading(true);
     try {
       const data = await getMesBiens.list();
-      setBiens(data ?? []);
+      const list = data ?? [];
+      setBiens(list);
+      markBiensAsSeen(user?.id, list);
     } catch {
       setBiens([]);
     } finally {
@@ -276,7 +281,7 @@ export default function MesAnnoncesPage() {
                   <button key={opt.key} onClick={() => setFilterType(opt.key)} style={{
                     padding: '5px 13px', borderRadius: 20, fontSize: 12, fontWeight: active ? 700 : 500,
                     border: `1.5px solid ${active ? 'var(--c-blue)' : 'var(--c-border)'}`,
-                    background: active ? 'var(--c-blue)' : 'transparent',
+                    background: active ? 'var(--c-blue-solid)' : 'transparent',
                     color: active ? '#fff' : 'var(--c-muted)',
                     cursor: 'pointer', transition: 'all 0.15s',
                   }}>
@@ -295,7 +300,7 @@ export default function MesAnnoncesPage() {
                 <button key={opt.key} onClick={() => setFilterStatus(opt.key)} style={{
                   padding: '5px 13px', borderRadius: 20, fontSize: 12, fontWeight: active ? 700 : 500,
                   border: `1.5px solid ${active ? 'var(--c-blue)' : 'var(--c-border)'}`,
-                  background: active ? 'var(--c-blue)' : 'transparent',
+                  background: active ? 'var(--c-blue-solid)' : 'transparent',
                   color: active ? '#fff' : 'var(--c-muted)',
                   cursor: 'pointer', transition: 'all 0.15s',
                 }}>
@@ -336,7 +341,9 @@ export default function MesAnnoncesPage() {
               const sc = STATUS_CARD[b.statut_moderation];
               return (
                 <div key={b.id} style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid var(--c-border)', background: 'var(--c-card)', display: 'flex', flexDirection: 'column', transition: 'box-shadow 0.15s', cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}
-                  onClick={() => navigate(`/annonces/${b.id}`)}>
+                  onClick={() => b.statut_moderation === 'approuve'
+                    ? navigate(`/mes-annonces/${b.id}`, { state: { from: 'mes-annonces' } })
+                    : navigate(`/mes-annonces/${b.id}/modifier`)}>
                   {/* Photo */}
                   <div style={{ position: 'relative', height: 160, background: 'var(--c-border)', flexShrink: 0 }}>
                     {cover ? (
@@ -390,7 +397,7 @@ export default function MesAnnoncesPage() {
       <ProprietaireInfoModal
         onClose={() => setShowProprietaireModal(false)}
         onConfirm={(info) => {
-          sessionStorage.setItem('proprietaire_info', JSON.stringify(info));
+          localStorage.setItem('proprietaire_info', JSON.stringify(info));
           setShowProprietaireModal(false);
           navigate('/publier-bien');
         }}

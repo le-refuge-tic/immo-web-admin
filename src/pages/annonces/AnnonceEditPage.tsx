@@ -1,13 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { blockInvalidNumberKey } from '../../utils/inputNumbers';
 import { getAdminBien } from '../../api/getAdminBien';
 import { patchAdminBien } from '../../api/patchAdminBien';
 import { adminPhotos } from '../../api/adminPhotos';
+import { useAuth } from '../../context/AuthContext';
 import {
   ChevronLeftIcon, CheckIcon, TrashIcon,
   HomeIcon, PinIcon, GridIcon, CardIcon, ImageIcon,
 } from '../../components/Icons';
 import { BENIN_VILLES, getQuartiersByVille, ALL_QUARTIERS } from '../../data/beninLocations';
+import { apiMessage } from '../../utils/apiMessage';
 
 // ── Icônes SVG locales ────────────────────────────────────────────────────────
 const SaveIcon = () => (
@@ -49,11 +52,12 @@ function getTypeLabel(dbType: string, dbSousType: string) {
 }
 
 // ── Options constantes ────────────────────────────────────────────────────────
-const FINITIONS = [
-  { value: 'ordinaire',     label: 'Ordinaire',           sub: 'Finitions simples, fonctionnelles' },
-  { value: 'semi_staffe',   label: 'Semi-Staffé',         sub: 'Salon staffé et carrelé, chambre simple' },
-  { value: 'staffe_carele', label: 'Staffé-Carrelé',      sub: 'Staff complet + carreaux modernes partout' },
-  { value: 'haut_standing', label: 'Haut Standing / VIP', sub: 'Baies vitrées, douche moderne, climatisation' },
+const STANDINGS = [
+  { value: 'sanitaire',             label: 'Sanitaire',             sub: '' },
+  { value: 'semi_sanitaire',        label: 'Semi sanitaire',        sub: '' },
+  { value: 'sanitaire_semi_staffe', label: 'Sanitaire semi-staffé', sub: '' },
+  { value: 'sanitaire_staffe',      label: 'Sanitaire staffé',      sub: '' },
+  { value: 'haut_standing_vip',     label: 'Haut Standing / VIP',   sub: 'Baies vitrées, douche moderne, climatisation' },
 ];
 const ELEC_OPTS   = [{ value:'non', label:'Aucune' }, { value:'sbee', label:'SBEE (compteur commun)' }, { value:'decompteur', label:'Décompteur (séparé)' }];
 const EAU_OPTS    = [{ value:'non', label:'Aucune' }, { value:'soneb', label:'SONEB' }, { value:'forage', label:'Forage' }];
@@ -65,43 +69,57 @@ const EQUIPEMENT_PRESET = ['Climatisation','Ventilateur','Chauffe-eau','Réfrig�
 
 // ── Composants UI ─────────────────────────────────────────────────────────────
 function SectionTitle({ children }: { children: React.ReactNode }) {
-  return <h3 style={{ fontSize:11, fontWeight:700, letterSpacing:'.7px', textTransform:'uppercase', color:'#2563EB', margin:'0 0 18px', paddingBottom:8, borderBottom:'1.5px solid #E2E8F0' }}>{children}</h3>;
+  return <h3 style={{ fontSize:11, fontWeight:700, letterSpacing:'.7px', textTransform:'uppercase', color:'var(--s-blue)', margin:'0 0 18px', paddingBottom:8, borderBottom:'1.5px solid var(--c-border)' }}>{children}</h3>;
 }
 function Field({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) {
   return (
     <div style={{ marginBottom:18 }}>
-      <label style={{ display:'block', fontSize:11, fontWeight:700, color:'#64748B', textTransform:'uppercase', letterSpacing:'.5px', marginBottom: hint ? 4 : 7 }}>{label}</label>
-      {hint && <p style={{ fontSize:11, color:'#64748B', margin:'0 0 7px', fontStyle:'italic' }}>{hint}</p>}
+      <label style={{ display:'block', fontSize:11, fontWeight:700, color:'var(--c-muted)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom: hint ? 4 : 7 }}>{label}</label>
+      {hint && <p style={{ fontSize:11, color:'var(--c-muted)', margin:'0 0 7px', fontStyle:'italic' }}>{hint}</p>}
       {children}
     </div>
   );
 }
 function SInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
   const [f, setF] = useState(false);
-  return <input {...props} style={{ width:'100%', boxSizing:'border-box', background:'#fff', border:`1.5px solid ${f ? '#2563EB' : '#E2E8F0'}`, borderRadius:8, padding:'9px 12px', fontSize:13, color:'#0F172A', outline:'none', transition:'border-color .15s', ...props.style }}
+  return <input {...props} style={{ width:'100%', boxSizing:'border-box', background:'var(--c-card)', border:`1.5px solid ${f ? 'var(--c-blue)' : 'var(--c-border)'}`, borderRadius:8, padding:'9px 12px', fontSize:13, color:'var(--c-text)', outline:'none', transition:'border-color .15s', ...props.style }}
     onFocus={e => { setF(true); props.onFocus?.(e); }} onBlur={e => { setF(false); props.onBlur?.(e); }} />;
 }
 function SSelect({ value, onChange, children }: { value: string; onChange: (v: string) => void; children: React.ReactNode }) {
   return (
     <div style={{ position:'relative' }}>
-      <select value={value} onChange={e => onChange(e.target.value)} style={{ width:'100%', boxSizing:'border-box', background:'#fff', border:'1.5px solid #E2E8F0', borderRadius:8, padding:'9px 36px 9px 12px', fontSize:13, color:'#0F172A', appearance:'none', WebkitAppearance:'none', cursor:'pointer', outline:'none' }}>
+      <select value={value} onChange={e => onChange(e.target.value)} style={{ width:'100%', boxSizing:'border-box', background:'var(--c-card)', border:'1.5px solid var(--c-border)', borderRadius:8, padding:'9px 36px 9px 12px', fontSize:13, color:'var(--c-text)', appearance:'none', WebkitAppearance:'none', cursor:'pointer', outline:'none' }}>
         {children}
       </select>
-      <svg style={{ position:'absolute', right:10, top:'50%', transform:'translateY(-50%)', pointerEvents:'none', color:'#64748B' }} width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
+      <svg style={{ position:'absolute', right:10, top:'50%', transform:'translateY(-50%)', pointerEvents:'none', color:'var(--c-muted)' }} width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
     </div>
   );
 }
 function Chip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
-  return <button type="button" onClick={onClick} style={{ padding:'6px 14px', borderRadius:20, fontSize:12, border: active ? '2px solid #2563EB' : '1.5px solid #E2E8F0', background: active ? '#EFF6FF' : '#fff', color: active ? '#2563EB' : '#64748B', fontWeight: active ? 600 : 400, cursor:'pointer', transition:'all .12s' }}>{label}</button>;
+  return <button type="button" onClick={onClick} style={{ padding:'6px 14px', borderRadius:20, fontSize:12, border: active ? '2px solid #2563EB' : '1.5px solid var(--c-border)', background: active ? 'var(--t-blue-bg)' : 'var(--c-card)', color: active ? 'var(--s-blue)' : 'var(--c-muted)', fontWeight: active ? 600 : 400, cursor:'pointer', transition:'all .12s' }}>{label}</button>;
 }
 function Toggle({ label, value, onChange }: { label: string; value: boolean | null | undefined; onChange: (v: boolean | null) => void }) {
   return (
-    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 0', borderBottom:'1px solid #E2E8F0' }}>
-      <span style={{ fontSize:13, color:'#0F172A' }}>{label}</span>
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 0', borderBottom:'1px solid var(--c-border)' }}>
+      <span style={{ fontSize:13, color:'var(--c-text)' }}>{label}</span>
       <div style={{ display:'flex', gap:4 }}>
         {([true, false] as const).map(v => (
-          <button key={String(v)} type="button" onClick={() => onChange(value === v ? null : v)} style={{ padding:'4px 16px', borderRadius:6, fontSize:12, cursor:'pointer', border: value===v ? '2px solid #2563EB' : '1.5px solid #E2E8F0', background: value===v ? '#EFF6FF' : '#fff', color: value===v ? '#2563EB' : '#64748B', fontWeight: value===v ? 600 : 400, transition:'all .12s' }}>{v ? 'Oui' : 'Non'}</button>
+          <button key={String(v)} type="button" onClick={() => onChange(value === v ? null : v)} style={{ padding:'4px 16px', borderRadius:6, fontSize:12, cursor:'pointer', border: value===v ? '2px solid #2563EB' : '1.5px solid var(--c-border)', background: value===v ? 'var(--t-blue-bg)' : 'var(--c-card)', color: value===v ? 'var(--s-blue)' : 'var(--c-muted)', fontWeight: value===v ? 600 : 400, transition:'all .12s' }}>{v ? 'Oui' : 'Non'}</button>
         ))}
+      </div>
+    </div>
+  );
+}
+function PieceCounter({ label, value, onInc, onDec, min = 0 }: { label: string; value: number; onInc: () => void; onDec: () => void; min?: number }) {
+  return (
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 0', borderBottom:'1px solid var(--c-border)' }}>
+      <span style={{ fontSize:13, color:'var(--c-text)' }}>{label}</span>
+      <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+        <button type="button" disabled={value <= min} onClick={onDec}
+          style={{ width:28, height:28, borderRadius:7, display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700, border:'1px solid var(--c-border)', background:'var(--c-card)', color:'var(--c-text)', cursor: value<=min?'not-allowed':'pointer', opacity: value<=min?0.4:1 }}>−</button>
+        <span style={{ width:20, textAlign:'center', fontWeight:700, color:'var(--c-text)' }}>{value}</span>
+        <button type="button" onClick={onInc}
+          style={{ width:28, height:28, borderRadius:7, display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700, background:'var(--t-blue-bg)', color:'var(--s-blue)', border:'none', cursor:'pointer' }}>+</button>
       </div>
     </div>
   );
@@ -114,7 +132,7 @@ function TagPicker({ label, preset, value, onChange }: { label: string; preset: 
     <Field label={label}>
       <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginBottom:8 }}>
         {preset.map(t => <Chip key={t} label={t} active={value.includes(t)} onClick={() => toggle(t)} />)}
-        {value.filter(t => !preset.includes(t)).map(t => <button key={t} type="button" onClick={() => toggle(t)} style={{ padding:'6px 12px', borderRadius:20, fontSize:12, cursor:'pointer', border:'2px solid #2563EB', background:'#EFF6FF', color:'#2563EB', fontWeight:600 }}>{t} ×</button>)}
+        {value.filter(t => !preset.includes(t)).map(t => <button key={t} type="button" onClick={() => toggle(t)} style={{ padding:'6px 12px', borderRadius:20, fontSize:12, cursor:'pointer', border:'2px solid #2563EB', background:'var(--t-blue-bg)', color:'var(--s-blue)', fontWeight:600 }}>{t} ×</button>)}
       </div>
       <div style={{ display:'flex', gap:8 }}>
         <SInput placeholder="Ajouter un autre…" value={custom} onChange={e => setCustom(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), add())} />
@@ -143,6 +161,9 @@ export default function AnnonceEditPage() {
   const { id }   = useParams();
   const navigate = useNavigate();
   const numId    = Number(id);
+  const { user } = useAuth();
+  const myRole   = user?.role_principal ?? user?.role;
+  const isCommercial = myRole === 'commercial';
 
   const [bien, setBien]           = useState<any>(null);
   const [loading, setLoading]     = useState(true);
@@ -158,6 +179,7 @@ export default function AnnonceEditPage() {
   const [autreQ, setAutreQ]             = useState('');
   const [qSearch, setQSearch]           = useState('');
   const [qOpen, setQOpen]               = useState(false);
+  const [hoveredQ, setHoveredQ]         = useState('');
   const [adresse, setAdresse]           = useState('');
   const qRef = useRef<HTMLDivElement>(null);
 
@@ -173,9 +195,8 @@ export default function AnnonceEditPage() {
   const [pieces, setPieces] = useState<PieceState[]>([]);
 
   // Caractéristiques
-  const [sanitaire, setSanitaire]       = useState<boolean | null>(null);
   const [couloir, setCouloir]           = useState<boolean | null>(null);
-  const [finition, setFinition]         = useState('');
+  const [standing, setStanding]         = useState('');
   const [typeCuisine, setTypeCuisine]   = useState('');
   const [cour, setCour]                 = useState<boolean | null>(null);
   const [typeCour, setTypeCour]         = useState('');
@@ -188,6 +209,7 @@ export default function AnnonceEditPage() {
   const [nbVeh, setNbVeh]               = useState('');
   const [armoiresCh, setArmoiresCh]     = useState<boolean | null>(null);
   const [nbVoisins, setNbVoisins]       = useState('');
+  const [echeanceMois, setEcheanceMois] = useState('');
 
   // Réseaux
   const [elec, setElec]             = useState('non');
@@ -203,6 +225,7 @@ export default function AnnonceEditPage() {
 
   // Photos
   const [photos, setPhotos] = useState<PhotoState[]>([]);
+  const [confirmDeletePhotoId, setConfirmDeletePhotoId] = useState<number | null>(null);
 
   // Autres (options personnalisées)
   const [autrePrecision, setAutrePrecision] = useState<Record<string, string>>({});
@@ -233,12 +256,13 @@ export default function AnnonceEditPage() {
 
         setPieces((b.pieces ?? []).map((p: any) => ({ id:p.id, nom:p.nom??'', surface:'', longueur:'', largeur:'' })));
 
-        setSanitaire(a.sanitaire??null); setCouloir(a.chambre_couloir??null);
+        setCouloir(a.chambre_couloir??null);
         setCour(a.cour??null); setArriereCour(a.arriere_cour??null);
         setBoyerie(a.boyerie??null);
         setParking(a.parking??null); setParkingCap(a.parking_capacite!=null?String(a.parking_capacite):'');
         setAccesVeh(a.acces_vehicule??null); setNbVeh(a.nb_vehicules!=null?String(a.nb_vehicules):'');
         setArmoiresCh(a.armoires_chambre??null); setNbVoisins(a.nb_voisins!=null?String(a.nb_voisins):'');
+        setEcheanceMois(a.echeance_mois!=null?String(a.echeance_mois):'');
 
         const autreMap: Record<string, string> = {};
         const setChip = (
@@ -249,7 +273,7 @@ export default function AnnonceEditPage() {
           if (known.includes(raw)) { setter(raw); }
           else { setter('autre'); autreMap[field] = raw; }
         };
-        setChip(setFinition,    a.finition,       FINITIONS.map(f=>f.value), 'finition');
+        setChip(setStanding,    a.standing,       STANDINGS.map(f=>f.value), 'standing');
         setChip(setTypeCuisine, a.type_cuisine,   CUISINE_OPTS.map(o=>o.value), 'cuisine');
         setChip(setTypeCour,    a.type_cour,      ['commune','privee'], 'type_cour');
         setChip(setBoyerieType, a.boyerie_type,   BOYERIE_OPTS.map(o=>o.value), 'boyerie_type');
@@ -292,8 +316,10 @@ export default function AnnonceEditPage() {
         sa(k, v === 'autre' ? (autrePrecision[field] || 'autre') : v);
       };
       if (dbST) sa('sous_type', dbST);
-      sa('sanitaire', sanitaire); sa('chambre_couloir', couloir);
-      chip('finition', finition, 'finition');
+      if (echeanceMois) sa('echeance_mois', Number(echeanceMois));
+      sa('chambre_couloir', couloir);
+      sa('standing', standing);
+      if (standing === 'autre') sa('standing_autre', autrePrecision['standing'] || '');
       chip('type_cuisine', typeCuisine, 'cuisine');
       sa('cour', cour);
       if (cour) {
@@ -325,7 +351,7 @@ export default function AnnonceEditPage() {
         type: dbType, description: description||undefined, prix: prix ? Number(prix) : undefined,
         localisation: { ville:villeVal, quartier:quartierVal||undefined, adresse:adresse||undefined },
         amenites: ame,
-        pieces: pieces.map(p => ({ id:p.id, nom:p.nom, surface:p.surface!==''?Number(p.surface):null, longueur:p.longueur!==''?Number(p.longueur):null, largeur:p.largeur!==''?Number(p.largeur):null })),
+        pieces: pieces.map(p => ({ id:p.id > 0 ? p.id : undefined, nom:p.nom, surface:p.surface!==''?Number(p.surface):null, longueur:p.longueur!==''?Number(p.longueur):null, largeur:p.largeur!==''?Number(p.largeur):null })),
       };
       if      (dbType==='maison')                              payload.details_maison  = { superficie:superficie?Number(superficie):0, cloture:cloture??false };
       else if (dbType==='terrain')                             payload.details_terrain = { superficie:superficie?Number(superficie):0, cloture:cloture??false };
@@ -333,7 +359,7 @@ export default function AnnonceEditPage() {
 
       await patchAdminBien.update(numId, payload);
       setSaved(true); setTimeout(() => setSaved(false), 2500);
-    } catch (e: any) { setError(e?.response?.data?.message ?? 'Erreur lors de la sauvegarde.'); }
+    } catch (e: any) { setError(apiMessage(e) ?? 'Erreur lors de la sauvegarde.'); }
     finally { setSaving(false); }
   }
 
@@ -350,9 +376,9 @@ export default function AnnonceEditPage() {
     }
   }
   async function handleDelete(photoId: number) {
-    if (!window.confirm('Supprimer cette photo ?')) return;
     await adminPhotos.remove(numId, photoId);
     setPhotos(prev => prev.filter(p => p.id !== photoId));
+    setConfirmDeletePhotoId(null);
   }
   async function handleCover(photoId: number) {
     await adminPhotos.setCover(numId, photoId);
@@ -372,25 +398,35 @@ export default function AnnonceEditPage() {
   const filteredQ = qSearch.trim() ? qList.filter((q: string) => q.toLowerCase().includes(qSearch.toLowerCase())) : qList;
   const amenites  = bien?.amenites ?? {};
   const isOwner   = bien?.user?.role === 'proprietaire';
-  const CARD: React.CSSProperties = { background:'#fff', border:'1px solid #E2E8F0', borderRadius:12, padding:'22px 24px', marginBottom:18 };
+  const isLocked  = isCommercial && bien?.statut_moderation === 'approuve';
+
+  // Compteurs de pièces (mode simplifié commercial — identique à la création) :
+  // les lignes détaillées (superficie/longueur/largeur) restent gérées par l'admin.
+  const pieceCount = (nom: string) => pieces.filter(p => p.nom === nom).length;
+  const addPiece = (nom: string) => setPieces(ps => [...ps, { id: -(Date.now() + Math.random()), nom, surface: '', longueur: '', largeur: '' }]);
+  const removePiece = (nom: string) => setPieces(ps => {
+    const lastIdx = [...ps].map(p => p.nom).lastIndexOf(nom);
+    return lastIdx === -1 ? ps : ps.filter((_, i) => i !== lastIdx);
+  });
+  const CARD: React.CSSProperties = { background:'var(--c-card)', border:'1px solid var(--c-border)', borderRadius:12, padding:'22px 24px', marginBottom:18 };
 
   // ── Loading / error states ───────────────────────────────────────────────────
   const TOP_STYLE: React.CSSProperties = {
     position:'sticky', top:0, zIndex:40,
     display:'flex', alignItems:'center', gap:10, padding:'0 24px', height:52,
-    borderBottom:'1px solid #E2E8F0', background:'#fff', boxShadow:'0 1px 0 #E2E8F0',
+    borderBottom:'1px solid var(--c-border)', background:'var(--c-card)', boxShadow:'0 1px 0 var(--c-border)',
   };
 
   if (loading) return (
     <>
-      <div style={TOP_STYLE}><button onClick={() => navigate(`/annonces/${id}`)} style={{ background:'none',border:'none',cursor:'pointer',color:'#64748B',fontSize:12,display:'flex',alignItems:'center',gap:5 }}><ChevronLeftIcon size={13}/> Retour</button></div>
-      <div style={{ display:'flex',justifyContent:'center',alignItems:'center',height:'45vh',color:'#64748B' }}>Chargement…</div>
+      <div style={TOP_STYLE}><button onClick={() => navigate(-1)} style={{ background:'none',border:'none',cursor:'pointer',color:'var(--c-muted)',fontSize:12,display:'flex',alignItems:'center',gap:5 }}><ChevronLeftIcon size={13}/> Retour</button></div>
+      <div style={{ display:'flex',justifyContent:'center',alignItems:'center',height:'45vh',color:'var(--c-muted)' }}>Chargement…</div>
     </>
   );
   if (!bien) return (
     <>
-      <div style={TOP_STYLE}><button onClick={() => navigate(-1)} style={{ background:'none',border:'none',cursor:'pointer',color:'#64748B',fontSize:12,display:'flex',alignItems:'center',gap:5 }}><ChevronLeftIcon size={13}/> Retour</button></div>
-      <div style={{ padding:32,color:'#EF4444' }}>{error || 'Bien introuvable'}</div>
+      <div style={TOP_STYLE}><button onClick={() => navigate(-1)} style={{ background:'none',border:'none',cursor:'pointer',color:'var(--c-muted)',fontSize:12,display:'flex',alignItems:'center',gap:5 }}><ChevronLeftIcon size={13}/> Retour</button></div>
+      <div style={{ padding:32,color:'var(--s-red)' }}>{error || 'Bien introuvable'}</div>
     </>
   );
 
@@ -398,27 +434,34 @@ export default function AnnonceEditPage() {
     <>
       {/* ── Topbar ─────────────────────────────────────────────────────────── */}
       <div style={TOP_STYLE}>
-        <button onClick={() => navigate(`/annonces/${id}`)} style={{ display:'flex',alignItems:'center',gap:5,background:'none',border:'none',cursor:'pointer',color:'#64748B',fontSize:12,padding:'5px 8px',borderRadius:6,fontWeight:500,flexShrink:0 }}>
+        <button onClick={() => navigate(-1)} style={{ display:'flex',alignItems:'center',gap:5,background:'none',border:'none',cursor:'pointer',color:'var(--c-muted)',fontSize:12,padding:'5px 8px',borderRadius:6,fontWeight:500,flexShrink:0 }}>
           <ChevronLeftIcon size={13}/> Retour
         </button>
-        <div style={{ width:1,height:16,background:'#E2E8F0',flexShrink:0 }}/>
-        <span style={{ fontSize:12,fontWeight:600,color:'#0F172A',flexShrink:0 }}>Bien #{id}</span>
+        <div style={{ width:1,height:16,background:'var(--c-surface-2)',flexShrink:0 }}/>
+        <span style={{ fontSize:12,fontWeight:600,color:'var(--c-text)',flexShrink:0 }}>Bien #{id}</span>
         <div style={{ flex:1 }}/>
-        {error && <span style={{ fontSize:11,color:'#EF4444',flexShrink:0,maxWidth:240,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{error}</span>}
-        <button
-          onClick={handleSave} disabled={saving}
-          style={{ display:'flex',alignItems:'center',gap:6,flexShrink:0,background:saved?'#16A34A':'#2563EB',color:'#fff',border:'none',borderRadius:8,padding:'10px 22px',fontSize:13,fontWeight:600,cursor:saving?'not-allowed':'pointer',opacity:saving?.7:1,transition:'background .2s',whiteSpace:'nowrap' }}
-        >
-          {saved ? <CheckIcon size={13}/> : <SaveIcon/>}
-          {saving ? 'Sauvegarde…' : saved ? 'Sauvegardé !' : 'Sauvegarder'}
-        </button>
+        {error && <span style={{ fontSize:11,color:'var(--s-red)',flexShrink:0,maxWidth:240,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{error}</span>}
+        {!isLocked && (
+          <button
+            onClick={handleSave} disabled={saving}
+            style={{ display:'flex',alignItems:'center',gap:6,flexShrink:0,background:saved?'#16A34A':'#2563EB',color:'#fff',border:'none',borderRadius:8,padding:'10px 22px',fontSize:13,fontWeight:600,cursor:saving?'not-allowed':'pointer',opacity:saving?.7:1,transition:'background .2s',whiteSpace:'nowrap' }}
+          >
+            {saved ? <CheckIcon size={13}/> : <SaveIcon/>}
+            {saving ? 'Sauvegarde…' : saved ? 'Sauvegardé !' : 'Sauvegarder'}
+          </button>
+        )}
       </div>
+      {isLocked && (
+        <div style={{ padding:'10px 24px', background:'var(--t-yellow-bg)', borderBottom:'1px solid var(--t-yellow-bd)', fontSize:12.5, color:'var(--s-yellow)' }}>
+          Ce bien est déjà approuvé : il ne peut plus être modifié depuis cette page. Contactez un administrateur si un changement est nécessaire.
+        </div>
+      )}
 
       {/* ── Corps : nav gauche + contenu ───────────────────────────────────── */}
-      <div style={{ display:'flex', gap:0, alignItems:'flex-start' }}>
+      <div className="edit-layout" style={{ display:'flex', gap:0, alignItems:'flex-start' }}>
 
         {/* Navigation latérale */}
-        <nav style={{ width:220, flexShrink:0, borderRight:'1px solid #E2E8F0', background:'#fff', padding:'16px 0', position:'sticky', top:52, alignSelf:'flex-start', maxHeight:'calc(100vh - 52px)', overflowY:'auto' }}>
+        <nav className="edit-nav" style={{ width:220, flexShrink:0, borderRight:'1px solid var(--c-border)', background:'var(--c-card)', padding:'16px 0', position:'sticky', top:52, alignSelf:'flex-start', maxHeight:'calc(100vh - 52px)', overflowY:'auto' }}>
           {TABS.map(tab => {
             const active = activeTab === tab;
             return (
@@ -428,17 +471,17 @@ export default function AnnonceEditPage() {
                 style={{
                   display:'flex', alignItems:'center', gap:10, width:'100%', padding:'11px 20px',
                   fontSize:13, fontWeight: active ? 700 : 400, cursor:'pointer', textAlign:'left',
-                  background: active ? '#EFF6FF' : 'transparent',
-                  color: active ? '#2563EB' : '#64748B',
+                  background: active ? 'var(--t-blue-bg)' : 'transparent',
+                  color: active ? 'var(--s-blue)' : 'var(--c-muted)',
                   border:'none',
                   borderLeft: `3px solid ${active ? '#2563EB' : 'transparent'}`,
                   transition:'all .12s',
                 }}
               >
-                <span style={{ flexShrink:0, color: active ? '#2563EB' : '#94A3B8' }}><NavIcon tab={tab}/></span>
+                <span style={{ flexShrink:0, color: active ? 'var(--s-blue)' : 'var(--c-muted)' }}><NavIcon tab={tab}/></span>
                 <span>{tab}</span>
                 {tab === 'Photos' && photos.length > 0 && (
-                  <span style={{ marginLeft:'auto', fontSize:10, background: active?'#2563EB':'#E2E8F0', color: active?'#fff':'#64748B', padding:'1px 7px', borderRadius:10, fontWeight:700 }}>{photos.length}</span>
+                  <span style={{ marginLeft:'auto', fontSize:10, background: active?'#2563EB':'var(--c-surface-2)', color: active?'#fff':'var(--c-muted)', padding:'1px 7px', borderRadius:10, fontWeight:700 }}>{photos.length}</span>
                 )}
               </button>
             );
@@ -453,10 +496,10 @@ export default function AnnonceEditPage() {
             <>
               <div style={CARD}>
                 <SectionTitle>Type de bien</SectionTitle>
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8 }}>
+                <div className="edit-type-grid" style={{ gap:8 }}>
                   {TYPE_OPTIONS.map(o => {
                     const active = typeLabel === o.label;
-                    return <button key={o.label} type="button" onClick={() => setTypeLabel(o.label)} style={{ padding:'10px 8px', borderRadius:8, fontSize:12.5, fontWeight:active?700:400, cursor:'pointer', textAlign:'center', border:active?'2px solid #2563EB':'1.5px solid #E2E8F0', background:active?'#EFF6FF':'#fff', color:active?'#1D4ED8':'#64748B', boxShadow:active?'0 0 0 3px rgba(37,99,235,.1)':'none', transition:'all .12s' }}>{o.label}</button>;
+                    return <button key={o.label} type="button" onClick={() => setTypeLabel(o.label)} style={{ padding:'10px 8px', borderRadius:8, fontSize:12.5, fontWeight:active?700:400, cursor:'pointer', textAlign:'center', border:active?'2px solid #2563EB':'1.5px solid var(--c-border)', background:active?'var(--t-blue-bg)':'var(--c-card)', color:active?'var(--s-blue)':'var(--c-muted)', boxShadow:active?'0 0 0 3px rgba(37,99,235,.1)':'none', transition:'all .12s' }}>{o.label}</button>;
                   })}
                 </div>
               </div>
@@ -464,17 +507,17 @@ export default function AnnonceEditPage() {
               <div style={CARD}>
                 <SectionTitle>Prix & Description</SectionTitle>
                 <Field label="Loyer mensuel (FCFA)" hint="Modifiable après vérification sur site.">
-                  <SInput type="number" min="0" step="500" placeholder="Ex : 50 000" value={prix} onChange={e => setPrix(e.target.value)} />
+                  <SInput type="number" min="0" max="999999999" step="1" placeholder="Ex : 50 000" value={prix} onChange={e => setPrix(e.target.value)} onKeyDown={e => blockInvalidNumberKey(e, true)} />
                 </Field>
                 <Field label="Description">
-                  <textarea rows={5} value={description} onChange={e => setDescription(e.target.value)} placeholder="Description détaillée du bien…" style={{ width:'100%', boxSizing:'border-box', background:'#fff', border:'1.5px solid #E2E8F0', borderRadius:8, padding:'9px 12px', fontSize:13, color:'#0F172A', resize:'vertical', fontFamily:'inherit', outline:'none' }}/>
+                  <textarea rows={5} value={description} onChange={e => setDescription(e.target.value)} placeholder="Description détaillée du bien…" style={{ width:'100%', boxSizing:'border-box', background:'var(--c-card)', border:'1.5px solid var(--c-border)', borderRadius:8, padding:'9px 12px', fontSize:13, color:'var(--c-text)', resize:'vertical', fontFamily:'inherit', outline:'none' }}/>
                 </Field>
               </div>
 
               {(isMaison || isTerrain) && (
                 <div style={CARD}>
                   <SectionTitle>Terrain / Bâti</SectionTitle>
-                  <Field label="Superficie totale (m²)"><SInput type="number" min="0" placeholder="Ex : 200" value={superficie} onChange={e => setSuperficie(e.target.value)} /></Field>
+                  <Field label="Superficie totale (m²)"><SInput type="number" min="0" max="9999999" step="0.01" placeholder="Ex : 200" value={superficie} onChange={e => setSuperficie(e.target.value)} onKeyDown={e => blockInvalidNumberKey(e)} /></Field>
                   <Toggle label="Terrain / maison clôturé(e)" value={cloture} onChange={setCloture} />
                 </div>
               )}
@@ -509,18 +552,19 @@ export default function AnnonceEditPage() {
                     onChange={e => { setQSearch(e.target.value); setQOpen(true); }}
                   />
                   {qOpen && (
-                    <div style={{ position:'absolute', top:'calc(100% + 4px)', left:0, right:0, background:'#fff', border:'2px solid #2563EB', borderRadius:8, maxHeight:240, overflowY:'auto', zIndex:100, boxShadow:'0 8px 24px rgba(0,0,0,.12)' }}>
-                      {filteredQ.length === 0 && <div style={{ padding:'10px 12px', fontSize:12, color:'#64748B' }}>Aucun résultat pour "{qSearch}"</div>}
+                    <div style={{ position:'absolute', top:'calc(100% + 4px)', left:0, right:0, background:'var(--c-card)', border:'2px solid #2563EB', borderRadius:8, maxHeight:240, overflowY:'auto', zIndex:100, boxShadow:'0 8px 24px rgba(0,0,0,.12)' }}>
+                      {filteredQ.length === 0 && <div style={{ padding:'10px 12px', fontSize:12, color:'var(--c-muted)' }}>Aucun résultat pour "{qSearch}"</div>}
                       {filteredQ.slice(0, 80).map((q: string) => (
-                        <div key={q} onMouseDown={() => { setSelQ(q); setQOpen(false); setQSearch(''); }}
-                          style={{ padding:'8px 12px', fontSize:13, cursor:'pointer', color:'#0F172A', background: selQ===q?'#EFF6FF':'transparent', fontWeight: selQ===q?600:400 }}
-                          onMouseEnter={e => e.currentTarget.style.background='#F1F5F9'}
-                          onMouseLeave={e => e.currentTarget.style.background = selQ===q?'#EFF6FF':'transparent'}
+                        <div key={q}
+                          onMouseDown={() => { setSelQ(q); setQOpen(false); setQSearch(''); setHoveredQ(''); }}
+                          onMouseEnter={() => setHoveredQ(q)}
+                          onMouseLeave={() => setHoveredQ('')}
+                          style={{ padding:'8px 12px', fontSize:13, cursor:'pointer', color:'var(--c-text)', background: hoveredQ===q?'var(--c-surface-2)':selQ===q?'var(--t-blue-bg)':'transparent', fontWeight: selQ===q?600:400 }}
                         >{q}</div>
                       ))}
-                      {filteredQ.length > 80 && <div style={{ padding:'6px 12px', fontSize:11, color:'#64748B', borderTop:'1px solid #E2E8F0', fontStyle:'italic' }}>…{filteredQ.length - 80} autres — affinez la recherche</div>}
+                      {filteredQ.length > 80 && <div style={{ padding:'6px 12px', fontSize:11, color:'var(--c-muted)', borderTop:'1px solid var(--c-border)', fontStyle:'italic' }}>…{filteredQ.length - 80} autres — affinez la recherche</div>}
                       <div onMouseDown={() => { setSelQ('autre'); setQOpen(false); setQSearch(''); }}
-                        style={{ padding:'9px 12px', fontSize:12.5, cursor:'pointer', color:'#2563EB', fontWeight:600, borderTop:'1px solid #E2E8F0', display:'flex', alignItems:'center', gap:6 }}>
+                        style={{ padding:'9px 12px', fontSize:12.5, cursor:'pointer', color:'var(--s-blue)', fontWeight:600, borderTop:'1px solid var(--c-border)', display:'flex', alignItems:'center', gap:6 }}>
                         <span style={{ fontSize:16, lineHeight:1 }}>+</span> Autre quartier (saisir manuellement)
                       </div>
                     </div>
@@ -538,17 +582,31 @@ export default function AnnonceEditPage() {
           {/* ═══ CONFORT ═══ */}
           {activeTab === 'Confort' && (
             <>
-              {pieces.length > 0 && (
+              {isCommercial ? (
+                <div style={CARD}>
+                  <SectionTitle>Nombre de pièces</SectionTitle>
+                  <div style={{ display:'flex', flexDirection:'column' }}>
+                    <PieceCounter label="Chambres" value={pieceCount('Chambre')} min={1}
+                      onInc={() => addPiece('Chambre')} onDec={() => removePiece('Chambre')} />
+                    <PieceCounter label="Salons" value={pieceCount('Salon')}
+                      onInc={() => addPiece('Salon')} onDec={() => removePiece('Salon')} />
+                    <PieceCounter label="Cuisines" value={pieceCount('Cuisine')}
+                      onInc={() => addPiece('Cuisine')} onDec={() => removePiece('Cuisine')} />
+                    <PieceCounter label="Douches" value={pieceCount('Salle de bain')}
+                      onInc={() => addPiece('Salle de bain')} onDec={() => removePiece('Salle de bain')} />
+                  </div>
+                </div>
+              ) : pieces.length > 0 && (
                 <div style={CARD}>
                   <SectionTitle>Composition des pièces</SectionTitle>
-                  <p style={{ fontSize:12, color:'#64748B', margin:'0 0 16px', lineHeight:1.5 }}>Remplissez les dimensions après vérification sur site. Superficie en m², longueur / largeur en mètres. Laissez vide ce qui n'a pas été mesuré.</p>
+                  <p style={{ fontSize:12, color:'var(--c-muted)', margin:'0 0 16px', lineHeight:1.5 }}>Remplissez les dimensions après vérification sur site. Superficie en m², longueur / largeur en mètres. Laissez vide ce qui n'a pas été mesuré.</p>
                   <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
                     {pieces.map((p, i) => (
-                      <div key={p.id} style={{ display:'grid', gridTemplateColumns:'2fr 1fr 1fr 1fr', gap:10, padding:14, background:'#F8FAFC', borderRadius:8, border:'1px solid #E2E8F0' }}>
-                        <div><label style={{ fontSize:11, fontWeight:600, color:'#64748B', display:'block', marginBottom:5 }}>Pièce</label><SInput value={p.nom} onChange={e => setPieces(ps => ps.map((x,j) => j===i?{...x,nom:e.target.value}:x))} /></div>
-                        <div><label style={{ fontSize:11, fontWeight:600, color:'#64748B', display:'block', marginBottom:5 }}>Superficie (m²)</label><SInput type="number" min="0" step="0.5" placeholder="—" value={p.surface} onChange={e => setPieces(ps => ps.map((x,j) => j===i?{...x,surface:e.target.value}:x))} /></div>
-                        <div><label style={{ fontSize:11, fontWeight:600, color:'#64748B', display:'block', marginBottom:5 }}>Longueur (m)</label><SInput type="number" min="0" step="0.1" placeholder="Optionnel" value={p.longueur} onChange={e => setPieces(ps => ps.map((x,j) => j===i?{...x,longueur:e.target.value}:x))} /></div>
-                        <div><label style={{ fontSize:11, fontWeight:600, color:'#64748B', display:'block', marginBottom:5 }}>Largeur (m)</label><SInput type="number" min="0" step="0.1" placeholder="Optionnel" value={p.largeur} onChange={e => setPieces(ps => ps.map((x,j) => j===i?{...x,largeur:e.target.value}:x))} /></div>
+                      <div key={p.id} className="edit-piece-row" style={{ gap:10, padding:14, background:'var(--c-surface-2)', borderRadius:8, border:'1px solid var(--c-border)' }}>
+                        <div><label style={{ fontSize:11, fontWeight:600, color:'var(--c-muted)', display:'block', marginBottom:5 }}>Pièce</label><SInput value={p.nom} onChange={e => setPieces(ps => ps.map((x,j) => j===i?{...x,nom:e.target.value}:x))} /></div>
+                        <div><label style={{ fontSize:11, fontWeight:600, color:'var(--c-muted)', display:'block', marginBottom:5 }}>Superficie (m²)</label><SInput type="number" min="0" max="9999" step="0.5" placeholder="—" value={p.surface} onChange={e => setPieces(ps => ps.map((x,j) => j===i?{...x,surface:e.target.value}:x))} onKeyDown={e => blockInvalidNumberKey(e)} /></div>
+                        <div><label style={{ fontSize:11, fontWeight:600, color:'var(--c-muted)', display:'block', marginBottom:5 }}>Longueur (m)</label><SInput type="number" min="0" max="999" step="0.1" placeholder="Optionnel" value={p.longueur} onChange={e => setPieces(ps => ps.map((x,j) => j===i?{...x,longueur:e.target.value}:x))} onKeyDown={e => blockInvalidNumberKey(e)} /></div>
+                        <div><label style={{ fontSize:11, fontWeight:600, color:'var(--c-muted)', display:'block', marginBottom:5 }}>Largeur (m)</label><SInput type="number" min="0" max="999" step="0.1" placeholder="Optionnel" value={p.largeur} onChange={e => setPieces(ps => ps.map((x,j) => j===i?{...x,largeur:e.target.value}:x))} onKeyDown={e => blockInvalidNumberKey(e)} /></div>
                       </div>
                     ))}
                   </div>
@@ -557,7 +615,6 @@ export default function AnnonceEditPage() {
 
               <div style={CARD}>
                 <SectionTitle>Caractéristiques</SectionTitle>
-                <Toggle label="Sanitaire" value={sanitaire} onChange={setSanitaire} />
                 {isSmall && <Toggle label="Maison à couloir" value={couloir} onChange={setCouloir} />}
                 <Toggle label="Cour" value={cour} onChange={setCour} />
                 {cour && (
@@ -572,45 +629,49 @@ export default function AnnonceEditPage() {
                     </Field>
                     {typeCour==='commune' && (
                       <Field label="Nb de ménages dans la concession">
-                        <SInput type="number" min="0" placeholder="Ex : 4" value={nbVoisins} onChange={e => setNbVoisins(e.target.value)} />
+                        <SInput type="number" min="0" max="999" step="1" placeholder="Ex : 4" value={nbVoisins} onChange={e => setNbVoisins(e.target.value)} onKeyDown={e => blockInvalidNumberKey(e, true)} />
                       </Field>
                     )}
-                    <Toggle label="Arrière-cour" value={arriereCour} onChange={setArriereCour} />
+                    {!isCommercial && <Toggle label="Arrière-cour" value={arriereCour} onChange={setArriereCour} />}
                   </div>
                 )}
-                <Toggle label="Boyerie (chambre domestique)" value={boyerie} onChange={setBoyerie} />
-                {boyerie && (
-                  <div style={{ paddingLeft:16, paddingTop:8, paddingBottom:4 }}>
-                    <Field label="Type de boyerie">
-                      <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
-                        {BOYERIE_OPTS.map(o => <Chip key={o.value} label={o.label} active={boyerieType===o.value} onClick={() => setBoyerieType(boyerieType===o.value?'':o.value)} />)}
-                        <Chip label="Autre (à préciser)" active={boyerieType==='autre'} onClick={() => setBoyerieType(boyerieType==='autre'?'':'autre')} />
-                      </div>
-                      {boyerieType==='autre' && <SInput style={{ marginTop:8 }} placeholder="Précisez…" value={autrePrecision.boyerie_type??''} onChange={e => setAutrePrecision(p=>({...p, boyerie_type:e.target.value}))} />}
-                    </Field>
-                  </div>
-                )}
-                <Toggle label="Parking" value={parking} onChange={setParking} />
-                {parking && <div style={{ paddingLeft:16, paddingTop:8, paddingBottom:4 }}><Field label="Capacité (nb véhicules)"><SInput type="number" min="1" placeholder="Ex : 2" value={parkingCap} onChange={e => setParkingCap(e.target.value)} /></Field></div>}
                 <Toggle label="Accès véhicule (portail suffisamment large)" value={accesVeh} onChange={setAccesVeh} />
-                {accesVeh && <div style={{ paddingLeft:16, paddingTop:8, paddingBottom:4 }}><Field label="Nb de véhicules pouvant entrer"><SInput type="number" min="1" placeholder="Ex : 1" value={nbVeh} onChange={e => setNbVeh(e.target.value)} /></Field></div>}
-                {isSmall && <Toggle label="Armoires encastrées dans la chambre" value={armoiresCh} onChange={setArmoiresCh} />}
+                {accesVeh && <div style={{ paddingLeft:16, paddingTop:8, paddingBottom:4 }}><Field label="Nb de véhicules pouvant entrer"><SInput type="number" min="1" max="99" step="1" placeholder="Ex : 1" value={nbVeh} onChange={e => setNbVeh(e.target.value)} onKeyDown={e => blockInvalidNumberKey(e, true)} /></Field></div>}
+                {!isCommercial && (
+                  <>
+                    <Toggle label="Boyerie (chambre domestique)" value={boyerie} onChange={setBoyerie} />
+                    {boyerie && (
+                      <div style={{ paddingLeft:16, paddingTop:8, paddingBottom:4 }}>
+                        <Field label="Type de boyerie">
+                          <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+                            {BOYERIE_OPTS.map(o => <Chip key={o.value} label={o.label} active={boyerieType===o.value} onClick={() => setBoyerieType(boyerieType===o.value?'':o.value)} />)}
+                            <Chip label="Autre (à préciser)" active={boyerieType==='autre'} onClick={() => setBoyerieType(boyerieType==='autre'?'':'autre')} />
+                          </div>
+                          {boyerieType==='autre' && <SInput style={{ marginTop:8 }} placeholder="Précisez…" value={autrePrecision.boyerie_type??''} onChange={e => setAutrePrecision(p=>({...p, boyerie_type:e.target.value}))} />}
+                        </Field>
+                      </div>
+                    )}
+                    <Toggle label="Parking" value={parking} onChange={setParking} />
+                    {parking && <div style={{ paddingLeft:16, paddingTop:8, paddingBottom:4 }}><Field label="Capacité (nb véhicules)"><SInput type="number" min="1" max="99" step="1" placeholder="Ex : 2" value={parkingCap} onChange={e => setParkingCap(e.target.value)} onKeyDown={e => blockInvalidNumberKey(e, true)} /></Field></div>}
+                    {isSmall && <Toggle label="Armoires encastrées dans la chambre" value={armoiresCh} onChange={setArmoiresCh} />}
+                  </>
+                )}
               </div>
 
               <div style={CARD}>
-                <SectionTitle>Finition</SectionTitle>
+                <SectionTitle>Standing</SectionTitle>
                 <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                  {FINITIONS.map(o => {
-                    const active = finition === o.value;
-                    return <button key={o.value} type="button" onClick={() => setFinition(active?'':o.value)} style={{ display:'flex', flexDirection:'column', alignItems:'flex-start', padding:'11px 14px', borderRadius:8, cursor:'pointer', textAlign:'left', width:'100%', border:active?'2px solid #2563EB':'1.5px solid #E2E8F0', background:active?'#EFF6FF':'#fff', transition:'all .12s' }}>
-                      <span style={{ fontSize:13, fontWeight:600, color:active?'#1D4ED8':'#0F172A' }}>{o.label}</span>
-                      <span style={{ fontSize:11, color:'#64748B', marginTop:2 }}>{o.sub}</span>
+                  {STANDINGS.map(o => {
+                    const active = standing === o.value;
+                    return <button key={o.value} type="button" onClick={() => setStanding(active?'':o.value)} style={{ display:'flex', flexDirection:'column', alignItems:'flex-start', padding:'11px 14px', borderRadius:8, cursor:'pointer', textAlign:'left', width:'100%', border:active?'2px solid #2563EB':'1.5px solid var(--c-border)', background:active?'var(--t-blue-bg)':'var(--c-card)', transition:'all .12s' }}>
+                      <span style={{ fontSize:13, fontWeight:600, color:active?'var(--s-blue)':'var(--c-text)' }}>{o.label}</span>
+                      <span style={{ fontSize:11, color:'var(--c-muted)', marginTop:2 }}>{o.sub}</span>
                     </button>;
                   })}
-                  {(() => { const active = finition==='autre'; return (
-                    <button type="button" onClick={() => setFinition(active?'':'autre')} style={{ display:'flex', flexDirection:'column', alignItems:'flex-start', padding:'11px 14px', borderRadius:8, cursor:'pointer', textAlign:'left', width:'100%', border:active?'2px solid #2563EB':'1.5px solid #E2E8F0', background:active?'#EFF6FF':'#fff', transition:'all .12s' }}>
-                      <span style={{ fontSize:13, fontWeight:600, color:active?'#1D4ED8':'#0F172A' }}>Autre (à préciser)</span>
-                      {active && <SInput style={{ marginTop:8 }} placeholder="Décrivez la finition…" value={autrePrecision.finition??''} onChange={e => setAutrePrecision(p=>({...p, finition:e.target.value}))} onClick={ev => ev.stopPropagation()} />}
+                  {(() => { const active = standing==='autre'; return (
+                    <button type="button" onClick={() => setStanding(active?'':'autre')} style={{ display:'flex', flexDirection:'column', alignItems:'flex-start', padding:'11px 14px', borderRadius:8, cursor:'pointer', textAlign:'left', width:'100%', border:active?'2px solid #2563EB':'1.5px solid var(--c-border)', background:active?'var(--t-blue-bg)':'var(--c-card)', transition:'all .12s' }}>
+                      <span style={{ fontSize:13, fontWeight:600, color:active?'var(--s-blue)':'var(--c-text)' }}>Autre (à préciser)</span>
+                      {active && <SInput style={{ marginTop:8 }} placeholder="Décrivez le standing…" value={autrePrecision.standing??''} onChange={e => setAutrePrecision(p=>({...p, standing:e.target.value}))} onClick={ev => ev.stopPropagation()} />}
                     </button>
                   ); })()}
                 </div>
@@ -636,7 +697,7 @@ export default function AnnonceEditPage() {
                   </div>
                   {elec==='autre' && <SInput style={{ marginTop:10 }} placeholder="Précisez la source d'électricité…" value={autrePrecision.elec??''} onChange={e => setAutrePrecision(p=>({...p, elec:e.target.value}))} />}
                 </Field>
-                {elec==='decompteur' && <div style={{ paddingLeft:16, paddingBottom:8 }}><Field label="Prix au kWh (FCFA)"><SInput type="number" min="0" placeholder="Ex : 125" value={prixKwh} onChange={e => setPrixKwh(e.target.value)} /></Field></div>}
+                {elec==='decompteur' && <div style={{ paddingLeft:16, paddingBottom:8 }}><Field label="Prix au kWh (FCFA)"><SInput type="number" min="0" max="9999" step="1" placeholder="Ex : 125" value={prixKwh} onChange={e => setPrixKwh(e.target.value)} onKeyDown={e => blockInvalidNumberKey(e, true)} /></Field></div>}
 
                 <Field label="Eau">
                   <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
@@ -655,13 +716,13 @@ export default function AnnonceEditPage() {
                       </div>
                       {sonebG==='autre' && <SInput style={{ marginTop:8 }} placeholder="Précisez…" value={autrePrecision.soneb_gestion??''} onChange={e => setAutrePrecision(p=>({...p, soneb_gestion:e.target.value}))} />}
                     </Field>
-                    {sonebG==='prix_m3' && <Field label="Prix au m³ (FCFA)"><SInput type="number" min="0" placeholder="Ex : 450" value={prixM3} onChange={e => setPrixM3(e.target.value)} /></Field>}
+                    {sonebG==='prix_m3' && <Field label="Prix au m³ (FCFA)"><SInput type="number" min="0" max="99999" step="1" placeholder="Ex : 450" value={prixM3} onChange={e => setPrixM3(e.target.value)} onKeyDown={e => blockInvalidNumberKey(e, true)} /></Field>}
                   </div>
                 )}
                 {eau==='forage' && (
                   <div style={{ paddingLeft:16, paddingBottom:8 }}>
                     <Toggle label="Forage payant" value={forageP} onChange={setForageP} />
-                    {forageP && <div style={{ paddingTop:8 }}><Field label="Prix au m³ — forage (FCFA)"><SInput type="number" min="0" placeholder="Ex : 500" value={prixForage} onChange={e => setPrixForage(e.target.value)} /></Field></div>}
+                    {forageP && <div style={{ paddingTop:8 }}><Field label="Prix au m³ — forage (FCFA)"><SInput type="number" min="0" max="99999" step="1" placeholder="Ex : 500" value={prixForage} onChange={e => setPrixForage(e.target.value)} onKeyDown={e => blockInvalidNumberKey(e, true)} /></Field></div>}
                   </div>
                 )}
                 <Field label="Disponibilité">
@@ -673,11 +734,13 @@ export default function AnnonceEditPage() {
                 </Field>
               </div>
 
-              <div style={CARD}>
-                <SectionTitle>Voisinage & Équipements</SectionTitle>
-                <TagPicker label="Points d'intérêt à proximité" preset={VOISINAGE_PRESET} value={voisinage} onChange={setVoisinage} />
-                <div style={{ marginTop:4 }}><TagPicker label="Équipements inclus" preset={EQUIPEMENT_PRESET} value={equips} onChange={setEquips} /></div>
-              </div>
+              {!isCommercial && (
+                <div style={CARD}>
+                  <SectionTitle>Voisinage & Équipements</SectionTitle>
+                  <TagPicker label="Points d'intérêt à proximité" preset={VOISINAGE_PRESET} value={voisinage} onChange={setVoisinage} />
+                  <div style={{ marginTop:4 }}><TagPicker label="Équipements inclus" preset={EQUIPEMENT_PRESET} value={equips} onChange={setEquips} /></div>
+                </div>
+              )}
             </>
           )}
 
@@ -685,7 +748,7 @@ export default function AnnonceEditPage() {
           {activeTab === 'Honoraires' && (
             <div style={CARD}>
               <SectionTitle>Conditions financières</SectionTitle>
-              <p style={{ fontSize:12, color:'#64748B', margin:'0 0 20px', lineHeight:1.6 }}>Ces données sont définies par le propriétaire ou l'agent à la création. Le loyer mensuel est éditable dans l'onglet <strong>Type & Prix</strong>.</p>
+              <p style={{ fontSize:12, color:'var(--c-muted)', margin:'0 0 20px', lineHeight:1.6 }}>Ces données sont définies par le propriétaire ou l'agent à la création. Le loyer mensuel est éditable dans l'onglet <strong>Type & Prix</strong>.</p>
               {([
                 ['Loyer mensuel',       bien.prix!=null ? `${Number(bien.prix).toLocaleString('fr-FR')} FCFA / mois` : '—'],
                 ['Avance',              amenites.avance_mois!=null ? `${amenites.avance_mois} mois` : '—'],
@@ -693,15 +756,18 @@ export default function AnnonceEditPage() {
                 ['Caution eau',         amenites.caution_eau!=null ? `${Number(amenites.caution_eau).toLocaleString('fr-FR')} FCFA` : '—'],
                 ['Caution électricité', amenites.caution_elec!=null ? `${Number(amenites.caution_elec).toLocaleString('fr-FR')} FCFA` : '—'],
                 ['Frais de visite',     bien.frais_visite!=null ? `${Number(bien.frais_visite).toLocaleString('fr-FR')} FCFA` : '—'],
-                ['Échéance paiement',   amenites.echeance_mois!=null ? `${amenites.echeance_mois} mois` : '—'],
               ] as [string,string][]).map(([lbl,val]) => (
-                <div key={lbl} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'11px 0', borderBottom:'1px solid #E2E8F0' }}>
-                  <span style={{ fontSize:13, color:'#64748B' }}>{lbl}</span>
-                  <span style={{ fontSize:13, fontWeight:600, color:'#0F172A' }}>{val}</span>
+                <div key={lbl} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'11px 0', borderBottom:'1px solid var(--c-border)' }}>
+                  <span style={{ fontSize:13, color:'var(--c-muted)' }}>{lbl}</span>
+                  <span style={{ fontSize:13, fontWeight:600, color:'var(--c-text)' }}>{val}</span>
                 </div>
               ))}
-              <div style={{ marginTop:16, padding:14, background:'#F0F9FF', borderRadius:8, border:'1px solid #BAE6FD' }}>
-                <p style={{ fontSize:12, color:'#075985', margin:0, lineHeight:1.7 }}>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'11px 0', borderBottom:'1px solid var(--c-border)', gap:12 }}>
+                <span style={{ fontSize:13, color:'var(--c-muted)', flexShrink:0 }}>Échéance paiement (jour du mois)</span>
+                <SInput type="number" min="1" max="31" step="1" placeholder="Ex : 5" value={echeanceMois} onChange={e => setEcheanceMois(e.target.value)} onKeyDown={e => blockInvalidNumberKey(e, true)} style={{ maxWidth:120, textAlign:'right' }} />
+              </div>
+              <div style={{ marginTop:16, padding:14, background:'var(--t-blue-bg)', borderRadius:8, border:'1px solid var(--t-blue-bd)' }}>
+                <p style={{ fontSize:12, color:'var(--s-blue)', margin:0, lineHeight:1.7 }}>
                   <strong>Commission</strong>
                   {isOwner
                     ? <span> : 500 FCFA fixe (annonce propriétaire — lecture seule)</span>
@@ -717,32 +783,39 @@ export default function AnnonceEditPage() {
           {/* ═══ PHOTOS ═══ */}
           {activeTab === 'Photos' && (
             <>
-              <div style={{ ...CARD, border:'2px dashed #2563EB', background:'#F8FAFC', cursor:'pointer', textAlign:'center' }}
+              <div style={{ ...CARD, border:'2px dashed #2563EB', background:'var(--c-surface-2)', cursor:'pointer', textAlign:'center' }}
                 onClick={() => document.getElementById('ph-inp')?.click()}
                 onDragOver={e => e.preventDefault()}
                 onDrop={e => { e.preventDefault(); handleUpload(e.dataTransfer.files); }}>
                 <input id="ph-inp" type="file" accept="image/*" multiple style={{ display:'none' }} onChange={e => handleUpload(e.target.files)} />
-                <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:8, padding:'12px 0', color:'#2563EB' }}>
+                <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:8, padding:'12px 0', color:'var(--s-blue)' }}>
                   <UploadIcon/>
                   <span style={{ fontSize:13, fontWeight:600 }}>Cliquer ou glisser des photos ici</span>
-                  <span style={{ fontSize:11, color:'#64748B' }}>JPG, PNG, WebP — 5 Mo max par photo</span>
+                  <span style={{ fontSize:11, color:'var(--c-muted)' }}>JPG, PNG, WebP — 5 Mo max par photo</span>
                 </div>
               </div>
               {photos.length === 0 ? (
-                <div style={{ ...CARD, textAlign:'center', color:'#64748B', fontSize:13, padding:'40px 24px' }}>Aucune photo. Ajoutez-en ci-dessus.</div>
+                <div style={{ ...CARD, textAlign:'center', color:'var(--c-muted)', fontSize:13, padding:'40px 24px' }}>Aucune photo. Ajoutez-en ci-dessus.</div>
               ) : (
                 <>
-                  <p style={{ fontSize:12, color:'#64748B', margin:'0 0 12px', lineHeight:1.5 }}>Étoile = photo principale (première dans l'app). Cliquez pour modifier, corbeille pour supprimer.</p>
+                  <p style={{ fontSize:12, color:'var(--c-muted)', margin:'0 0 12px', lineHeight:1.5 }}>Étoile = photo principale (première dans l'app). Cliquez pour modifier, corbeille pour supprimer.</p>
                   <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(190px,1fr))', gap:12 }}>
                     {photos.map(ph => (
-                      <div key={ph.id} style={{ position:'relative', borderRadius:10, overflow:'hidden', border: ph.is_cover ? '2.5px solid #2563EB' : '1.5px solid #E2E8F0', background:'#F8FAFC' }}>
+                      <div key={ph.id} style={{ position:'relative', borderRadius:10, overflow:'hidden', border: ph.is_cover ? '2.5px solid #2563EB' : '1.5px solid var(--c-border)', background:'var(--c-surface-2)' }}>
                         <img src={ph.url} alt="" style={{ width:'100%', aspectRatio:'4/3', objectFit:'cover', display:'block', opacity: ph.uploading?.5:1 }}/>
-                        {ph.uploading && <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(255,255,255,.6)', fontSize:12, color:'#64748B' }}>Upload…</div>}
+                        {ph.uploading && <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(255,255,255,.6)', fontSize:12, color:'var(--c-muted)' }}>Upload…</div>}
                         {ph.is_cover && <div style={{ position:'absolute', top:8, left:8, background:'#2563EB', color:'#fff', fontSize:10, fontWeight:700, padding:'2px 8px', borderRadius:4 }}>PRINCIPALE</div>}
                         {!ph.uploading && (
                           <div style={{ position:'absolute', bottom:0, left:0, right:0, display:'flex', gap:6, padding:8, background:'linear-gradient(to top,rgba(0,0,0,.5),transparent)' }}>
-                            <button title="Photo principale" onClick={() => !ph.is_cover && handleCover(ph.id)} style={{ display:'flex', alignItems:'center', justifyContent:'center', width:30, height:30, borderRadius:6, border:'none', cursor:ph.is_cover?'default':'pointer', background:ph.is_cover?'#2563EB':'rgba(255,255,255,.85)', color:ph.is_cover?'#fff':'#64748B' }}><StarIcon/></button>
-                            <button title="Supprimer" onClick={() => handleDelete(ph.id)} style={{ display:'flex', alignItems:'center', justifyContent:'center', width:30, height:30, borderRadius:6, border:'none', cursor:'pointer', background:'rgba(255,255,255,.85)', color:'#DC2626', marginLeft:'auto' }}><TrashIcon size={12}/></button>
+                            <button title="Photo principale" onClick={() => !ph.is_cover && handleCover(ph.id)} style={{ display:'flex', alignItems:'center', justifyContent:'center', width:30, height:30, borderRadius:6, border:'none', cursor:ph.is_cover?'default':'pointer', background:ph.is_cover?'#2563EB':'rgba(255,255,255,.85)', color:ph.is_cover?'#fff':'var(--c-muted)' }}><StarIcon/></button>
+                            {confirmDeletePhotoId === ph.id ? (
+                              <>
+                                <button title="Confirmer la suppression" onClick={() => handleDelete(ph.id)} style={{ display:'flex', alignItems:'center', justifyContent:'center', height:30, padding:'0 8px', borderRadius:6, border:'none', cursor:'pointer', background:'#DC2626', color:'#fff', fontSize:11, fontWeight:600, marginLeft:'auto' }}>Confirmer</button>
+                                <button title="Annuler" onClick={() => setConfirmDeletePhotoId(null)} style={{ display:'flex', alignItems:'center', justifyContent:'center', height:30, padding:'0 8px', borderRadius:6, border:'none', cursor:'pointer', background:'rgba(255,255,255,.85)', color:'var(--c-text)', fontSize:11 }}>✕</button>
+                              </>
+                            ) : (
+                              <button title="Supprimer" onClick={() => setConfirmDeletePhotoId(ph.id)} style={{ display:'flex', alignItems:'center', justifyContent:'center', width:30, height:30, borderRadius:6, border:'none', cursor:'pointer', background:'rgba(255,255,255,.85)', color:'var(--s-red)', marginLeft:'auto' }}><TrashIcon size={12}/></button>
+                            )}
                           </div>
                         )}
                       </div>

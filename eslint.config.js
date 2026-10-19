@@ -18,5 +18,9 @@ export default defineConfig([
     languageOptions: {
       globals: globals.browser,
     },
+    rules: {
+      // Pas de console.log en production ; console.warn/error restent permis pour les erreurs.
+      'no-console': ['error', { allow: ['warn', 'error'] }],
+    },
   },
 ])

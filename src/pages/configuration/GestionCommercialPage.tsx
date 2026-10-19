@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef, type FormEvent } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { blockInvalidNumberKey } from '../../utils/inputNumbers';
 import { getCommerciaux } from '../../api/getCommerciaux';
 import { deleteCommerciaux } from '../../api/deleteCommerciaux';
 import { postCommercialBonus } from '../../api/postCommercialBonus';
@@ -11,6 +12,7 @@ import { getMessages } from '../../api/getMessages';
 import { postMessage } from '../../api/postMessage';
 import { useChatSocket } from '../../hooks/useChatSocket';
 import GestionCommercialModal from './GestionCommercialModal';
+import { apiMessage } from '../../utils/apiMessage';
 
 /* ─── Helpers ─────────────────────────────────────────────── */
 
@@ -86,7 +88,7 @@ function ClientsListModal({ commercial, onClose }: { commercial: any; onClose: (
                 <span style={{
                   padding: '2px 8px', borderRadius: 20, fontSize: 10, fontWeight: 700,
                   letterSpacing: '0.5px', textTransform: 'uppercase',
-                  background: '#EFF6FF', color: '#1D4ED8', border: '1px solid #BFDBFE',
+                  background: 'var(--t-blue-bg)', color: 'var(--s-blue)', border: '1px solid var(--t-blue-bd)',
                   flexShrink: 0,
                 }}>
                   {c.role_principal ?? c.role ?? 'prospect'}
@@ -126,7 +128,7 @@ function BonusCommercialModal({ commercial, onClose }: { commercial: any; onClos
       await postCommercialBonus.accorder(commercial.id, Number(montant), motif.trim());
       setSuccess(true);
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Erreur lors de l\'attribution du bonus.');
+      setError(apiMessage(err) ?? 'Erreur lors de l\'attribution du bonus.');
     } finally {
       setLoading(false);
     }
@@ -149,7 +151,7 @@ function BonusCommercialModal({ commercial, onClose }: { commercial: any; onClos
 
         {success ? (
           <div style={{ textAlign: 'center', padding: '20px 0' }}>
-            <div style={{ color: '#16A34A', marginBottom: 10 }}>
+            <div style={{ color: 'var(--s-green)', marginBottom: 10 }}>
               <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 auto' }}>
                 <polyline points="20 6 9 17 4 12"/>
               </svg>
@@ -162,8 +164,9 @@ function BonusCommercialModal({ commercial, onClose }: { commercial: any; onClos
             <div className="immo-form-field" style={{ marginBottom: 14 }}>
               <label className="immo-form-label">Montant (FCFA) *</label>
               <input
-                className="immo-form-input" type="number" min={1} step={100}
+                className="immo-form-input" type="number" min={1} max={99999999} step={100}
                 value={montant} onChange={e => setMontant(e.target.value)}
+                onKeyDown={e => blockInvalidNumberKey(e, true)}
                 placeholder="Ex: 5000" autoFocus disabled={loading} required
               />
             </div>
@@ -177,7 +180,7 @@ function BonusCommercialModal({ commercial, onClose }: { commercial: any; onClos
             </div>
 
             {error && (
-              <div style={{ marginBottom: 14, padding: '8px 12px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8, fontSize: 12, color: '#DC2626' }}>
+              <div style={{ marginBottom: 14, padding: '8px 12px', background: 'var(--t-red-bg)', border: '1px solid var(--t-red-bd)', borderRadius: 8, fontSize: 12, color: 'var(--s-red)' }}>
                 {error}
               </div>
             )}
@@ -244,7 +247,7 @@ function AttribuerClientModal({
       setSuccess(userId);
       onSuccess();
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Erreur lors de l\'attribution.');
+      setError(apiMessage(err) ?? 'Erreur lors de l\'attribution.');
     } finally {
       setAssigning(null);
     }
@@ -286,7 +289,7 @@ function AttribuerClientModal({
         </div>
 
         {error && (
-          <div style={{ marginBottom: 12, padding: '8px 12px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8, fontSize: 12, color: '#DC2626' }}>
+          <div style={{ marginBottom: 12, padding: '8px 12px', background: 'var(--t-red-bg)', border: '1px solid var(--t-red-bd)', borderRadius: 8, fontSize: 12, color: 'var(--s-red)' }}>
             {error}
           </div>
         )}
@@ -321,13 +324,13 @@ function AttribuerClientModal({
                 <span style={{
                   padding: '2px 8px', borderRadius: 20, fontSize: 10, fontWeight: 700,
                   letterSpacing: '0.5px', textTransform: 'uppercase',
-                  background: '#F3F4F6', color: '#6B7280', border: '1px solid #E5E7EB',
+                  background: 'var(--c-surface-2)', color: 'var(--c-muted)', border: '1px solid var(--c-border)',
                   flexShrink: 0,
                 }}>
                   {u.role_principal ?? u.role ?? ''}
                 </span>
                 {success === u.id ? (
-                  <span style={{ color: '#16A34A', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
+                  <span style={{ color: 'var(--s-green)', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="20 6 9 17 4 12"/>
                     </svg>
@@ -338,7 +341,7 @@ function AttribuerClientModal({
                     disabled={assigning === u.id}
                     style={{
                       padding: '5px 12px', borderRadius: 6, fontSize: 12, fontWeight: 600,
-                      background: 'var(--c-blue)', color: '#fff', border: 'none', cursor: 'pointer', flexShrink: 0,
+                      background: 'var(--c-blue-solid)', color: '#fff', border: 'none', cursor: 'pointer', flexShrink: 0,
                     }}
                   >
                     {assigning === u.id ? '…' : 'Attribuer'}
@@ -417,7 +420,7 @@ function DirectChatModal({ commercial, me, onClose }: { commercial: any; me: any
               {commercial.prenom} {commercial.nom}
             </div>
           </div>
-          <div style={{ fontSize: 11, color: 'var(--c-blue)', fontWeight: 600, background: '#EFF6FF', borderRadius: 6, padding: '3px 8px', border: '1px solid #BFDBFE' }}>
+          <div style={{ fontSize: 11, color: 'var(--c-blue)', fontWeight: 600, background: 'var(--t-blue-bg)', borderRadius: 6, padding: '3px 8px', border: '1px solid var(--t-blue-bd)' }}>
             Vous : {me?.prenom ?? ''} {me?.nom ?? ''} — {adminLabel}
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-muted)', padding: 4 }}>
@@ -459,7 +462,7 @@ function DirectChatModal({ commercial, me, onClose }: { commercial: any; me: any
                         </div>
                       )}
                       <div style={{
-                        background: isMine ? 'var(--c-blue)' : '#fff',
+                        background: isMine ? 'var(--c-blue-solid)' : 'var(--c-card)',
                         color: isMine ? '#fff' : 'var(--c-text)',
                         border: isMine ? 'none' : '1px solid var(--c-border)',
                         borderRadius: isMine ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
@@ -481,7 +484,7 @@ function DirectChatModal({ commercial, me, onClose }: { commercial: any; me: any
         </div>
 
         {/* Input */}
-        <div style={{ padding: '10px 14px', borderTop: '1px solid var(--c-border)', background: '#fff', display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
+        <div style={{ padding: '10px 14px', borderTop: '1px solid var(--c-border)', background: 'var(--c-card)', display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
           <input
             className="immo-form-input"
             style={{ flex: 1 }}
@@ -497,7 +500,7 @@ function DirectChatModal({ commercial, me, onClose }: { commercial: any; me: any
             disabled={!input.trim() || sending || loading}
             style={{
               padding: '0 16px', height: 38, borderRadius: 8, border: 'none',
-              background: !input.trim() || sending ? 'var(--c-border)' : 'var(--c-blue)',
+              background: !input.trim() || sending ? 'var(--c-border)' : 'var(--c-blue-solid)',
               color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer', flexShrink: 0,
             }}
           >
@@ -518,10 +521,10 @@ const TYPE_LABEL_MAP: Record<string, string> = {
   villa: 'Villa', duplex: 'Duplex / Grande prop.', maison_individuelle: 'Maison indiv.', appartement: 'Appartement',
 };
 const MOD_LABELS: Record<string, { label: string; color: string; bg: string }> = {
-  en_attente:   { label: 'En attente',  color: '#D97706', bg: '#FFFBEB' },
-  approuve:     { label: 'Publié',      color: '#16A34A', bg: '#F0FDF4' },
-  rejete:       { label: 'Rejeté',      color: '#DC2626', bg: '#FEF2F2' },
-  conditionnel: { label: 'Conditionnel',color: '#7C3AED', bg: '#F5F3FF' },
+  en_attente:   { label: 'En attente',  color: 'var(--s-yellow)', bg: 'var(--t-yellow-bg)' },
+  approuve:     { label: 'Publié',      color: 'var(--s-green)', bg: 'var(--t-green-bg)' },
+  rejete:       { label: 'Rejeté',      color: 'var(--s-red)', bg: 'var(--t-red-bg)' },
+  conditionnel: { label: 'Conditionnel',color: 'var(--s-violet)', bg: 'var(--t-violet-bg)' },
 };
 
 function fmtSemaine(raw: string) {
@@ -543,6 +546,7 @@ function SupervisionModal({ commercial, onClose }: { commercial: any; onClose: (
   const [loadingConvs, setLoadingConvs] = useState(false);
   const [loadingBiens, setLoadingBiens] = useState(false);
   const [openConv, setOpenConv] = useState<any | null>(null);
+  const [hoveredConvId, setHoveredConvId] = useState<number | null>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [loadingMsgs, setLoadingMsgs] = useState(false);
   const [reply, setReply]       = useState('');
@@ -653,10 +657,10 @@ function SupervisionModal({ commercial, onClose }: { commercial: any; onClose: (
                   {/* Compteurs */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
                     {[
-                      { label: 'Biens publiés', value: compteurs?.total_publies ?? 0, color: '#7C3AED' },
-                      { label: 'En vérification', value: compteurs?.en_verification ?? 0, color: '#D97706' },
-                      { label: 'Validés', value: compteurs?.valides ?? 0, color: '#16A34A' },
-                      { label: 'Validés cette semaine', value: compteurs?.valides_semaine ?? 0, color: '#2563EB' },
+                      { label: 'Biens publiés', value: compteurs?.total_publies ?? 0, color: 'var(--s-violet)' },
+                      { label: 'En vérification', value: compteurs?.en_verification ?? 0, color: 'var(--s-yellow)' },
+                      { label: 'Validés', value: compteurs?.valides ?? 0, color: 'var(--s-green)' },
+                      { label: 'Validés cette semaine', value: compteurs?.valides_semaine ?? 0, color: 'var(--s-blue)' },
                     ].map(c => (
                       <div key={c.label} style={{ background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 10, padding: '12px 14px' }}>
                         <div style={{ fontSize: 24, fontWeight: 800, color: c.color }}>{c.value}</div>
@@ -683,11 +687,11 @@ function SupervisionModal({ commercial, onClose }: { commercial: any; onClose: (
                         }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
                             <span style={{ fontSize: 12, color: 'var(--c-text)', fontWeight: 600 }}>{fmtSemaine(s.semaine_debut)}</span>
-                            <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, background: '#F5F3FF', color: '#7C3AED', border: '1px solid #DDD6FE' }}>
+                            <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, background: 'var(--t-violet-bg)', color: 'var(--s-violet)', border: '1px solid var(--t-violet-bd)' }}>
                               {s.nb_biens_valides} bien{s.nb_biens_valides !== 1 ? 's' : ''}
                             </span>
                             {s.palier_atteint && (
-                              <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, background: '#F0FDF4', color: '#16A34A', border: '1px solid #BBF7D0', fontWeight: 700 }}>
+                              <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, background: 'var(--t-green-bg)', color: 'var(--s-green)', border: '1px solid var(--t-green-bd)', fontWeight: 700 }}>
                                 Palier 20
                               </span>
                             )}
@@ -715,9 +719,10 @@ function SupervisionModal({ commercial, onClose }: { commercial: any; onClose: (
                   padding: '12px 24px', display: 'flex', alignItems: 'center', gap: 12,
                   borderBottom: '1px solid var(--c-border)', cursor: 'pointer',
                   transition: 'background 0.15s',
+                  background: hoveredConvId === conv.id ? 'var(--c-bg)' : 'transparent',
                 }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'var(--c-bg)')}
-                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                onMouseEnter={() => setHoveredConvId(conv.id)}
+                onMouseLeave={() => setHoveredConvId(null)}
                 >
                   <div style={{
                     width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
@@ -773,7 +778,7 @@ function SupervisionModal({ commercial, onClose }: { commercial: any; onClose: (
                     <div key={m.id} style={{ display: 'flex', justifyContent: isGest ? 'flex-end' : 'flex-start' }}>
                       <div style={{
                         maxWidth: '72%', padding: '8px 12px', borderRadius: isGest ? '12px 12px 2px 12px' : '12px 12px 12px 2px',
-                        background: isGest ? 'var(--c-blue)' : 'var(--c-bg)',
+                        background: isGest ? 'var(--c-blue-solid)' : 'var(--c-bg)',
                         border: isGest ? 'none' : '1px solid var(--c-border)',
                         color: isGest ? '#fff' : 'var(--c-text)',
                         fontSize: 13, lineHeight: 1.5,
@@ -804,7 +809,7 @@ function SupervisionModal({ commercial, onClose }: { commercial: any; onClose: (
                   disabled={sending || !reply.trim()}
                   style={{
                     padding: '0 16px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                    background: 'var(--c-blue)', color: '#fff', fontWeight: 600, fontSize: 13,
+                    background: 'var(--c-blue-solid)', color: '#fff', fontWeight: 600, fontSize: 13,
                     opacity: sending || !reply.trim() ? 0.5 : 1,
                   }}
                 >
@@ -825,7 +830,7 @@ function SupervisionModal({ commercial, onClose }: { commercial: any; onClose: (
               ) : biens.map((b: any) => {
                 const sousType = b.amenites?.sous_type;
                 const label = TYPE_LABEL_MAP[sousType] ?? TYPE_LABEL_MAP[b.type] ?? b.type;
-                const mod = MOD_LABELS[b.statut_moderation] ?? { label: b.statut_moderation, color: '#6B7280', bg: '#F3F4F6' };
+                const mod = MOD_LABELS[b.statut_moderation] ?? { label: b.statut_moderation, color: 'var(--c-muted)', bg: 'var(--c-surface-2)' };
                 const proprio = b.amenites?.proprietaire_info;
                 return (
                   <div key={b.id} style={{ padding: '12px 24px', borderBottom: '1px solid var(--c-border)', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
@@ -844,7 +849,7 @@ function SupervisionModal({ commercial, onClose }: { commercial: any; onClose: (
                         {' · '}<strong style={{ color: 'var(--c-text)' }}>{new Intl.NumberFormat('fr-FR').format(b.prix)} FCFA</strong>
                       </div>
                       {proprio && (
-                        <div style={{ marginTop: 4, fontSize: 11, color: 'var(--c-muted)', background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 6, padding: '3px 8px', display: 'inline-block' }}>
+                        <div style={{ marginTop: 4, fontSize: 11, color: 'var(--c-muted)', background: 'var(--t-green-bg)', border: '1px solid var(--t-green-bd)', borderRadius: 6, padding: '3px 8px', display: 'inline-block' }}>
                           Proprio : {proprio.prenom ?? ''} {proprio.nom ?? ''}{proprio.telephone ? ` · ${proprio.telephone}` : ''}
                         </div>
                       )}
@@ -868,6 +873,8 @@ export default function GestionCommercialPage() {
   const [loading, setLoading]          = useState(true);
   const [showModal, setShowModal]      = useState(false);
   const [deletingId, setDeletingId]    = useState(null as any);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null as any);
+  const [deleteError, setDeleteError]  = useState('');
   const [clientsModal, setClientsModal]         = useState<any | null>(null);
   const [attribuerModal, setAttribuerModal]     = useState<any | null>(null);
   const [supervisionModal, setSupervisionModal] = useState<any | null>(null);
@@ -887,13 +894,14 @@ export default function GestionCommercialPage() {
   const handleCreated = (u: any) => setCommerciaux(c => [...c, u]);
 
   const handleDelete = async (commercial: any) => {
-    if (!confirm(`Supprimer le commercial ${commercial.prenom} ${commercial.nom} ?`)) return;
+    setDeleteError('');
     setDeletingId(commercial.id);
     try {
       await deleteCommerciaux.byId(commercial.id);
       setCommerciaux(c => c.filter((x: any) => x.id !== commercial.id));
+      setConfirmDeleteId(null);
     } catch (err: any) {
-      alert(err?.response?.data?.message ?? 'Erreur lors de la suppression');
+      setDeleteError(apiMessage(err) ?? 'Erreur lors de la suppression');
     } finally {
       setDeletingId(null);
     }
@@ -917,7 +925,7 @@ export default function GestionCommercialPage() {
         {/* Stats */}
         <div className="mgmt-stats">
           <div className="mgmt-stat-card">
-            <div className="mgmt-stat-icon" style={{ background: '#F0FDF4' }}>
+            <div className="mgmt-stat-icon" style={{ background: 'var(--t-green-bg)' }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
                 <circle cx="9" cy="7" r="4"/>
@@ -930,7 +938,7 @@ export default function GestionCommercialPage() {
             </div>
           </div>
           <div className="mgmt-stat-card">
-            <div className="mgmt-stat-icon" style={{ background: '#EFF6FF' }}>
+            <div className="mgmt-stat-icon" style={{ background: 'var(--t-blue-bg)' }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M19 8l2 2 4-4"/>
               </svg>
@@ -941,7 +949,7 @@ export default function GestionCommercialPage() {
             </div>
           </div>
           <div className="mgmt-stat-card">
-            <div className="mgmt-stat-icon" style={{ background: '#FFFBEB' }}>
+            <div className="mgmt-stat-icon" style={{ background: 'var(--t-yellow-bg)' }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
               </svg>
@@ -1007,6 +1015,7 @@ export default function GestionCommercialPage() {
                         {isMe && <span className="admin-you-badge">MOI</span>}
                       </div>
                       <div className="admin-info-email">{c.email ?? '—'}</div>
+                      <div className="admin-info-email" style={{ marginTop: 1 }}>{c.telephone ?? '—'}</div>
                       {/* Stats mini */}
                       <div style={{ display: 'flex', gap: 10, marginTop: 6, flexWrap: 'wrap' }}>
                         <span style={{
@@ -1032,15 +1041,27 @@ export default function GestionCommercialPage() {
                       </div>
                     </div>
 
-                    {/* Badge rôle */}
-                    <span style={{
-                      display: 'inline-flex', alignItems: 'center', gap: 4, alignSelf: 'center',
-                      padding: '3px 9px', borderRadius: 20, fontSize: 10, fontWeight: 700,
-                      letterSpacing: '0.5px', textTransform: 'uppercase',
-                      background: '#F0FDF4', color: '#16A34A', border: '1px solid #BBF7D0',
-                    }}>
-                      Commercial
-                    </span>
+                    {/* Badges rôle + statut */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-end', alignSelf: 'center', flexShrink: 0 }}>
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 4,
+                        padding: '3px 9px', borderRadius: 20, fontSize: 10, fontWeight: 700,
+                        letterSpacing: '0.5px', textTransform: 'uppercase',
+                        background: 'var(--t-green-bg)', color: 'var(--s-green)', border: '1px solid var(--t-green-bd)',
+                      }}>
+                        Commercial
+                      </span>
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 4,
+                        padding: '3px 9px', borderRadius: 20, fontSize: 10, fontWeight: 700,
+                        letterSpacing: '0.5px', textTransform: 'uppercase',
+                        background: c.actif ? 'var(--t-blue-bg)' : 'var(--t-red-bg)',
+                        color: c.actif ? 'var(--s-blue)' : 'var(--s-red)',
+                        border: `1px solid ${c.actif ? 'var(--t-blue-bd)' : 'var(--t-red-bd)'}`,
+                      }}>
+                        {c.actif ? 'Actif' : 'Inactif'}
+                      </span>
+                    </div>
 
                     {/* Actions supervision */}
                     {canManage && (
@@ -1049,7 +1070,7 @@ export default function GestionCommercialPage() {
                           className="btn-icon-sm"
                           title="Voir les clients"
                           onClick={() => setClientsModal(c)}
-                          style={{ background: '#EFF6FF', color: '#2563EB', border: '1px solid #BFDBFE' }}
+                          style={{ background: 'var(--t-blue-bg)', color: 'var(--s-blue)', border: '1px solid var(--t-blue-bd)' }}
                         >
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
@@ -1060,7 +1081,7 @@ export default function GestionCommercialPage() {
                           className="btn-icon-sm"
                           title="Attribuer un client"
                           onClick={() => setAttribuerModal(c)}
-                          style={{ background: '#F0FDF4', color: '#16A34A', border: '1px solid #BBF7D0' }}
+                          style={{ background: 'var(--t-green-bg)', color: 'var(--s-green)', border: '1px solid var(--t-green-bd)' }}
                         >
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                             <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -1070,7 +1091,7 @@ export default function GestionCommercialPage() {
                           className="btn-icon-sm"
                           title="Superviser (biens & conversations)"
                           onClick={() => setSupervisionModal(c)}
-                          style={{ background: '#F5F3FF', color: '#7C3AED', border: '1px solid #DDD6FE' }}
+                          style={{ background: 'var(--t-violet-bg)', color: 'var(--s-violet)', border: '1px solid var(--t-violet-bd)' }}
                         >
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <circle cx="12" cy="12" r="3"/><path d="M2.05 12A9.95 9.95 0 0 1 12 2.05M12 21.95A9.95 9.95 0 0 1 2.05 12M21.95 12A9.95 9.95 0 0 1 12 21.95M12 2.05A9.95 9.95 0 0 1 21.95 12"/>
@@ -1080,7 +1101,7 @@ export default function GestionCommercialPage() {
                           className="btn-icon-sm"
                           title="Chat direct avec ce commercial"
                           onClick={() => setChatModal(c)}
-                          style={{ background: '#EFF6FF', color: '#2563EB', border: '1px solid #BFDBFE' }}
+                          style={{ background: 'var(--t-blue-bg)', color: 'var(--s-blue)', border: '1px solid var(--t-blue-bd)' }}
                         >
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
@@ -1090,7 +1111,7 @@ export default function GestionCommercialPage() {
                           className="btn-icon-sm"
                           title="Ajouter un bonus"
                           onClick={() => setBonusModal(c)}
-                          style={{ background: '#FFF7ED', color: '#EA580C', border: '1px solid #FED7AA' }}
+                          style={{ background: 'var(--t-orange-bg)', color: '#EA580C', border: '1px solid var(--t-orange-bd)' }}
                         >
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/>
@@ -1098,16 +1119,24 @@ export default function GestionCommercialPage() {
                           </svg>
                         </button>
                         {!isMe && (
-                          <button className="btn-icon-sm danger" onClick={() => handleDelete(c)} disabled={deletingId === c.id} title="Supprimer ce commercial">
-                            {deletingId === c.id ? (
-                              <span style={{ width: 12, height: 12, border: '2px solid currentColor', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite', display: 'block' }} />
-                            ) : (
+                          confirmDeleteId === c.id ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'flex-end' }}>
+                              {deleteError && <span style={{ fontSize: 10, color: 'var(--s-red)' }}>{deleteError}</span>}
+                              <div style={{ display: 'flex', gap: 4 }}>
+                                <button className="btn-icon-sm danger" onClick={() => handleDelete(c)} disabled={deletingId === c.id} style={{ padding: '2px 8px', fontSize: 11, fontWeight: 600, borderRadius: 5 }}>
+                                  {deletingId === c.id ? '…' : 'Supprimer'}
+                                </button>
+                                <button className="btn-icon-sm" onClick={() => { setConfirmDeleteId(null); setDeleteError(''); }} style={{ padding: '2px 7px', fontSize: 11, borderRadius: 5 }}>✕</button>
+                              </div>
+                            </div>
+                          ) : (
+                            <button className="btn-icon-sm danger" onClick={() => setConfirmDeleteId(c.id)} title="Supprimer ce commercial">
                               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                                 <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
                                 <path d="M10 11v6M14 11v6M9 6V4h6v2"/>
                               </svg>
-                            )}
-                          </button>
+                            </button>
+                          )
                         )}
                       </div>
                     )}
@@ -1120,7 +1149,7 @@ export default function GestionCommercialPage() {
 
         {/* Info permissions */}
         <div className="immo-card" style={{ padding: '14px 20px', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-          <div style={{ width: 34, height: 34, borderRadius: 8, background: '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div style={{ width: 34, height: 34, borderRadius: 8, background: 'var(--t-green-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10"/>
               <line x1="12" y1="8" x2="12" y2="12"/>

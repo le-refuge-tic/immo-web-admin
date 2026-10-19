@@ -140,7 +140,7 @@ export default function AnnoncesPage() {
                 <button key={opt.key} onClick={() => handleStatutChange(opt.key)} style={{
                   padding: '5px 13px', borderRadius: 20, fontSize: 12, fontWeight: active ? 700 : 500,
                   border: `1.5px solid ${active ? 'var(--c-blue)' : 'var(--c-border)'}`,
-                  background: active ? 'var(--c-blue)' : 'transparent',
+                  background: active ? 'var(--c-blue-solid)' : 'transparent',
                   color: active ? '#fff' : 'var(--c-muted)',
                   cursor: 'pointer', transition: 'all 0.15s',
                 }}>
@@ -159,7 +159,7 @@ export default function AnnoncesPage() {
                   <button key={opt.key} onClick={() => setFilterType(opt.key)} style={{
                     padding: '5px 13px', borderRadius: 20, fontSize: 12, fontWeight: active ? 700 : 500,
                     border: `1.5px solid ${active ? 'var(--c-blue)' : 'var(--c-border)'}`,
-                    background: active ? 'var(--c-blue)' : 'transparent',
+                    background: active ? 'var(--c-blue-solid)' : 'transparent',
                     color: active ? '#fff' : 'var(--c-muted)',
                     cursor: 'pointer', transition: 'all 0.15s',
                   }}>
@@ -197,7 +197,7 @@ export default function AnnoncesPage() {
                       <img src={cover.url} alt={b.type} />
                     ) : (
                       <div style={{
-                        width: '100%', height: '100%', background: '#E2E8F0',
+                        width: '100%', height: '100%', background: 'var(--c-surface-2)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         color: 'var(--c-muted)', fontSize: 13,
                       }}>

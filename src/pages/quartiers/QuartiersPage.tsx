@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getQuartiers, type QuartierPropose } from '../../api/getQuartiers';
+import { refreshSidebarBadges } from '../../hooks/useSidebarBadges';
 
 const STATUT_LABEL: Record<string, string> = {
   en_attente: 'En attente', valide: 'Validé', rejete: 'Rejeté',
@@ -42,6 +43,7 @@ export default function QuartiersPage() {
       await refresh();
     } finally {
       setBusy(null);
+      refreshSidebarBadges();
     }
   };
 
@@ -64,7 +66,7 @@ export default function QuartiersPage() {
               style={{
                 padding: '7px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer',
                 border: '1px solid var(--c-border)',
-                background: filtre === f.v ? 'var(--c-blue)' : 'var(--c-card)',
+                background: filtre === f.v ? 'var(--c-blue-solid)' : 'var(--c-card)',
                 color: filtre === f.v ? '#fff' : 'var(--c-text)',
               }}>
               {f.l}
@@ -76,9 +78,9 @@ export default function QuartiersPage() {
       <div className="immo-page">
 
         {loadError && (
-          <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8, padding: '10px 16px', fontSize: 13, color: '#DC2626', fontWeight: 500 }}>
+          <div style={{ background: 'var(--t-red-bg)', border: '1px solid var(--t-red-bd)', borderRadius: 8, padding: '10px 16px', fontSize: 13, color: 'var(--s-red)', fontWeight: 500 }}>
             Erreur lors du chargement.{' '}
-            <button onClick={refresh} style={{ background: 'none', border: 'none', color: '#DC2626', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>
+            <button onClick={refresh} style={{ background: 'none', border: 'none', color: 'var(--s-red)', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>
               Réessayer
             </button>
           </div>
@@ -120,7 +122,7 @@ export default function QuartiersPage() {
                             Valider
                           </button>
                           <button disabled={busy === q.id} onClick={() => traiter(q.id, 'rejeter')}
-                            style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid var(--c-border)', background: 'var(--c-card)', color: '#ef4444', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: busy === q.id ? 0.6 : 1 }}>
+                            style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid var(--c-border)', background: 'var(--c-card)', color: 'var(--s-red)', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: busy === q.id ? 0.6 : 1 }}>
                             Rejeter
                           </button>
                         </div>
@@ -165,7 +167,7 @@ export default function QuartiersPage() {
                       Valider
                     </button>
                     <button disabled={busy === q.id} onClick={() => traiter(q.id, 'rejeter')}
-                      style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid var(--c-border)', background: 'var(--c-card)', color: '#ef4444', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: busy === q.id ? 0.6 : 1 }}>
+                      style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid var(--c-border)', background: 'var(--c-card)', color: 'var(--s-red)', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: busy === q.id ? 0.6 : 1 }}>
                       Rejeter
                     </button>
                   </div>

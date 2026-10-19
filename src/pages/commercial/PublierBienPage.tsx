@@ -3,8 +3,10 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { postBien } from '../../api/postBien'
 import { BENIN_LOCATION_DATA } from '../../data/beninLocations'
+import { blockInvalidNumberKey } from '../../utils/inputNumbers'
 import { getGeocoding } from '../../api/getGeocoding'
 import { getQuartiers } from '../../api/getQuartiers'
+import { apiMessage } from '../../utils/apiMessage';
 
 // ─── Quartiers — même structure que immo-web-user ─────────────────────────────
 type Quartier = { nom: string; arrondissement: string; ville: string }
@@ -37,18 +39,13 @@ const TYPES_BIEN = [
   { key: 'boutique',      label: 'Boutique'        },
 ]
 
-const SANITAIRE_OPTS = [
-  { value: 'interieur',      label: 'Sanitaire',        sub: '' },
-  { value: 'semi_interieur', label: 'Semi sanitaire',   sub: '' },
-  { value: 'cour',           label: 'Non sanitaire',    sub: '' },
-  { value: 'autre',          label: 'Autre à préciser', sub: '' },
-]
-
-const FINITION_OPTS = [
-  { value: 'ordinaire',     label: 'Ordinaire',           sub: '' },
-  { value: 'staffe_carele', label: 'Staffé',              sub: '' },
-  { value: 'haut_standing', label: 'Haut Standing / VIP', sub: '' },
-  { value: 'villa',         label: 'Villa',               sub: '' },
+const STANDING_OPTS = [
+  { value: 'sanitaire',              label: 'Sanitaire',              sub: '' },
+  { value: 'semi_sanitaire',         label: 'Semi sanitaire',         sub: '' },
+  { value: 'sanitaire_semi_staffe',  label: 'Sanitaire semi-staffé',  sub: '' },
+  { value: 'sanitaire_staffe',       label: 'Sanitaire staffé',       sub: '' },
+  { value: 'haut_standing_vip',      label: 'Haut Standing / VIP',    sub: '' },
+  { value: 'autre',                  label: 'Autre à préciser',       sub: '' },
 ]
 
 const CUISINE_OPTS = [
@@ -124,7 +121,7 @@ const formatFcfa = (v: number) => v > 0 ? `${Math.round(v).toLocaleString('fr-FR
 // ─── UI primitives (inline styles only — pas de Tailwind dans ce projet) ──────
 
 const S: Record<string, CSSProperties> = {
-  card: { background: '#fff', border: '1px solid var(--c-border)', borderRadius: 14, padding: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', marginBottom: 0 },
+  card: { background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 14, padding: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', marginBottom: 0 },
   row:  { display: 'flex', alignItems: 'center' },
   col:  { display: 'flex', flexDirection: 'column' },
   wrap: { display: 'flex', flexWrap: 'wrap', gap: 8 },
@@ -166,7 +163,7 @@ function ChoiceList({ options, value, onChange, disabledValues, onDeselect }: {
             style={{
               width: '100%', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8,
               padding: '12px 16px', borderRadius: 12, border: `2px solid ${isActive ? BLUE : 'var(--c-border)'}`,
-              background: isActive ? BLUE + '12' : 'var(--c-bg)',
+              background: isActive ? BLUE + '12' : 'var(--c-surface-2)',
               opacity: isDisabled ? 0.4 : 1, cursor: isDisabled ? 'not-allowed' : 'pointer',
               textAlign: 'left', transition: 'border-color 0.15s, background 0.15s',
             }}>
@@ -203,7 +200,7 @@ function Counter({ label, value, onChange, min = 0 }: {
       <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--c-text)' }}>{label}</span>
       <div style={{ ...S.row, gap: 12 }}>
         <button type="button" disabled={value <= min} onClick={() => onChange(value - 1)}
-          style={{ width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, border: '1px solid var(--c-border)', background: 'var(--c-bg)', color: 'var(--c-text)', cursor: value <= min ? 'not-allowed' : 'pointer', opacity: value <= min ? 0.4 : 1 }}>−</button>
+          style={{ width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, border: '1px solid var(--c-border)', background: 'var(--c-surface-2)', color: 'var(--c-text)', cursor: value <= min ? 'not-allowed' : 'pointer', opacity: value <= min ? 0.4 : 1 }}>−</button>
         <span style={{ width: 24, textAlign: 'center', fontWeight: 700, color: 'var(--c-text)' }}>{value}</span>
         <button type="button" onClick={() => onChange(value + 1)}
           style={{ width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, background: BLUE + '18', color: BLUE, border: 'none', cursor: 'pointer' }}>+</button>
@@ -225,8 +222,8 @@ function NumberPicker({ presets, unit, value, isCustom, onPick, onCustomStart, c
         <Chip label="Saisir" active={isCustom} onClick={onCustomStart} />
       </div>
       {isCustom && (
-        <input type="number" value={customText} onChange={e => onCustomText(e.target.value)} placeholder="Nombre"
-          style={{ marginTop: 10, width: '100%', borderRadius: 10, padding: '10px 16px', fontSize: 14, outline: 'none', border: `1px solid ${BLUE}`, background: 'var(--c-bg)', color: 'var(--c-text)', boxSizing: 'border-box' }} />
+        <input type="number" min="0" max="9999" step="1" value={customText} onChange={e => onCustomText(e.target.value)} onKeyDown={e => blockInvalidNumberKey(e, true)} placeholder="Nombre"
+          style={{ marginTop: 10, width: '100%', borderRadius: 10, padding: '10px 16px', fontSize: 14, outline: 'none', border: `1px solid ${BLUE}`, background: 'var(--c-surface-2)', color: 'var(--c-text)', boxSizing: 'border-box' }} />
       )}
     </div>
   )
@@ -235,8 +232,8 @@ function NumberPicker({ presets, unit, value, isCustom, onPick, onCustomStart, c
 function MoneyInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
   return (
     <div style={{ position: 'relative' }}>
-      <input type="number" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder ?? '0'}
-        style={{ width: '100%', borderRadius: 10, padding: '12px 56px 12px 16px', fontSize: 14, outline: 'none', border: '1px solid var(--c-border)', background: 'var(--c-bg)', color: 'var(--c-text)', transition: 'border-color 0.15s', boxSizing: 'border-box' }}
+      <input type="number" min="0" max="999999999" step="1" value={value} onChange={e => onChange(e.target.value)} onKeyDown={e => blockInvalidNumberKey(e, true)} placeholder={placeholder ?? '0'}
+        style={{ width: '100%', borderRadius: 10, padding: '12px 56px 12px 16px', fontSize: 14, outline: 'none', border: '1px solid var(--c-border)', background: 'var(--c-surface-2)', color: 'var(--c-text)', transition: 'border-color 0.15s', boxSizing: 'border-box' }}
         onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
         onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
       <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 12, fontWeight: 600, color: 'var(--c-muted)', pointerEvents: 'none' }}>FCFA</span>
@@ -246,7 +243,7 @@ function MoneyInput({ value, onChange, placeholder }: { value: string; onChange:
 
 const baseInput: CSSProperties = {
   width: '100%', borderRadius: 10, padding: '12px 16px', fontSize: 14, outline: 'none',
-  border: '1px solid var(--c-border)', background: 'var(--c-bg)', color: 'var(--c-text)',
+  border: '1px solid var(--c-border)', background: 'var(--c-surface-2)', color: 'var(--c-text)',
   boxSizing: 'border-box', transition: 'border-color 0.15s',
 }
 
@@ -270,7 +267,7 @@ export default function PublierBienPage() {
   const navigate = useNavigate()
 
   const proprietaireInfo = (() => {
-    try { return JSON.parse(sessionStorage.getItem('proprietaire_info') ?? 'null') } catch { return null }
+    try { return JSON.parse(localStorage.getItem('proprietaire_info') ?? 'null') } catch { return null }
   })()
 
   const DRAFT_KEY = 'publier_bien_draft'
@@ -284,26 +281,16 @@ export default function PublierBienPage() {
   const [photos, setPhotos]           = useState<File[]>([])
   const [video, setVideo]             = useState<File | null>(null)
   const [uploadProgress, setUploadProgress] = useState(0)
+  const [hoveredDropzone, setHoveredDropzone] = useState<string | null>(null)
+  const [hoveredQuartierIdx, setHoveredQuartierIdx] = useState<number | null>(null)
 
   // Étape 0
   const [typeBien, setTypeBien]               = useState('chambre_salon')
   const [typeTransaction, setTypeTransaction] = useState<'location' | 'vente'>('location')
   const [prix, setPrix]                       = useState('')
   const [estMeuble, setEstMeuble]             = useState(false)
-  const [sanitaire, setSanitaire]             = useState<string | null>(null)
-  const [sanitaireAutre, setSanitaireAutre]   = useState('')
-  const [finition, setFinition]               = useState<string | null>(null)
-
-  const onSelectSanitaire = (v: string) => {
-    setSanitaire(v)
-    if (v === 'interieur' && finition === 'ordinaire') setFinition(null)
-  }
-  const onSelectFinition = (v: string) => {
-    setFinition(v)
-    if (v === 'staffe_carele') setSanitaire('interieur')
-    else if (v === 'ordinaire') setSanitaire('cour')
-    else if (v === 'haut_standing' || v === 'villa') setSanitaire(null)
-  }
+  const [standing, setStanding]               = useState<string | null>(null)
+  const [standingAutre, setStandingAutre]     = useState('')
 
   const [prixLongSejour, setPrixLongSejour]           = useState('')
   const [prixSejourRestreint, setPrixSejourRestreint] = useState('')
@@ -386,7 +373,7 @@ export default function PublierBienPage() {
 
   // ── Persistance du brouillon ──────────────────────────────────────────────
   const draftState = {
-    step, typeBien, typeTransaction, prix, estMeuble, sanitaire, sanitaireAutre, finition,
+    step, typeBien, typeTransaction, prix, estMeuble, standing, standingAutre,
     prixLongSejour, prixSejourRestreint, prixHeure, tarifsAutres,
     ville, quartier, arrondissement, indicationAdresse, quartierSearch,
     latitude, longitude, adresseNormalisee, adresseVerifiee,
@@ -403,14 +390,14 @@ export default function PublierBienPage() {
   }
 
   const saveDraft = useCallback(() => {
-    try { sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draftState)) } catch { /* quota */ }
+    try { localStorage.setItem(DRAFT_KEY, JSON.stringify(draftState)) } catch { /* quota */ }
   }, [JSON.stringify(draftState)]) // eslint-disable-line
 
   useEffect(() => { saveDraft() }, [saveDraft])
 
   // Restauration au montage
   useEffect(() => {
-    const raw = sessionStorage.getItem(DRAFT_KEY)
+    const raw = localStorage.getItem(DRAFT_KEY)
     if (!raw) return
     try {
       const d = JSON.parse(raw)
@@ -419,9 +406,8 @@ export default function PublierBienPage() {
       if (d.typeTransaction)           setTypeTransaction(d.typeTransaction)
       if (d.prix !== undefined)        setPrix(d.prix)
       if (d.estMeuble !== undefined)   setEstMeuble(d.estMeuble)
-      if (d.sanitaire !== undefined)   setSanitaire(d.sanitaire)
-      if (d.sanitaireAutre)            setSanitaireAutre(d.sanitaireAutre)
-      if (d.finition !== undefined)    setFinition(d.finition)
+      if (d.standing !== undefined)    setStanding(d.standing)
+      if (d.standingAutre)             setStandingAutre(d.standingAutre)
       if (d.prixLongSejour)            setPrixLongSejour(d.prixLongSejour)
       if (d.prixSejourRestreint)       setPrixSejourRestreint(d.prixSejourRestreint)
       if (d.prixHeure)                 setPrixHeure(d.prixHeure)
@@ -557,18 +543,13 @@ export default function PublierBienPage() {
       setAdresseVerifiee(adresse)
     } catch (err: any) {
       setLatitude(null); setLongitude(null); setAdresseNormalisee('')
-      setGeocodeError(err?.response?.data?.message ?? 'Adresse introuvable, précisez-la et réessayez.')
+      setGeocodeError(apiMessage(err) ?? 'Adresse introuvable, précisez-la et réessayez.')
     } finally {
       setGeocoding(false)
     }
   }
 
-  const labelFinition  = (v: string) => ({ ordinaire: 'Ordinaire', staffe_carele: 'Staffé', haut_standing: 'Haut Standing / VIP', villa: 'Villa' } as Record<string,string>)[v] ?? v
-  const labelSanitaire = (v: string) =>
-    v === 'interieur'      ? 'Sanitaire' :
-    v === 'semi_interieur' ? 'Semi sanitaire' :
-    v === 'cour'           ? 'Non sanitaire' :
-    (sanitaireAutre.trim() || 'Autre à préciser')
+  const labelStanding = (v: string) => v === 'autre' ? (standingAutre.trim() || 'Autre à préciser') : (STANDING_OPTS.find(o => o.value === v)?.label ?? v)
   const labelCuisine   = (v: string) => v === 'separee_douche' ? 'Cuisine séparée de la douche' : v === 'americaine' ? 'Cuisine américaine' : (cuisineAutre.trim() || 'Autres')
   const labelCour      = (v: string) => v === 'entree_personnelle' ? 'Entrée personnelle' : 'Cour commune'
   const labelElec      = (v: string) => { const p = parsePrix(prixKwh); return v === 'sbee' ? 'SBEE' : v === 'decompteur' ? `Décompteur${p !== undefined ? ` (${Math.round(p)} FCFA/kWh)` : ''}` : 'Non' }
@@ -619,11 +600,8 @@ export default function PublierBienPage() {
       return a
     }
 
-    if (sanitaire === 'interieur')      a.sanitaire = true
-    if (sanitaire === 'semi_interieur') a.sanitaire_autre = 'Semi sanitaire'
-    if (sanitaire === 'cour')           a.sanitaire = false
-    if (sanitaire === 'autre' && sanitaireAutre.trim()) a.sanitaire_autre = sanitaireAutre.trim()
-    if (finition) a.finition = finition
+    if (standing) a.standing = standing
+    if (standing === 'autre' && standingAutre.trim()) a.standing_autre = standingAutre.trim()
     a.disponibilite = disponibilite
     if (equipementsBonus.length || equipementsAutre.trim()) a.equipements = [...equipementsBonus, ...(equipementsAutre.trim() ? [equipementsAutre.trim()] : [])]
     if (alentours.length || alentoursAutre.trim()) a.voisinage = [...alentours, ...(alentoursAutre.trim() ? [alentoursAutre.trim()] : [])]
@@ -738,11 +716,11 @@ export default function PublierBienPage() {
         getQuartiers.proposer(quartier.trim(), ville || undefined, arrondissement || undefined).catch(() => {})
       }
 
-      sessionStorage.removeItem('proprietaire_info')
-      sessionStorage.removeItem(DRAFT_KEY)
+      localStorage.removeItem('proprietaire_info')
+      localStorage.removeItem(DRAFT_KEY)
       setCreated(true)
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'Erreur lors de la création')
+      setError(apiMessage(err) || 'Erreur lors de la création')
       setSubmitting(false)
     }
   }
@@ -773,11 +751,11 @@ export default function PublierBienPage() {
   return (
     <>
     {/* ── Sticky header : progression + proprio ── */}
-    <div style={{ position: 'sticky', top: 0, zIndex: 20, background: '#fff', borderBottom: '1px solid var(--c-border)' }}>
+    <div style={{ position: 'sticky', top: 0, zIndex: 20, background: 'var(--c-card)', borderBottom: '1px solid var(--c-border)' }}>
       <div style={{ maxWidth: PW, width: '100%', margin: '0 auto', padding: '10px 16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
           <button onClick={() => step > 0 ? setStep(s => s - 1) : navigate('/mes-annonces')}
-            style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', borderRadius: 7, fontSize: 11, fontWeight: 600, border: '1px solid var(--c-border)', background: 'var(--c-bg)', color: 'var(--c-muted)', cursor: 'pointer', flexShrink: 0 }}>
+            style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', borderRadius: 7, fontSize: 11, fontWeight: 600, border: '1px solid var(--c-border)', background: 'var(--c-surface-2)', color: 'var(--c-muted)', cursor: 'pointer', flexShrink: 0 }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
               <path d="M15 19l-7-7 7-7" />
             </svg>
@@ -812,7 +790,7 @@ export default function PublierBienPage() {
 
       {error && (
         <div style={{ borderRadius: 10, padding: '12px 16px', border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.08)', marginBottom: 16 }}>
-          <p style={{ fontSize: 14, color: '#EF4444', margin: 0 }}>{error}</p>
+          <p style={{ fontSize: 14, color: 'var(--s-red)', margin: 0 }}>{error}</p>
         </div>
       )}
 
@@ -840,17 +818,13 @@ export default function PublierBienPage() {
 
               {isSmallUnit && (
                 <Card>
-                  <Section title="Sanitaires" />
-                  <ChoiceList options={SANITAIRE_OPTS} value={sanitaire} onChange={onSelectSanitaire} onDeselect={() => setSanitaire(null)} />
-                  {sanitaire === 'autre' && (
-                    <input value={sanitaireAutre} onChange={e => setSanitaireAutre(e.target.value)}
-                      placeholder="Précisez la configuration des sanitaires"
+                  <Section title="Standing" />
+                  <ChoiceList options={STANDING_OPTS} value={standing} onChange={setStanding} onDeselect={() => setStanding(null)} />
+                  {standing === 'autre' && (
+                    <input value={standingAutre} onChange={e => setStandingAutre(e.target.value)}
+                      placeholder="Précisez le standing"
                       style={{ ...baseInput, marginTop: 8 }} />
                   )}
-                  <div style={{ marginTop: 20 }}>
-                    <Section title="Finition / Standing" />
-                    <ChoiceList options={FINITION_OPTS} value={finition} onChange={onSelectFinition} />
-                  </div>
                 </Card>
               )}
 
@@ -894,7 +868,7 @@ export default function PublierBienPage() {
                         <div style={{ width: 112 }}>
                           <MoneyInput value={t.prix} onChange={v => setTarifsAutres(a => a.map((x, idx) => idx === i ? { ...x, prix: v } : x))} />
                         </div>
-                        <button type="button" onClick={() => setTarifsAutres(a => a.filter((_, idx) => idx !== i))} style={{ color: '#EF4444' }}>✕</button>
+                        <button type="button" onClick={() => setTarifsAutres(a => a.filter((_, idx) => idx !== i))} style={{ color: 'var(--s-red)' }}>✕</button>
                       </div>
                     ))}
                     <button type="button" onClick={() => setTarifsAutres(a => [...a, { label: '', prix: '' }])}
@@ -945,7 +919,7 @@ export default function PublierBienPage() {
                         <circle cx={11} cy={11} r={8} /><path strokeLinecap="round" d="M21 21l-4.35-4.35" />
                       </svg>
                       {quartierInputFocused && dropdownRect && (
-                        <div style={{ position: 'fixed', top: dropdownRect.top, left: dropdownRect.left, width: dropdownRect.width, zIndex: 9999, background: '#fff', borderColor: 'var(--c-border)', border: '1px solid var(--c-border)', borderRadius: 12, maxHeight: 260, overflowY: 'auto' }}>
+                        <div style={{ position: 'fixed', top: dropdownRect.top, left: dropdownRect.left, width: dropdownRect.width, zIndex: 9999, background: 'var(--c-card)', borderColor: 'var(--c-border)', border: '1px solid var(--c-border)', borderRadius: 12, maxHeight: 260, overflowY: 'auto' }}>
                           {filteredQuartiers.length === 0 ? (
                             quartierSearch.trim() ? (
                               <button type="button" onMouseDown={() => {
@@ -967,12 +941,12 @@ export default function PublierBienPage() {
                             ) : (
                               <p style={{ padding: '12px 16px', fontSize: 14, color: 'var(--c-muted)', margin: 0 }}>Commencez à taper…</p>
                             )
-                          ) : filteredQuartiers.map(q => (
+                          ) : filteredQuartiers.map((q, qi) => (
                             <button key={q.nom + q.arrondissement} type="button"
                               onMouseDown={() => selectQuartier(q.nom, q.arrondissement, q.ville)}
-                              style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', textAlign: 'left', fontSize: 14, color: 'var(--c-text)', background: 'none', border: 'none', borderBottom: '1px solid var(--c-border)', cursor: 'pointer' }}
-                              onMouseEnter={e => (e.currentTarget.style.background = 'var(--c-bg)')}
-                              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                              style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', textAlign: 'left', fontSize: 14, color: 'var(--c-text)', background: hoveredQuartierIdx === qi ? 'var(--c-surface-2)' : 'none', border: 'none', borderBottom: '1px solid var(--c-border)', cursor: 'pointer' }}
+                              onMouseEnter={() => setHoveredQuartierIdx(qi)}
+                              onMouseLeave={() => setHoveredQuartierIdx(null)}>
                               <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} style={{ color: 'var(--c-muted)', flexShrink: 0 }}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -1013,7 +987,7 @@ export default function PublierBienPage() {
                 {quartier && !quartierManuel && arrondissement && (
                   <div>
                     <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 8, display: 'block', color: 'var(--c-muted)' }}>Arrondissement</label>
-                    <div style={{ padding: '12px 16px', borderRadius: 12, border: '1px solid var(--c-border)', fontSize: 14, fontWeight: 600, background: 'var(--c-bg)', color: 'var(--c-muted)' }}>
+                    <div style={{ padding: '12px 16px', borderRadius: 12, border: '1px solid var(--c-border)', fontSize: 14, fontWeight: 600, background: 'var(--c-surface-2)', color: 'var(--c-muted)' }}>
                       {arrondissement}
                     </div>
                   </div>
@@ -1039,7 +1013,7 @@ export default function PublierBienPage() {
                     style={{
                       display: 'flex', alignItems: 'center', gap: 8, padding: '11px 18px',
                       borderRadius: 12, border: `1px solid ${adressePositionAJour ? 'rgba(72,199,116,0.45)' : 'var(--c-border)'}`,
-                      background: adressePositionAJour ? 'rgba(72,199,116,0.09)' : '#fff',
+                      background: adressePositionAJour ? 'rgba(72,199,116,0.09)' : 'var(--c-card)',
                       color: adressePositionAJour ? '#48C774' : BLUE,
                       fontSize: 13, fontWeight: 700, cursor: geocoding || !quartier.trim() ? 'not-allowed' : 'pointer',
                       opacity: !quartier.trim() ? 0.5 : 1,
@@ -1063,7 +1037,7 @@ export default function PublierBienPage() {
                     <div style={{ marginTop: 8, fontSize: 12, color: 'var(--c-muted)' }}>{adresseNormalisee}</div>
                   )}
                   {geocodeError && (
-                    <div style={{ marginTop: 8, fontSize: 12, color: '#DC2626' }}>
+                    <div style={{ marginTop: 8, fontSize: 12, color: 'var(--s-red)' }}>
                       {geocodeError} Vous pouvez continuer sans — la position sera approximative.
                     </div>
                   )}
@@ -1091,12 +1065,12 @@ export default function PublierBienPage() {
               <Card>
                 <Section title="Superficie" required />
                 <div style={{ display: 'flex', gap: 10 }}>
-                  <input type="number" value={superficieTerrain} onChange={e => setSuperficieTerrain(e.target.value)}
+                  <input type="number" min="0" max={superficieUnite === 'ha' ? 999999 : 9999999999} step={superficieUnite === 'ha' ? 0.01 : 1} value={superficieTerrain} onChange={e => setSuperficieTerrain(e.target.value)} onKeyDown={e => blockInvalidNumberKey(e, superficieUnite !== 'ha')}
                     placeholder={superficieUnite === 'ha' ? 'Ex: 2.5' : 'Ex: 25000'}
                     style={{ ...baseInput, flex: 1, minWidth: 0 }}
                     onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
                     onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
-                  <div style={{ display: 'flex', borderRadius: 12, border: '1px solid var(--c-border)', padding: 4, flexShrink: 0, background: 'var(--c-bg)' }}>
+                  <div style={{ display: 'flex', borderRadius: 12, border: '1px solid var(--c-border)', padding: 4, flexShrink: 0, background: 'var(--c-surface-2)' }}>
                     {(['m2', 'ha'] as const).map(u => (
                       <button key={u} type="button"
                         onClick={() => {
@@ -1123,7 +1097,7 @@ export default function PublierBienPage() {
                   { value: 'ruelle', label: 'Dans la ruelle' },
                   { value: 'autre', label: 'Autre' },
                 ]} value={positionTerrain} onChange={setPositionTerrain} />
-                <label style={{ marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderRadius: 12, border: '1px solid var(--c-border)', cursor: 'pointer', background: 'var(--c-bg)' }}>
+                <label style={{ marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderRadius: 12, border: '1px solid var(--c-border)', cursor: 'pointer', background: 'var(--c-surface-2)' }}>
                   <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--c-text)' }}>Parcelle en angle de rue</span>
                   <input type="checkbox" checked={angleRue} onChange={e => setAngleRue(e.target.checked)} style={{ width: 20, height: 20, accentColor: BLUE }} />
                 </label>
@@ -1162,16 +1136,16 @@ export default function PublierBienPage() {
                 <p style={{ fontSize: 12, marginBottom: 12, color: 'var(--c-muted)' }}>Ajoutez toute information utile non couverte ci-dessus.</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {detailsSupplementaires.map((d, i) => (
-                    <div key={i} style={{ padding: 12, borderRadius: 12, border: '1px solid var(--c-border)', display: 'flex', flexDirection: 'column', gap: 8, background: 'var(--c-bg)' }}>
+                    <div key={i} style={{ padding: 12, borderRadius: 12, border: '1px solid var(--c-border)', display: 'flex', flexDirection: 'column', gap: 8, background: 'var(--c-surface-2)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <input value={d.label}
                           onChange={e => setDetailsSupplementaires(arr => arr.map((x, idx) => idx === i ? { ...x, label: e.target.value } : x))}
                           placeholder="Ex: Distance de la route" style={{ flex: 1, fontSize: 14, fontWeight: 600, outline: 'none', background: 'transparent', border: 'none', color: 'var(--c-text)' }} />
-                        <button type="button" onClick={() => setDetailsSupplementaires(arr => arr.filter((_, idx) => idx !== i))} style={{ color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
+                        <button type="button" onClick={() => setDetailsSupplementaires(arr => arr.filter((_, idx) => idx !== i))} style={{ color: 'var(--s-red)', background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
                       </div>
                       <input value={d.valeur}
                         onChange={e => setDetailsSupplementaires(arr => arr.map((x, idx) => idx === i ? { ...x, valeur: e.target.value } : x))}
-                        placeholder="Ex: 50 mètres" style={{ width: '100%', borderRadius: 8, padding: '8px 12px', fontSize: 14, outline: 'none', background: '#fff', color: 'var(--c-text)', border: '1px solid var(--c-border)', boxSizing: 'border-box' }} />
+                        placeholder="Ex: 50 mètres" style={{ width: '100%', borderRadius: 8, padding: '8px 12px', fontSize: 14, outline: 'none', background: 'var(--c-card)', color: 'var(--c-text)', border: '1px solid var(--c-border)', boxSizing: 'border-box' }} />
                     </div>
                   ))}
                   <button type="button" onClick={() => setDetailsSupplementaires(arr => [...arr, { label: '', valeur: '' }])}
@@ -1286,19 +1260,15 @@ export default function PublierBienPage() {
               )}
               {!isSmallUnit && (
                 <Card>
-                  <Section title="Sanitaires" />
-                  <ChoiceList options={SANITAIRE_OPTS} value={sanitaire} onChange={onSelectSanitaire} onDeselect={() => setSanitaire(null)} />
-                  {sanitaire === 'autre' && (
-                    <input value={sanitaireAutre} onChange={e => setSanitaireAutre(e.target.value)}
-                      placeholder="Précisez la configuration des sanitaires"
+                  <Section title="Standing" />
+                  <ChoiceList options={STANDING_OPTS} value={standing} onChange={setStanding} onDeselect={() => setStanding(null)} />
+                  {standing === 'autre' && (
+                    <input value={standingAutre} onChange={e => setStandingAutre(e.target.value)}
+                      placeholder="Précisez le standing"
                       style={{ ...baseInput, marginTop: 8 }}
                       onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
                       onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
                   )}
-                  <div style={{ marginTop: 20 }}>
-                    <Section title="Finition / Standing" />
-                    <ChoiceList options={FINITION_OPTS} value={finition} onChange={onSelectFinition} />
-                  </div>
                 </Card>
               )}
               <Card>
@@ -1406,7 +1376,7 @@ export default function PublierBienPage() {
                     const isActive = electricite === o.value
                     return (
                       <button key={o.value} type="button" onClick={() => setElectricite(o.value)}
-                        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '12px 16px', borderRadius: 12, border: `2px solid ${isActive ? BLUE : 'var(--c-border)'}`, textAlign: 'left', transition: 'all 0.15s', background: isActive ? BLUE + '18' : 'var(--c-bg)', cursor: 'pointer' }}>
+                        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '12px 16px', borderRadius: 12, border: `2px solid ${isActive ? BLUE : 'var(--c-border)'}`, textAlign: 'left', transition: 'all 0.15s', background: isActive ? BLUE + '18' : 'var(--c-surface-2)', cursor: 'pointer' }}>
                         <span>
                           <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: isActive ? BLUE : 'var(--c-text)' }}>{o.label}</span>
                           {o.sub && <span style={{ display: 'block', fontSize: 12, marginTop: 2, color: 'var(--c-muted)' }}>{o.sub}</span>}
@@ -1440,7 +1410,7 @@ export default function PublierBienPage() {
                     const isActive = eau === o.value
                     return (
                       <button key={o.value} type="button" onClick={() => setEau(o.value)}
-                        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '12px 16px', borderRadius: 12, border: `2px solid ${isActive ? BLUE : 'var(--c-border)'}`, textAlign: 'left', transition: 'all 0.15s', background: isActive ? BLUE + '18' : 'var(--c-bg)', cursor: 'pointer' }}>
+                        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '12px 16px', borderRadius: 12, border: `2px solid ${isActive ? BLUE : 'var(--c-border)'}`, textAlign: 'left', transition: 'all 0.15s', background: isActive ? BLUE + '18' : 'var(--c-surface-2)', cursor: 'pointer' }}>
                         <span>
                           <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: isActive ? BLUE : 'var(--c-text)' }}>{o.label}</span>
                           {o.sub && <span style={{ display: 'block', fontSize: 12, marginTop: 2, color: 'var(--c-muted)' }}>{o.sub}</span>}
@@ -1500,7 +1470,7 @@ export default function PublierBienPage() {
                   </div>
                 </Card>
               )}
-              {(!isSmallUnit || finition === 'haut_standing') && (
+              {(!isSmallUnit || standing === 'haut_standing_vip') && (
                 <>
                   <button type="button" onClick={() => setShowMoreOptions(v => !v)} style={{ fontSize: 14, fontWeight: 700, color: BLUE, background: 'none', border: 'none', cursor: 'pointer', padding: 0, textAlign: 'left' }}>
                     {showMoreOptions ? "Moins d'options" : "Plus d'options (facultatif)"}
@@ -1596,7 +1566,7 @@ export default function PublierBienPage() {
                         <div style={{ width: 112 }}>
                           <MoneyInput value={f.prix} onChange={v => setAutresFrais(a => a.map((x, idx) => idx === i ? { ...x, prix: v } : x))} />
                         </div>
-                        <button type="button" onClick={() => setAutresFrais(a => a.filter((_, idx) => idx !== i))} style={{ color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
+                        <button type="button" onClick={() => setAutresFrais(a => a.filter((_, idx) => idx !== i))} style={{ color: 'var(--s-red)', background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
                       </div>
                     ))}
                     <button type="button" onClick={() => setAutresFrais(a => [...a, { label: '', prix: '' }])}
@@ -1620,8 +1590,7 @@ export default function PublierBienPage() {
                 <p style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, color: 'var(--c-text)' }}>Récapitulatif de votre annonce</p>
                 <RecapSection title="Type de bien" items={[
                   TYPES_BIEN.find(t => t.key === typeBien)?.label ?? typeBien,
-                  ...(finition ? [labelFinition(finition)] : []),
-                  ...(sanitaire ? [labelSanitaire(sanitaire)] : []),
+                  ...(standing ? [labelStanding(standing)] : []),
                   ...(isMeuble ? ['Meublé / Guesthouse'] : []),
                 ]} />
                 <RecapSection title="Localisation" items={[
@@ -1711,9 +1680,9 @@ export default function PublierBienPage() {
                 <p style={{ fontSize: 14, fontWeight: 700, marginBottom: 4, color: 'var(--c-text)' }}>Photos du bien</p>
                 <p style={{ fontSize: 12, marginBottom: 16, color: 'var(--c-muted)' }}>Maximum 5 photos (PNG, JPEG, WEBP) — les photos augmentent les visites de 3×</p>
                 {photos.length < 5 && (
-                  <label style={{ display: 'block', border: '2px dashed var(--c-border)', borderRadius: 16, padding: 32, textAlign: 'center', cursor: 'pointer', transition: 'border-color 0.15s' }}
-                    onMouseEnter={e => (e.currentTarget.style.borderColor = BLUE)}
-                    onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--c-border)')}>
+                  <label style={{ display: 'block', border: `2px dashed ${hoveredDropzone === 'photos' ? BLUE : 'var(--c-border)'}`, borderRadius: 16, padding: 32, textAlign: 'center', cursor: 'pointer', transition: 'border-color 0.15s' }}
+                    onMouseEnter={() => setHoveredDropzone('photos')}
+                    onMouseLeave={() => setHoveredDropzone(null)}>
                     <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
                       <svg width={40} height={40} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} style={{ color: 'var(--c-muted)' }}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -1753,7 +1722,7 @@ export default function PublierBienPage() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4, color: 'var(--c-muted)' }}>
                       <span>Upload photos…</span><span>{uploadProgress}%</span>
                     </div>
-                    <div style={{ height: 8, borderRadius: 4, background: 'var(--c-bg)' }}>
+                    <div style={{ height: 8, borderRadius: 4, background: 'var(--c-surface-2)' }}>
                       <div style={{ height: '100%', borderRadius: 4, transition: 'width 0.3s', width: `${uploadProgress}%`, background: BLUE }} />
                     </div>
                   </div>
@@ -1767,7 +1736,7 @@ export default function PublierBienPage() {
                 </p>
                 <p style={{ fontSize: 12, marginBottom: 16, color: 'var(--c-muted)' }}>Maximum 1 vidéo (MP4 uniquement)</p>
                 {video ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 12, border: '1px solid var(--c-border)', background: 'var(--c-bg)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 12, border: '1px solid var(--c-border)', background: 'var(--c-surface-2)' }}>
                     <div style={{ width: 40, height: 40, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: BLUE + '20' }}>
                       <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} style={{ color: BLUE }}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -1782,9 +1751,9 @@ export default function PublierBienPage() {
                     </button>
                   </div>
                 ) : (
-                  <label style={{ display: 'block', border: '2px dashed var(--c-border)', borderRadius: 16, padding: 28, textAlign: 'center', cursor: 'pointer', transition: 'border-color 0.15s' }}
-                    onMouseEnter={e => (e.currentTarget.style.borderColor = BLUE)}
-                    onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--c-border)')}>
+                  <label style={{ display: 'block', border: `2px dashed ${hoveredDropzone === 'video' ? BLUE : 'var(--c-border)'}`, borderRadius: 16, padding: 28, textAlign: 'center', cursor: 'pointer', transition: 'border-color 0.15s' }}
+                    onMouseEnter={() => setHoveredDropzone('video')}
+                    onMouseLeave={() => setHoveredDropzone(null)}>
                     <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
                       <svg width={36} height={36} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} style={{ color: 'var(--c-muted)' }}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
