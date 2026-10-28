@@ -2559,7 +2559,8 @@ body.lp-page #root { overflow: auto; }
   /* Modal full-width sur petit écran */
   .immo-modal { padding: 1.375rem 1.125rem; }
   .immo-modal-actions { flex-direction: column; }
-  .btn-cancel, .btn-submit { flex: none; width: 100%; }
+  .immo-modal-actions .btn-cancel,
+  .immo-modal-actions .btn-submit { flex: none; width: 100%; }
 
   /* Logo text compact */
   .immo-logo-text { font-size: 0.875rem; letter-spacing: -0.03125rem; }
