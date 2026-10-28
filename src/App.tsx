@@ -28,6 +28,7 @@ import QuartiersPage       from './pages/quartiers/QuartiersPage';
 import MesAnnoncesPage         from './pages/commercial/MesAnnoncesPage';
 import MesVisitesPage          from './pages/commercial/MesVisitesPage';
 import PublierBienPage         from './pages/commercial/PublierBienPage';
+import PublierGuesthousePage   from './pages/commercial/PublierGuesthousePage';
 import CommercialDashboardPage    from './pages/commercial/CommercialDashboardPage';
 import CommercialPortefeuillePage from './pages/commercial/CommercialPortefeuillePage';
 import MesClientsPage             from './pages/commercial/MesClientsPage';
@@ -72,6 +73,7 @@ export default function App() {
             <Route path="mon-equipe"               element={<MonEquipePage />} />
             <Route path="portefeuille-commercial" element={<CommercialPortefeuillePage />} />
             <Route path="publier-bien"         element={<PublierBienPage />} />
+            <Route path="publier-guesthouse"   element={<PublierGuesthousePage />} />
             <Route path="messages"     element={<MessagesPage />} />
             <Route path="supervision"  element={<AdminRoute><SupervisionPage /></AdminRoute>} />
             <Route path="utilisateurs" element={<AdminRoute><UtilisateursPage /></AdminRoute>} />

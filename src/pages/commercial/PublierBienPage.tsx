@@ -1,4 +1,3 @@
-import type { ReactNode, CSSProperties } from 'react'
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { postBien } from '../../api/postBien'
@@ -7,6 +6,8 @@ import { blockInvalidNumberKey } from '../../utils/inputNumbers'
 import { getGeocoding } from '../../api/getGeocoding'
 import { getQuartiers } from '../../api/getQuartiers'
 import { apiMessage } from '../../utils/apiMessage';
+import { Card, Section, ChoiceList, Chip, Counter, NumberPicker, MoneyInput, RecapSection } from './formUi'
+import { BLUE, baseInput } from './formStyles'
 
 // ─── Quartiers — même structure que immo-web-user ─────────────────────────────
 type Quartier = { nom: string; arrondissement: string; ville: string }
@@ -23,10 +24,12 @@ const QUARTIERS: Quartier[] = (() => {
 const normalizeStr = (s: string) =>
   s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 
-const BLUE = '#4B6BFF'
 
 type TarifCustom = { label: string; prix: string }
 type DetailCustom = { label: string; valeur: string }
+
+/** Photos par bien : plafond commun à tous les types (décision du 28/10/2026, contrôlé aussi par l'API). */
+const MAX_PHOTOS = 8
 
 const TYPES_BIEN = [
   { key: 'entree_coucher', label: 'Entrée-Coucher' },
@@ -119,148 +122,6 @@ const formatFcfa = (v: number) => v > 0 ? `${Math.round(v).toLocaleString('fr-FR
 
 
 // ─── UI primitives (inline styles only — pas de Tailwind dans ce projet) ──────
-
-const S: Record<string, CSSProperties> = {
-  card: { background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 14, padding: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', marginBottom: 0 },
-  row:  { display: 'flex', alignItems: 'center' },
-  col:  { display: 'flex', flexDirection: 'column' },
-  wrap: { display: 'flex', flexWrap: 'wrap', gap: 8 },
-  g4:   { gap: 4 }, g8: { gap: 8 }, g10: { gap: 10 }, g12: { gap: 12 }, g16: { gap: 16 },
-  grid2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 },
-  grid3: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 },
-}
-
-function Card({ children }: { children: ReactNode }) {
-  return <div style={S.card}>{children}</div>
-}
-
-function Section({ title, required }: { title: string; required?: boolean }) {
-  return (
-    <div style={{ ...S.row, gap: 8, marginBottom: 12 }}>
-      <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--c-muted)', margin: 0 }}>{title}</p>
-      {required && (
-        <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4, color: BLUE, background: BLUE + '22' }}>Obligatoire</span>
-      )}
-    </div>
-  )
-}
-
-function ChoiceList({ options, value, onChange, disabledValues, onDeselect }: {
-  options: { value: string; label: string; sub?: string }[]
-  value: string | null
-  onChange: (v: string) => void
-  disabledValues?: string[]
-  onDeselect?: () => void
-}) {
-  return (
-    <div style={{ ...S.col, gap: 8 }}>
-      {options.map(o => {
-        const isDisabled = disabledValues?.includes(o.value) ?? false
-        const isActive = value === o.value
-        return (
-          <button key={o.value} type="button" disabled={isDisabled}
-            onClick={() => (isActive && onDeselect) ? onDeselect() : onChange(o.value)}
-            style={{
-              width: '100%', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8,
-              padding: '12px 16px', borderRadius: 12, border: `2px solid ${isActive ? BLUE : 'var(--c-border)'}`,
-              background: isActive ? BLUE + '12' : 'var(--c-surface-2)',
-              opacity: isDisabled ? 0.4 : 1, cursor: isDisabled ? 'not-allowed' : 'pointer',
-              textAlign: 'left', transition: 'border-color 0.15s, background 0.15s',
-            }}>
-            <span>
-              <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: isActive ? BLUE : 'var(--c-text)' }}>{o.label}</span>
-              {o.sub && <span style={{ display: 'block', fontSize: 12, marginTop: 2, color: 'var(--c-muted)' }}>{o.sub}</span>}
-            </span>
-            {isActive && !isDisabled && <span style={{ fontWeight: 700, flexShrink: 0, color: BLUE }}>✓</span>}
-          </button>
-        )
-      })}
-    </div>
-  )
-}
-
-function Chip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
-  return (
-    <button type="button" onClick={onClick}
-      style={{
-        padding: '8px 16px', borderRadius: 10, border: `2px solid ${active ? BLUE : 'var(--c-border)'}`,
-        background: active ? BLUE + '12' : 'transparent', color: active ? BLUE : 'var(--c-muted)',
-        fontSize: 12, fontWeight: 700, cursor: 'pointer', transition: 'all 0.15s',
-      }}>
-      {label}
-    </button>
-  )
-}
-
-function Counter({ label, value, onChange, min = 0 }: {
-  label: string; value: number; onChange: (v: number) => void; min?: number
-}) {
-  return (
-    <div style={{ ...S.row, justifyContent: 'space-between', padding: '10px 0' }}>
-      <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--c-text)' }}>{label}</span>
-      <div style={{ ...S.row, gap: 12 }}>
-        <button type="button" disabled={value <= min} onClick={() => onChange(value - 1)}
-          style={{ width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, border: '1px solid var(--c-border)', background: 'var(--c-surface-2)', color: 'var(--c-text)', cursor: value <= min ? 'not-allowed' : 'pointer', opacity: value <= min ? 0.4 : 1 }}>−</button>
-        <span style={{ width: 24, textAlign: 'center', fontWeight: 700, color: 'var(--c-text)' }}>{value}</span>
-        <button type="button" onClick={() => onChange(value + 1)}
-          style={{ width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, background: BLUE + '18', color: BLUE, border: 'none', cursor: 'pointer' }}>+</button>
-      </div>
-    </div>
-  )
-}
-
-function NumberPicker({ presets, unit, value, isCustom, onPick, onCustomStart, customText, onCustomText }: {
-  presets: number[]; unit: (n: number) => string; value: number; isCustom: boolean
-  onPick: (n: number) => void; onCustomStart: () => void; customText: string; onCustomText: (t: string) => void
-}) {
-  return (
-    <div>
-      <div style={S.wrap}>
-        {presets.map(n => (
-          <Chip key={n} label={unit(n)} active={!isCustom && value === n} onClick={() => onPick(n)} />
-        ))}
-        <Chip label="Saisir" active={isCustom} onClick={onCustomStart} />
-      </div>
-      {isCustom && (
-        <input type="number" min="0" max="9999" step="1" value={customText} onChange={e => onCustomText(e.target.value)} onKeyDown={e => blockInvalidNumberKey(e, true)} placeholder="Nombre"
-          style={{ marginTop: 10, width: '100%', borderRadius: 10, padding: '10px 16px', fontSize: 14, outline: 'none', border: `1px solid ${BLUE}`, background: 'var(--c-surface-2)', color: 'var(--c-text)', boxSizing: 'border-box' }} />
-      )}
-    </div>
-  )
-}
-
-function MoneyInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
-  return (
-    <div style={{ position: 'relative' }}>
-      <input type="number" min="0" max="999999999" step="1" value={value} onChange={e => onChange(e.target.value)} onKeyDown={e => blockInvalidNumberKey(e, true)} placeholder={placeholder ?? '0'}
-        style={{ width: '100%', borderRadius: 10, padding: '12px 56px 12px 16px', fontSize: 14, outline: 'none', border: '1px solid var(--c-border)', background: 'var(--c-surface-2)', color: 'var(--c-text)', transition: 'border-color 0.15s', boxSizing: 'border-box' }}
-        onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
-        onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
-      <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 12, fontWeight: 600, color: 'var(--c-muted)', pointerEvents: 'none' }}>FCFA</span>
-    </div>
-  )
-}
-
-const baseInput: CSSProperties = {
-  width: '100%', borderRadius: 10, padding: '12px 16px', fontSize: 14, outline: 'none',
-  border: '1px solid var(--c-border)', background: 'var(--c-surface-2)', color: 'var(--c-text)',
-  boxSizing: 'border-box', transition: 'border-color 0.15s',
-}
-
-function RecapSection({ title, items }: { title: string; items: string[] }) {
-  if (!items.length) return null
-  return (
-    <div style={{ padding: '12px 0', borderBottom: '1px solid var(--c-border)' }}>
-      <p style={{ fontSize: 12, fontWeight: 700, marginBottom: 8, color: BLUE }}>{title}</p>
-      {items.map((item, i) => (
-        <div key={i} style={{ ...S.row, alignItems: 'flex-start', gap: 6, marginBottom: 4 }}>
-          <span style={{ fontWeight: 700, fontSize: 12, flexShrink: 0, color: BLUE }}>•</span>
-          <span style={{ fontSize: 14, lineHeight: 1.35, color: 'var(--c-text)' }}>{item}</span>
-        </div>
-      ))}
-    </div>
-  )
-}
 
 // ─── Page principale ──────────────────────────────────────────────────────────
 export default function PublierBienPage() {
@@ -813,6 +674,15 @@ export default function PublierBienPage() {
                       {t.label}
                     </button>
                   ))}
+                  {/* Guesthouse : formulaire dédié (location meublée à la nuitée) */}
+                  <button type="button" onClick={() => navigate('/publier-guesthouse')}
+                    style={{ padding: '10px 14px', borderRadius: 12, border: '2px solid var(--c-border)', fontSize: 12, fontWeight: 700, background: 'transparent', color: 'var(--c-muted)', cursor: 'pointer' }}>
+                    Guesthouse
+                  </button>
+                  <button type="button" disabled title="Bientôt disponible"
+                    style={{ padding: '10px 14px', borderRadius: 12, border: '2px dashed var(--c-border)', fontSize: 12, fontWeight: 700, background: 'transparent', color: 'var(--c-muted)', opacity: 0.5, cursor: 'not-allowed' }}>
+                    Salle de fêtes · bientôt
+                  </button>
                 </div>
               </Card>
 
@@ -833,7 +703,7 @@ export default function PublierBienPage() {
                   <Section title="État du bien" />
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                     <Chip label="Vide" active={!estMeuble} onClick={() => setEstMeuble(false)} />
-                    <Chip label="Meublé / Guesthouse" active={estMeuble} onClick={() => setEstMeuble(true)} />
+                    <Chip label="Meublé" active={estMeuble} onClick={() => setEstMeuble(true)} />
                   </div>
                 </Card>
               )}
@@ -1591,7 +1461,7 @@ export default function PublierBienPage() {
                 <RecapSection title="Type de bien" items={[
                   TYPES_BIEN.find(t => t.key === typeBien)?.label ?? typeBien,
                   ...(standing ? [labelStanding(standing)] : []),
-                  ...(isMeuble ? ['Meublé / Guesthouse'] : []),
+                  ...(isMeuble ? ['Meublé'] : []),
                 ]} />
                 <RecapSection title="Localisation" items={[
                   ...(quartier       ? [`Quartier : ${quartier}`]            : []),
@@ -1678,8 +1548,8 @@ export default function PublierBienPage() {
               {/* Photos */}
               <Card>
                 <p style={{ fontSize: 14, fontWeight: 700, marginBottom: 4, color: 'var(--c-text)' }}>Photos du bien</p>
-                <p style={{ fontSize: 12, marginBottom: 16, color: 'var(--c-muted)' }}>Maximum 5 photos (PNG, JPEG, WEBP) — les photos augmentent les visites de 3×</p>
-                {photos.length < 5 && (
+                <p style={{ fontSize: 12, marginBottom: 16, color: 'var(--c-muted)' }}>Maximum {MAX_PHOTOS} photos (PNG, JPEG, WEBP) — les photos augmentent les visites de 3×</p>
+                {photos.length < MAX_PHOTOS && (
                   <label style={{ display: 'block', border: `2px dashed ${hoveredDropzone === 'photos' ? BLUE : 'var(--c-border)'}`, borderRadius: 16, padding: 32, textAlign: 'center', cursor: 'pointer', transition: 'border-color 0.15s' }}
                     onMouseEnter={() => setHoveredDropzone('photos')}
                     onMouseLeave={() => setHoveredDropzone(null)}>
@@ -1689,11 +1559,11 @@ export default function PublierBienPage() {
                       </svg>
                     </div>
                     <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--c-text)' }}>Choisir des photos</p>
-                    <p style={{ fontSize: 12, marginTop: 4, color: 'var(--c-muted)' }}>JPG, PNG, WEBP (max 5 photos)</p>
+                    <p style={{ fontSize: 12, marginTop: 4, color: 'var(--c-muted)' }}>JPG, PNG, WEBP (max {MAX_PHOTOS} photos)</p>
                     <input type="file" multiple accept="image/png,image/jpeg,image/webp" style={{ display: 'none' }}
                       onChange={e => {
-                        const files = Array.from(e.target.files || []).slice(0, 5 - photos.length)
-                        setPhotos(p => [...p, ...files].slice(0, 5))
+                        const files = Array.from(e.target.files || []).slice(0, MAX_PHOTOS - photos.length)
+                        setPhotos(p => [...p, ...files].slice(0, MAX_PHOTOS))
                       }} />
                   </label>
                 )}
@@ -1713,7 +1583,7 @@ export default function PublierBienPage() {
                       ))}
                     </div>
                     <p style={{ fontSize: 11, marginTop: 8, color: 'var(--c-muted)' }}>
-                      {photos.length}/5 photo{photos.length > 1 ? 's' : ''} — encore {5 - photos.length} possible{5 - photos.length > 1 ? 's' : ''}
+                      {photos.length}/{MAX_PHOTOS} photo{photos.length > 1 ? 's' : ''} — encore {MAX_PHOTOS - photos.length} possible{MAX_PHOTOS - photos.length > 1 ? 's' : ''}
                     </p>
                   </>
                 )}
