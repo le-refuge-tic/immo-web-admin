@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SearchIcon, PinIcon, ChevronLeftIcon, ChevronRightIcon } from '../../components/Icons';
 import { getAdminBien } from '../../api/getAdminBien';
+import { libellePrix, suffixeUnite } from '../../utils/prix';
 
 const STATUT_FILTER = [
   { key: '',            label: 'Tous' },
@@ -232,10 +233,10 @@ export default function AnnoncesPage() {
                       <div className="annonce-price-block">
                         <div className="annonce-price">
                           {Number(b.prix).toLocaleString('fr-FR')}
-                          <span style={{ fontSize: 13, fontWeight: 600 }}> F</span>
+                          <span style={{ fontSize: 13, fontWeight: 600 }}> F{suffixeUnite(b)}</span>
                         </div>
                         <div className="annonce-price-type">
-                          {b.transaction === 'vente' ? 'PRIX DE VENTE' : 'LOYER MENSUEL'}
+                          {libellePrix(b).toUpperCase()}
                         </div>
                       </div>
                     </div>

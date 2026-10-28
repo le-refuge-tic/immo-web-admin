@@ -15,7 +15,8 @@ const QUARTIERS: Quartier[] = Object.entries(BENIN_LOCATION_DATA).flatMap(([vill
 
 const normaliser = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 
-export default function EtapeLocalisation({ form, maj }: EtapeProps) {
+/** `sansPosition` : édition, où la position n'est pas modifiable (l'API ne l'accepte pas). */
+export default function EtapeLocalisation({ form, maj, sansPosition = false }: EtapeProps & { sansPosition?: boolean }) {
   const [recherche, setRecherche] = useState('')
   const [manuel, setManuel] = useState(false)
   const [verification, setVerification] = useState<'idle' | 'en_cours' | 'ok' | 'erreur'>(
@@ -103,7 +104,7 @@ export default function EtapeLocalisation({ form, maj }: EtapeProps) {
             placeholder="Ex. Derrière la station Total, portail bleu" />
         </div>
 
-        <div>
+        {!sansPosition && <div>
           <button type="button" onClick={verifierPosition}
             disabled={!form.quartier.trim() || verification === 'en_cours'}
             style={{ padding: '10px 16px', borderRadius: 10, border: `1px solid ${BLUE}`, background: 'transparent', color: BLUE, fontWeight: 700, fontSize: 13, cursor: 'pointer', opacity: !form.quartier.trim() ? 0.5 : 1 }}>
@@ -114,7 +115,7 @@ export default function EtapeLocalisation({ form, maj }: EtapeProps) {
             {verification === 'erreur' && erreurPosition}
             {verification === 'idle' && 'Facultatif : sans vérification, la position par défaut de Cotonou est utilisée.'}
           </p>
-        </div>
+        </div>}
       </div>
     </Card>
   )

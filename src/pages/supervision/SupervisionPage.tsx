@@ -6,6 +6,7 @@ import { getCommerciaux } from '../../api/getCommerciaux';
 import { getAdminUser } from '../../api/getAdminUser';
 import { useAuth } from '../../context/AuthContext';
 import PerformanceHebdoModal from './PerformanceHebdoModal';
+import { suffixeUnite } from '../../utils/prix';
 
 /* ─── Constants ─────────────────────────────────────────────── */
 
@@ -995,7 +996,7 @@ export default function SupervisionPage() {
                         </div>
                         <div style={{ fontSize: 12, color: 'var(--c-muted)', marginTop: 4 }}>
                           {b.localisation?.ville ?? ''}{b.localisation?.quartier ? ` · ${b.localisation.quartier}` : ''}
-                          {' · '}<strong style={{ color: 'var(--c-text)' }}>{new Intl.NumberFormat('fr-FR').format(b.prix)} FCFA</strong>
+                          {' · '}<strong style={{ color: 'var(--c-text)' }}>{new Intl.NumberFormat('fr-FR').format(b.prix)} FCFA{suffixeUnite(b)}</strong>
                         </div>
                         {proprio && (
                           <div style={{ marginTop: 4, fontSize: 11, color: 'var(--s-green)', background: 'var(--t-green-bg)', border: '1px solid var(--t-green-bd)', borderRadius: 6, padding: '2px 8px', display: 'inline-block' }}>

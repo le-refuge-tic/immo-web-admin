@@ -6,7 +6,8 @@ import { patchAdminBien } from '../../api/patchAdminBien';
 import { refreshSidebarBadges } from '../../hooks/useSidebarBadges';
 import ModerationRisqueLabel from './ModerationRisqueLabel';
 import ModerationDetail from './ModerationDetail';
-import { MOTIFS_REFUS, TYPE_LABELS, formatPrix, auteurNom } from './moderationChecks';
+import { MOTIFS_REFUS, TYPE_LABELS, formatPrix, auteurNom, blocageApprobation } from './moderationChecks';
+import { suffixeUnite } from '../../utils/prix';
 import { apiMessage } from '../../utils/apiMessage';
 
 const LIMIT = 10;
@@ -92,7 +93,7 @@ function ModerationModal({
             </div>
             <div style={{ fontSize: 12, color: 'var(--c-muted)', marginTop: 2 }}>
               {TYPE_LABELS[bien.type] ?? bien.type} — {Number(bien.prix).toLocaleString('fr-FR')} FCFA
-              {bien.transaction === 'location' ? '/mois' : ''}
+              {suffixeUnite(bien)}
               {bien.localisation?.quartier ? ` · ${bien.localisation.quartier}` : ''}
               {bien.localisation?.ville ? `, ${bien.localisation.ville}` : ''}
             </div>
@@ -282,7 +283,8 @@ export default function ModerationPage() {
         setSelectedId(next.id);
         listRef.current?.querySelector<HTMLElement>(`[data-id="${next.id}"]`)?.scrollIntoView({ block: 'nearest' });
       } else if (selected && e.key.toLowerCase() === 'a') {
-        setModal({ bien: selected, type: 'approuve' });
+        // Guesthouse incomplète : pas d'approbation (le motif est affiché sous le bouton)
+        if (!blocageApprobation(selected)) setModal({ bien: selected, type: 'approuve' });
       } else if (selected && e.key.toLowerCase() === 'r') {
         setModal({ bien: selected, type: 'rejete' });
       }

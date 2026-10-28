@@ -6,6 +6,7 @@ import { blockInvalidNumberKey } from '../../utils/inputNumbers'
 import { getGeocoding } from '../../api/getGeocoding'
 import { getQuartiers } from '../../api/getQuartiers'
 import { apiMessage } from '../../utils/apiMessage';
+import { useToast } from '../../context/ToastContext'
 import { Card, Section, ChoiceList, Chip, Counter, NumberPicker, MoneyInput, RecapSection } from './formUi'
 import { BLUE, baseInput } from './formStyles'
 
@@ -126,6 +127,7 @@ const formatFcfa = (v: number) => v > 0 ? `${Math.round(v).toLocaleString('fr-FR
 // ─── Page principale ──────────────────────────────────────────────────────────
 export default function PublierBienPage() {
   const navigate = useNavigate()
+  const toast = useToast()
 
   const proprietaireInfo = (() => {
     try { return JSON.parse(localStorage.getItem('proprietaire_info') ?? 'null') } catch { return null }
@@ -560,16 +562,25 @@ export default function PublierBienPage() {
       const data = await postBien.create(body)
       const bien = data.data || data.bien || data
 
+      // Échecs d'envoi des médias : comptés et signalés (le bien, lui, est créé)
+      let photosEchouees = 0
+      let videoEchouee = false
       if (photos.length > 0 && bien.id) {
         for (let i = 0; i < photos.length; i++) {
           try {
             await postBien.uploadPhoto(bien.id, photos[i])
-            setUploadProgress(Math.round(((i + 1) / photos.length) * 100))
-          } catch (_) {}
+          } catch {
+            photosEchouees += 1
+          }
+          setUploadProgress(Math.round(((i + 1) / photos.length) * 100))
         }
       }
       if (video && bien.id) {
-        try { await postBien.uploadVideo(bien.id, video) } catch (_) {}
+        try { await postBien.uploadVideo(bien.id, video) } catch { videoEchouee = true }
+      }
+      if (photosEchouees || videoEchouee) {
+        const details = [photosEchouees ? `${photosEchouees} photo(s)` : '', videoEchouee ? 'la vidéo' : ''].filter(Boolean).join(' et ')
+        toast(`Bien enregistré, mais ${details} n’ont pas pu être envoyées. Ajoutez-les depuis « Modifier l’annonce ».`, 'error')
       }
 
       // Enregistre le quartier ajouté manuellement (avec arrondissement + ville) pour validation admin.

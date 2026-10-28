@@ -7,6 +7,7 @@ import { deleteAdminBien } from '../../api/deleteAdminBien';
 import { ChevronLeftIcon, PinIcon, TrashIcon, EditIcon } from '../../components/Icons';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { libellePrix, suffixeUnite } from '../../utils/prix';
 
 // ── Labels lisibles pour les champs amenites ────────────────────────────────
 const STANDING_LABELS: Record<string, string> = {
@@ -413,10 +414,10 @@ export default function AnnonceDetailPage() {
           <div className="detail-card">
             <div className="detail-bien-type">{TYPE_LABELS[bien.type] ?? bien.type}</div>
             <div className="detail-bien-price">
-              {formatPrice(bien.prix)} <span>FCFA</span>
+              {formatPrice(bien.prix)} <span>FCFA{suffixeUnite(bien)}</span>
             </div>
             <div className="detail-bien-price-type">
-              {bien.transaction === 'vente' ? 'Prix de vente' : 'Loyer mensuel'}
+              {libellePrix(bien)}
             </div>
             {bien.localisation && (
               <div className="detail-bien-location">

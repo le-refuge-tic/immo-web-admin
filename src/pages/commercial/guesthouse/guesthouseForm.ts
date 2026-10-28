@@ -220,3 +220,70 @@ export function construirePayload(f: GuesthouseForm) {
     equipements: f.equipements,
   }
 }
+
+/** Bien renvoyé par GET /admin/biens/:id (champs utiles à l'éditeur). */
+type BienLu = {
+  prix?: number | string | null
+  description?: string | null
+  localisation?: { ville?: string | null; quartier?: string | null; adresse?: string | null } | null
+  amenites?: { proprietaire_info?: { prenom?: string; nom?: string; telephone?: string; email?: string } } | null
+  details_guesthouse?: {
+    prix_nuitee: number; caution: number | null; nuitees_min: number; capacite: number; nb_chambres: number
+    lits: Lit[]; nb_salles_bain: number; garage: boolean; type_acces_garage: AccesGarage | null
+    heure_arrivee: string; heure_depart: string
+    animaux_autorises: boolean; fetes_autorisees: boolean; fumeur_autorise: boolean
+  } | null
+  equipements_liste?: { code: string }[]
+}
+
+/**
+ * Formulaire d'édition à partir d'un bien existant. Une ancienne guesthouse
+ * (sans détails) repart des valeurs par défaut, avec son prix et le garage à choisir.
+ */
+export function depuisBien(b: BienLu): GuesthouseForm {
+  const vide = formulaireVide(b.amenites?.proprietaire_info)
+  const desc = (b.description ?? '').trim()
+  const coupe = desc.indexOf('\n\n')
+  const d = b.details_guesthouse
+  const heure = (h: string) => h.slice(0, 5)
+  const base: GuesthouseForm = {
+    ...vide,
+    nom: coupe > 0 ? desc.slice(0, coupe).trim() : '',
+    description: coupe > 0 ? desc.slice(coupe + 2).trim() : desc,
+    ville: b.localisation?.ville ?? '',
+    quartier: b.localisation?.quartier ?? '',
+    repere: b.localisation?.adresse ?? '',
+    prixNuitee: b.prix != null ? String(Math.round(Number(b.prix))) : '',
+    equipements: (b.equipements_liste ?? []).map(e => e.code),
+  }
+  if (!d) return base
+  return {
+    ...base,
+    prixNuitee: String(d.prix_nuitee),
+    caution: d.caution != null ? String(d.caution) : '',
+    nuiteesMin: d.nuitees_min,
+    capacite: d.capacite,
+    nbChambres: d.nb_chambres,
+    lits: d.lits.map(l => ({ type: l.type, nombre: l.nombre })),
+    nbSallesBain: d.nb_salles_bain,
+    garage: d.garage,
+    typeAccesGarage: d.type_acces_garage,
+    heureArrivee: heure(d.heure_arrivee),
+    heureDepart: heure(d.heure_depart),
+    animaux: d.animaux_autorises,
+    fetes: d.fetes_autorisees,
+    fumeur: d.fumeur_autorise,
+  }
+}
+
+/** Corps de PATCH /admin/biens/:id : le type ne change pas, l'adresse est reprise telle quelle. */
+export function payloadEdition(f: GuesthouseForm) {
+  const p = construirePayload(f)
+  return {
+    description: p.description,
+    localisation: { ville: f.ville, quartier: f.quartier, adresse: f.repere.trim() || f.quartier },
+    amenites: p.amenites,
+    details_guesthouse: p.details_guesthouse,
+    equipements: p.equipements,
+  }
+}

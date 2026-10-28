@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getMesBiens } from '../../api/getMesBiens';
 import { markBiensAsSeen } from '../../hooks/useSidebarBadges';
 import { useAuth } from '../../context/AuthContext';
+import { prixAvecUnite } from '../../utils/prix';
 
 /* ─── Helpers ─────────────────────────────────────────────── */
 
@@ -33,10 +34,6 @@ const TRANS: Record<string, string> = {
   vente:    'Vente',
 };
 
-function formatFcfa(v: number) {
-  if (!v) return '—';
-  return new Intl.NumberFormat('fr-FR').format(v) + ' FCFA';
-}
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -379,7 +376,7 @@ export default function MesAnnoncesPage() {
                       </svg>
                       {[b.localisation?.quartier, b.localisation?.ville].filter(Boolean).join(', ') || '—'}
                     </div>
-                    <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--c-text)', marginTop: 4 }}>{formatFcfa(b.prix)}</div>
+                    <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--c-text)', marginTop: 4 }}>{Number(b.prix) ? prixAvecUnite(b) : '—'}</div>
                     <div style={{ marginTop: 'auto', paddingTop: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontSize: 10, color: 'var(--c-muted)' }}>{b.nb_consultations ?? 0} vue(s)</span>
                       <span style={{ fontSize: 10, color: 'var(--c-muted)' }}>{b.created_at ? formatDate(b.created_at) : '—'}</span>

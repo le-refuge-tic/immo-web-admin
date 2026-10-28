@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { blockInvalidNumberKey } from '../../utils/inputNumbers';
 import { getAdminBien } from '../../api/getAdminBien';
 import { patchAdminBien } from '../../api/patchAdminBien';
+import GuesthouseEditor from '../commercial/guesthouse/GuesthouseEditor';
 import { adminPhotos } from '../../api/adminPhotos';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -42,7 +43,6 @@ const TYPE_OPTIONS = [
   { label: 'Maison',            type: 'maison',        sousType: 'maison_individuelle' },
   { label: 'Boutique / Local',  type: 'appart_vide',   sousType: 'boutique'            },
   { label: 'Terrain',           type: 'terrain',       sousType: 'terrain'             },
-  { label: 'Guesthouse',        type: 'guesthouse',    sousType: ''                    },
 ] as const;
 
 function getTypeLabel(dbType: string, dbSousType: string) {
@@ -429,6 +429,11 @@ export default function AnnonceEditPage() {
       <div style={{ padding:32,color:'var(--s-red)' }}>{error || 'Bien introuvable'}</div>
     </>
   );
+
+  // Guesthouse : éditeur dédié (le type ne peut pas être changé, l'API le refuse)
+  if (bien.type === 'guesthouse') {
+    return <GuesthouseEditor bien={bien} isLocked={isLocked} onBack={() => navigate(-1)} />;
+  }
 
   return (
     <>

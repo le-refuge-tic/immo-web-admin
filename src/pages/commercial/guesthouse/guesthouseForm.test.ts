@@ -6,6 +6,8 @@ import {
   construirePayload,
   PHOTOS_MIN,
   PHOTOS_MAX,
+  depuisBien,
+  payloadEdition,
   type GuesthouseForm,
 } from './guesthouseForm'
 
@@ -186,5 +188,54 @@ describe('construirePayload', () => {
 
   it('e-mail vide : non envoyé', () => {
     expect(construirePayload(rempli()).amenites.proprietaire_info).not.toHaveProperty('email')
+  })
+})
+
+describe('depuisBien / payloadEdition (éditeur)', () => {
+  const bienComplet = {
+    id: 7,
+    prix: '25000.00',
+    description: 'Villa Les Palmiers\n\nGuesthouse calme.',
+    localisation: { ville: 'Cotonou', quartier: 'Fidjrossè', adresse: 'Derrière la station Total, Fidjrossè' },
+    amenites: { proprietaire_info: { prenom: 'Koffi', nom: 'Adjovi', telephone: '+22997000000' } },
+    details_guesthouse: {
+      prix_nuitee: 25000, caution: null, nuitees_min: 2, capacite: 4, nb_chambres: 2,
+      lits: [{ type: 'double', nombre: 1 }], nb_salles_bain: 1, garage: true, type_acces_garage: 'commun' as const,
+      heure_arrivee: '14:00:00', heure_depart: '11:00:00',
+      animaux_autorises: true, fetes_autorisees: false, fumeur_autorise: false,
+    },
+    equipements_liste: [{ code: 'wifi' }, { code: 'piscine' }],
+  }
+
+  it('relit une guesthouse complète', () => {
+    const f = depuisBien(bienComplet)
+    expect(f).toMatchObject({
+      nom: 'Villa Les Palmiers', description: 'Guesthouse calme.',
+      proprioNom: 'Adjovi', proprioTelephone: '+22997000000',
+      ville: 'Cotonou', quartier: 'Fidjrossè', repere: 'Derrière la station Total, Fidjrossè',
+      prixNuitee: '25000', caution: '', nuiteesMin: 2, capacite: 4, garage: true, typeAccesGarage: 'commun',
+      heureArrivee: '14:00', heureDepart: '11:00', animaux: true, equipements: ['wifi', 'piscine'],
+    })
+  })
+
+  it('ancienne guesthouse sans détails : prix repris du bien, garage à choisir, description sans nom', () => {
+    const f = depuisBien({ prix: '55000.00', description: 'Duplex meublé', localisation: {}, amenites: {}, details_guesthouse: null })
+    expect(f.prixNuitee).toBe('55000')
+    expect(f.garage).toBeNull()
+    expect(f.nom).toBe('')
+    expect(f.description).toBe('Duplex meublé')
+  })
+
+  it('payloadEdition : corps de PATCH /admin/biens/:id (sans type ni coordonnées)', () => {
+    const p = payloadEdition(depuisBien(bienComplet))
+    expect(p).toMatchObject({
+      description: 'Villa Les Palmiers\n\nGuesthouse calme.',
+      localisation: { ville: 'Cotonou', quartier: 'Fidjrossè' },
+      amenites: { proprietaire_info: { nom: 'Adjovi' } },
+      details_guesthouse: { prix_nuitee: 25000, type_acces_garage: 'commun', heure_arrivee: '14:00' },
+      equipements: ['wifi', 'piscine'],
+    })
+    expect(p).not.toHaveProperty('type')
+    expect(p.localisation).not.toHaveProperty('latitude')
   })
 })

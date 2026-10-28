@@ -13,6 +13,7 @@ import { postMessage } from '../../api/postMessage';
 import { useChatSocket } from '../../hooks/useChatSocket';
 import GestionCommercialModal from './GestionCommercialModal';
 import { apiMessage } from '../../utils/apiMessage';
+import { suffixeUnite } from '../../utils/prix';
 
 /* ─── Helpers ─────────────────────────────────────────────── */
 
@@ -846,7 +847,7 @@ function SupervisionModal({ commercial, onClose }: { commercial: any; onClose: (
                       </div>
                       <div style={{ fontSize: 12, color: 'var(--c-muted)', marginTop: 3 }}>
                         {b.localisation?.ville ?? ''} {b.localisation?.quartier ? `· ${b.localisation.quartier}` : ''}
-                        {' · '}<strong style={{ color: 'var(--c-text)' }}>{new Intl.NumberFormat('fr-FR').format(b.prix)} FCFA</strong>
+                        {' · '}<strong style={{ color: 'var(--c-text)' }}>{new Intl.NumberFormat('fr-FR').format(b.prix)} FCFA{suffixeUnite(b)}</strong>
                       </div>
                       {proprio && (
                         <div style={{ marginTop: 4, fontSize: 11, color: 'var(--c-muted)', background: 'var(--t-green-bg)', border: '1px solid var(--t-green-bd)', borderRadius: 6, padding: '3px 8px', display: 'inline-block' }}>
