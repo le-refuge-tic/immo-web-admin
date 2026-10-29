@@ -4,6 +4,7 @@ import { blockInvalidNumberKey } from '../../utils/inputNumbers';
 import { getAdminBien } from '../../api/getAdminBien';
 import { patchAdminBien } from '../../api/patchAdminBien';
 import GuesthouseEditor from '../commercial/guesthouse/GuesthouseEditor';
+import SalleFeteEditor from '../commercial/salle-fete/SalleFeteEditor';
 import { adminPhotos } from '../../api/adminPhotos';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -433,6 +434,10 @@ export default function AnnonceEditPage() {
   // Guesthouse : éditeur dédié (le type ne peut pas être changé, l'API le refuse)
   if (bien.type === 'guesthouse') {
     return <GuesthouseEditor bien={bien} isLocked={isLocked} onBack={() => navigate(-1)} />;
+  }
+  // Salle de fêtes : éditeur dédié, de même (l'onglet Honoraires parlerait de loyer mensuel)
+  if (bien.type === 'salle_fete') {
+    return <SalleFeteEditor bien={bien} isLocked={isLocked} onBack={() => navigate(-1)} />;
   }
 
   return (

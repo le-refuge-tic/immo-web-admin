@@ -27,6 +27,7 @@ const TYPE_BADGE: Record<string, string> = {
   appart_vide:         'APPARTEMENT',
   appart_meuble:       'APPART. MEUBLÉ',
   guesthouse:          'GUESTHOUSE',
+  salle_fete:          'SALLE DE FÊTES',
 };
 
 const TYPE_NAME: Record<string, string> = {
@@ -42,6 +43,7 @@ const TYPE_NAME: Record<string, string> = {
   appart_vide:         'Appartement',
   appart_meuble:       'Appartement meublé',
   guesthouse:          'Guesthouse',
+  salle_fete:          'Salle de fêtes',
 };
 
 function getBienBadge(b: any): string {

@@ -690,9 +690,10 @@ export default function PublierBienPage() {
                     style={{ padding: '10px 14px', borderRadius: 12, border: '2px solid var(--c-border)', fontSize: 12, fontWeight: 700, background: 'transparent', color: 'var(--c-muted)', cursor: 'pointer' }}>
                     Guesthouse
                   </button>
-                  <button type="button" disabled title="Bientôt disponible"
-                    style={{ padding: '10px 14px', borderRadius: 12, border: '2px dashed var(--c-border)', fontSize: 12, fontWeight: 700, background: 'transparent', color: 'var(--c-muted)', opacity: 0.5, cursor: 'not-allowed' }}>
-                    Salle de fêtes · bientôt
+                  {/* Salle de fêtes : formulaire dédié (location à l'heure) */}
+                  <button type="button" onClick={() => navigate('/publier-salle-fete')}
+                    style={{ padding: '10px 14px', borderRadius: 12, border: '2px solid var(--c-border)', fontSize: 12, fontWeight: 700, background: 'transparent', color: 'var(--c-muted)', cursor: 'pointer' }}>
+                    Salle de fêtes
                   </button>
                 </div>
               </Card>

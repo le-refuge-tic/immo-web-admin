@@ -1,23 +1,37 @@
 import { Card, Section } from '../formUi'
 import { baseInput, BLUE } from '../formStyles'
-import { Libelle, Texte, type EtapeProps } from './ui'
+import type { ChampsIdentite, TextesIdentite } from './guesthouseForm'
+import { Libelle, Texte } from './ui'
 
-export default function EtapeIdentite({ form, maj }: EtapeProps) {
+const TEXTES_GUESTHOUSE: TextesIdentite = {
+  titre: 'La guesthouse',
+  libelleNom: 'Nom de la guesthouse',
+  placeholderNom: 'Ex. Villa Les Palmiers',
+  placeholderDescription: 'Ambiance, points forts, proximité (plage, marché, aéroport…)',
+}
+
+type Props = {
+  form: ChampsIdentite
+  maj: (patch: Partial<ChampsIdentite>) => void
+  textes?: TextesIdentite
+}
+
+export default function EtapeIdentite({ form, maj, textes = TEXTES_GUESTHOUSE }: Props) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <Card>
-        <Section title="La guesthouse" required />
+        <Section title={textes.titre} required />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div>
-            <Libelle>Nom de la guesthouse</Libelle>
+            <Libelle>{textes.libelleNom}</Libelle>
             <Texte value={form.nom} onChange={v => maj({ nom: v })} maxLength={100}
-              placeholder="Ex. Villa Les Palmiers" />
+              placeholder={textes.placeholderNom} />
           </div>
           <div>
             <Libelle>Description</Libelle>
             <textarea value={form.description} onChange={e => maj({ description: e.target.value })}
               rows={5} maxLength={1800}
-              placeholder="Ambiance, points forts, proximité (plage, marché, aéroport…)"
+              placeholder={textes.placeholderDescription}
               style={{ ...baseInput, resize: 'vertical', fontFamily: 'inherit' }}
               onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
               onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />

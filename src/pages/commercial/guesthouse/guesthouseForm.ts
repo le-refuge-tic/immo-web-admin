@@ -17,7 +17,7 @@ export const PHOTOS_MAX = 8
 export const VIDEO_MAX_OCTETS = 30 * 1024 * 1024
 
 /** Position par défaut (Cotonou) quand l'adresse n'a pas été vérifiée — même repli que PublierBienPage. */
-const POSITION_PAR_DEFAUT = { latitude: 6.3654, longitude: 2.4183 }
+export const POSITION_PAR_DEFAUT = { latitude: 6.3654, longitude: 2.4183 }
 
 export const TYPES_LIT = [
   { value: 'double', label: 'Lit double' },
@@ -60,6 +60,24 @@ export type GuesthouseForm = {
   fumeur: boolean
 }
 
+/** Champs communs aux formulaires de guesthouse et de salle de fêtes (étapes « Identité » et « Localisation »). */
+export type ChampsIdentite = Pick<
+  GuesthouseForm,
+  'nom' | 'description' | 'proprioPrenom' | 'proprioNom' | 'proprioTelephone' | 'proprioEmail'
+>
+export type ChampsLocalisation = Pick<
+  GuesthouseForm,
+  'ville' | 'quartier' | 'arrondissement' | 'repere' | 'latitude' | 'longitude'
+>
+
+/** Textes de l'étape « Identité » : ceux d'une guesthouse par défaut, adaptables à un autre type de bien. */
+export type TextesIdentite = {
+  titre: string
+  libelleNom: string
+  placeholderNom: string
+  placeholderDescription: string
+}
+
 export function formulaireVide(proprio?: {
   prenom?: string
   nom?: string
@@ -97,10 +115,10 @@ export function formulaireVide(proprio?: {
   }
 }
 
-const HEURE = /^([01]\d|2[0-3]):[0-5]\d$/
+export const HEURE = /^([01]\d|2[0-3]):[0-5]\d$/
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-const telephoneNormalise = (t: string) => t.replace(/[\s.-]/g, '')
+export const telephoneNormalise = (t: string) => t.replace(/[\s.-]/g, '')
 const telephoneValide = (t: string) => /^\+?\d{8,15}$/.test(telephoneNormalise(t))
 
 /** Entier strictement positif (ou ≥ 0 si `zeroOk`) saisi en texte ; undefined sinon. */
@@ -111,10 +129,13 @@ export function entierFcfa(v: string, zeroOk = false): number | undefined {
   return n > 0 || (zeroOk && n === 0) ? n : undefined
 }
 
-function manquesIdentite(f: GuesthouseForm): string[] {
+export function manquesIdentite(
+  f: ChampsIdentite,
+  libelleNom = 'Nom de la guesthouse (3 à 100 caractères)',
+): string[] {
   const m: string[] = []
   const nom = f.nom.trim()
-  if (nom.length < 3 || nom.length > 100) m.push('Nom de la guesthouse (3 à 100 caractères)')
+  if (nom.length < 3 || nom.length > 100) m.push(libelleNom)
   if (!f.description.trim()) m.push('Description')
   if (!f.proprioNom.trim()) m.push('Nom du propriétaire ou gestionnaire')
   if (!telephoneValide(f.proprioTelephone)) m.push('Téléphone du propriétaire (ex. +229 01 97 00 00 00)')
@@ -122,7 +143,7 @@ function manquesIdentite(f: GuesthouseForm): string[] {
   return m
 }
 
-function manquesLocalisation(f: GuesthouseForm): string[] {
+export function manquesLocalisation(f: ChampsLocalisation): string[] {
   const m: string[] = []
   if (!f.quartier.trim()) m.push('Quartier')
   if (!f.ville.trim()) m.push('Ville')
@@ -150,7 +171,7 @@ function manquesRegles(f: GuesthouseForm): string[] {
   return m
 }
 
-function manquesPhotos(nbPhotos: number): string[] {
+export function manquesPhotos(nbPhotos: number): string[] {
   if (nbPhotos < PHOTOS_MIN) return [`Au moins ${PHOTOS_MIN} photos (${nbPhotos} pour l’instant)`]
   if (nbPhotos > PHOTOS_MAX) return [`${PHOTOS_MAX} photos au maximum (${nbPhotos} choisies)`]
   return []
@@ -170,37 +191,56 @@ export function manquesEtape(etape: number, f: GuesthouseForm, nbPhotos: number)
 
 export const formatFcfa = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`
 
-export function adresseComplete(f: GuesthouseForm): string {
+export function adresseComplete(f: ChampsLocalisation): string {
   return [f.repere.trim(), f.quartier, f.arrondissement, f.ville, 'Bénin'].filter(Boolean).join(', ')
+}
+
+/** Pas de colonne « nom » : même convention que le titre d'un terrain (1re ligne de la description). */
+export const descriptionPayload = (f: ChampsIdentite) => `${f.nom.trim()}\n\n${f.description.trim()}`
+
+/** Relit nom et description d'un bien enregistré avec `descriptionPayload`. */
+export function separerNomDescription(description: string | null | undefined): { nom: string; description: string } {
+  const desc = (description ?? '').trim()
+  const coupe = desc.indexOf('\n\n')
+  return coupe > 0
+    ? { nom: desc.slice(0, coupe).trim(), description: desc.slice(coupe + 2).trim() }
+    : { nom: '', description: desc }
+}
+
+export function localisationPayload(f: ChampsLocalisation) {
+  return {
+    adresse: [f.repere.trim(), f.quartier, f.arrondissement].filter(Boolean).join(', '),
+    ville: f.ville,
+    quartier: f.quartier,
+    latitude: f.latitude ?? POSITION_PAR_DEFAUT.latitude,
+    longitude: f.longitude ?? POSITION_PAR_DEFAUT.longitude,
+  }
+}
+
+export function amenitesProprietairePayload(f: ChampsIdentite) {
+  const email = f.proprioEmail.trim()
+  return {
+    proprietaire_info: {
+      ...(f.proprioPrenom.trim() ? { prenom: f.proprioPrenom.trim() } : {}),
+      nom: f.proprioNom.trim(),
+      telephone: telephoneNormalise(f.proprioTelephone),
+      ...(email ? { email } : {}),
+    },
+  }
 }
 
 /** Corps de POST /biens (type guesthouse). À n'appeler qu'une fois toutes les étapes valides. */
 export function construirePayload(f: GuesthouseForm) {
   const caution = f.caution.trim() ? entierFcfa(f.caution, true) : undefined
   const prix = entierFcfa(f.prixNuitee) ?? 0
-  const email = f.proprioEmail.trim()
   return {
     type: 'guesthouse' as const,
     transaction: 'location' as const,
     prix,
     frais_visite: 500,
-    // Pas de colonne « nom » : même convention que le titre d'un terrain (1re ligne de la description)
-    description: `${f.nom.trim()}\n\n${f.description.trim()}`,
-    localisation: {
-      adresse: [f.repere.trim(), f.quartier, f.arrondissement].filter(Boolean).join(', '),
-      ville: f.ville,
-      quartier: f.quartier,
-      latitude: f.latitude ?? POSITION_PAR_DEFAUT.latitude,
-      longitude: f.longitude ?? POSITION_PAR_DEFAUT.longitude,
-    },
-    amenites: {
-      proprietaire_info: {
-        ...(f.proprioPrenom.trim() ? { prenom: f.proprioPrenom.trim() } : {}),
-        nom: f.proprioNom.trim(),
-        telephone: telephoneNormalise(f.proprioTelephone),
-        ...(email ? { email } : {}),
-      },
-    },
+    description: descriptionPayload(f),
+    localisation: localisationPayload(f),
+    amenites: amenitesProprietairePayload(f),
     details_guesthouse: {
       prix_nuitee: prix,
       ...(caution !== undefined ? { caution } : {}),
@@ -242,14 +282,11 @@ type BienLu = {
  */
 export function depuisBien(b: BienLu): GuesthouseForm {
   const vide = formulaireVide(b.amenites?.proprietaire_info)
-  const desc = (b.description ?? '').trim()
-  const coupe = desc.indexOf('\n\n')
   const d = b.details_guesthouse
   const heure = (h: string) => h.slice(0, 5)
   const base: GuesthouseForm = {
     ...vide,
-    nom: coupe > 0 ? desc.slice(0, coupe).trim() : '',
-    description: coupe > 0 ? desc.slice(coupe + 2).trim() : desc,
+    ...separerNomDescription(b.description),
     ville: b.localisation?.ville ?? '',
     quartier: b.localisation?.quartier ?? '',
     repere: b.localisation?.adresse ?? '',

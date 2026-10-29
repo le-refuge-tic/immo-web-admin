@@ -517,7 +517,7 @@ function DirectChatModal({ commercial, me, onClose }: { commercial: any; me: any
 
 const TYPE_LABEL_MAP: Record<string, string> = {
   maison: 'Maison', appart_vide: 'Appartement', appart_meuble: 'Appart. meublé',
-  guesthouse: 'Guesthouse', terrain: 'Terrain',
+  guesthouse: 'Guesthouse', salle_fete: 'Salle de fêtes', terrain: 'Terrain',
   chambre_salon: 'Chambre-Salon', entree_coucher: 'Entrée-Coucher',
   villa: 'Villa', duplex: 'Duplex / Grande prop.', maison_individuelle: 'Maison indiv.', appartement: 'Appartement',
 };

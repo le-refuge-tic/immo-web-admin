@@ -20,6 +20,7 @@ const TYPE_LABEL: Record<string, string> = {
   appart_vide:         'Appartement',
   appart_meuble:       'Appart. meublé',
   guesthouse:          'Guesthouse',
+  salle_fete:          'Salle de fêtes',
 };
 
 const MOD: Record<string, { label: string; cls: string }> = {

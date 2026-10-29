@@ -2,20 +2,17 @@ import { useCallback, useEffect, useState } from 'react'
 import { useToast } from '../../../context/ToastContext'
 import { apiMessage } from '../../../utils/apiMessage'
 import { patchAdminBien } from '../../../api/patchAdminBien'
-import { adminPhotos } from '../../../api/adminPhotos'
 import { guesthouseApi, type GroupeEquipements } from '../../../api/guesthouse'
-import { Card, Section } from '../formUi'
 import { BLUE } from '../formStyles'
-import { depuisBien, manquesEtape, payloadEdition, PHOTOS_MAX, PHOTOS_MIN, type GuesthouseForm } from './guesthouseForm'
+import { depuisBien, manquesEtape, payloadEdition, PHOTOS_MIN, type GuesthouseForm } from './guesthouseForm'
 import EtapeIdentite from './EtapeIdentite'
 import EtapeLocalisation from './EtapeLocalisation'
 import EtapeTarif from './EtapeTarif'
 import EtapeRegles from './EtapeRegles'
-
-type Photo = { id: number; url: string; is_cover: boolean }
+import EditeurPhotos, { type PhotoBien } from './EditeurPhotos'
 
 type Props = {
-  bien: Parameters<typeof depuisBien>[0] & { id: number; details_guesthouse?: unknown; photos?: Photo[] }
+  bien: Parameters<typeof depuisBien>[0] & { id: number; details_guesthouse?: unknown; photos?: PhotoBien[] }
   /** Commercial sur un bien déjà approuvé : lecture seule (règle existante). */
   isLocked: boolean
   onBack: () => void
@@ -28,9 +25,8 @@ type Props = {
 export default function GuesthouseEditor({ bien, isLocked, onBack }: Props) {
   const toast = useToast()
   const [form, setForm] = useState<GuesthouseForm>(() => depuisBien(bien))
-  const [photos, setPhotos] = useState<Photo[]>(bien.photos ?? [])
+  const [photos, setPhotos] = useState<PhotoBien[]>(bien.photos ?? [])
   const [enregistrement, setEnregistrement] = useState(false)
-  const [envoiPhoto, setEnvoiPhoto] = useState(false)
   const [groupes, setGroupes] = useState<GroupeEquipements[] | null>(null)
   const [erreurEquipements, setErreurEquipements] = useState('')
   const [essai, setEssai] = useState(0)
@@ -65,40 +61,6 @@ export default function GuesthouseEditor({ bien, isLocked, onBack }: Props) {
     }
   }
 
-  const ajouterPhoto = async (fichiers: FileList | null) => {
-    const liste = Array.from(fichiers ?? [])
-    const place = PHOTOS_MAX - photos.length
-    if (liste.length > place) toast(`${PHOTOS_MAX} photos au maximum : ${liste.length - Math.max(place, 0)} photo(s) non ajoutée(s).`, 'error')
-    setEnvoiPhoto(true)
-    for (const f of liste.slice(0, Math.max(place, 0))) {
-      try {
-        const p = await adminPhotos.upload(bien.id, f)
-        setPhotos(ps => [...ps, p])
-      } catch (err) {
-        toast(apiMessage(err) ?? `La photo « ${f.name} » n’a pas pu être envoyée.`, 'error')
-      }
-    }
-    setEnvoiPhoto(false)
-  }
-
-  const supprimerPhoto = async (id: number) => {
-    try {
-      await adminPhotos.remove(bien.id, id)
-      setPhotos(ps => ps.filter(p => p.id !== id))
-    } catch (err) {
-      toast(apiMessage(err) ?? 'La photo n’a pas pu être supprimée.', 'error')
-    }
-  }
-
-  const choisirCouverture = async (id: number) => {
-    try {
-      await adminPhotos.setCover(bien.id, id)
-      setPhotos(ps => ps.map(p => ({ ...p, is_cover: p.id === id })))
-    } catch (err) {
-      toast(apiMessage(err) ?? 'La couverture n’a pas pu être changée.', 'error')
-    }
-  }
-
   return (
     <div style={{ maxWidth: 760, margin: '0 auto', padding: '16px 16px 0' }}>
       <header style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
@@ -122,30 +84,7 @@ export default function GuesthouseEditor({ bien, isLocked, onBack }: Props) {
         <EtapeLocalisation form={form} maj={maj} sansPosition />
         <EtapeTarif form={form} maj={maj} />
         <EtapeRegles form={form} maj={maj} groupes={groupes} erreur={erreurEquipements} reessayer={() => setEssai(n => n + 1)} />
-
-        <Card>
-          <Section title={`Photos (${photos.length}/${PHOTOS_MAX}, minimum ${PHOTOS_MIN} pour publier)`} />
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 10 }}>
-            {photos.map(p => (
-              <figure key={p.id} style={{ margin: 0, borderRadius: 10, overflow: 'hidden', border: `2px solid ${p.is_cover ? BLUE : 'var(--c-border)'}` }}>
-                <img src={p.url} alt="" style={{ width: '100%', height: 100, objectFit: 'cover', display: 'block' }} />
-                <figcaption style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 6px', fontSize: 11, background: 'var(--c-card)' }}>
-                  {p.is_cover ? <span>Couverture</span> : (
-                    <button type="button" onClick={() => choisirCouverture(p.id)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: BLUE, fontSize: 11 }}>Couverture</button>
-                  )}
-                  <button type="button" aria-label="Supprimer la photo" onClick={() => supprimerPhoto(p.id)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--s-red)' }}>✕</button>
-                </figcaption>
-              </figure>
-            ))}
-            {photos.length < PHOTOS_MAX && (
-              <label style={{ minHeight: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 10, border: `2px dashed ${BLUE}`, color: BLUE, fontWeight: 700, fontSize: 13, cursor: 'pointer', textAlign: 'center' }}>
-                {envoiPhoto ? 'Envoi…' : '+ Ajouter des photos'}
-                <input type="file" multiple accept="image/png,image/jpeg,image/webp" style={{ display: 'none' }}
-                  onChange={e => { void ajouterPhoto(e.target.files); e.target.value = '' }} />
-              </label>
-            )}
-          </div>
-        </Card>
+        <EditeurPhotos bienId={bien.id} photos={photos} setPhotos={setPhotos} />
       </fieldset>
 
       {!isLocked && (

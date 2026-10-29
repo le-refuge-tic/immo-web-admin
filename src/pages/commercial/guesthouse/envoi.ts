@@ -4,17 +4,19 @@ import { postBien } from '../../../api/postBien'
 export type ResultatEnvoi = { bienId: number; photosEchouees: number; videoEchouee: boolean }
 
 /**
- * Crée la guesthouse, puis envoie les photos une à une (dans l'ordre choisi, la
- * première sert de couverture) et la vidéo. Une erreur de création remonte à
- * l'appelant ; les échecs de médias sont comptés et signalés, jamais ignorés.
+ * Crée le bien (guesthouse, salle de fêtes…) avec `creer`, puis envoie les photos
+ * une à une (dans l'ordre choisi, la première sert de couverture) et la vidéo. Une
+ * erreur de création remonte à l'appelant ; les échecs de médias sont comptés et
+ * signalés, jamais ignorés.
  */
-export async function envoyerGuesthouse(
+export async function envoyerBien(
+  creer: (payload: unknown) => Promise<{ id: number }>,
   payload: unknown,
   photos: File[],
   video: File | null,
   onProgres: (pourcent: number) => void,
 ): Promise<ResultatEnvoi> {
-  const bien = await guesthouseApi.create(payload)
+  const bien = await creer(payload)
   const total = photos.length + (video ? 1 : 0)
   let faits = 0
   let photosEchouees = 0
@@ -38,3 +40,10 @@ export async function envoyerGuesthouse(
   }
   return { bienId: bien.id, photosEchouees, videoEchouee }
 }
+
+export const envoyerGuesthouse = (
+  payload: unknown,
+  photos: File[],
+  video: File | null,
+  onProgres: (pourcent: number) => void,
+): Promise<ResultatEnvoi> => envoyerBien(guesthouseApi.create, payload, photos, video, onProgres)

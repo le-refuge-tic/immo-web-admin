@@ -52,7 +52,7 @@ function sousTypeLabel(d: Demande): string {
   const t = d.bien?.type ?? '';
   const map: Record<string, string> = {
     maison: 'Maison', appart_vide: 'Appartement', appart_meuble: 'Appartement meublé',
-    guesthouse: 'Guesthouse', terrain: 'Terrain',
+    guesthouse: 'Guesthouse', salle_fete: 'Salle de fêtes', terrain: 'Terrain',
   };
   return map[t] ?? t;
 }

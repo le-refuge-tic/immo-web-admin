@@ -61,6 +61,7 @@ const TYPE_LABELS: any = {
   appart_vide:   'Appartement vide',
   appart_meuble: 'Appartement meublé',
   guesthouse:    'Guesthouse',
+  salle_fete:    'Salle de fêtes',
   terrain:       'Terrain',
 };
 

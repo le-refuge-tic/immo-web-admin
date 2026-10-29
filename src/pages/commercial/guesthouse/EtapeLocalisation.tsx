@@ -4,8 +4,15 @@ import { BLUE, baseInput } from '../formStyles'
 import { BENIN_LOCATION_DATA } from '../../../data/beninLocations'
 import { getGeocoding } from '../../../api/getGeocoding'
 import { apiMessage } from '../../../utils/apiMessage'
-import { adresseComplete } from './guesthouseForm'
-import { Libelle, Texte, type EtapeProps } from './ui'
+import { adresseComplete, type ChampsLocalisation } from './guesthouseForm'
+import { Libelle, Texte } from './ui'
+
+type Props = {
+  form: ChampsLocalisation
+  maj: (patch: Partial<ChampsLocalisation>) => void
+  /** `sansPosition` : édition, où la position n'est pas modifiable (l'API ne l'accepte pas). */
+  sansPosition?: boolean
+}
 
 type Quartier = { nom: string; arrondissement: string; ville: string }
 
@@ -15,8 +22,7 @@ const QUARTIERS: Quartier[] = Object.entries(BENIN_LOCATION_DATA).flatMap(([vill
 
 const normaliser = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 
-/** `sansPosition` : édition, où la position n'est pas modifiable (l'API ne l'accepte pas). */
-export default function EtapeLocalisation({ form, maj, sansPosition = false }: EtapeProps & { sansPosition?: boolean }) {
+export default function EtapeLocalisation({ form, maj, sansPosition = false }: Props) {
   const [recherche, setRecherche] = useState('')
   const [manuel, setManuel] = useState(false)
   const [verification, setVerification] = useState<'idle' | 'en_cours' | 'ok' | 'erreur'>(
@@ -30,7 +36,7 @@ export default function EtapeLocalisation({ form, maj, sansPosition = false }: E
   }, [recherche])
 
   // Toute modification de l'adresse invalide la position vérifiée
-  const majAdresse = (patch: Parameters<EtapeProps['maj']>[0]) => {
+  const majAdresse = (patch: Partial<ChampsLocalisation>) => {
     maj({ ...patch, latitude: null, longitude: null })
     setVerification('idle')
   }
