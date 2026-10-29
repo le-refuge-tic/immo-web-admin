@@ -400,7 +400,7 @@ export default function SupervisionPage() {
     setConfirmDeleteId(null);
     try {
       await supervisionApi.deleteMessage(openConv.id, msgId);
-      setThread(prev => prev.map(m => m.id === msgId ? { ...m, supprime_pour_tous: true } : m));
+      setThread(prev => prev.map(m => m.id === msgId ? { ...m, supprime_pour_tous: true, supprime_par_admin: true } : m));
     } catch { /**/ }
     finally { setDeletingMsg(null); }
   }
@@ -732,7 +732,9 @@ export default function SupervisionPage() {
                                 wordBreak: 'break-word',
                                 whiteSpace: 'pre-wrap',
                               }}>
-                                {isSuppressed ? 'Message supprimé par l\'administrateur' : msg.contenu}
+                                {isSuppressed
+                                  ? (msg.supprime_par_admin ? 'Ce message a été supprimé par l\'administrateur' : 'Ce message a été supprimé')
+                                  : msg.contenu}
                               </div>
                               <div style={{ fontSize: 10, color: 'var(--c-muted)', marginTop: 2, textAlign: isStaff ? 'right' : 'left', paddingLeft: isStaff ? 0 : 4, paddingRight: isStaff ? 4 : 0 }}>
                                 {fmtDateTime(msg.created_at)}

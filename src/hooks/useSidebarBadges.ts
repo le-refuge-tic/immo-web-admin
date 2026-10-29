@@ -5,6 +5,7 @@ import { getMessages, getActiveCommercialIds } from '../api/getMessages';
 import { getAdminStats } from '../api/getAdminStats';
 import { getQuartiers } from '../api/getQuartiers';
 import { getMesBiens } from '../api/getMesBiens';
+import { verificationsApi } from '../api/verificationsApi';
 
 const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api/v1';
 const SOCKET_BASE = BASE.replace(/\/api\/v1\/?$/, '');
@@ -48,9 +49,10 @@ export type SidebarBadges = {
   quartiers: number;
   retraits: number;
   mesAnnonces: number;
+  verifications: number;
 };
 
-const EMPTY: SidebarBadges = { supervision: 0, messages: 0, moderation: 0, quartiers: 0, retraits: 0, mesAnnonces: 0 };
+const EMPTY: SidebarBadges = { supervision: 0, messages: 0, moderation: 0, quartiers: 0, retraits: 0, mesAnnonces: 0, verifications: 0 };
 
 /**
  * Compteurs de la sidebar, regroupés : un seul socket, un seul polling de
@@ -81,10 +83,11 @@ export function useSidebarBadges({ isAdmin, isCommercial, userId }: { isAdmin: b
 
   const loadAdmin = useCallback(async () => {
     if (!isAdmin) return;
-    const [stats, quartiers, retraits] = await Promise.allSettled([
+    const [stats, quartiers, retraits, verifications] = await Promise.allSettled([
       getAdminStats.get(),
       getQuartiers.lister('en_attente'),
       axios.get(`${BASE}/retraits/admin?statut=en_attente`, auth()),
+      verificationsApi.list(),
     ]);
     const patch: Partial<SidebarBadges> = {};
     if (stats.status === 'fulfilled') patch.moderation = stats.value?.biens_en_attente ?? 0;
@@ -92,6 +95,9 @@ export function useSidebarBadges({ isAdmin, isCommercial, userId }: { isAdmin: b
     if (retraits.status === 'fulfilled') {
       const rd = retraits.value.data;
       patch.retraits = Array.isArray(rd) ? rd.length : (rd?.data?.length ?? 0);
+    }
+    if (verifications.status === 'fulfilled') {
+      patch.verifications = Array.isArray(verifications.value) ? verifications.value.length : 0;
     }
     set(patch);
   }, [isAdmin, set]);
