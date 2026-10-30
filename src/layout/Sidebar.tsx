@@ -88,7 +88,10 @@ export default function Sidebar({
       { to: '/configuration/prospects',      label: 'Prospects',      Icon: UsersIcon    },
       { to: '/configuration/locataires',     label: 'Locataires',     Icon: KeyIcon      },
     ] : []),
-    ...(isSuperAdmin ? [{ to: '/configuration/administrateurs', label: 'Administrateurs', Icon: ShieldIcon }] : []),
+    ...(isSuperAdmin ? [
+      { to: '/configuration/administrateurs', label: 'Administrateurs', Icon: ShieldIcon },
+      { to: '/configuration/frais-visite', label: 'Frais de visite', Icon: CardIcon },
+    ] : []),
   ];
   const allGroups: NavGroup[] = [...groups, { id: 'configuration', label: 'Configuration', Icon: SettingsIcon, items: configSubs }];
 

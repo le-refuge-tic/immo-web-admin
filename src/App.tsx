@@ -25,6 +25,7 @@ import FeedbacksPage from './pages/feedbacks/FeedbacksPage';
 import GestionLiaisonsPage from './pages/gestion/GestionLiaisonsPage';
 import RetraitsPage        from './pages/retraits/RetraitsPage';
 import QuartiersPage       from './pages/quartiers/QuartiersPage';
+import GestionFraisVisitePage from './pages/configuration/GestionFraisVisitePage';
 import MesAnnoncesPage         from './pages/commercial/MesAnnoncesPage';
 import MesVisitesPage          from './pages/commercial/MesVisitesPage';
 import PublierBienPage         from './pages/commercial/PublierBienPage';
@@ -100,6 +101,7 @@ export default function App() {
               <Route path="prospects"       element={<AdminRoute><GestionProspectPage /></AdminRoute>} />
               <Route path="locataires"      element={<AdminRoute><GestionLocatairePage /></AdminRoute>} />
               <Route path="administrateurs" element={<SuperAdminRoute><GestionAdminPage /></SuperAdminRoute>} />
+              <Route path="frais-visite" element={<SuperAdminRoute><GestionFraisVisitePage /></SuperAdminRoute>} />
             </Route>
             <Route path="*" element={<NotFoundPage />} />
           </Route>
