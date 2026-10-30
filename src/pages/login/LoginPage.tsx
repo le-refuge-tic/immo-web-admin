@@ -5,15 +5,18 @@ import villaImg       from '../../assets/login/villa.jpg';
 import appartementImg from '../../assets/login/appartement.jpg';
 import terrainImg     from '../../assets/login/terrain.jpg';
 import logoUrl        from '../../assets/logo_complet.jpeg';
+import { apiMessage } from '../../utils/apiMessage';
 
 export default function LoginPage() {
-  const { login, isAuthenticated } = useAuth();
+  const { login, verifyOtp, isAuthenticated } = useAuth();
 
   const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
   const [showPwd,  setShowPwd]  = useState(false);
   const [error,    setError]    = useState('');
   const [loading,  setLoading]  = useState(false);
+  const [sessionToken, setSessionToken] = useState('');
+  const [code,     setCode]     = useState('');
 
   useEffect(() => {
     document.body.classList.add('lp-page');
@@ -27,11 +30,17 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      await login({ email, password });
+      if (sessionToken) {
+        await verifyOtp(sessionToken, code);
+      } else {
+        const res = await login({ email, password });
+        if (res.requiresOtp) setSessionToken(res.sessionToken);
+      }
       // La redirection est gérée par <Navigate> quand isAuthenticated devient true
     } catch (err: any) {
-      const msg = err?.response?.data?.message;
-      setError(msg || 'Email ou mot de passe incorrect.');
+      const msg = apiMessage(err);
+      const fallback = sessionToken ? 'Code invalide ou expiré.' : 'Email ou mot de passe incorrect.';
+      setError(msg || fallback);
     } finally {
       setLoading(false);
     }
@@ -96,6 +105,30 @@ export default function LoginPage() {
           {/* Formulaire */}
           <form onSubmit={handleSubmit} className="lp-form">
 
+            {sessionToken ? (
+            <div className="lp-field">
+              <label className="lp-label">Code reçu par SMS</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={6}
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+                placeholder="123456"
+                required
+                autoFocus
+                className="lp-input"
+              />
+              <button
+                type="button"
+                onClick={() => { setSessionToken(''); setCode(''); setError(''); }}
+                style={{ marginTop: 8, background: 'none', border: 'none', padding: 0, color: 'var(--s-blue)', fontSize: 13, cursor: 'pointer' }}
+              >
+                ← Modifier l'e-mail ou le mot de passe
+              </button>
+            </div>
+            ) : (<>
             <div className="lp-field">
               <label className="lp-label">Adresse e-mail</label>
               <input
@@ -146,11 +179,12 @@ export default function LoginPage() {
                 </button>
               </div>
             </div>
+            </>)}
 
-            <button type="submit" disabled={loading} className="lp-btn-submit">
+            <button type="submit" disabled={loading || (!!sessionToken && code.length !== 6)} className="lp-btn-submit">
               {loading ? (
-                <><span className="lp-spinner"/>Connexion…</>
-              ) : 'Se connecter'}
+                <><span className="lp-spinner"/>{sessionToken ? 'Vérification…' : 'Connexion…'}</>
+              ) : (sessionToken ? 'Valider le code' : 'Se connecter')}
             </button>
           </form>
 

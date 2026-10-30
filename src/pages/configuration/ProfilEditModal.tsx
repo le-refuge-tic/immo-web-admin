@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { patchAuth } from '../../api/patchAuth';
+import { apiMessage } from '../../utils/apiMessage';
+import VerifyPhoneSection from '../../components/VerifyPhoneSection';
 
 export default function ProfilEditModal({ initial, onClose, onSaved }: {
   initial: any;
@@ -9,6 +11,9 @@ export default function ProfilEditModal({ initial, onClose, onSaved }: {
   const [form, setForm]       = useState({ ...initial });
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
+  const [editingPhone, setEditingPhone] = useState(false);
+
+  const currentPhone: string = form.telephone || '';
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -23,16 +28,17 @@ export default function ProfilEditModal({ initial, onClose, onSaved }: {
     setError('');
     setLoading(true);
     try {
+      // `telephone` est exclu volontairement : il ne change que par le flux
+      // vérifié par SMS (VerifyPhoneSection), jamais par ce PATCH.
       await patchAuth.profile({
-        nom:       form.nom,
-        prenom:    form.prenom,
-        email:     form.email || undefined,
-        telephone: form.telephone || undefined,
+        nom:    form.nom,
+        prenom: form.prenom,
+        email:  form.email || undefined,
       });
       await onSaved();
       onClose();
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Une erreur est survenue');
+      setError(apiMessage(err) ?? 'Une erreur est survenue');
     } finally {
       setLoading(false);
     }
@@ -47,7 +53,7 @@ export default function ProfilEditModal({ initial, onClose, onSaved }: {
         {error && (
           <div style={{
             background: 'var(--c-red-bg)', color: 'var(--c-red)',
-            border: '1px solid #FECACA', borderRadius: 8,
+            border: '1px solid var(--t-red-bd)', borderRadius: 8,
             padding: '9px 13px', fontSize: 12, fontWeight: 500, marginBottom: 14,
           }}>
             {error}
@@ -71,7 +77,36 @@ export default function ProfilEditModal({ initial, onClose, onSaved }: {
           </div>
           <div className="immo-form-field">
             <label className="immo-form-label">Téléphone</label>
-            <input className="immo-form-input" type="tel" value={form.telephone} onChange={set('telephone')} placeholder="+229 01 XX XX XX XX" />
+            {editingPhone ? (
+              <VerifyPhoneSection
+                currentPhone={currentPhone}
+                onVerified={async tel => {
+                  setForm((f: any) => ({ ...f, telephone: tel }));
+                  setEditingPhone(false);
+                  await onSaved();
+                }}
+              />
+            ) : (
+              <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+                background: 'var(--c-surface-2)', border: '1px solid var(--c-border)',
+                borderRadius: 10, padding: '10px 13px',
+              }}>
+                <span style={{ fontSize: 13, color: 'var(--c-text)', opacity: currentPhone ? 1 : 0.6 }}>
+                  {currentPhone || 'Aucun numéro enregistré'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setEditingPhone(true)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-blue)', fontSize: 12, fontWeight: 600, padding: 0, whiteSpace: 'nowrap' }}
+                >
+                  {currentPhone ? 'Modifier' : 'Ajouter'}
+                </button>
+              </div>
+            )}
+            <div style={{ fontSize: 11, color: 'var(--c-text)', opacity: 0.6, marginTop: 6 }}>
+              Le numéro sert à la connexion en deux étapes : il est confirmé par un code SMS.
+            </div>
           </div>
 
           <div className="immo-modal-actions">

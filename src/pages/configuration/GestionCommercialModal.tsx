@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { postCommerciaux } from '../../api/postCommerciaux';
+import { apiMessage } from '../../utils/apiMessage';
 
 function EyeIcon({ open }: { open: boolean }) {
   return open ? (
@@ -48,7 +49,7 @@ export default function GestionCommercialModal({ onClose, onCreated }: {
       onCreated(res.user ?? res);
       onClose();
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Une erreur est survenue');
+      setError(apiMessage(err) ?? 'Une erreur est survenue');
     } finally {
       setLoading(false);
     }
@@ -95,7 +96,7 @@ export default function GestionCommercialModal({ onClose, onCreated }: {
         {error && (
           <div style={{
             background: 'var(--c-red-bg)', color: 'var(--c-red)',
-            border: '1px solid #FECACA', borderRadius: 8,
+            border: '1px solid var(--t-red-bd)', borderRadius: 8,
             padding: '9px 13px', fontSize: 12, fontWeight: 500, marginBottom: 14,
           }}>
             {error}

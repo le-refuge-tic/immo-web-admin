@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { CardIcon, TrendingUpIcon, ChevronLeftIcon, ChevronRightIcon } from '../../components/Icons';
+import { CardIcon, TrendingUpIcon, ChevronLeftIcon, ChevronRightIcon, WithdrawIcon } from '../../components/Icons';
 import { getTransaction } from '../../api/getTransaction';
 import { getFraisVisite } from '../../api/getFraisVisite';
+import { getWalletPlateforme } from '../../api/getWalletPlateforme';
+import { useAuth } from '../../context/AuthContext';
 import FinancesStatutBadge from './FinancesStatutBadge';
 
 const LIMIT = 15;
@@ -37,10 +39,15 @@ const TYPE_BIEN_LABELS: any = {
   appart_vide:   'Appartement vide',
   appart_meuble: 'Appartement meublé',
   guesthouse:    'Guesthouse',
+  salle_fete:    'Salle de fêtes',
   terrain:       'Terrain',
 };
 
 export default function FinancesPage() {
+  const { user } = useAuth();
+  const isSuperAdmin = (user?.role_principal ?? user?.role) === 'super_admin';
+  const [soldePlateforme, setSoldePlateforme] = useState(null as number | null);
+
   const [transactions, setTransactions] = useState([] as any[]);
   const [total, setTotal]               = useState(0);
   const [page, setPage]                 = useState(1);
@@ -89,6 +96,12 @@ export default function FinancesPage() {
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => { loadFraisVisite(); }, [loadFraisVisite]);
+  useEffect(() => {
+    if (!isSuperAdmin) return;
+    getWalletPlateforme.solde()
+      .then(res => setSoldePlateforme(Number(res.balance)))
+      .catch(() => {});
+  }, [isSuperAdmin]);
 
   const totalPages = Math.ceil(total / LIMIT);
   const fvTotalPages = Math.ceil(fvCount / LIMIT);
@@ -123,9 +136,9 @@ export default function FinancesPage() {
 
       <div className="immo-page">
         {loadError && (
-          <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8, padding: '10px 16px', fontSize: 13, color: '#DC2626', fontWeight: 500 }}>
+          <div style={{ background: 'var(--t-red-bg)', border: '1px solid var(--t-red-bd)', borderRadius: 8, padding: '10px 16px', fontSize: 13, color: 'var(--s-red)', fontWeight: 500 }}>
             Erreur lors du chargement des transactions.{' '}
-            <button onClick={load} style={{ background: 'none', border: 'none', color: '#DC2626', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>
+            <button onClick={load} style={{ background: 'none', border: 'none', color: 'var(--s-red)', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>
               Réessayer
             </button>
           </div>
@@ -161,6 +174,19 @@ export default function FinancesPage() {
             </div>
             <div className="mod-stat-icon"><TrendingUpIcon size={24} /></div>
           </div>
+          {isSuperAdmin && (
+            <div className="mod-stat-card">
+              <div>
+                <div className="mod-stat-label">Solde plateforme</div>
+                <div className="mod-stat-value" style={{ fontSize: 20 }}>
+                  {soldePlateforme === null ? '—' : (
+                    <>{fmt(soldePlateforme)} <span style={{ fontSize: 12, fontWeight: 400 }}>FCFA</span></>
+                  )}
+                </div>
+              </div>
+              <div className="mod-stat-icon"><WithdrawIcon size={24} /></div>
+            </div>
+          )}
         </div>
 
         {/* ══ Frais de visite ══ */}

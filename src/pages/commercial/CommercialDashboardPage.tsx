@@ -13,7 +13,7 @@ const TYPE_LABEL: Record<string, string> = {
   appartement: 'Appartement', villa: 'Villa', duplex: 'Duplex / Grande propriété',
   maison_individuelle: 'Maison', boutique: 'Boutique / Local',
   terrain: 'Terrain', maison: 'Maison', appart_vide: 'Appartement',
-  appart_meuble: 'Appart. meublé', guesthouse: 'Guesthouse',
+  appart_meuble: 'Appart. meublé', guesthouse: 'Guesthouse', salle_fete: 'Salle de fêtes',
 };
 
 const MOD: Record<string, { label: string; cls: string }> = {

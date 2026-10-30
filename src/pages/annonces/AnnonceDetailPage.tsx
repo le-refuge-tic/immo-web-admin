@@ -7,8 +7,17 @@ import { deleteAdminBien } from '../../api/deleteAdminBien';
 import { ChevronLeftIcon, PinIcon, TrashIcon, EditIcon } from '../../components/Icons';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { libellePrix, suffixeUnite } from '../../utils/prix';
 
 // ── Labels lisibles pour les champs amenites ────────────────────────────────
+const STANDING_LABELS: Record<string, string> = {
+  sanitaire: 'Sanitaire',
+  semi_sanitaire: 'Semi sanitaire',
+  sanitaire_semi_staffe: 'Sanitaire semi-staffé',
+  sanitaire_staffe: 'Sanitaire staffé',
+  haut_standing_vip: 'Haut Standing / VIP',
+}
+
 const AMENITE_FIELD_GROUPS = [
   {
     title: 'Caractéristiques',
@@ -16,7 +25,7 @@ const AMENITE_FIELD_GROUPS = [
       { key: 'parking',          label: 'Parking',            fmt: (v: any, a: any) => v ? (a.parking_capacite ? `Oui — ×${a.parking_capacite}` : 'Oui') : 'Non' },
       { key: 'cour',             label: 'Cour',               fmt: (v: any) => v ? 'Oui' : 'Non' },
       { key: 'boyerie',          label: 'Boyerie',            fmt: (v: any) => v ? 'Oui' : 'Non' },
-      { key: 'sanitaire',        label: 'Sanitaires',         fmt: (v: any) => v == null ? null : (v ? 'Intérieur' : 'Extérieur') },
+      { key: 'standing',         label: 'Standing',           fmt: (v: any, a: any) => STANDING_LABELS[v] ?? (v === 'autre' ? (a.standing_autre || 'Autre') : null) },
       { key: 'chambre_couloir',  label: 'Maison à couloir',   fmt: (v: any) => v == null ? null : (v ? 'Oui' : 'Non') },
       { key: 'acces_vehicule',   label: 'Accès véhicule',     fmt: (v: any, a: any) => v == null ? null : (v ? (a.nb_vehicules ? `Oui — ${a.nb_vehicules} véh.` : 'Oui') : 'Non') },
     ],
@@ -27,7 +36,6 @@ const AMENITE_FIELD_GROUPS = [
       { key: 'electricite_label', label: 'Électricité', fmt: (v: any) => v || null },
       { key: 'eau_label',         label: 'Eau',         fmt: (v: any) => v || null },
       { key: 'cuisine_label',     label: 'Cuisine',     fmt: (v: any) => v || null },
-      { key: 'finition_label',    label: 'Finition',    fmt: (v: any) => v || null },
     ],
   },
   {
@@ -53,6 +61,7 @@ const TYPE_LABELS: any = {
   appart_vide:   'Appartement vide',
   appart_meuble: 'Appartement meublé',
   guesthouse:    'Guesthouse',
+  salle_fete:    'Salle de fêtes',
   terrain:       'Terrain',
 };
 
@@ -406,10 +415,10 @@ export default function AnnonceDetailPage() {
           <div className="detail-card">
             <div className="detail-bien-type">{TYPE_LABELS[bien.type] ?? bien.type}</div>
             <div className="detail-bien-price">
-              {formatPrice(bien.prix)} <span>FCFA</span>
+              {formatPrice(bien.prix)} <span>FCFA{suffixeUnite(bien)}</span>
             </div>
             <div className="detail-bien-price-type">
-              {bien.transaction === 'vente' ? 'Prix de vente' : 'Loyer mensuel'}
+              {libellePrix(bien)}
             </div>
             {bien.localisation && (
               <div className="detail-bien-location">
@@ -733,7 +742,7 @@ export default function AnnonceDetailPage() {
             <div className="detail-delete-zone">
               {confirmDelete ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 16px', background: 'rgba(220,38,38,0.06)', borderRadius: 10, border: '1px solid rgba(220,38,38,0.25)' }}>
-                  <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#DC2626' }}>Supprimer définitivement ce bien ? Cette action est irréversible.</p>
+                  <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--s-red)' }}>Supprimer définitivement ce bien ? Cette action est irréversible.</p>
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button
                       className="detail-btn detail-btn--delete"

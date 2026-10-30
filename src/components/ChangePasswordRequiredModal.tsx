@@ -19,14 +19,14 @@ export default function ChangePasswordRequiredModal() {
       overflowY: 'auto',
     }}>
       <div style={{
-        background: '#ffffff', border: '1px solid #E2E8F0',
+        background: 'var(--c-card)', border: '1px solid var(--c-border)',
         borderRadius: 16, padding: '36px 32px', width: '100%', maxWidth: 420,
         boxShadow: '0 24px 64px rgba(0,0,0,0.22)',
         margin: 'auto',
       }}>
         <div style={{
           width: 52, height: 52, borderRadius: 14,
-          background: '#EFF6FF',
+          background: 'var(--t-blue-bg)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20,
         }}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -35,10 +35,10 @@ export default function ChangePasswordRequiredModal() {
           </svg>
         </div>
 
-        <h2 style={{ fontSize: 18, fontWeight: 800, color: '#0F172A', marginBottom: 8 }}>
+        <h2 style={{ fontSize: 18, fontWeight: 800, color: 'var(--c-text)', marginBottom: 8 }}>
           Changez votre mot de passe
         </h2>
-        <p style={{ fontSize: 13, color: '#374151', lineHeight: 1.6, marginBottom: 24 }}>
+        <p style={{ fontSize: 13, color: 'var(--c-text)', lineHeight: 1.6, marginBottom: 24 }}>
           Votre compte a été créé par un administrateur. Pour votre sécurité, définissez un nouveau mot de passe avant de continuer.
         </p>
 

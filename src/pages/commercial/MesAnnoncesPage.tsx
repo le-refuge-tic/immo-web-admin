@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getMesBiens } from '../../api/getMesBiens';
-import { markBiensAsSeen } from '../../layout/Sidebar';
+import { markBiensAsSeen } from '../../hooks/useSidebarBadges';
+import { useAuth } from '../../context/AuthContext';
+import { prixAvecUnite } from '../../utils/prix';
 
 /* ─── Helpers ─────────────────────────────────────────────── */
 
@@ -18,6 +20,7 @@ const TYPE_LABEL: Record<string, string> = {
   appart_vide:         'Appartement',
   appart_meuble:       'Appart. meublé',
   guesthouse:          'Guesthouse',
+  salle_fete:          'Salle de fêtes',
 };
 
 const MOD: Record<string, { label: string; cls: string }> = {
@@ -32,10 +35,6 @@ const TRANS: Record<string, string> = {
   vente:    'Vente',
 };
 
-function formatFcfa(v: number) {
-  if (!v) return '—';
-  return new Intl.NumberFormat('fr-FR').format(v) + ' FCFA';
-}
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -126,6 +125,7 @@ const STATUS_CARD: Record<string, { label: string; bg: string; color: string; sh
 
 export default function MesAnnoncesPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [biens, setBiens]       = useState<any[]>([]);
   const [loading, setLoading]   = useState(true);
   const [showProprietaireModal, setShowProprietaireModal] = useState(false);
@@ -146,7 +146,7 @@ export default function MesAnnoncesPage() {
       const data = await getMesBiens.list();
       const list = data ?? [];
       setBiens(list);
-      markBiensAsSeen(list);
+      markBiensAsSeen(user?.id, list);
     } catch {
       setBiens([]);
     } finally {
@@ -279,7 +279,7 @@ export default function MesAnnoncesPage() {
                   <button key={opt.key} onClick={() => setFilterType(opt.key)} style={{
                     padding: '5px 13px', borderRadius: 20, fontSize: 12, fontWeight: active ? 700 : 500,
                     border: `1.5px solid ${active ? 'var(--c-blue)' : 'var(--c-border)'}`,
-                    background: active ? 'var(--c-blue)' : 'transparent',
+                    background: active ? 'var(--c-blue-solid)' : 'transparent',
                     color: active ? '#fff' : 'var(--c-muted)',
                     cursor: 'pointer', transition: 'all 0.15s',
                   }}>
@@ -298,7 +298,7 @@ export default function MesAnnoncesPage() {
                 <button key={opt.key} onClick={() => setFilterStatus(opt.key)} style={{
                   padding: '5px 13px', borderRadius: 20, fontSize: 12, fontWeight: active ? 700 : 500,
                   border: `1.5px solid ${active ? 'var(--c-blue)' : 'var(--c-border)'}`,
-                  background: active ? 'var(--c-blue)' : 'transparent',
+                  background: active ? 'var(--c-blue-solid)' : 'transparent',
                   color: active ? '#fff' : 'var(--c-muted)',
                   cursor: 'pointer', transition: 'all 0.15s',
                 }}>
@@ -377,7 +377,7 @@ export default function MesAnnoncesPage() {
                       </svg>
                       {[b.localisation?.quartier, b.localisation?.ville].filter(Boolean).join(', ') || '—'}
                     </div>
-                    <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--c-text)', marginTop: 4 }}>{formatFcfa(b.prix)}</div>
+                    <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--c-text)', marginTop: 4 }}>{Number(b.prix) ? prixAvecUnite(b) : '—'}</div>
                     <div style={{ marginTop: 'auto', paddingTop: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontSize: 10, color: 'var(--c-muted)' }}>{b.nb_consultations ?? 0} vue(s)</span>
                       <span style={{ fontSize: 10, color: 'var(--c-muted)' }}>{b.created_at ? formatDate(b.created_at) : '—'}</span>

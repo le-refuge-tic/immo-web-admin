@@ -6,4 +6,5 @@ const auth = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('
 export const getAdminBien = {
   list:  (params?: any) => axios.get(`${BASE}/admin/biens`, { ...auth(), params }).then(r => r.data),
   byId:  (id: number)   => axios.get(`${BASE}/admin/biens/${id}`, auth()).then(r => r.data),
+  moderationStats: () => axios.get(`${BASE}/admin/moderation/stats`, auth()).then(r => r.data),
 };

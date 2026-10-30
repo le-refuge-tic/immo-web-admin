@@ -28,6 +28,8 @@ import QuartiersPage       from './pages/quartiers/QuartiersPage';
 import MesAnnoncesPage         from './pages/commercial/MesAnnoncesPage';
 import MesVisitesPage          from './pages/commercial/MesVisitesPage';
 import PublierBienPage         from './pages/commercial/PublierBienPage';
+import PublierGuesthousePage   from './pages/commercial/PublierGuesthousePage';
+import PublierSalleFetePage    from './pages/commercial/PublierSalleFetePage';
 import CommercialDashboardPage    from './pages/commercial/CommercialDashboardPage';
 import CommercialPortefeuillePage from './pages/commercial/CommercialPortefeuillePage';
 import MesClientsPage             from './pages/commercial/MesClientsPage';
@@ -35,6 +37,8 @@ import MonEquipePage              from './pages/commercial/MonEquipePage';
 import SupervisionPage         from './pages/supervision/SupervisionPage';
 import PlaintesPage            from './pages/plaintes/PlaintesPage';
 import ModerationPage          from './pages/moderation/ModerationPage';
+import VerificationsPage       from './pages/verifications/VerificationsPage';
+import NotFoundPage from './pages/errors/NotFoundPage';
 
 function DefaultRedirect() {
   const { user } = useAuth();
@@ -71,6 +75,8 @@ export default function App() {
             <Route path="mon-equipe"               element={<MonEquipePage />} />
             <Route path="portefeuille-commercial" element={<CommercialPortefeuillePage />} />
             <Route path="publier-bien"         element={<PublierBienPage />} />
+            <Route path="publier-guesthouse"   element={<PublierGuesthousePage />} />
+            <Route path="publier-salle-fete"   element={<PublierSalleFetePage />} />
             <Route path="messages"     element={<MessagesPage />} />
             <Route path="supervision"  element={<AdminRoute><SupervisionPage /></AdminRoute>} />
             <Route path="utilisateurs" element={<AdminRoute><UtilisateursPage /></AdminRoute>} />
@@ -78,6 +84,7 @@ export default function App() {
             <Route path="finances"     element={<AdminRoute><FinancesPage /></AdminRoute>} />
             <Route path="feedbacks"    element={<AdminRoute><FeedbacksPage /></AdminRoute>} />
             <Route path="moderation"   element={<AdminRoute><ModerationPage /></AdminRoute>} />
+            <Route path="verifications" element={<AdminRoute><VerificationsPage /></AdminRoute>} />
             <Route path="reclamations" element={<AdminRoute><PlaintesPage /></AdminRoute>} />
             <Route path="liaisons"     element={<AdminRoute><GestionLiaisonsPage /></AdminRoute>} />
             <Route path="retraits"     element={<AdminRoute><RetraitsPage /></AdminRoute>} />
@@ -94,8 +101,8 @@ export default function App() {
               <Route path="locataires"      element={<AdminRoute><GestionLocatairePage /></AdminRoute>} />
               <Route path="administrateurs" element={<SuperAdminRoute><GestionAdminPage /></SuperAdminRoute>} />
             </Route>
+            <Route path="*" element={<NotFoundPage />} />
           </Route>
-          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         </ToastProvider>
       </AuthProvider>

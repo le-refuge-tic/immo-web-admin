@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import ProfilEditModal from './ProfilEditModal';
 import ProfilInfoCard from './ProfilInfoCard';
 import ChangePasswordModal from './ChangePasswordModal';
+import AppearanceSetting from '../../components/AppearanceSetting';
 
 const ROLE_LABELS: any = {
   super_admin:  'Super Administrateur',
@@ -84,7 +85,7 @@ export default function ProfilPage() {
         </div>
 
         <div className="immo-card" style={{ padding: '16px 20px', display: 'flex', gap: 14, alignItems: 'flex-start' }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--t-blue-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
             </svg>
@@ -106,6 +107,8 @@ export default function ProfilPage() {
             </button>
           </div>
         </div>
+
+        <AppearanceSetting />
       </div>
 
       {showEdit && (

@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { patchAuth } from '../api/patchAuth';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { apiMessage } from '../utils/apiMessage';
 
 type Props = {
   onSuccess: () => void;
@@ -43,7 +44,7 @@ function PasswordField({
         autoFocus={autoFocus}
         disabled={disabled}
         required
-        style={{ background: '#F8FAFC', color: '#0F172A', paddingRight: 40 }}
+        style={{ background: 'var(--c-surface-2)', color: 'var(--c-text)', paddingRight: 40 }}
         aria-label={label}
       />
       <button
@@ -53,7 +54,7 @@ function PasswordField({
         style={{
           position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
           background: 'none', border: 'none', cursor: 'pointer',
-          color: '#6B7280', padding: 2, display: 'flex', alignItems: 'center',
+          color: 'var(--c-muted)', padding: 2, display: 'flex', alignItems: 'center',
         }}
         aria-label={show ? 'Masquer' : 'Afficher'}
       >
@@ -67,8 +68,8 @@ function ErrorBox({ message }: { message: string }) {
   return (
     <div style={{
       marginBottom: 14, padding: '8px 12px',
-      background: '#FEF2F2', border: '1px solid #FECACA',
-      borderRadius: 8, fontSize: 12, color: '#DC2626',
+      background: 'var(--t-red-bg)', border: '1px solid var(--t-red-bd)',
+      borderRadius: 8, fontSize: 12, color: 'var(--s-red)',
     }}>
       {message}
     </div>
@@ -120,39 +121,36 @@ export default function ChangePasswordForm({ onSuccess, submitLabel = 'Valider l
     }), 1000);
   };
 
-  // Étape 1 : valider les mots de passe puis envoyer l'OTP
+  const terminer = () => {
+    showToast('Mot de passe mis à jour. Vos autres appareils ont été déconnectés.');
+    onSuccess();
+  };
+
+  // Étape 1 : vérifier le mot de passe actuel ; le serveur envoie un code SMS
+  // (sauf pour le changement imposé du mot de passe provisoire).
   const handleSubmitForm = async (e: FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
-    // Si pas de téléphone enregistré (ex. admin), on change directement sans OTP
-    if (!phone) {
-      setError('');
-      setLoading(true);
-      try {
-        await patchAuth.changePassword(currentPassword, newPassword);
-        showToast('Mot de passe mis à jour avec succès.');
-        onSuccess();
-      } catch (err: any) {
-        setError(err?.response?.data?.message ?? 'Impossible de changer le mot de passe.');
-        setLoading(false);
-      }
-      return;
-    }
     setError('');
     setLoading(true);
     try {
-      const res = await patchAuth.sendPhoneOtp(phone);
+      const res = await patchAuth.sendPasswordOtp(currentPassword);
+      if (!res.requires_otp || !res.session_token) {
+        await patchAuth.changePassword({ current_password: currentPassword, new_password: newPassword });
+        terminer();
+        return;
+      }
       setSessionToken(res.session_token);
       setStep('otp');
       startCountdown();
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Impossible d\'envoyer le code SMS.');
+      setError(apiMessage(err) ?? 'Impossible de changer le mot de passe.');
     } finally {
       setLoading(false);
     }
   };
 
-  // Étape 2 : vérifier l'OTP puis changer le mot de passe
+  // Étape 2 : changer le mot de passe avec le code reçu
   const handleVerifyOtp = async (e: FormEvent) => {
     e.preventDefault();
     if (otp.length !== 6) {
@@ -162,18 +160,15 @@ export default function ChangePasswordForm({ onSuccess, submitLabel = 'Valider l
     setLoading(true);
     setError('');
     try {
-      await patchAuth.verifyPhoneOtp(sessionToken, otp, phone);
+      await patchAuth.changePassword({
+        current_password: currentPassword,
+        new_password: newPassword,
+        session_token: sessionToken,
+        code: otp,
+      });
+      terminer();
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Code incorrect ou expiré.');
-      setLoading(false);
-      return;
-    }
-    try {
-      await patchAuth.changePassword(currentPassword, newPassword);
-      showToast('Mot de passe mis à jour avec succès.');
-      onSuccess();
-    } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Impossible de changer le mot de passe.');
+      setError(apiMessage(err) ?? 'Code incorrect ou expiré.');
       setLoading(false);
     }
   };
@@ -184,11 +179,11 @@ export default function ChangePasswordForm({ onSuccess, submitLabel = 'Valider l
     setError('');
     setOtp('');
     try {
-      const res = await patchAuth.sendPhoneOtp(phone);
-      setSessionToken(res.session_token);
+      const res = await patchAuth.sendPasswordOtp(currentPassword);
+      if (res.session_token) setSessionToken(res.session_token);
       startCountdown();
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Erreur lors du renvoi.');
+      setError(apiMessage(err) ?? 'Erreur lors du renvoi.');
     } finally {
       setLoading(false);
     }
@@ -202,7 +197,7 @@ export default function ChangePasswordForm({ onSuccess, submitLabel = 'Valider l
           {(['form', 'otp'] as Step[]).map((s) => (
             <div key={s} style={{
               height: 3, flex: 1, borderRadius: 2,
-              background: s === 'otp' ? 'var(--c-blue)' : '#16A34A',
+              background: s === 'otp' ? 'var(--c-blue-solid)' : '#16A34A',
               transition: 'background 0.2s',
             }} />
           ))}
@@ -210,7 +205,7 @@ export default function ChangePasswordForm({ onSuccess, submitLabel = 'Valider l
 
         <div style={{
           width: 48, height: 48, borderRadius: 14,
-          background: '#F0FDF4',
+          background: 'var(--t-green-bg)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16,
         }}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -221,9 +216,9 @@ export default function ChangePasswordForm({ onSuccess, submitLabel = 'Valider l
           </svg>
         </div>
 
-        <div style={{ fontSize: 13, color: '#374151', lineHeight: 1.6, marginBottom: 20 }}>
+        <div style={{ fontSize: 13, color: 'var(--c-text)', lineHeight: 1.6, marginBottom: 20 }}>
           Un code de vérification a été envoyé au{' '}
-          <strong style={{ color: '#0F172A' }}>+{phone}</strong>.{' '}
+          <strong style={{ color: 'var(--c-text)' }}>{phone.startsWith('+') ? phone : `+${phone}`}</strong>.{' '}
           <button
             type="button"
             onClick={() => { setStep('form'); setError(''); setOtp(''); }}
@@ -235,7 +230,7 @@ export default function ChangePasswordForm({ onSuccess, submitLabel = 'Valider l
 
         <form onSubmit={handleVerifyOtp}>
           <div className="immo-form-field" style={{ marginBottom: 16 }}>
-            <label className="immo-form-label" style={{ color: '#0F172A' }}>Code de vérification *</label>
+            <label className="immo-form-label" style={{ color: 'var(--c-text)' }}>Code de vérification *</label>
             <input
               className="immo-form-input"
               type="text"
@@ -247,7 +242,7 @@ export default function ChangePasswordForm({ onSuccess, submitLabel = 'Valider l
               autoFocus
               disabled={loading}
               required
-              style={{ letterSpacing: '0.3em', fontSize: 20, textAlign: 'center', background: '#F8FAFC', color: '#0F172A' }}
+              style={{ letterSpacing: '0.3em', fontSize: 20, textAlign: 'center', background: 'var(--c-surface-2)', color: 'var(--c-text)' }}
             />
           </div>
           {error && <ErrorBox message={error} />}
@@ -282,7 +277,7 @@ export default function ChangePasswordForm({ onSuccess, submitLabel = 'Valider l
         {(['form', 'otp'] as Step[]).map((s) => (
           <div key={s} style={{
             height: 3, flex: 1, borderRadius: 2,
-            background: s === 'form' ? 'var(--c-blue)' : 'var(--c-border)',
+            background: s === 'form' ? 'var(--c-blue-solid)' : 'var(--c-border)',
             transition: 'background 0.2s',
           }} />
         ))}
@@ -290,29 +285,29 @@ export default function ChangePasswordForm({ onSuccess, submitLabel = 'Valider l
 
       <form onSubmit={handleSubmitForm}>
         <div className="immo-form-field" style={{ marginBottom: 16 }}>
-          <label className="immo-form-label" style={{ color: '#0F172A' }}>Mot de passe actuel *</label>
+          <label className="immo-form-label" style={{ color: 'var(--c-text)' }}>Mot de passe actuel *</label>
           <PasswordField label="Mot de passe actuel" value={currentPassword}
             onChange={v => { setCurrentPassword(v); setError(''); }} autoFocus disabled={loading} />
         </div>
 
         <div className="immo-form-field" style={{ marginBottom: 16 }}>
-          <label className="immo-form-label" style={{ color: '#0F172A' }}>Nouveau mot de passe *</label>
+          <label className="immo-form-label" style={{ color: 'var(--c-text)' }}>Nouveau mot de passe *</label>
           <PasswordField label="Nouveau mot de passe" value={newPassword} placeholder="8 caractères minimum"
             onChange={v => { setNewPassword(v); setError(''); }} disabled={loading} />
           {tooShort && (
-            <div style={{ fontSize: 11, color: '#D97706', marginTop: 4 }}>8 caractères minimum requis.</div>
+            <div style={{ fontSize: 11, color: 'var(--s-yellow)', marginTop: 4 }}>8 caractères minimum requis.</div>
           )}
         </div>
 
         <div className="immo-form-field" style={{ marginBottom: 16 }}>
-          <label className="immo-form-label" style={{ color: '#0F172A' }}>Confirmer le nouveau mot de passe *</label>
+          <label className="immo-form-label" style={{ color: 'var(--c-text)' }}>Confirmer le nouveau mot de passe *</label>
           <PasswordField label="Confirmer le mot de passe" value={confirmPassword}
             onChange={v => { setConfirmPassword(v); setError(''); }} disabled={loading} />
           {mismatch && (
-            <div style={{ fontSize: 11, color: '#DC2626', marginTop: 4 }}>Les mots de passe ne correspondent pas.</div>
+            <div style={{ fontSize: 11, color: 'var(--s-red)', marginTop: 4 }}>Les mots de passe ne correspondent pas.</div>
           )}
           {!mismatch && confirmPassword.length > 0 && newPassword.length >= 8 && (
-            <div style={{ fontSize: 11, color: '#16A34A', marginTop: 4 }}>Les mots de passe correspondent.</div>
+            <div style={{ fontSize: 11, color: 'var(--s-green)', marginTop: 4 }}>Les mots de passe correspondent.</div>
           )}
         </div>
 

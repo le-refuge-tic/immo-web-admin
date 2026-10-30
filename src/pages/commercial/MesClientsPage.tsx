@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { commerciauxApi } from '../../api/getClientsCommercial';
 import { supervisionApi } from '../../api/commercialSupervisionApi';
+import { apiMessage } from '../../utils/apiMessage';
 
 const COLORS = ['#2563EB', '#7C3AED', '#DB2777', '#D97706', '#16A34A', '#0891B2', '#DC2626', '#0284C7'];
 function avatarColor(id: number) { return COLORS[Math.abs(id ?? 0) % COLORS.length]; }
@@ -17,10 +18,10 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 const ROLE_COLORS: Record<string, { bg: string; color: string; border: string }> = {
-  prospect:     { bg: '#EFF6FF', color: '#1D4ED8', border: '#BFDBFE' },
-  locataire:    { bg: '#F5F3FF', color: '#7C3AED', border: '#DDD6FE' },
-  proprietaire: { bg: '#F0FDF4', color: '#15803D', border: '#BBF7D0' },
-  client:       { bg: '#FFFBEB', color: '#B45309', border: '#FDE68A' },
+  prospect:     { bg: 'var(--t-blue-bg)', color: 'var(--s-blue)', border: 'var(--t-blue-bd)' },
+  locataire:    { bg: 'var(--t-violet-bg)', color: 'var(--s-violet)', border: 'var(--t-violet-bd)' },
+  proprietaire: { bg: 'var(--t-green-bg)', color: 'var(--s-green)', border: 'var(--t-green-bd)' },
+  client:       { bg: 'var(--t-yellow-bg)', color: 'var(--s-yellow)', border: 'var(--t-yellow-bd)' },
 };
 
 export default function MesClientsPage() {
@@ -46,7 +47,7 @@ export default function MesClientsPage() {
       setProprietairesData(propData);
     } catch (err: any) {
       const status = err?.response?.status;
-      const msg = err?.response?.data?.message;
+      const msg = apiMessage(err);
       setError(status === 403
         ? 'Accès refusé — contactez votre responsable.'
         : (msg ?? 'Impossible de charger vos clients.'));
@@ -190,7 +191,7 @@ export default function MesClientsPage() {
                 <button key={opt.key} onClick={() => setFilterRole(opt.key)} style={{
                   padding: '5px 13px', borderRadius: 20, fontSize: 12, fontWeight: active ? 700 : 500,
                   border: `1.5px solid ${active ? 'var(--c-blue)' : 'var(--c-border)'}`,
-                  background: active ? 'var(--c-blue)' : 'transparent',
+                  background: active ? 'var(--c-blue-solid)' : 'transparent',
                   color: active ? '#fff' : 'var(--c-muted)',
                   cursor: 'pointer', transition: 'all 0.15s',
                 }}>
@@ -204,7 +205,7 @@ export default function MesClientsPage() {
 
       {/* ── Erreur ── */}
       {error && (
-        <div style={{ padding: '10px 16px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, fontSize: 13, color: '#DC2626' }}>
+        <div style={{ padding: '10px 16px', background: 'var(--t-red-bg)', border: '1px solid var(--t-red-bd)', borderRadius: 10, fontSize: 13, color: 'var(--s-red)' }}>
           {error}
         </div>
       )}
@@ -260,8 +261,8 @@ export default function MesClientsPage() {
                       <span style={{
                         padding: '3px 10px', borderRadius: 20, fontSize: 10, fontWeight: 700,
                         letterSpacing: '0.5px', textTransform: 'uppercase',
-                        background: p.verifie ? '#F0FDF4' : '#FFFBEB',
-                        color:      p.verifie ? '#15803D' : '#B45309',
+                        background: p.verifie ? 'var(--t-green-bg)' : 'var(--t-yellow-bg)',
+                        color:      p.verifie ? 'var(--s-green)' : 'var(--s-yellow)',
                         border: `1px solid ${p.verifie ? '#BBF7D0' : '#FDE68A'}`,
                       }}>
                         {p.verifie ? 'Vérifié' : 'En attente'}
@@ -305,7 +306,7 @@ export default function MesClientsPage() {
                 filtered.map((c: any, idx: number) => {
                   const role = c.role_principal ?? c.role ?? '';
                   const roleLabel = ROLE_LABELS[role] ?? role;
-                  const roleStyle = ROLE_COLORS[role] ?? { bg: '#F1F5F9', color: '#64748B', border: '#E2E8F0' };
+                  const roleStyle = ROLE_COLORS[role] ?? { bg: 'var(--c-surface-2)', color: 'var(--c-muted)', border: 'var(--c-border)' };
                   return (
                     <div key={c.id} style={{
                       display: 'flex', alignItems: 'center', gap: 14,
