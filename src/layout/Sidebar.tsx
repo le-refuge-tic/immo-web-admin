@@ -3,7 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import {
   GridIcon, HomeIcon, UsersIcon, SettingsIcon, ShieldIcon, AlertIcon,
   ChevronDownIcon, UserIcon, BuildingIcon, KeyIcon, FileTextIcon, TrendingUpIcon, StarIcon,
-  MessageIcon, WithdrawIcon, ListingsIcon, VisitIcon, ClientsIcon, FlagIcon,
+  MessageIcon, WithdrawIcon, ListingsIcon, VisitIcon, ClientsIcon, FlagIcon, CardIcon,
 } from '../components/Icons';
 import { useAuth } from '../context/AuthContext';
 import { useSidebarBadges } from '../hooks/useSidebarBadges';
@@ -45,9 +45,7 @@ export default function Sidebar({
     ] },
     { id: 'annonces', label: 'Annonces', Icon: HomeIcon, items: [
       { to: '/annonces',   label: 'Toutes les annonces', Icon: HomeIcon },
-      { to: '/publier-bien', label: 'Créer un bien', Icon: BuildingIcon },
-      { to: '/publier-guesthouse', label: 'Créer une guesthouse', Icon: BuildingIcon },
-      { to: '/publier-salle-fete', label: 'Créer une salle de fêtes', Icon: BuildingIcon },
+      { to: '/mes-annonces', label: 'Mes annonces', Icon: ListingsIcon },
       { to: '/moderation', label: 'Modération',          Icon: AlertIcon },
       { to: '/quartiers',  label: 'Quartiers',           Icon: BuildingIcon },
     ] },
@@ -65,6 +63,7 @@ export default function Sidebar({
       { to: '/finances', label: 'Vue d\'ensemble', Icon: TrendingUpIcon },
       { to: '/loyers',   label: 'Loyers',          Icon: FileTextIcon },
       { to: '/retraits', label: 'Retraits MoMo',   Icon: WithdrawIcon },
+      { to: '/portefeuille-commercial', label: 'Portefeuille', Icon: CardIcon },
     ] },
   ] : [];
 
@@ -75,6 +74,7 @@ export default function Sidebar({
       { to: '/mes-visites',          label: 'Mes visites',     Icon: VisitIcon    },
       { to: '/mes-clients',          label: 'Mes clients',     Icon: ClientsIcon  },
       { to: '/mon-equipe',           label: 'Mon équipe',      Icon: UsersIcon    },
+      { to: '/portefeuille-commercial', label: 'Portefeuille', Icon: CardIcon },
     ] : []),
     { to: '/messages', label: 'Messages', Icon: MessageIcon },
   ];

@@ -132,26 +132,52 @@ export default function MesAnnoncesPage() {
   const [showProprietaireModal, setShowProprietaireModal] = useState(false);
   const [drafts, setDrafts] = useState<any[]>([]);
   const [showDraftMenu, setShowDraftMenu] = useState(false);
+  const [showCreateMenu, setShowCreateMenu] = useState(false);
   const [filterType, setFilterType]     = useState('');
   const [filterStatus, setFilterStatus] = useState('');
 
   useEffect(() => {
     try {
+      const allDrafts: any[] = [];
       const raw = localStorage.getItem(DRAFTS_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        setDrafts(Array.isArray(parsed) ? parsed : []);
-        return;
+        if (Array.isArray(parsed)) {
+          allDrafts.push(...parsed.map((draft: any) => ({ ...draft, storageKey: DRAFTS_KEY, type: 'bien' })));
+        }
+      } else {
+        const legacy = localStorage.getItem(LEGACY_DRAFT_KEY);
+        if (legacy) {
+          const data = JSON.parse(legacy);
+          const id = crypto.randomUUID();
+          const migrated = [{ id, label: data?.titreTerrain || data?.quartier || 'Brouillon', updatedAt: Date.now(), data }];
+          localStorage.setItem(DRAFTS_KEY, JSON.stringify(migrated));
+          localStorage.removeItem(LEGACY_DRAFT_KEY);
+          allDrafts.push(...migrated.map((draft: any) => ({ ...draft, storageKey: DRAFTS_KEY, type: 'bien' })));
+        }
       }
-      const legacy = localStorage.getItem(LEGACY_DRAFT_KEY);
-      if (legacy) {
-        const data = JSON.parse(legacy);
-        const id = crypto.randomUUID();
-        const migrated = [{ id, label: data?.titreTerrain || data?.quartier || 'Brouillon', updatedAt: Date.now(), data }];
-        localStorage.setItem(DRAFTS_KEY, JSON.stringify(migrated));
-        localStorage.removeItem(LEGACY_DRAFT_KEY);
-        setDrafts(migrated);
+
+      const guesthouse = JSON.parse(localStorage.getItem('publier_guesthouse_draft') ?? 'null');
+      if (guesthouse?.form) {
+        allDrafts.push({
+          id: 'guesthouse-draft',
+          label: guesthouse.form.titre || guesthouse.form.quartier || 'Guesthouse',
+          updatedAt: null,
+          storageKey: 'publier_guesthouse_draft',
+          type: 'guesthouse',
+        });
       }
+      const salleFete = JSON.parse(localStorage.getItem('publier_salle_fete_draft') ?? 'null');
+      if (salleFete?.form) {
+        allDrafts.push({
+          id: 'salle-fete-draft',
+          label: salleFete.form.nom || salleFete.form.titre || salleFete.form.quartier || 'Salle de fêtes',
+          updatedAt: null,
+          storageKey: 'publier_salle_fete_draft',
+          type: 'salle-fete',
+        });
+      }
+      setDrafts(allDrafts);
     } catch { /* ignore */ }
   }, []);
 
@@ -192,11 +218,16 @@ export default function MesAnnoncesPage() {
   const enAttente   = biens.filter(b => b.statut_moderation === 'en_attente').length;
   const rejetes     = biens.filter(b => b.statut_moderation === 'rejete').length;
 
-  const deleteDraft = (id: string) => {
+  const deleteDraft = (draft: any) => {
     if (!window.confirm('Supprimer ce brouillon ?')) return
-    const next = drafts.filter(draft => draft.id !== id)
+    if (draft.storageKey && draft.storageKey !== DRAFTS_KEY) {
+      localStorage.removeItem(draft.storageKey)
+    } else {
+      const next = drafts.filter(item => item.id !== draft.id && item.storageKey === DRAFTS_KEY)
+      localStorage.setItem(DRAFTS_KEY, JSON.stringify(next.map(({ storageKey, type, ...item }) => item)))
+    }
+    const next = drafts.filter(item => item.id !== draft.id || item.storageKey !== draft.storageKey)
     setDrafts(next)
-    localStorage.setItem(DRAFTS_KEY, JSON.stringify(next))
     if (!next.length) setShowDraftMenu(false)
   }
 
@@ -275,14 +306,19 @@ export default function MesAnnoncesPage() {
                   )}
                   {drafts.map(draft => (
                     <div key={draft.id} style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 8 }}>
-                      <button onClick={() => { setShowDraftMenu(false); window.location.href = `/publier-bien?draft=${encodeURIComponent(draft.id)}` }}
+                      <button onClick={() => {
+                        setShowDraftMenu(false);
+                        if (draft.type === 'guesthouse') window.location.href = '/publier-guesthouse';
+                        else if (draft.type === 'salle-fete') window.location.href = '/publier-salle-fete';
+                        else window.location.href = `/publier-bien?draft=${encodeURIComponent(draft.id)}`;
+                      }}
                         style={{ flex: 1, minWidth: 0, border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', padding: '10px 8px', color: 'var(--c-text)' }}>
                         <div style={{ fontSize: 12, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{draft.label || 'Brouillon sans titre'}</div>
                         <div style={{ fontSize: 10, color: 'var(--c-muted)', marginTop: 2 }}>
                           {draft.updatedAt ? formatDate(new Date(draft.updatedAt).toISOString()) : 'Date inconnue'}
                         </div>
                       </button>
-                      <button onClick={() => deleteDraft(draft.id)} title="Supprimer le brouillon"
+                      <button onClick={() => deleteDraft(draft)} title="Supprimer le brouillon"
                         style={{ width: 32, height: 32, flexShrink: 0, border: 'none', background: 'transparent', color: 'var(--s-red, #ef4444)', cursor: 'pointer', borderRadius: 8 }}>
                         ✕
                       </button>
@@ -291,12 +327,28 @@ export default function MesAnnoncesPage() {
                 </div>
               )}
             </div>
-          <button className="btn-submit" onClick={() => setShowProprietaireModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            Nouveau bien
-          </button>
+          <div style={{ position: 'relative' }}>
+            <button className="btn-submit" onClick={() => setShowCreateMenu(open => !open)} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Créer une annonce
+            </button>
+            {showCreateMenu && (
+              <div style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, width: 220, zIndex: 30, borderRadius: 12, border: '1px solid var(--c-border)', background: 'var(--c-surface)', boxShadow: '0 12px 32px rgba(0,0,0,0.18)', padding: 6 }}>
+                {[
+                  { label: 'Bien immobilier', path: '', action: () => { setShowCreateMenu(false); setShowProprietaireModal(true); } },
+                  { label: 'Guesthouse', path: '/publier-guesthouse', action: () => { setShowCreateMenu(false); navigate('/publier-guesthouse'); } },
+                  { label: 'Salle de fêtes', path: '/publier-salle-fete', action: () => { setShowCreateMenu(false); navigate('/publier-salle-fete'); } },
+                ].map(option => (
+                  <button key={option.label} type="button" onClick={option.action}
+                    style={{ width: '100%', border: 'none', borderRadius: 8, background: 'transparent', color: 'var(--c-text)', cursor: 'pointer', textAlign: 'left', padding: '10px 12px', fontSize: 12, fontWeight: 700 }}>
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

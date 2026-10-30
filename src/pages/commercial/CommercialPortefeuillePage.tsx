@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getWallet, type WalletTransaction } from '../../api/getWallet';
 import { postRetrait, type Retrait } from '../../api/postRetrait';
 import RetraitRequestModal from './RetraitRequestModal';
+import { useAuth } from '../../context/AuthContext';
 
 function formatFcfa(v: number) {
   return new Intl.NumberFormat('fr-FR').format(Math.round(v)) + ' FCFA';
@@ -20,6 +21,9 @@ const STATUT_COLOR: Record<string, string> = {
 
 export default function CommercialPortefeuillePage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const role = user?.role_principal ?? user?.role ?? '';
+  const dashboardPath = role === 'commercial' ? '/commercial-dashboard' : '/dashboard';
   const [solde, setSolde]           = useState(0);
   const [transactions, setTrans]    = useState<WalletTransaction[]>([]);
   const [retraits, setRetraits]     = useState<Retrait[]>([]);
@@ -52,7 +56,7 @@ export default function CommercialPortefeuillePage() {
     <div className="immo-page">
       {/* En-tête */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
-        <button onClick={() => navigate('/commercial-dashboard')}
+        <button onClick={() => navigate(dashboardPath)}
           style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-muted)', display: 'flex', alignItems: 'center', gap: 4, padding: 0, fontSize: 13 }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M15 18l-6-6 6-6"/>
