@@ -198,6 +198,8 @@ export default function AnnonceEditPage() {
   // Caractéristiques
   const [couloir, setCouloir]           = useState<boolean | null>(null);
   const [standing, setStanding]         = useState('');
+  const [etatMeubleMaison, setEtatMeubleMaison] = useState<'non_meuble'|'semi_meuble'|'meuble'>('non_meuble');
+  const [etatConstructionMaison, setEtatConstructionMaison] = useState<'semi_construite'|'totalement_construite'|null>(null);
   const [typeCuisine, setTypeCuisine]   = useState('');
   const [cour, setCour]                 = useState<boolean | null>(null);
   const [typeCour, setTypeCour]         = useState('');
@@ -258,6 +260,10 @@ export default function AnnonceEditPage() {
         setPieces((b.pieces ?? []).map((p: any) => ({ id:p.id, nom:p.nom??'', surface:'', longueur:'', largeur:'' })));
 
         setCouloir(a.chambre_couloir??null);
+        if (a.etat_meuble === 'semi_meuble' || a.etat_meuble === 'meuble') setEtatMeubleMaison(a.etat_meuble);
+        else setEtatMeubleMaison('non_meuble');
+        if (a.etat_construction === 'semi_construite' || a.etat_construction === 'totalement_construite') setEtatConstructionMaison(a.etat_construction);
+        else setEtatConstructionMaison(null);
         setCour(a.cour??null); setArriereCour(a.arriere_cour??null);
         setBoyerie(a.boyerie??null);
         setParking(a.parking??null); setParkingCap(a.parking_capacite!=null?String(a.parking_capacite):'');
@@ -347,6 +353,10 @@ export default function AnnonceEditPage() {
       const dispoVal = dispo === 'autre' ? (autrePrecision.dispo || 'autre') : dispo;
       sa('disponibilite', dispoVal);
       if (voisinage.length) sa('voisinage', voisinage); if (equips.length) sa('equipements', equips);
+      if (dbType === 'maison') {
+        sa('etat_meuble', etatMeubleMaison);
+        if (etatConstructionMaison) sa('etat_construction', etatConstructionMaison);
+      }
 
       const payload: any = {
         type: dbType, description: description||undefined, prix: prix ? Number(prix) : undefined,
@@ -625,6 +635,23 @@ export default function AnnonceEditPage() {
 
               <div style={CARD}>
                 <SectionTitle>Caractéristiques</SectionTitle>
+                {isMaison && (
+                  <>
+                    <Field label="État du meuble">
+                      <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+                        <Chip label="Non meublée" active={etatMeubleMaison==='non_meuble'} onClick={() => setEtatMeubleMaison('non_meuble')} />
+                        <Chip label="Semi-meublée" active={etatMeubleMaison==='semi_meuble'} onClick={() => setEtatMeubleMaison('semi_meuble')} />
+                        <Chip label="Meublée" active={etatMeubleMaison==='meuble'} onClick={() => setEtatMeubleMaison('meuble')} />
+                      </div>
+                    </Field>
+                    <Field label="État de construction">
+                      <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+                        <Chip label="Semi-construite" active={etatConstructionMaison==='semi_construite'} onClick={() => setEtatConstructionMaison('semi_construite')} />
+                        <Chip label="Totalement construite" active={etatConstructionMaison==='totalement_construite'} onClick={() => setEtatConstructionMaison('totalement_construite')} />
+                      </div>
+                    </Field>
+                  </>
+                )}
                 {isSmall && <Toggle label="Maison à couloir" value={couloir} onChange={setCouloir} />}
                 <Toggle label="Cour" value={cour} onChange={setCour} />
                 {cour && (
