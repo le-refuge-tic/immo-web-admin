@@ -166,6 +166,7 @@ export default function PublierBienPage() {
   const [typeBien, setTypeBien]               = useState('chambre_salon')
   const [typeTransaction, setTypeTransaction] = useState<'location' | 'vente'>('location')
   const [prix, setPrix]                       = useState('')
+  const [prixPromo, setPrixPromo]             = useState('')
   const [estMeuble, setEstMeuble]             = useState(false)
   const [etatMeubleMaison, setEtatMeubleMaison] = useState<'non_meuble' | 'semi_meuble' | 'meuble'>('non_meuble')
   const [etatConstructionMaison, setEtatConstructionMaison] = useState<'semi_construite' | 'totalement_construite' | null>(null)
@@ -233,7 +234,6 @@ export default function PublierBienPage() {
 
   // Terrain
   const [titreTerrain, setTitreTerrain]                     = useState('')
-  const [titreFoncier, setTitreFoncier]                     = useState<boolean | null>(null)
   const [superficieTerrain, setSuperficieTerrain]           = useState('')
   const [superficieUnite, setSuperficieUnite]               = useState<'m2' | 'ha'>('m2')
   const [documentTerrain, setDocumentTerrain]               = useState<string[]>([])
@@ -256,7 +256,7 @@ export default function PublierBienPage() {
 
   // ── Persistance du brouillon ──────────────────────────────────────────────
   const draftState = {
-    step, typeBien, typeTransaction, prix, estMeuble, etatMeubleMaison, etatConstructionMaison, standing, standingAutre,
+    step, typeBien, typeTransaction, prix, prixPromo, estMeuble, etatMeubleMaison, etatConstructionMaison, standing, standingAutre,
     prixLongSejour, prixSejourRestreint, prixHeure, tarifsAutres,
     ville, quartier, arrondissement, indicationAdresse, quartierSearch,
     latitude, longitude, adresseNormalisee, adresseVerifiee,
@@ -266,7 +266,7 @@ export default function PublierBienPage() {
     loyerPrepayeMois, loyerPrepayeAutre, loyerPrepayeAutreText,
     cautionEau, cautionElec, electricite, electriciteAutre, prixKwh, eau, eauAutre, forageGestion, prixM3, prixForage,
     equipementsBonus, equipementsAutre, alentours, alentoursAutre, disponibilite,
-    titreTerrain, titreFoncier, superficieTerrain, superficieUnite, documentTerrain, documentAutreDetail,
+    titreTerrain, superficieTerrain, superficieUnite, documentTerrain, documentAutreDetail,
     positionTerrain, angleRue, permissionConstruire, descriptionConstruction, estLoti, detailsSupplementaires,
     typeVoie, visibiliteBoutique, parkingClients,
     description, autresFrais,
@@ -337,6 +337,7 @@ export default function PublierBienPage() {
       if (d.typeBien)                  setTypeBien(d.typeBien)
       if (d.typeTransaction)           setTypeTransaction(d.typeTransaction)
       if (d.prix !== undefined)        setPrix(d.prix)
+      if (d.prixPromo !== undefined)   setPrixPromo(d.prixPromo)
       if (d.estMeuble !== undefined)   setEstMeuble(d.estMeuble)
       if (d.etatMeubleMaison)          setEtatMeubleMaison(d.etatMeubleMaison)
       if (d.etatConstructionMaison !== undefined) setEtatConstructionMaison(d.etatConstructionMaison)
@@ -391,12 +392,13 @@ export default function PublierBienPage() {
       if (d.alentoursAutre)            setAlentoursAutre(d.alentoursAutre)
       if (d.disponibilite)             setDisponibilite(d.disponibilite)
       if (d.titreTerrain)              setTitreTerrain(d.titreTerrain)
-      if (d.titreFoncier !== undefined) setTitreFoncier(d.titreFoncier)
       if (d.superficieTerrain)         setSuperficieTerrain(d.superficieTerrain)
       if (d.superficieUnite)           setSuperficieUnite(d.superficieUnite)
-      if (d.documentTerrain !== undefined) {
-        setDocumentTerrain(Array.isArray(d.documentTerrain) ? d.documentTerrain : d.documentTerrain ? [d.documentTerrain] : [])
-      }
+      const savedDocuments = d.documentTerrain !== undefined
+        ? Array.isArray(d.documentTerrain) ? [...d.documentTerrain] : d.documentTerrain ? [d.documentTerrain] : []
+        : []
+      if (d.titreFoncier === true && !savedDocuments.includes('titre_foncier')) savedDocuments.push('titre_foncier')
+      setDocumentTerrain(savedDocuments)
       if (d.documentAutreDetail)       setDocumentAutreDetail(d.documentAutreDetail)
       if (d.positionTerrain)           setPositionTerrain(d.positionTerrain)
       if (d.angleRue !== undefined)    setAngleRue(d.angleRue)
@@ -530,7 +532,12 @@ export default function PublierBienPage() {
 
   const goNext = () => {
     if (step === 0) {
-      if (!parsePrix(prix)) { setError('Veuillez entrer le prix'); return }
+      const prixPrincipal = parsePrix(prix)
+      if (!prixPrincipal) { setError('Veuillez entrer le prix'); return }
+      const prixCash = parsePrix(prixPromo)
+      if (isTerrain && typeTransaction === 'vente' && prixCash !== undefined && prixCash >= prixPrincipal) {
+        setError('Le prix promo doit être inférieur au prix de vente'); return
+      }
     }
     if (step === 1 && !quartier.trim()) { setError('Veuillez sélectionner un quartier'); return }
     if (step === 2 && isTerrain && !titreTerrain.trim()) { setError('Veuillez donner un nom à ce bien'); return }
@@ -566,7 +573,7 @@ export default function PublierBienPage() {
       a.position = positionTerrain; a.angle_rue = angleRue; a.permission_construire = permissionConstruire
       if (permissionConstruire && descriptionConstruction.trim()) a.description_construction = descriptionConstruction.trim()
       if (estLoti !== null) a.loti = estLoti
-      if (titreFoncier !== null) a.titre_foncier = titreFoncier
+      a.titre_foncier = documentTerrain.includes('titre_foncier')
       const details = detailsSupplementaires.filter(d => d.label.trim() && d.valeur.trim())
       if (details.length) a.details_supplementaires = details.map(d => ({ label: d.label.trim(), valeur: d.valeur.trim() }))
       return a
@@ -656,6 +663,9 @@ export default function PublierBienPage() {
         type: typeBackend,
         transaction: typeTransaction,
         prix: prixFinal,
+        ...(isTerrain && typeTransaction === 'vente' && parsePrix(prixPromo) !== undefined
+          ? { prix_promo: parsePrix(prixPromo) }
+          : {}),
         frais_visite: 500,
         description: descFull || undefined,
         localisation: {
@@ -904,6 +914,12 @@ export default function PublierBienPage() {
                 <Section title={getPriceFieldLabel(typeTransaction)} />
                 <MoneyInput value={prix} onChange={setPrix} />
               </Card>
+              {isTerrain && typeTransaction === 'vente' && (
+                <Card>
+                  <Section title="Prix promo (prix cash) — optionnel" />
+                  <MoneyInput value={prixPromo} onChange={setPrixPromo} placeholder="Facultatif" />
+                </Card>
+              )}
             </div>
           )}
 
@@ -1111,18 +1127,34 @@ export default function PublierBienPage() {
               </Card>
               <Card>
                 <Section title="Document" />
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
                   {DOCUMENT_TERRAIN_OPTS.map(option => {
                     const active = documentTerrain.includes(option.value)
                     return (
-                      <Chip
+                      <button
                         key={option.value}
-                        label={`${active ? '✓ ' : ''}${option.label}`}
-                        active={active}
+                        type="button"
+                        aria-pressed={active}
                         onClick={() => setDocumentTerrain(current =>
                           active ? current.filter(value => value !== option.value) : [...current, option.value]
                         )}
-                      />
+                        style={{
+                          width: '100%', minWidth: 0, minHeight: 44, display: 'flex', alignItems: 'flex-start', gap: 9,
+                          padding: '10px 12px', borderRadius: 10,
+                          border: `2px solid ${active ? BLUE : 'var(--c-border)'}`,
+                          background: active ? BLUE + '12' : 'transparent', color: active ? BLUE : 'var(--c-muted)',
+                          fontSize: 12, fontWeight: 700, textAlign: 'left', cursor: 'pointer',
+                        }}
+                      >
+                        <span aria-hidden="true" style={{
+                          width: 18, height: 18, flex: '0 0 18px', boxSizing: 'border-box', marginTop: 1,
+                          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                          border: `1.5px solid ${active ? BLUE : 'var(--c-border)'}`,
+                          borderRadius: 4, background: active ? BLUE : 'transparent', color: 'white',
+                          fontSize: 12, lineHeight: 1,
+                        }}>{active ? '✓' : ''}</span>
+                        <span style={{ flex: 1, minWidth: 0, overflowWrap: 'anywhere', lineHeight: '18px' }}>{option.label}</span>
+                      </button>
                     )
                   })}
                 </div>
@@ -1170,13 +1202,6 @@ export default function PublierBienPage() {
                   <Chip label="Lotie"     active={estLoti === 'lotie'}     onClick={() => setEstLoti('lotie')}     />
                   <Chip label="Non lotie" active={estLoti === 'non_lotie'} onClick={() => setEstLoti('non_lotie')} />
                   <Chip label="Autre"     active={estLoti === 'autre'}     onClick={() => setEstLoti('autre')}     />
-                </div>
-              </Card>
-              <Card>
-                <Section title="Titre foncier ?" />
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                  <Chip label="Oui" active={titreFoncier === true}  onClick={() => setTitreFoncier(true)}  />
-                  <Chip label="Non" active={titreFoncier === false} onClick={() => setTitreFoncier(false)} />
                 </div>
               </Card>
               <Card>
@@ -1656,9 +1681,12 @@ export default function PublierBienPage() {
                   ...(ville          ? [`Ville : ${ville}`]                   : []),
                   ...(indicationAdresse.trim() ? [`Adresse : ${indicationAdresse.trim()}`] : []),
                 ]} />
-                {!isTerrain && prixCalcul > 0 && (
+                {prixCalcul > 0 && (
                   <RecapSection title="Prix" items={[
-                    `${isMeuble ? 'Tarif principal' : typeTransaction === 'location' ? 'Loyer mensuel' : 'Prix de vente'} : ${formatFcfa(prixCalcul)}`
+                    `${isMeuble ? 'Tarif principal' : typeTransaction === 'location' ? 'Loyer mensuel' : 'Prix de vente'} : ${formatFcfa(prixCalcul)}`,
+                    ...(isTerrain && typeTransaction === 'vente' && parsePrix(prixPromo) !== undefined
+                      ? [`Prix promo (prix cash) : ${formatFcfa(parsePrix(prixPromo)!)}`]
+                      : []),
                   ]} />
                 )}
                 {isMeuble && (
