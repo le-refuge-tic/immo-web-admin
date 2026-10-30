@@ -2525,7 +2525,6 @@ body.lp-page #root { overflow: auto; }
   .immo-topbar .immo-search-wrap { display: none; }
   .immo-topbar .immo-admin-block { display: none; }
   .immo-topbar .immo-status      { display: none !important; }
-  .immo-topbar .immo-bell-btn    { display: none; }
   .immo-topbar .immo-spacer      { display: none; }
 
   /* Footer compact */

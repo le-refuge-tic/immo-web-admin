@@ -91,15 +91,26 @@ export default function Topbar({
         <button
           className="immo-bell-btn"
           onClick={logout}
-          title="Se déconnecter"
-          aria-label="Se déconnecter"
-          style={{ color: 'var(--c-red)' }}
+          title="Déconnexion"
+          aria-label="Déconnexion"
+          style={{
+            color: 'var(--c-red)',
+            width: 'auto',
+            paddingInline: 10,
+            gap: 7,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 12,
+            fontWeight: 700,
+          }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
             <polyline points="16 17 21 12 16 7"/>
             <line x1="21" y1="12" x2="9" y2="12"/>
           </svg>
+          <span>Déconnexion</span>
         </button>
       </div>
     </div>
