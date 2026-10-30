@@ -133,15 +133,23 @@ export default function PublierBienPage() {
   const navigate = useNavigate()
   const toast = useToast()
 
+  const DRAFTS_KEY = 'publier_bien_drafts'
+  const LEGACY_DRAFT_KEY = 'publier_bien_draft'
+
   const proprietaireInfo = (() => {
     try { return JSON.parse(localStorage.getItem('proprietaire_info') ?? 'null') } catch { return null }
   })()
 
-  const DRAFT_KEY = 'publier_bien_draft'
   const quartierInputRef = useRef<HTMLInputElement>(null)
   const [dropdownRect, setDropdownRect] = useState<{ top: number; left: number; width: number } | null>(null)
 
   const [step, setStep]               = useState(0)
+  const [draftHydrated, setDraftHydrated] = useState(false)
+  const [draftId, setDraftId] = useState(() => {
+    const requested = new URLSearchParams(window.location.search).get('draft')
+    if (requested && requested !== 'new') return requested
+    return crypto.randomUUID()
+  })
   const [submitting, setSubmitting]   = useState(false)
   const [error, setError]             = useState('')
   const [created, setCreated]         = useState(false)
@@ -260,17 +268,56 @@ export default function PublierBienPage() {
   }
 
   const saveDraft = useCallback(() => {
-    try { localStorage.setItem(DRAFT_KEY, JSON.stringify(draftState)) } catch { /* quota */ }
-  }, [JSON.stringify(draftState)]) // eslint-disable-line
+    if (!draftHydrated) return
+    try {
+      const raw = localStorage.getItem(DRAFTS_KEY)
+      const drafts = raw ? JSON.parse(raw) : []
+      const safeDrafts = Array.isArray(drafts) ? drafts : []
+      const label = titreTerrain.trim() || quartier.trim() || TYPES_BIEN.find(t => t.key === typeBien)?.label || 'Brouillon'
+      const record = {
+        id: draftId,
+        label,
+        updatedAt: Date.now(),
+        data: draftState,
+      }
+      const next = [record, ...safeDrafts.filter((item: any) => item?.id !== draftId)]
+      localStorage.setItem(DRAFTS_KEY, JSON.stringify(next.slice(0, 20)))
+    } catch { /* quota ou stockage indisponible */ }
+  }, [draftHydrated, draftId, JSON.stringify(draftState)]) // eslint-disable-line
 
   useEffect(() => { saveDraft() }, [saveDraft])
 
   // Restauration au montage
   useEffect(() => {
-    const raw = localStorage.getItem(DRAFT_KEY)
-    if (!raw) return
     try {
-      const d = JSON.parse(raw)
+      let drafts: any[] = []
+      const draftsRaw = localStorage.getItem(DRAFTS_KEY)
+      if (draftsRaw) {
+        const parsed = JSON.parse(draftsRaw)
+        if (Array.isArray(parsed)) drafts = parsed
+      }
+
+      const legacyRaw = localStorage.getItem(LEGACY_DRAFT_KEY)
+      if (legacyRaw && !drafts.length) {
+        try {
+          const legacy = JSON.parse(legacyRaw)
+          const legacyId = crypto.randomUUID()
+          drafts = [{ id: legacyId, label: legacy?.titreTerrain || legacy?.quartier || 'Brouillon', updatedAt: Date.now(), data: legacy }]
+          localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts))
+          localStorage.removeItem(LEGACY_DRAFT_KEY)
+        } catch { /* brouillon legacy corrompu */ }
+      }
+
+      const requested = new URLSearchParams(window.location.search).get('draft')
+      const isNew = requested === 'new'
+      let selected = !isNew ? drafts.find((item: any) => item?.id === draftId) : null
+      if (!selected && !isNew && drafts.length) selected = drafts[0]
+      if (!isNew && selected?.id && selected.id !== draftId) setDraftId(selected.id)
+      const d = selected?.data
+      if (!d) {
+        setDraftHydrated(true)
+        return
+      }
       if (d.step !== undefined)        setStep(d.step)
       if (d.typeBien)                  setTypeBien(d.typeBien)
       if (d.typeTransaction)           setTypeTransaction(d.typeTransaction)
@@ -346,6 +393,7 @@ export default function PublierBienPage() {
       if (d.description)               setDescription(d.description)
       if (d.autresFrais)               setAutresFrais(d.autresFrais)
     } catch { /* JSON corrompu */ }
+    finally { setDraftHydrated(true) }
   }, []) // eslint-disable-line
 
   // Dérivés
@@ -636,7 +684,15 @@ export default function PublierBienPage() {
       }
 
       localStorage.removeItem('proprietaire_info')
-      localStorage.removeItem(DRAFT_KEY)
+      try {
+        const raw = localStorage.getItem(DRAFTS_KEY)
+        if (raw) {
+          const drafts = JSON.parse(raw)
+          if (Array.isArray(drafts)) {
+            localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts.filter((item: any) => item?.id !== draftId)))
+          }
+        }
+      } catch { /* suppression du brouillon échouée */ }
       setCreated(true)
     } catch (err: any) {
       setError(apiMessage(err) || 'Erreur lors de la création')
