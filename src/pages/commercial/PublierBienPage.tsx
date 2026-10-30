@@ -9,6 +9,7 @@ import { apiMessage } from '../../utils/apiMessage';
 import { useToast } from '../../context/ToastContext'
 import { Card, Section, ChoiceList, Chip, Counter, NumberPicker, MoneyInput, RecapSection } from './formUi'
 import { BLUE, baseInput } from './formStyles'
+import { prixPrincipalDuplex } from './duplexCalculs'
 
 // ─── Quartiers — même structure que immo-web-user ─────────────────────────────
 type Quartier = { nom: string; arrondissement: string; ville: string }
@@ -360,10 +361,19 @@ export default function PublierBienPage() {
     : typeBien
 
   // Commission plateforme : 50% du loyer mensuel, uniquement pour les biens en location.
-  const commissionAgence = (!isTerrain && typeTransaction === 'location') ? (parsePrix(prix) ?? 0) * 0.5 : 0
+  const prixCalcul = isMeuble
+    ? prixPrincipalDuplex({
+        prix_long_sejour: prixLongSejour,
+        prix_sejour_restreint: prixSejourRestreint,
+        prix_heure: prixHeure,
+        autres: tarifsAutres,
+      }, parsePrix)
+    : (parsePrix(prix) ?? 0)
+
+  const commissionAgence = (!isTerrain && typeTransaction === 'location') ? prixCalcul * 0.5 : 0
 
   const montantBrut = (() => {
-    const loyer  = parsePrix(prix) ?? 0
+    const loyer  = prixCalcul
     const cEau   = parsePrix(cautionEau) ?? 0
     const cElec  = parsePrix(cautionElec) ?? 0
     const autres = autresFrais.reduce((a, f) => a + (parsePrix(f.prix) ?? 0), 0)
@@ -523,8 +533,12 @@ export default function PublierBienPage() {
     try {
       let prixFinal: number
       if (isMeuble) {
-        prixFinal = parsePrix(prixLongSejour) ?? parsePrix(prixSejourRestreint) ?? parsePrix(prixHeure)
-          ?? (tarifsAutres.length ? parsePrix(tarifsAutres[0].prix) : undefined) ?? 0
+        prixFinal = prixPrincipalDuplex({
+          prix_long_sejour: prixLongSejour,
+          prix_sejour_restreint: prixSejourRestreint,
+          prix_heure: prixHeure,
+          autres: tarifsAutres,
+        }, parsePrix)
       } else {
         prixFinal = parsePrix(prix) ?? 0
       }
@@ -1481,16 +1495,16 @@ export default function PublierBienPage() {
                   ...(ville          ? [`Ville : ${ville}`]                   : []),
                   ...(indicationAdresse.trim() ? [`Adresse : ${indicationAdresse.trim()}`] : []),
                 ]} />
-                {!isTerrain && (parsePrix(prix) ?? 0) > 0 && (
+                {!isTerrain && prixCalcul > 0 && (
                   <RecapSection title="Prix" items={[
-                    `${typeTransaction === 'location' ? 'Loyer mensuel' : 'Prix de vente'} : ${formatFcfa(parsePrix(prix) ?? 0)}`
+                    `${isMeuble ? 'Tarif principal' : typeTransaction === 'location' ? 'Loyer mensuel' : 'Prix de vente'} : ${formatFcfa(prixCalcul)}`
                   ]} />
                 )}
                 {!isTerrain && !isBoutique && typeTransaction === 'location' && (
                   <>
                     <RecapSection title="Conditions d'entrée" items={[
                       avanceMois > 0
-                        ? `Avance : ${avanceMois} mois × ${formatFcfa(parsePrix(prix) ?? 0)} = ${formatFcfa((parsePrix(prix) ?? 0) * avanceMois)}`
+                        ? `Avance : ${avanceMois} mois × ${formatFcfa(prixCalcul)} = ${formatFcfa(prixCalcul * avanceMois)}`
                         : 'Avance : Aucune',
                       ...(loyerPrepayeMois > 0 ? [`Loyer prépayé : ${loyerPrepayeMois} mois`] : []),
                       ...((parsePrix(cautionEau)  ?? 0) > 0 ? [`Caution eau : ${formatFcfa(parsePrix(cautionEau)  ?? 0)}`] : []),
