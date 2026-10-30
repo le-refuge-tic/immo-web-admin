@@ -113,6 +113,11 @@ export default function EtapeRegles({ form, maj, evenements, erreurEvenements, g
             <Libelle>Alcool</Libelle>
             <OuiNon value={form.alcool} oui="Autorisé" non="Interdit" onChange={v => maj({ alcool: v })} />
           </div>
+          <div>
+            <Libelle>Insonorisation</Libelle>
+            <OuiNon value={form.insonorisee} oui="Insonorisée" non="Non insonorisée"
+              onChange={v => maj({ insonorisee: v })} />
+          </div>
         </div>
       </Card>
     </div>
