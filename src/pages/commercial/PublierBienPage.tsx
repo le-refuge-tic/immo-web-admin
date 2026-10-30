@@ -11,6 +11,7 @@ import { Card, Section, ChoiceList, Chip, Counter, NumberPicker, MoneyInput, Rec
 import { BLUE, baseInput } from './formStyles'
 import { prixPrincipalDuplex } from './duplexCalculs'
 import { primeValidationCommerciale } from './commissionCommerciale'
+import { getPriceFieldLabel, shouldShowLocationSpecificFields } from './bienFormRules'
 
 // ─── Quartiers — même structure que immo-web-user ─────────────────────────────
 type Quartier = { nom: string; arrondissement: string; ville: string }
@@ -213,8 +214,10 @@ export default function PublierBienPage() {
   const [cautionEau, setCautionEau]           = useState('')
   const [cautionElec, setCautionElec]         = useState('')
   const [electricite, setElectricite]         = useState('non')
+  const [electriciteAutre, setElectriciteAutre] = useState('')
   const [prixKwh, setPrixKwh]                 = useState('')
   const [eau, setEau]                         = useState('non')
+  const [eauAutre, setEauAutre]               = useState('')
   const [forageGestion, setForageGestion]     = useState<string | null>(null)
   const [prixM3, setPrixM3]                   = useState('')
   const [prixForage, setPrixForage]           = useState('')
@@ -259,7 +262,7 @@ export default function PublierBienPage() {
     chambreACouloir, typeCour, nbVoisins, accesVehicule, nbVehicules,
     avanceMois, avanceAutre, avanceAutreText, echeanceMois, echeanceAutre, echeanceAutreText,
     loyerPrepayeMois, loyerPrepayeAutre, loyerPrepayeAutreText,
-    cautionEau, cautionElec, electricite, prixKwh, eau, forageGestion, prixM3, prixForage,
+    cautionEau, cautionElec, electricite, electriciteAutre, prixKwh, eau, eauAutre, forageGestion, prixM3, prixForage,
     equipementsBonus, equipementsAutre, alentours, alentoursAutre, disponibilite,
     titreTerrain, titreFoncier, superficieTerrain, superficieUnite, documentTerrain, documentAutreDetail,
     positionTerrain, angleRue, permissionConstruire, descriptionConstruction, estLoti, detailsSupplementaires,
@@ -363,8 +366,10 @@ export default function PublierBienPage() {
       if (d.cautionEau)                setCautionEau(d.cautionEau)
       if (d.cautionElec)               setCautionElec(d.cautionElec)
       if (d.electricite)               setElectricite(d.electricite)
+      if (d.electriciteAutre)          setElectriciteAutre(d.electriciteAutre)
       if (d.prixKwh)                   setPrixKwh(d.prixKwh)
       if (d.eau)                       setEau(d.eau)
+      if (d.eauAutre)                 setEauAutre(d.eauAutre)
       if (d.forageGestion !== undefined) setForageGestion(d.forageGestion)
       if (d.prixM3)                    setPrixM3(d.prixM3)
       if (d.prixForage)                setPrixForage(d.prixForage)
@@ -403,7 +408,6 @@ export default function PublierBienPage() {
   const peutEtreMeuble = typeBien === 'appartement' || typeBien === 'villa' || typeBien === 'duplex' || typeBien === 'maison'
   const isMeuble       = peutEtreMeuble && (typeBien === 'maison' ? etatMeubleMaison !== 'non_meuble' : estMeuble)
   const showPieces     = ['appartement', 'villa', 'duplex', 'maison', 'chambre_salon'].includes(typeBien)
-  const hasAtLeastOneTarif = !!(parsePrix(prixLongSejour) || parsePrix(prixSejourRestreint) || parsePrix(prixHeure) || tarifsAutres.some(t => parsePrix(t.prix)))
 
   const superficieM2 = (() => {
     const n = parseFloat(superficieTerrain.replace(',', '.'))
@@ -495,19 +499,26 @@ export default function PublierBienPage() {
   const labelStanding = (v: string) => v === 'autre' ? (standingAutre.trim() || 'Autre à préciser') : (STANDING_OPTS.find(o => o.value === v)?.label ?? v)
   const labelCuisine   = (v: string) => v === 'separee_douche' ? 'Cuisine séparée de la douche' : v === 'americaine' ? 'Cuisine américaine' : (cuisineAutre.trim() || 'Autres')
   const labelCour      = (v: string) => v === 'entree_personnelle' ? 'Entrée personnelle' : 'Cour commune'
-  const labelElec      = (v: string) => { const p = parsePrix(prixKwh); return v === 'sbee' ? 'SBEE' : v === 'decompteur' ? `Décompteur${p !== undefined ? ` (${Math.round(p)} FCFA/kWh)` : ''}` : 'Non' }
+  const labelElec      = (v: string) => {
+    if (v === 'non') return 'Non'
+    if (v === 'compteur_electrique') return 'Compteur électrique'
+    if (v === 'panneaux_solaires') return 'Panneaux solaires'
+    if (v === 'groupe_electrogene') return 'Groupe électrogène'
+    if (v === 'autre') return electriciteAutre.trim() || 'Autre'
+    return 'Non'
+  }
   const labelEau       = (v: string) => {
-    const p = parsePrix(prixForage); const pm3 = parsePrix(prixM3)
-    if (v === 'soneb')            return 'SONEB'
-    if (v === 'decompteur_soneb') return `Décompteur SONEB${pm3 !== undefined ? ` (${Math.round(pm3)} FCFA/m³)` : ''}`
-    if (v === 'forage') { const suf = forageGestion === 'voisins' ? ' (entre voisins)' : forageGestion === 'mensuel' ? ' (abonnement mensuel)' : ''; return `Forage${suf}${p !== undefined ? ` · ${Math.round(p)} FCFA` : ''}` }
+    if (v === 'non') return 'Non'
+    if (v === 'soneb') return 'SONEB'
+    if (v === 'puits') return 'Puits'
+    if (v === 'forage') return 'Forage'
+    if (v === 'autre') return eauAutre.trim() || 'Autre'
     return 'Non'
   }
 
   const goNext = () => {
     if (step === 0) {
-      if (!isMeuble && !parsePrix(prix)) { setError('Veuillez entrer le prix'); return }
-      if (isMeuble && !hasAtLeastOneTarif) { setError('Renseignez au moins un tarif'); return }
+      if (!parsePrix(prix)) { setError('Veuillez entrer le prix'); return }
     }
     if (step === 1 && !quartier.trim()) { setError('Veuillez sélectionner un quartier'); return }
     if (step === 2 && isTerrain && !titreTerrain.trim()) { setError('Veuillez donner un nom à ce bien'); return }
@@ -563,23 +574,25 @@ export default function PublierBienPage() {
       a.type_voie = typeVoie; a.visibilite = visibiliteBoutique; a.parking_clients = parkingClients
     } else {
       const cEau = parsePrix(cautionEau) ?? 0; const cElec = parsePrix(cautionElec) ?? 0
-      a.type_cuisine = typeCuisine
-      if (typeCuisine === 'autre' && cuisineAutre.trim()) a.cuisine_autre_detail = cuisineAutre.trim()
-      a.type_cour = typeCour
-      if (typeCour === 'commune') a.nb_voisins = nbVoisins
-      if (typeCour === 'commune' && accesVehicule !== null) a.acces_vehicule = accesVehicule
-      if (typeCour === 'commune' && accesVehicule === true) a.nb_vehicules = nbVehicules
-      if (typeBien === 'chambre_salon') a.chambre_couloir = chambreACouloir
-      a.avance_mois = avanceMois
-      if (loyerPrepayeMois > 0) a.loyer_prepaye_mois = loyerPrepayeMois
-      if (typeTransaction === 'location') a.echeance_mois = echeanceMois
-      if (typeTransaction === 'location') a.commission_agence = commissionAgence
+      if (shouldShowLocationSpecificFields(typeTransaction)) {
+        a.type_cuisine = typeCuisine
+        if (typeCuisine === 'autre' && cuisineAutre.trim()) a.cuisine_autre_detail = cuisineAutre.trim()
+        a.type_cour = typeCour
+        if (typeCour === 'commune') a.nb_voisins = nbVoisins
+        if (typeCour === 'commune' && accesVehicule !== null) a.acces_vehicule = accesVehicule
+        if (typeCour === 'commune' && accesVehicule === true) a.nb_vehicules = nbVehicules
+        if (typeBien === 'chambre_salon') a.chambre_couloir = chambreACouloir
+        a.avance_mois = avanceMois
+        if (loyerPrepayeMois > 0) a.loyer_prepaye_mois = loyerPrepayeMois
+        if (typeTransaction === 'location') a.echeance_mois = echeanceMois
+        if (typeTransaction === 'location') a.commission_agence = commissionAgence
+      }
       if (cEau  > 0) a.caution_eau  = cEau
       if (cElec > 0) a.caution_elec = cElec
       a.electricite = electricite
-      if (electricite === 'decompteur' && parsePrix(prixKwh) !== undefined) a.prix_kwh = parsePrix(prixKwh)
+      if (electricite === 'autre' && electriciteAutre.trim()) a.electricite_autre = electriciteAutre.trim()
       a.eau = eau
-      if (eau === 'decompteur_soneb' && parsePrix(prixM3) !== undefined) a.prix_m3 = parsePrix(prixM3)
+      if (eau === 'autre' && eauAutre.trim()) a.eau_autre = eauAutre.trim()
       if (eau === 'forage' && parsePrix(prixForage) !== undefined) a.prix_forage = parsePrix(prixForage)
       if (eau === 'forage' && forageGestion) a.forage_gestion = forageGestion
       if (isMeuble) a.tarifs_meuble = buildTarifsMeuble()
@@ -849,41 +862,10 @@ export default function PublierBienPage() {
                 </div>
               </Card>
 
-              {isMeuble ? (
-                <Card>
-                  <Section title="Tarification (par durée de séjour)" />
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    {[
-                      { label: 'Court séjour (par nuit)', value: prixSejourRestreint, onChange: setPrixSejourRestreint },
-                      { label: 'Long séjour (mensuel)',   value: prixLongSejour,      onChange: setPrixLongSejour      },
-                      { label: "À l'heure",               value: prixHeure,           onChange: setPrixHeure           },
-                    ].map(row => (
-                      <div key={row.label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: 'var(--c-text)' }}>{row.label}</span>
-                        <div style={{ width: 128 }}><MoneyInput value={row.value} onChange={row.onChange} /></div>
-                      </div>
-                    ))}
-                    {tarifsAutres.map((t, i) => (
-                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <input value={t.label}
-                          onChange={e => setTarifsAutres(a => a.map((x, idx) => idx === i ? { ...x, label: e.target.value } : x))}
-                          placeholder="Libellé" style={{ ...baseInput, flex: 1 }} />
-                        <div style={{ width: 112 }}>
-                          <MoneyInput value={t.prix} onChange={v => setTarifsAutres(a => a.map((x, idx) => idx === i ? { ...x, prix: v } : x))} />
-                        </div>
-                        <button type="button" onClick={() => setTarifsAutres(a => a.filter((_, idx) => idx !== i))} style={{ color: 'var(--s-red)' }}>✕</button>
-                      </div>
-                    ))}
-                    <button type="button" onClick={() => setTarifsAutres(a => [...a, { label: '', prix: '' }])}
-                      style={{ fontSize: 12, fontWeight: 700, color: BLUE, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>+ Ajouter un tarif</button>
-                  </div>
-                </Card>
-              ) : (
-                <Card>
-                  <Section title={typeTransaction === 'location' ? 'Loyer mensuel (FCFA)' : 'Prix de vente (FCFA)'} />
-                  <MoneyInput value={prix} onChange={setPrix} />
-                </Card>
-              )}
+              <Card>
+                <Section title={getPriceFieldLabel(typeTransaction)} />
+                <MoneyInput value={prix} onChange={setPrix} />
+              </Card>
             </div>
           )}
 
@@ -1299,17 +1281,19 @@ export default function PublierBienPage() {
                   )}
                 </Card>
               )}
-              <Card>
-                <Section title="Type de cuisine" />
-                <ChoiceList options={CUISINE_OPTS} value={typeCuisine} onChange={setTypeCuisine} />
-                {typeCuisine === 'autre' && (
-                  <input value={cuisineAutre} onChange={e => setCuisineAutre(e.target.value)}
-                    placeholder="Précisez le type de cuisine"
-                    style={{ ...baseInput, marginTop: 8 }}
-                    onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
-                    onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
-                )}
-              </Card>
+              {shouldShowLocationSpecificFields(typeTransaction) && (
+                <Card>
+                  <Section title="Type de cuisine" />
+                  <ChoiceList options={CUISINE_OPTS} value={typeCuisine} onChange={setTypeCuisine} />
+                  {typeCuisine === 'autre' && (
+                    <input value={cuisineAutre} onChange={e => setCuisineAutre(e.target.value)}
+                      placeholder="Précisez le type de cuisine"
+                      style={{ ...baseInput, marginTop: 8 }}
+                      onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
+                      onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
+                  )}
+                </Card>
+              )}
               {typeBien === 'chambre_salon' && (
                 <Card>
                   <Section title="Chambre à couloir ?" />
@@ -1319,49 +1303,53 @@ export default function PublierBienPage() {
                   </div>
                 </Card>
               )}
-              <Card>
-                <Section title="Type de cour / Accès" />
-                <ChoiceList options={COUR_OPTS} value={typeCour} onChange={setTypeCour} />
-                {COUR_DESC[typeCour] && <p style={{ fontSize: 12, fontStyle: 'italic', marginTop: 8, color: BLUE }}>{COUR_DESC[typeCour]}</p>}
-                {typeCour === 'commune' && (
-                  <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
-                    <div>
-                      <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: 'var(--c-muted)' }}>Nombre de voisins dans la cour</p>
-                      <Counter label="Voisins" value={nbVoisins} onChange={setNbVoisins} />
-                    </div>
-                    <div>
-                      <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: 'var(--c-muted)' }}>Accès véhicule</p>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                        <Chip label="Oui" active={accesVehicule === true}  onClick={() => setAccesVehicule(true)}  />
-                        <Chip label="Non" active={accesVehicule === false} onClick={() => setAccesVehicule(false)} />
-                      </div>
-                    </div>
-                    {accesVehicule === true && (
+              {shouldShowLocationSpecificFields(typeTransaction) && (
+                <Card>
+                  <Section title="Type de cour / Accès" />
+                  <ChoiceList options={COUR_OPTS} value={typeCour} onChange={setTypeCour} />
+                  {COUR_DESC[typeCour] && <p style={{ fontSize: 12, fontStyle: 'italic', marginTop: 8, color: BLUE }}>{COUR_DESC[typeCour]}</p>}
+                  {typeCour === 'commune' && (
+                    <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
                       <div>
-                        <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: 'var(--c-muted)' }}>Nombre de véhicules</p>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                          {[1, 2, 3, 4, 5].map(n => (
-                            <Chip key={n} label={`${n}`} active={nbVehicules === n} onClick={() => setNbVehicules(n)} />
-                          ))}
+                        <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: 'var(--c-muted)' }}>Nombre de voisins dans la cour</p>
+                        <Counter label="Voisins" value={nbVoisins} onChange={setNbVoisins} />
+                      </div>
+                      <div>
+                        <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: 'var(--c-muted)' }}>Accès véhicule</p>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                          <Chip label="Oui" active={accesVehicule === true}  onClick={() => setAccesVehicule(true)}  />
+                          <Chip label="Non" active={accesVehicule === false} onClick={() => setAccesVehicule(false)} />
                         </div>
                       </div>
-                    )}
-                  </div>
-                )}
-              </Card>
-              <Card>
-                <Section title="Avance (mois de loyer)" />
-                <NumberPicker presets={[0, 1, 2, 3, 4, 5]} unit={n => n === 0 ? 'Aucun' : `${n} mois`}
-                  value={avanceMois} isCustom={avanceAutre}
-                  onPick={n => { setAvanceMois(n); setAvanceAutre(false) }}
-                  onCustomStart={() => setAvanceAutre(true)}
-                  customText={avanceAutreText}
-                  onCustomText={t => { setAvanceAutreText(t); setAvanceMois(Number(t) || 0) }}
-                />
-                {(parsePrix(prix) ?? 0) > 0 && avanceMois > 0 && (
-                  <p style={{ fontSize: 14, fontWeight: 700, marginTop: 8, color: BLUE }}>= {formatFcfa((parsePrix(prix) ?? 0) * avanceMois)}</p>
-                )}
-              </Card>
+                      {accesVehicule === true && (
+                        <div>
+                          <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: 'var(--c-muted)' }}>Nombre de véhicules</p>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                            {[1, 2, 3, 4, 5].map(n => (
+                              <Chip key={n} label={`${n}`} active={nbVehicules === n} onClick={() => setNbVehicules(n)} />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </Card>
+              )}
+              {shouldShowLocationSpecificFields(typeTransaction) && (
+                <Card>
+                  <Section title="Avance (mois de loyer)" />
+                  <NumberPicker presets={[0, 1, 2, 3, 4, 5]} unit={n => n === 0 ? 'Aucun' : `${n} mois`}
+                    value={avanceMois} isCustom={avanceAutre}
+                    onPick={n => { setAvanceMois(n); setAvanceAutre(false) }}
+                    onCustomStart={() => setAvanceAutre(true)}
+                    customText={avanceAutreText}
+                    onCustomText={t => { setAvanceAutreText(t); setAvanceMois(Number(t) || 0) }}
+                  />
+                  {(parsePrix(prix) ?? 0) > 0 && avanceMois > 0 && (
+                    <p style={{ fontSize: 14, fontWeight: 700, marginTop: 8, color: BLUE }}>= {formatFcfa((parsePrix(prix) ?? 0) * avanceMois)}</p>
+                  )}
+                </Card>
+              )}
               {typeTransaction === 'location' && (
                 <Card>
                   <Section title="Échéance du mois" />
@@ -1374,32 +1362,34 @@ export default function PublierBienPage() {
                   />
                 </Card>
               )}
-              <Card>
-                <Section title="Loyer prépayé (optionnel)" />
-                <NumberPicker presets={[0, 1, 2, 3]} unit={n => n === 0 ? 'Aucun' : `${n} mois`}
-                  value={loyerPrepayeMois} isCustom={loyerPrepayeAutre}
-                  onPick={n => { setLoyerPrepayeMois(n); setLoyerPrepayeAutre(false) }}
-                  onCustomStart={() => setLoyerPrepayeAutre(true)}
-                  customText={loyerPrepayeAutreText}
-                  onCustomText={t => { setLoyerPrepayeAutreText(t); setLoyerPrepayeMois(Number(t) || 0) }}
-                />
-                {loyerPrepayeMois > 0 && (
-                  <p style={{ fontSize: 12, fontStyle: 'italic', marginTop: 8, color: BLUE }}>
-                    {loyerPrepayeMois === 1
-                      ? 'Le locataire ne paiera pas de loyer pour le 1er mois après intégration.'
-                      : `Le locataire ne paiera pas de loyer pour les ${loyerPrepayeMois} premiers mois après intégration.`}
-                  </p>
-                )}
-              </Card>
+              {shouldShowLocationSpecificFields(typeTransaction) && (
+                <Card>
+                  <Section title="Loyer prépayé (optionnel)" />
+                  <NumberPicker presets={[0, 1, 2, 3]} unit={n => n === 0 ? 'Aucun' : `${n} mois`}
+                    value={loyerPrepayeMois} isCustom={loyerPrepayeAutre}
+                    onPick={n => { setLoyerPrepayeMois(n); setLoyerPrepayeAutre(false) }}
+                    onCustomStart={() => setLoyerPrepayeAutre(true)}
+                    customText={loyerPrepayeAutreText}
+                    onCustomText={t => { setLoyerPrepayeAutreText(t); setLoyerPrepayeMois(Number(t) || 0) }}
+                  />
+                  {loyerPrepayeMois > 0 && (
+                    <p style={{ fontSize: 12, fontStyle: 'italic', marginTop: 8, color: BLUE }}>
+                      {loyerPrepayeMois === 1
+                        ? 'Le locataire ne paiera pas de loyer pour le 1er mois après intégration.'
+                        : `Le locataire ne paiera pas de loyer pour les ${loyerPrepayeMois} premiers mois après intégration.`}
+                    </p>
+                  )}
+                </Card>
+              )}
               <Card>
                 <Section title="Électricité" />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {([
-                    { value: 'non', label: 'Non', sub: '' },
-                    { value: 'sbee', label: 'SBEE', sub: 'Branchement direct réseau national', logo: (
-                      <img src="/logo-SBEE.png" alt="SBEE" style={{ height: 28, width: 'auto', objectFit: 'contain', borderRadius: 4 }} />
-                    )},
-                    { value: 'decompteur', label: 'Décompteur', sub: 'Compteur individuel dans le logement' },
+                    { value: 'non', label: 'Non', sub: 'Aucune source électrique' },
+                    { value: 'compteur_electrique', label: 'Compteur électrique', sub: 'Compteur individuel sur le logement' },
+                    { value: 'panneaux_solaires', label: 'Panneaux solaires', sub: 'Production solaire locale' },
+                    { value: 'groupe_electrogene', label: 'Groupe électrogène', sub: 'Alimentation de secours' },
+                    { value: 'autre', label: 'Autre', sub: 'Préciser la source ci-dessous' },
                   ] as any[]).map(o => {
                     const isActive = electricite === o.value
                     return (
@@ -1409,18 +1399,19 @@ export default function PublierBienPage() {
                           <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: isActive ? BLUE : 'var(--c-text)' }}>{o.label}</span>
                           {o.sub && <span style={{ display: 'block', fontSize: 12, marginTop: 2, color: 'var(--c-muted)' }}>{o.sub}</span>}
                         </span>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                          {o.logo}
-                          {isActive && <span style={{ fontWeight: 700, color: BLUE }}>✓</span>}
-                        </div>
+                        <span style={{ fontWeight: 700, color: isActive ? BLUE : 'var(--c-muted)' }}>{isActive ? '✓' : ''}</span>
                       </button>
                     )
                   })}
                 </div>
-                {electricite === 'decompteur' && (
+                {electricite === 'autre' && (
                   <div style={{ marginTop: 12 }}>
-                    <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: 'var(--c-muted)' }}>Prix du kWh</p>
-                    <MoneyInput value={prixKwh} onChange={setPrixKwh} placeholder="Ex: 150" />
+                    <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: 'var(--c-muted)' }}>Précisez</p>
+                    <input value={electriciteAutre} onChange={e => setElectriciteAutre(e.target.value)}
+                      placeholder="Ex: panneaux solaires + batterie"
+                      style={{ ...baseInput }}
+                      onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
+                      onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
                   </div>
                 )}
               </Card>
@@ -1428,12 +1419,11 @@ export default function PublierBienPage() {
                 <Section title="Eau" />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {([
-                    { value: 'non', label: 'Non', sub: '' },
-                    { value: 'soneb', label: 'SONEB', sub: 'Branchement direct réseau SONEB', logo: (
-                      <img src="/logo_soneb.png" alt="SONEB" style={{ height: 28, width: 'auto', objectFit: 'contain', borderRadius: 4 }} />
-                    )},
-                    { value: 'decompteur_soneb', label: 'Décompteur SONEB', sub: 'Compteur individuel SONEB' },
+                    { value: 'non', label: 'Non', sub: 'Aucune source d’eau disponible' },
+                    { value: 'soneb', label: 'SONEB', sub: 'Branchement direct réseau SONEB' },
+                    { value: 'puits', label: 'Puits', sub: 'Approvisionnement à partir d’un puits' },
                     { value: 'forage', label: 'Forage', sub: 'Forage dans la cour' },
+                    { value: 'autre', label: 'Autre', sub: 'Préciser la source ci-dessous' },
                   ] as any[]).map(o => {
                     const isActive = eau === o.value
                     return (
@@ -1443,18 +1433,19 @@ export default function PublierBienPage() {
                           <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: isActive ? BLUE : 'var(--c-text)' }}>{o.label}</span>
                           {o.sub && <span style={{ display: 'block', fontSize: 12, marginTop: 2, color: 'var(--c-muted)' }}>{o.sub}</span>}
                         </span>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                          {o.logo}
-                          {isActive && <span style={{ fontWeight: 700, color: BLUE }}>✓</span>}
-                        </div>
+                        <span style={{ fontWeight: 700, color: isActive ? BLUE : 'var(--c-muted)' }}>{isActive ? '✓' : ''}</span>
                       </button>
                     )
                   })}
                 </div>
-                {eau === 'decompteur_soneb' && (
+                {eau === 'autre' && (
                   <div style={{ marginTop: 12 }}>
-                    <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: 'var(--c-muted)' }}>Prix du m³</p>
-                    <MoneyInput value={prixM3} onChange={setPrixM3} placeholder="Ex: 150" />
+                    <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: 'var(--c-muted)' }}>Précisez</p>
+                    <input value={eauAutre} onChange={e => setEauAutre(e.target.value)}
+                      placeholder="Ex: réseau villageois, citerne, source locale"
+                      style={{ ...baseInput }}
+                      onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
+                      onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
                   </div>
                 )}
                 {eau === 'forage' && (
@@ -1475,11 +1466,11 @@ export default function PublierBienPage() {
                   </div>
                 )}
               </Card>
-              {(eau === 'soneb' || eau === 'decompteur_soneb' || electricite !== 'non') && (
+              {(eau === 'soneb' || eau === 'puits' || eau === 'forage' || eau === 'autre' || electricite !== 'non') && (
                 <Card>
                   <Section title="Caution" />
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    {(eau === 'soneb' || eau === 'decompteur_soneb') && (
+                    {(eau === 'soneb' || eau === 'puits' || eau === 'forage' || eau === 'autre') && (
                       <div>
                         <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 6, color: 'var(--c-muted)' }}>Caution eau</p>
                         <MoneyInput value={cautionEau} onChange={setCautionEau} />
@@ -1489,7 +1480,7 @@ export default function PublierBienPage() {
                     {electricite !== 'non' && (
                       <div>
                         <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 6, color: 'var(--c-muted)' }}>
-                          Caution électricité ({electricite === 'sbee' ? 'SBEE' : 'Décompteur'})
+                          Caution électricité ({electricite === 'compteur_electrique' ? 'Compteur électrique' : electricite === 'panneaux_solaires' ? 'Panneaux solaires' : electricite === 'groupe_electrogene' ? 'Groupe électrogène' : 'Autre'})
                         </p>
                         <MoneyInput value={cautionElec} onChange={setCautionElec} />
                         <p style={{ fontSize: 11, marginTop: 4, color: 'var(--c-muted)' }}>Saisir 0 si pas de caution électricité</p>
@@ -1681,10 +1672,10 @@ export default function PublierBienPage() {
                 )}
                 {!isTerrain && !isBoutique && (
                   <RecapSection title="Confort" items={[
-                    `Cuisine : ${labelCuisine(typeCuisine)}`,
-                    `Accès / Cour : ${labelCour(typeCour)}`,
-                    ...(typeCour === 'commune' ? [`Voisins : ${nbVoisins}`] : []),
-                    ...(typeCour === 'commune' && accesVehicule !== null ? [`Accès véhicule : ${accesVehicule ? `Oui (${nbVehicules} véhicule${nbVehicules > 1 ? 's' : ''})` : 'Non'}`] : []),
+                    ...(typeTransaction === 'location' ? [`Cuisine : ${labelCuisine(typeCuisine)}`] : []),
+                    ...(typeTransaction === 'location' ? [`Accès / Cour : ${labelCour(typeCour)}`] : []),
+                    ...(typeTransaction === 'location' && typeCour === 'commune' ? [`Voisins : ${nbVoisins}`] : []),
+                    ...(typeTransaction === 'location' && typeCour === 'commune' && accesVehicule !== null ? [`Accès véhicule : ${accesVehicule ? `Oui (${nbVehicules} véhicule${nbVehicules > 1 ? 's' : ''})` : 'Non'}`] : []),
                     `Électricité : ${labelElec(electricite)}`,
                     `Eau : ${labelEau(eau)}`,
                     ...(typeBien === 'chambre_salon' ? [`Chambre à couloir : ${chambreACouloir ? 'Oui' : 'Non'}`] : []),
