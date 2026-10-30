@@ -254,8 +254,7 @@ export default function MesAnnoncesPage() {
           </p>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          {drafts.length > 0 && (
-            <div style={{ position: 'relative' }}>
+          <div style={{ position: 'relative' }}>
               <button onClick={() => setShowDraftMenu(open => !open)} title="Voir les brouillons"
                 style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 10, fontWeight: 700, fontSize: 12, background: 'rgba(99,102,241,0.10)', color: '#6366F1', border: '1px solid rgba(99,102,241,0.30)', cursor: 'pointer' }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
@@ -265,9 +264,18 @@ export default function MesAnnoncesPage() {
               </button>
               {showDraftMenu && (
                 <div style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, width: 300, zIndex: 30, borderRadius: 12, border: '1px solid var(--c-border)', background: 'var(--c-surface)', boxShadow: '0 12px 32px rgba(0,0,0,0.18)', padding: 8 }}>
+                  <button onClick={() => { setShowDraftMenu(false); window.location.href = '/publier-bien?draft=new' }}
+                    style={{ width: '100%', border: '1px dashed rgba(99,102,241,0.45)', borderRadius: 8, background: 'rgba(99,102,241,0.08)', color: '#6366F1', cursor: 'pointer', padding: '9px 8px', fontSize: 12, fontWeight: 700, marginBottom: 6 }}>
+                    + Nouveau brouillon
+                  </button>
+                  {drafts.length === 0 && (
+                    <div style={{ padding: '12px 8px', textAlign: 'center', fontSize: 12, color: 'var(--c-muted)' }}>
+                      Aucun brouillon enregistré
+                    </div>
+                  )}
                   {drafts.map(draft => (
                     <div key={draft.id} style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 8 }}>
-                      <button onClick={() => { setShowDraftMenu(false); navigate(`/publier-bien?draft=${encodeURIComponent(draft.id)}`) }}
+                      <button onClick={() => { setShowDraftMenu(false); window.location.href = `/publier-bien?draft=${encodeURIComponent(draft.id)}` }}
                         style={{ flex: 1, minWidth: 0, border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', padding: '10px 8px', color: 'var(--c-text)' }}>
                         <div style={{ fontSize: 12, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{draft.label || 'Brouillon sans titre'}</div>
                         <div style={{ fontSize: 10, color: 'var(--c-muted)', marginTop: 2 }}>
@@ -283,7 +291,6 @@ export default function MesAnnoncesPage() {
                 </div>
               )}
             </div>
-          )}
           <button className="btn-submit" onClick={() => setShowProprietaireModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>

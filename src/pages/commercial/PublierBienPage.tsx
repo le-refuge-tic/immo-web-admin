@@ -146,6 +146,8 @@ export default function PublierBienPage() {
 
   const [step, setStep]               = useState(0)
   const [draftHydrated, setDraftHydrated] = useState(false)
+  const [draftList, setDraftList] = useState<Array<{ id: string; label?: string; updatedAt?: number }>>([])
+  const [showDraftList, setShowDraftList] = useState(false)
   const [draftId, setDraftId] = useState(() => {
     const requested = new URLSearchParams(window.location.search).get('draft')
     if (requested && requested !== 'new') return requested
@@ -285,6 +287,11 @@ export default function PublierBienPage() {
       }
       const next = [record, ...safeDrafts.filter((item: any) => item?.id !== draftId)]
       localStorage.setItem(DRAFTS_KEY, JSON.stringify(next.slice(0, 20)))
+      setDraftList(next.slice(0, 20).map((item: any) => ({
+        id: item.id,
+        label: item.label,
+        updatedAt: item.updatedAt,
+      })))
     } catch { /* quota ou stockage indisponible */ }
   }, [draftHydrated, draftId, JSON.stringify(draftState)]) // eslint-disable-line
 
@@ -310,6 +317,11 @@ export default function PublierBienPage() {
           localStorage.removeItem(LEGACY_DRAFT_KEY)
         } catch { /* brouillon legacy corrompu */ }
       }
+      setDraftList(drafts.map((item: any) => ({
+        id: item.id,
+        label: item.label,
+        updatedAt: item.updatedAt,
+      })))
 
       const requested = new URLSearchParams(window.location.search).get('draft')
       const isNew = requested === 'new'
@@ -752,6 +764,40 @@ export default function PublierBienPage() {
           <div style={{ flex: 1, minWidth: 0 }}>
             <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-text)' }}>Nouveau bien</span>
             <span style={{ fontSize: 11, color: 'var(--c-muted)', marginLeft: 8 }}>{STEP_LABELS[step]}</span>
+          </div>
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            <button onClick={() => setShowDraftList(open => !open)}
+              style={{ display: 'flex', alignItems: 'center', gap: 5, height: 30, padding: '0 10px', borderRadius: 999, border: '1px solid rgba(99,102,241,0.30)', background: 'rgba(99,102,241,0.10)', color: '#6366F1', cursor: 'pointer', fontSize: 11, fontWeight: 700 }}>
+              Brouillons ({draftList.length})
+            </button>
+            {showDraftList && (
+              <div style={{ position: 'absolute', top: 38, right: 0, width: 300, maxHeight: 360, overflowY: 'auto', zIndex: 50, borderRadius: 12, border: '1px solid var(--c-border)', background: 'var(--c-surface)', boxShadow: '0 12px 32px rgba(0,0,0,0.18)', padding: 8 }}>
+                <button onClick={() => { setShowDraftList(false); window.location.href = '/publier-bien?draft=new' }}
+                  style={{ width: '100%', border: `1px dashed ${BLUE}55`, borderRadius: 8, background: BLUE + '08', color: BLUE, cursor: 'pointer', padding: '9px 8px', fontSize: 12, fontWeight: 700, marginBottom: 6 }}>
+                  + Nouveau brouillon
+                </button>
+                {draftList.length === 0 ? (
+                  <div style={{ padding: '12px 8px', textAlign: 'center', fontSize: 12, color: 'var(--c-muted)' }}>Aucun brouillon enregistré</div>
+                ) : draftList.map(draft => (
+                  <div key={draft.id} style={{ display: 'flex', alignItems: 'center', gap: 4, borderRadius: 8 }}>
+                    <button onClick={() => { setShowDraftList(false); window.location.href = `/publier-bien?draft=${encodeURIComponent(draft.id)}` }}
+                      style={{ flex: 1, minWidth: 0, border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', padding: '10px 8px', color: 'var(--c-text)' }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{draft.label || 'Brouillon sans titre'}</div>
+                      <div style={{ fontSize: 10, color: 'var(--c-muted)', marginTop: 2 }}>{draft.updatedAt ? new Date(draft.updatedAt).toLocaleString() : 'Date inconnue'}</div>
+                    </button>
+                    <button title="Supprimer ce brouillon" onClick={() => {
+                      const next = draftList.filter(item => item.id !== draft.id)
+                      setDraftList(next)
+                      try {
+                        const raw = localStorage.getItem(DRAFTS_KEY)
+                        const parsed = raw ? JSON.parse(raw) : []
+                        if (Array.isArray(parsed)) localStorage.setItem(DRAFTS_KEY, JSON.stringify(parsed.filter((item: any) => item?.id !== draft.id)))
+                      } catch { /* ignore */ }
+                    }} style={{ width: 32, height: 32, border: 'none', background: 'transparent', color: '#EF4444', cursor: 'pointer' }}>✕</button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           {proprietaireInfo && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 999, background: BLUE + '10', border: `1px solid ${BLUE}25`, flexShrink: 0 }}>
