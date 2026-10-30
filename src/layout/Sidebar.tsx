@@ -45,6 +45,9 @@ export default function Sidebar({
     ] },
     { id: 'annonces', label: 'Annonces', Icon: HomeIcon, items: [
       { to: '/annonces',   label: 'Toutes les annonces', Icon: HomeIcon },
+      { to: '/publier-bien', label: 'Créer un bien', Icon: BuildingIcon },
+      { to: '/publier-guesthouse', label: 'Créer une guesthouse', Icon: BuildingIcon },
+      { to: '/publier-salle-fete', label: 'Créer une salle de fêtes', Icon: BuildingIcon },
       { to: '/moderation', label: 'Modération',          Icon: AlertIcon },
       { to: '/quartiers',  label: 'Quartiers',           Icon: BuildingIcon },
     ] },
