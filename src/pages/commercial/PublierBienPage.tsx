@@ -89,11 +89,13 @@ const EQUIPEMENTS_RESIDENTIEL = [
 ]
 
 const EQUIPEMENTS_BOUTIQUE = [
-  { value: 'toilette_interne',  label: 'Toilette interne'        },
+  { value: 'sanitaire',         label: 'Sanitaire'               },
   { value: 'arriere_boutique',  label: 'Arrière-boutique / Stock' },
-  { value: 'sol_carele',        label: 'Sol carrelé'              },
-  { value: 'plafond_staffe',    label: 'Plafond staffé'           },
   { value: 'climatisation',     label: 'Climatisation'            },
+  { value: 'brasseur',          label: 'Brasseur / Ventilateur'   },
+  { value: 'eau_courante',      label: 'Eau courante'             },
+  { value: 'compteur_electrique', label: 'Compteur électrique'   },
+  { value: 'rideau_metallique', label: 'Rideau métallique'        },
 ]
 
 const ALENTOURS_OPTS = [
@@ -154,6 +156,8 @@ export default function PublierBienPage() {
   const [typeTransaction, setTypeTransaction] = useState<'location' | 'vente'>('location')
   const [prix, setPrix]                       = useState('')
   const [estMeuble, setEstMeuble]             = useState(false)
+  const [etatMeubleMaison, setEtatMeubleMaison] = useState<'non_meuble' | 'semi_meuble' | 'meuble'>('non_meuble')
+  const [etatConstructionMaison, setEtatConstructionMaison] = useState<'semi_construite' | 'totalement_construite' | null>(null)
   const [standing, setStanding]               = useState<string | null>(null)
   const [standingAutre, setStandingAutre]     = useState('')
 
@@ -219,7 +223,8 @@ export default function PublierBienPage() {
   const [titreFoncier, setTitreFoncier]                     = useState<boolean | null>(null)
   const [superficieTerrain, setSuperficieTerrain]           = useState('')
   const [superficieUnite, setSuperficieUnite]               = useState<'m2' | 'ha'>('m2')
-  const [documentTerrain, setDocumentTerrain]               = useState<string | null>(null)
+  const [documentTerrain, setDocumentTerrain]               = useState<string[]>([])
+  const [documentAutreDetail, setDocumentAutreDetail]       = useState('')
   const [positionTerrain, setPositionTerrain]               = useState('bord_goudron')
   const [angleRue, setAngleRue]                             = useState(false)
   const [permissionConstruire, setPermissionConstruire]     = useState(false)
@@ -238,7 +243,7 @@ export default function PublierBienPage() {
 
   // ── Persistance du brouillon ──────────────────────────────────────────────
   const draftState = {
-    step, typeBien, typeTransaction, prix, estMeuble, standing, standingAutre,
+    step, typeBien, typeTransaction, prix, estMeuble, etatMeubleMaison, etatConstructionMaison, standing, standingAutre,
     prixLongSejour, prixSejourRestreint, prixHeure, tarifsAutres,
     ville, quartier, arrondissement, indicationAdresse, quartierSearch,
     latitude, longitude, adresseNormalisee, adresseVerifiee,
@@ -248,7 +253,7 @@ export default function PublierBienPage() {
     loyerPrepayeMois, loyerPrepayeAutre, loyerPrepayeAutreText,
     cautionEau, cautionElec, electricite, prixKwh, eau, forageGestion, prixM3, prixForage,
     equipementsBonus, equipementsAutre, alentours, alentoursAutre, disponibilite,
-    titreTerrain, titreFoncier, superficieTerrain, superficieUnite, documentTerrain,
+    titreTerrain, titreFoncier, superficieTerrain, superficieUnite, documentTerrain, documentAutreDetail,
     positionTerrain, angleRue, permissionConstruire, descriptionConstruction, estLoti, detailsSupplementaires,
     typeVoie, visibiliteBoutique, parkingClients,
     description, autresFrais,
@@ -271,6 +276,8 @@ export default function PublierBienPage() {
       if (d.typeTransaction)           setTypeTransaction(d.typeTransaction)
       if (d.prix !== undefined)        setPrix(d.prix)
       if (d.estMeuble !== undefined)   setEstMeuble(d.estMeuble)
+      if (d.etatMeubleMaison)          setEtatMeubleMaison(d.etatMeubleMaison)
+      if (d.etatConstructionMaison !== undefined) setEtatConstructionMaison(d.etatConstructionMaison)
       if (d.standing !== undefined)    setStanding(d.standing)
       if (d.standingAutre)             setStandingAutre(d.standingAutre)
       if (d.prixLongSejour)            setPrixLongSejour(d.prixLongSejour)
@@ -323,7 +330,10 @@ export default function PublierBienPage() {
       if (d.titreFoncier !== undefined) setTitreFoncier(d.titreFoncier)
       if (d.superficieTerrain)         setSuperficieTerrain(d.superficieTerrain)
       if (d.superficieUnite)           setSuperficieUnite(d.superficieUnite)
-      if (d.documentTerrain !== undefined) setDocumentTerrain(d.documentTerrain)
+      if (d.documentTerrain !== undefined) {
+        setDocumentTerrain(Array.isArray(d.documentTerrain) ? d.documentTerrain : d.documentTerrain ? [d.documentTerrain] : [])
+      }
+      if (d.documentAutreDetail)       setDocumentAutreDetail(d.documentAutreDetail)
       if (d.positionTerrain)           setPositionTerrain(d.positionTerrain)
       if (d.angleRue !== undefined)    setAngleRue(d.angleRue)
       if (d.permissionConstruire !== undefined) setPermissionConstruire(d.permissionConstruire)
@@ -343,7 +353,7 @@ export default function PublierBienPage() {
   const isBoutique     = typeBien === 'boutique'
   const isSmallUnit    = typeBien === 'entree_coucher' || typeBien === 'chambre_salon'
   const peutEtreMeuble = typeBien === 'appartement' || typeBien === 'villa' || typeBien === 'duplex' || typeBien === 'maison'
-  const isMeuble       = peutEtreMeuble && estMeuble
+  const isMeuble       = peutEtreMeuble && (typeBien === 'maison' ? etatMeubleMaison !== 'non_meuble' : estMeuble)
   const showPieces     = ['appartement', 'villa', 'duplex', 'maison', 'chambre_salon'].includes(typeBien)
   const hasAtLeastOneTarif = !!(parsePrix(prixLongSejour) || parsePrix(prixSejourRestreint) || parsePrix(prixHeure) || tarifsAutres.some(t => parsePrix(t.prix)))
 
@@ -475,7 +485,13 @@ export default function PublierBienPage() {
     if (proprietaireInfo) a.proprietaire_info = proprietaireInfo
 
     if (isTerrain) {
-      if (documentTerrain) a.document = documentTerrain
+      if (documentTerrain.length) {
+        a.document = documentTerrain[0]
+        a.documents = documentTerrain
+      }
+      if (documentTerrain.includes('autre') && documentAutreDetail.trim()) {
+        a.document_autre_detail = documentAutreDetail.trim()
+      }
       a.position = positionTerrain; a.angle_rue = angleRue; a.permission_construire = permissionConstruire
       if (permissionConstruire && descriptionConstruction.trim()) a.description_construction = descriptionConstruction.trim()
       if (estLoti !== null) a.loti = estLoti
@@ -487,6 +503,10 @@ export default function PublierBienPage() {
 
     if (standing) a.standing = standing
     if (standing === 'autre' && standingAutre.trim()) a.standing_autre = standingAutre.trim()
+    if (typeBien === 'maison') {
+      a.etat_meuble = etatMeubleMaison
+      if (etatConstructionMaison) a.etat_construction = etatConstructionMaison
+    }
     a.disponibilite = disponibilite
     if (equipementsBonus.length || equipementsAutre.trim()) a.equipements = [...equipementsBonus, ...(equipementsAutre.trim() ? [equipementsAutre.trim()] : [])]
     if (alentours.length || alentoursAutre.trim()) a.voisinage = [...alentours, ...(alentoursAutre.trim() ? [alentoursAutre.trim()] : [])]
@@ -569,6 +589,7 @@ export default function PublierBienPage() {
           adresse: indicationAdresse.trim() || [quartier, arrondissement].filter(Boolean).join(', ') || quartier,
           ville: ville || quartier || undefined,
           quartier: quartier || undefined,
+          arrondissement: arrondissement || undefined,
           latitude: latitude ?? 6.3654,
           longitude: longitude ?? 2.4183,
         },
@@ -738,10 +759,28 @@ export default function PublierBienPage() {
 
               {peutEtreMeuble && (
                 <Card>
-                  <Section title="État du bien" />
+                  <Section title={typeBien === 'maison' ? 'État du meuble' : 'État du bien'} />
+                  {typeBien === 'maison' ? (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+                      <Chip label="Non meublée" active={etatMeubleMaison === 'non_meuble'} onClick={() => setEtatMeubleMaison('non_meuble')} />
+                      <Chip label="Semi-meublée" active={etatMeubleMaison === 'semi_meuble'} onClick={() => setEtatMeubleMaison('semi_meuble')} />
+                      <Chip label="Meublée" active={etatMeubleMaison === 'meuble'} onClick={() => setEtatMeubleMaison('meuble')} />
+                    </div>
+                  ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                      <Chip label="Vide" active={!estMeuble} onClick={() => setEstMeuble(false)} />
+                      <Chip label="Meublé" active={estMeuble} onClick={() => setEstMeuble(true)} />
+                    </div>
+                  )}
+                </Card>
+              )}
+
+              {typeBien === 'maison' && (
+                <Card>
+                  <Section title="État de construction" />
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                    <Chip label="Vide" active={!estMeuble} onClick={() => setEstMeuble(false)} />
-                    <Chip label="Meublé" active={estMeuble} onClick={() => setEstMeuble(true)} />
+                    <Chip label="Semi-construite" active={etatConstructionMaison === 'semi_construite'} onClick={() => setEtatConstructionMaison('semi_construite')} />
+                    <Chip label="Totalement construite" active={etatConstructionMaison === 'totalement_construite'} onClick={() => setEtatConstructionMaison('totalement_construite')} />
                   </div>
                 </Card>
               )}
@@ -996,7 +1035,32 @@ export default function PublierBienPage() {
               </Card>
               <Card>
                 <Section title="Document" />
-                <ChoiceList options={DOCUMENT_TERRAIN_OPTS} value={documentTerrain} onChange={setDocumentTerrain} onDeselect={() => setDocumentTerrain(null)} />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  {DOCUMENT_TERRAIN_OPTS.map(option => {
+                    const active = documentTerrain.includes(option.value)
+                    return (
+                      <Chip
+                        key={option.value}
+                        label={`${active ? '✓ ' : ''}${option.label}`}
+                        active={active}
+                        onClick={() => setDocumentTerrain(current =>
+                          active ? current.filter(value => value !== option.value) : [...current, option.value]
+                        )}
+                      />
+                    )
+                  })}
+                </div>
+                {documentTerrain.includes('autre') && (
+                  <input
+                    value={documentAutreDetail}
+                    onChange={e => setDocumentAutreDetail(e.target.value.slice(0, 100))}
+                    maxLength={100}
+                    placeholder="Précisez le type de document (100 caractères max)"
+                    style={{ ...baseInput, marginTop: 12 }}
+                    onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
+                    onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')}
+                  />
+                )}
               </Card>
               <Card>
                 <Section title="Position" />
