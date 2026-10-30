@@ -10,6 +10,7 @@ import { useToast } from '../../context/ToastContext'
 import { Card, Section, ChoiceList, Chip, Counter, NumberPicker, MoneyInput, RecapSection } from './formUi'
 import { BLUE, baseInput } from './formStyles'
 import { prixPrincipalDuplex } from './duplexCalculs'
+import { primeValidationCommerciale } from './commissionCommerciale'
 
 // ─── Quartiers — même structure que immo-web-user ─────────────────────────────
 type Quartier = { nom: string; arrondissement: string; ville: string }
@@ -371,6 +372,17 @@ export default function PublierBienPage() {
     : (parsePrix(prix) ?? 0)
 
   const commissionAgence = (!isTerrain && typeTransaction === 'location') ? prixCalcul * 0.5 : 0
+  const primeValidationCommercialeEstimee = primeValidationCommerciale(
+    typeBackend,
+    sousType,
+    typeTransaction,
+    prixCalcul,
+    {
+      chambres,
+      meuble: isMeuble,
+      standing,
+    },
+  )
 
   const montantBrut = (() => {
     const loyer  = prixCalcul
@@ -1500,6 +1512,9 @@ export default function PublierBienPage() {
                     `${isMeuble ? 'Tarif principal' : typeTransaction === 'location' ? 'Loyer mensuel' : 'Prix de vente'} : ${formatFcfa(prixCalcul)}`
                   ]} />
                 )}
+                <RecapSection title="Prime de validation estimée" items={[
+                  `${formatFcfa(primeValidationCommercialeEstimee)} après validation de cette annonce`
+                ]} />
                 {!isTerrain && !isBoutique && typeTransaction === 'location' && (
                   <>
                     <RecapSection title="Conditions d'entrée" items={[
