@@ -872,21 +872,13 @@ export default function PublierBienPage() {
                 </Card>
               )}
 
-              {peutEtreMeuble && (
+              {peutEtreMeuble && typeBien !== 'maison' && (
                 <Card>
-                  <Section title={typeBien === 'maison' ? 'État du meuble' : 'État du bien'} />
-                  {typeBien === 'maison' ? (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
-                      <Chip label="Non meublée" active={etatMeubleMaison === 'non_meuble'} onClick={() => setEtatMeubleMaison('non_meuble')} />
-                      <Chip label="Semi-meublée" active={etatMeubleMaison === 'semi_meuble'} onClick={() => setEtatMeubleMaison('semi_meuble')} />
-                      <Chip label="Meublée" active={etatMeubleMaison === 'meuble'} onClick={() => setEtatMeubleMaison('meuble')} />
-                    </div>
-                  ) : (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                      <Chip label="Vide" active={!estMeuble} onClick={() => setEstMeuble(false)} />
-                      <Chip label="Meublé" active={estMeuble} onClick={() => setEstMeuble(true)} />
-                    </div>
-                  )}
+                  <Section title="État du bien" />
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    <Chip label="Vide" active={!estMeuble} onClick={() => setEstMeuble(false)} />
+                    <Chip label="Meublé" active={estMeuble} onClick={() => setEstMeuble(true)} />
+                  </div>
                 </Card>
               )}
 
