@@ -252,7 +252,7 @@ export function construirePayload(f: SalleFeteForm) {
 type BienLu = {
   prix?: number | string | null
   description?: string | null
-  localisation?: { ville?: string | null; quartier?: string | null; adresse?: string | null } | null
+  localisation?: { ville?: string | null; quartier?: string | null; arrondissement?: string | null; adresse?: string | null } | null
   amenites?: { proprietaire_info?: { prenom?: string; nom?: string; telephone?: string; email?: string } } | null
   details_salle_fete?: {
     prix: number; duree_heures: number; heures_min: number; caution: number | null; frais_menage: number | null
@@ -281,6 +281,7 @@ export function depuisBien(b: BienLu): SalleFeteForm {
     ...separerNomDescription(b.description),
     ville: b.localisation?.ville ?? '',
     quartier: b.localisation?.quartier ?? '',
+    arrondissement: b.localisation?.arrondissement ?? '',
     repere: b.localisation?.adresse ?? '',
     prix: b.prix != null ? String(Math.round(Number(b.prix))) : '',
     evenements: (b.evenements ?? []).map(e => e.code),
@@ -320,7 +321,7 @@ export function payloadEdition(f: SalleFeteForm) {
   const d = detailsPayload(f)
   return {
     description: descriptionPayload(f),
-    localisation: { ville: f.ville, quartier: f.quartier, adresse: f.repere.trim() || f.quartier },
+    localisation: { ville: f.ville, quartier: f.quartier, arrondissement: f.arrondissement || undefined, adresse: f.repere.trim() || f.quartier },
     amenites: amenitesProprietairePayload(f),
     details_salle_fete: {
       ...d,

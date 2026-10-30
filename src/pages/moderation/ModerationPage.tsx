@@ -95,6 +95,7 @@ function ModerationModal({
               {TYPE_LABELS[bien.type] ?? bien.type} — {Number(bien.prix).toLocaleString('fr-FR')} FCFA
               {suffixeUnite(bien)}
               {bien.localisation?.quartier ? ` · ${bien.localisation.quartier}` : ''}
+              {bien.localisation?.arrondissement ? ` · ${bien.localisation.arrondissement}` : ''}
               {bien.localisation?.ville ? `, ${bien.localisation.ville}` : ''}
             </div>
           </div>

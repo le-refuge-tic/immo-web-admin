@@ -425,6 +425,7 @@ export default function AnnonceDetailPage() {
                 <PinIcon size={13} />
                 {bien.localisation.ville}
                 {bien.localisation.quartier ? `, ${bien.localisation.quartier}` : ''}
+                {bien.localisation.arrondissement ? `, ${bien.localisation.arrondissement}` : ''}
               </div>
             )}
           </div>
@@ -503,6 +504,12 @@ export default function AnnonceDetailPage() {
                   <span>Quartier</span>
                   {bien.localisation.quartier
                     ? <strong>{bien.localisation.quartier}</strong>
+                    : <strong style={{ color: 'var(--c-muted)' }}>—</strong>}
+                </div>
+                <div className="detail-info-row">
+                  <span>Arrondissement</span>
+                  {bien.localisation.arrondissement
+                    ? <strong>{bien.localisation.arrondissement}</strong>
                     : <strong style={{ color: 'var(--c-muted)' }}>—</strong>}
                 </div>
                 <div className="detail-info-row">

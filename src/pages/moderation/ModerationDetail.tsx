@@ -17,7 +17,7 @@ export default function ModerationDetail({ bien: b, onApprove, onReject, onBack 
   const [photoIdx, setPhotoIdx] = useState(0);
   const checks = moderationChecks(b);
   const blocage = blocageApprobation(b);
-  const lieu = [b.localisation?.quartier, b.localisation?.ville].filter(Boolean).join(', ') || 'Localisation non renseignée';
+  const lieu = [b.localisation?.quartier, b.localisation?.arrondissement, b.localisation?.ville].filter(Boolean).join(', ') || 'Localisation non renseignée';
 
   return (
     <section className="immo-card mod-detail" aria-label={`Annonce ${TYPE_LABELS[b.type] ?? b.type}, ${lieu}`}>
