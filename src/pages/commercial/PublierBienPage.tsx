@@ -1512,6 +1512,24 @@ export default function PublierBienPage() {
                     `${isMeuble ? 'Tarif principal' : typeTransaction === 'location' ? 'Loyer mensuel' : 'Prix de vente'} : ${formatFcfa(prixCalcul)}`
                   ]} />
                 )}
+                {isMeuble && (
+                  <RecapSection title="Tous les tarifs meublés" items={[
+                    ...(parsePrix(prixLongSejour) !== undefined
+                      ? [`Long séjour / mois : ${formatFcfa(parsePrix(prixLongSejour)!)} `]
+                      : []),
+                    ...(parsePrix(prixSejourRestreint) !== undefined
+                      ? [`Court séjour / nuit : ${formatFcfa(parsePrix(prixSejourRestreint)!)} `]
+                      : []),
+                    ...(parsePrix(prixHeure) !== undefined
+                      ? [`À l'heure : ${formatFcfa(parsePrix(prixHeure)!)} `]
+                      : []),
+                    ...tarifsAutres
+                      .filter(tarif => parsePrix(tarif.prix) !== undefined)
+                      .map(tarif =>
+                        `${tarif.label.trim() || 'Tarif personnalisé'} : ${formatFcfa(parsePrix(tarif.prix)!)}`
+                      ),
+                  ].map(item => item.trim())} />
+                )}
                 <RecapSection title="Prime de validation estimée" items={[
                   `${formatFcfa(primeValidationCommercialeEstimee)} après validation de cette annonce`
                 ]} />
