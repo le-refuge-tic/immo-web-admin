@@ -56,6 +56,14 @@ export default function HistoriquePortefeuilleCard() {
                   <div style={{ fontSize: 11, color: 'var(--c-muted)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {t.description} · {formatDate(t.created_at)}
                   </div>
+                  {t.metadata?.prime_bien != null && (
+                    <div style={{ fontSize: 11, color: 'var(--c-muted)', marginTop: 4 }}>
+                      Bien {formatFcfa(Number(t.metadata.prime_bien))}
+                      {Number(t.metadata.bonus_meuble) > 0 && ` · Meuble +${formatFcfa(Number(t.metadata.bonus_meuble))}`}
+                      {Number(t.metadata.bonus_11e_bien) > 0 && ` · 11e bien +${formatFcfa(Number(t.metadata.bonus_11e_bien))}`}
+                      {t.metadata.plafond_exceptionnel && ` · Plafond exceptionnel ${formatFcfa(50000)}`}
+                    </div>
+                  )}
                 </div>
                 <span className={`immo-badge ${isBonus ? 'badge-warning' : 'badge-active'}`} style={{ flexShrink: 0 }}>
                   +{formatFcfa(t.amount)}
