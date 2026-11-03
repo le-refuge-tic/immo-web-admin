@@ -6,6 +6,7 @@ import { patchAdminBien } from '../../api/patchAdminBien';
 import GuesthouseEditor from '../commercial/guesthouse/GuesthouseEditor';
 import SalleFeteEditor from '../commercial/salle-fete/SalleFeteEditor';
 import { adminPhotos } from '../../api/adminPhotos';
+import SectionVideo from './SectionVideo';
 import { useAuth } from '../../context/AuthContext';
 import {
   ChevronLeftIcon, CheckIcon, TrashIcon,
@@ -229,6 +230,7 @@ export default function AnnonceEditPage() {
   // Photos
   const [photos, setPhotos] = useState<PhotoState[]>([]);
   const [confirmDeletePhotoId, setConfirmDeletePhotoId] = useState<number | null>(null);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
   // Autres (options personnalisées)
   const [autrePrecision, setAutrePrecision] = useState<Record<string, string>>({});
@@ -295,6 +297,7 @@ export default function AnnonceEditPage() {
         setForageP(a.forage_payant??null); setPrixForage(a.prix_forage!=null?String(a.prix_forage):'');
         setVoisinage(a.voisinage??[]); setEquips(a.equipements??[]);
         setPhotos(b.photos??[]);
+        setVideoUrl(b.video_url ?? null);
       })
       .catch(() => setError('Impossible de charger ce bien.'))
       .finally(() => setLoading(false));
@@ -860,6 +863,7 @@ export default function AnnonceEditPage() {
                   </div>
                 </>
               )}
+              <SectionVideo bienId={numId} videoUrl={videoUrl} onChange={setVideoUrl} style={CARD} />
             </>
           )}
 

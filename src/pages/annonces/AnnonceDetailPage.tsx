@@ -100,7 +100,9 @@ export default function AnnonceDetailPage() {
   const location     = useLocation();
   const { user }     = useAuth();
   const showToast    = useToast();
-  const backTo       = (location.state as any)?.from === 'mes-annonces' ? '/mes-annonces' : '/annonces';
+  const from         = (location.state as any)?.from;
+  const backTo       = from === 'mes-annonces' ? '/mes-annonces' : from === 'moderation' ? '/moderation' : '/annonces';
+  const backLabel    = from === 'moderation' ? 'Retour à la modération' : 'Retour aux annonces';
   const userRole     = user?.role_principal ?? user?.role;
   const isCommercial = userRole === 'commercial';
   const isSuperAdmin = userRole === 'super_admin';
@@ -257,7 +259,7 @@ export default function AnnonceDetailPage() {
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: '1rem' }}>
         <div style={{ color: 'var(--c-red)', fontWeight: 600 }}>{error}</div>
         <button className="detail-back-btn" onClick={() => navigate(backTo)}>
-          <ChevronLeftIcon size={16} /> Retour aux annonces
+          <ChevronLeftIcon size={16} /> {backLabel}
         </button>
       </div>
     );
@@ -274,7 +276,7 @@ export default function AnnonceDetailPage() {
       <div className="immo-topbar">
         <button className="detail-back-btn" onClick={() => navigate(backTo)}>
           <ChevronLeftIcon size={16} />
-          Retour aux annonces
+          {backLabel}
         </button>
         <div className="immo-spacer" />
         <span style={{
@@ -338,6 +340,14 @@ export default function AnnonceDetailPage() {
             </div>
           ) : (
             <div className="detail-no-photo">Aucune photo disponible</div>
+          )}
+
+          {/* Vidéo */}
+          {bien.video_url && (
+            <div className="detail-section">
+              <div className="detail-section-title">Vidéo</div>
+              <video className="detail-video" src={bien.video_url} controls preload="metadata" />
+            </div>
           )}
 
           {/* Description */}

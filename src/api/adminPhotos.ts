@@ -21,3 +21,15 @@ export const adminPhotos = {
   setCover: (bienId: number, photoId: number) =>
     axios.patch(`${BASE}/admin/biens/${bienId}/photos/${photoId}/cover`, {}, auth()).then(r => r.data),
 };
+
+/** Vidéo d'annonce côté staff : MP4, 30 Mo au plus ; remplace la précédente. */
+export const adminVideo = {
+  upload: (bienId: number, file: File) => {
+    const fd = new FormData();
+    fd.append('video', file);
+    return axios.post<{ video_url: string }>(`${BASE}/admin/biens/${bienId}/video`, fd, auth()).then(r => r.data);
+  },
+
+  remove: (bienId: number) =>
+    axios.delete<{ video_url: null }>(`${BASE}/admin/biens/${bienId}/video`, auth()).then(r => r.data),
+};

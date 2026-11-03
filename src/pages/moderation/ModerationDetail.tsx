@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { CheckIcon, XIcon, HomeIcon, ChevronLeftIcon } from '../../components/Icons';
 import ModerationRisqueLabel from './ModerationRisqueLabel';
 import { moderationChecks, TYPE_LABELS, formatPrix, auteurNom, blocageApprobation } from './moderationChecks';
@@ -15,6 +16,7 @@ type Props = {
 export default function ModerationDetail({ bien: b, onApprove, onReject, onBack }: Props) {
   const photos: { url: string }[] = Array.isArray(b.photos) ? b.photos : [];
   const [photoIdx, setPhotoIdx] = useState(0);
+  const navigate = useNavigate();
   const checks = moderationChecks(b);
   const blocage = blocageApprobation(b);
   const lieu = [b.localisation?.quartier, b.localisation?.arrondissement, b.localisation?.ville].filter(Boolean).join(', ') || 'Localisation non renseignée';
@@ -74,6 +76,10 @@ export default function ModerationDetail({ bien: b, onApprove, onReject, onBack 
         <p id={`blocage-${b.id}`} role="note" style={{ fontSize: 12, color: 'var(--s-red)', margin: '0 0 8px' }}>{blocage}</p>
       )}
       <div className="mod-detail-actions">
+        <button type="button" className="btn-cancel mod-btn-voir"
+          onClick={() => navigate(`/annonces/${b.id}`, { state: { from: 'moderation' } })}>
+          Voir le bien
+        </button>
         <button type="button" className="btn-cancel mod-btn-reject" onClick={onReject}>
           Rejeter… <kbd>R</kbd>
         </button>

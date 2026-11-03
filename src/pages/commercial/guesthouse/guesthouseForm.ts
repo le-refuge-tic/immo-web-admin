@@ -1,3 +1,4 @@
+import { VIDEO_MAX_MO } from '../../../utils/videoAnnonce'
 /**
  * Formulaire guesthouse : état, règles de chaque étape et corps de POST /biens.
  * Mêmes règles que le backend (voir API_GUESTHOUSE.md) pour éviter les allers-retours.
@@ -14,7 +15,7 @@ export const ETAPES = [
 
 export const PHOTOS_MIN = 4
 export const PHOTOS_MAX = 8
-export const VIDEO_MAX_OCTETS = 30 * 1024 * 1024
+export const VIDEO_MAX_OCTETS = VIDEO_MAX_MO * 1024 * 1024
 
 /** Position par défaut (Cotonou) quand l'adresse n'a pas été vérifiée — même repli que PublierBienPage. */
 export const POSITION_PAR_DEFAUT = { latitude: 6.3654, longitude: 2.4183 }

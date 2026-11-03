@@ -12,6 +12,7 @@ import { BLUE, baseInput } from './formStyles'
 import { prixPrincipalDuplex } from './duplexCalculs'
 import { primeValidationCommerciale } from './commissionCommerciale'
 import { getPriceFieldLabel, shouldShowLocationSpecificFields } from './bienFormRules'
+import { erreurFichierVideo, raisonEchecVideo } from '../../utils/videoAnnonce'
 
 // ─── Quartiers — même structure que immo-web-user ─────────────────────────────
 type Quartier = { nom: string; arrondissement: string; ville: string }
@@ -695,6 +696,7 @@ export default function PublierBienPage() {
       // Échecs d'envoi des médias : comptés et signalés (le bien, lui, est créé)
       let photosEchouees = 0
       let videoEchouee = false
+      let raisonVideo: string | undefined
       if (photos.length > 0 && bien.id) {
         for (let i = 0; i < photos.length; i++) {
           try {
@@ -706,11 +708,17 @@ export default function PublierBienPage() {
         }
       }
       if (video && bien.id) {
-        try { await postBien.uploadVideo(bien.id, video) } catch { videoEchouee = true }
+        try {
+          await postBien.uploadVideo(bien.id, video)
+        } catch (err) {
+          videoEchouee = true
+          raisonVideo = raisonEchecVideo(err)
+        }
       }
       if (photosEchouees || videoEchouee) {
         const details = [photosEchouees ? `${photosEchouees} photo(s)` : '', videoEchouee ? 'la vidéo' : ''].filter(Boolean).join(' et ')
-        toast(`Bien enregistré, mais ${details} n’ont pas pu être envoyées. Ajoutez-les depuis « Modifier l’annonce ».`, 'error')
+        const raison = raisonVideo ? ` (${raisonVideo})` : ''
+        toast(`Bien enregistré, mais ${details} n’ont pas pu être envoyées${raison}. Ajoutez-les depuis « Modifier l’annonce ».`, 'error')
       }
 
       // Enregistre le quartier ajouté manuellement (avec arrondissement + ville) pour validation admin.
@@ -1867,7 +1875,14 @@ export default function PublierBienPage() {
                     </div>
                     <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--c-text)' }}>Ajouter une vidéo (MP4)</p>
                     <input type="file" accept="video/mp4" style={{ display: 'none' }}
-                      onChange={e => { const f = e.target.files?.[0]; if (f) setVideo(f) }} />
+                      onChange={e => {
+                        const f = e.target.files?.[0]
+                        e.target.value = ''
+                        if (!f) return
+                        const refus = erreurFichierVideo(f)
+                        if (refus) { toast(refus, 'error'); return }
+                        setVideo(f)
+                      }} />
                   </label>
                 )}
               </Card>
