@@ -35,6 +35,8 @@ type DetailCustom = { label: string; valeur: string }
 
 /** Photos par bien : plafond commun à tous les types (décision du 28/10/2026, contrôlé aussi par l'API). */
 const MAX_PHOTOS = 8
+/** Minimum exigé pour publier (l'approbation est refusée en dessous). */
+const MIN_PHOTOS = 2
 
 const TYPES_BIEN = [
   { key: 'entree_coucher', label: 'Entrée-Coucher' },
@@ -543,6 +545,9 @@ export default function PublierBienPage() {
     if (step === 1 && !quartier.trim()) { setError('Veuillez sélectionner un quartier'); return }
     if (step === 2 && isTerrain && !titreTerrain.trim()) { setError('Veuillez donner un nom à ce bien'); return }
     if (step === 2 && isTerrain && !superficieM2) { setError('Veuillez indiquer la superficie du terrain'); return }
+    if (step === 4 && photos.length < MIN_PHOTOS) {
+      setError(`Ajoutez au moins ${MIN_PHOTOS} photos (${photos.length} pour l’instant)`); return
+    }
     setError('')
     if (step === 4) { handleCreate(); return }
     setStep(s => s + 1)
@@ -1792,7 +1797,7 @@ export default function PublierBienPage() {
               {/* Photos */}
               <Card>
                 <p style={{ fontSize: 14, fontWeight: 700, marginBottom: 4, color: 'var(--c-text)' }}>Photos du bien</p>
-                <p style={{ fontSize: 12, marginBottom: 16, color: 'var(--c-muted)' }}>Maximum {MAX_PHOTOS} photos (PNG, JPEG, WEBP) — les photos augmentent les visites de 3×</p>
+                <p style={{ fontSize: 12, marginBottom: 16, color: 'var(--c-muted)' }}>Entre {MIN_PHOTOS} et {MAX_PHOTOS} photos (PNG, JPEG, WEBP) — les photos augmentent les visites de 3×</p>
                 {photos.length < MAX_PHOTOS && (
                   <label style={{ display: 'block', border: `2px dashed ${hoveredDropzone === 'photos' ? BLUE : 'var(--c-border)'}`, borderRadius: 16, padding: 32, textAlign: 'center', cursor: 'pointer', transition: 'border-color 0.15s' }}
                     onMouseEnter={() => setHoveredDropzone('photos')}
@@ -1803,7 +1808,7 @@ export default function PublierBienPage() {
                       </svg>
                     </div>
                     <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--c-text)' }}>Choisir des photos</p>
-                    <p style={{ fontSize: 12, marginTop: 4, color: 'var(--c-muted)' }}>JPG, PNG, WEBP (max {MAX_PHOTOS} photos)</p>
+                    <p style={{ fontSize: 12, marginTop: 4, color: 'var(--c-muted)' }}>JPG, PNG, WEBP ({MIN_PHOTOS} à {MAX_PHOTOS} photos)</p>
                     <input type="file" multiple accept="image/png,image/jpeg,image/webp" style={{ display: 'none' }}
                       onChange={e => {
                         const files = Array.from(e.target.files || []).slice(0, MAX_PHOTOS - photos.length)

@@ -5,6 +5,8 @@ export type ModerationCheck = { label: string; ok: boolean };
 
 /** Photos exigées pour publier une guesthouse ou une salle de fêtes (même règle que l'API). */
 const PHOTOS_MIN_APPROBATION = 4;
+/** Photos exigées pour publier un bien classique (maison, appartement, terrain), comme l'API. */
+export const PHOTOS_MIN_BIEN = 2;
 
 /** Types qui ont leurs propres détails : sans eux, pas d'approbation (l'API refuse). */
 const TYPES_AVEC_DETAILS: Record<string, { cle: string; manque: string; renseignes: string; absents: string }> = {
@@ -26,11 +28,14 @@ const nbPhotosDe = (b: any) => (Array.isArray(b?.photos) ? b.photos.length : 0);
 
 /**
  * Motif pour lequel l'approbation est impossible, ou null.
- * Guesthouse et salle de fêtes : détails complets et 4 photos (l'API refuse sinon).
+ * Guesthouse et salle de fêtes : détails complets et 4 photos ; autres biens : 2 photos (l'API refuse sinon).
  */
 export function blocageApprobation(b: any): string | null {
   const regles = TYPES_AVEC_DETAILS[b?.type];
-  if (!regles) return null;
+  if (!regles) {
+    const n = nbPhotosDe(b);
+    return n < PHOTOS_MIN_BIEN ? `Approbation impossible : il faut au moins ${PHOTOS_MIN_BIEN} photos (${n} actuellement).` : null;
+  }
   const manques: string[] = [];
   if (!b[regles.cle]) manques.push(regles.manque);
   const n = nbPhotosDe(b);
@@ -50,7 +55,9 @@ export function moderationChecks(b: any): ModerationCheck[] {
   ] : [];
   return [
     ...specifiques,
-    { label: nbPhotos > 0 ? `${nbPhotos} photo${nbPhotos > 1 ? 's' : ''}` : 'Aucune photo', ok: nbPhotos > 0 },
+    regles
+      ? { label: nbPhotos > 0 ? `${nbPhotos} photo${nbPhotos > 1 ? 's' : ''}` : 'Aucune photo', ok: nbPhotos > 0 }
+      : { label: nbPhotos >= PHOTOS_MIN_BIEN ? `${nbPhotos} photos (minimum ${PHOTOS_MIN_BIEN}) : OK` : `${PHOTOS_MIN_BIEN} photos minimum requises (${nbPhotos} actuellement)`, ok: nbPhotos >= PHOTOS_MIN_BIEN },
     { label: desc.length >= DESCRIPTION_MIN ? 'Description détaillée' : `Description courte (${desc.length} car.)`, ok: desc.length >= DESCRIPTION_MIN },
     { label: b?.localisation?.quartier ? 'Quartier renseigné' : 'Quartier manquant', ok: !!b?.localisation?.quartier },
     { label: Number(b?.prix) > 0 ? 'Prix renseigné' : 'Prix manquant', ok: Number(b?.prix) > 0 },

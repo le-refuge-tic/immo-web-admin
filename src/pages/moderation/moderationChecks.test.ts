@@ -13,8 +13,9 @@ describe('modération guesthouse', () => {
   it('guesthouse complète : non bloquée', () => {
     expect(blocageApprobation({ type: 'guesthouse', details_guesthouse: {}, photos: photos(4) })).toBeNull()
   })
-  it('non-régression : un appartement n’est jamais bloqué par ces règles', () => {
-    expect(blocageApprobation({ type: 'appart_vide', photos: [] })).toBeNull()
+  it('appartement : bloqué sous 2 photos, approuvable à 2', () => {
+    expect(blocageApprobation({ type: 'appart_vide', photos: photos(1) })).toMatch(/au moins 2 photos \(1 actuellement\)/)
+    expect(blocageApprobation({ type: 'appart_vide', photos: photos(2) })).toBeNull()
   })
   it('contrôles : la guesthouse ajoute « détails » et « 4 photos »', () => {
     const labels = moderationChecks({ type: 'guesthouse', details_guesthouse: null, photos: photos(2) }).map(c => c.label).join(' | ')

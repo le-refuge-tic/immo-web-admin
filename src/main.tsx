@@ -4,7 +4,6 @@ import './index.css'
 import './api/httpInterceptor'
 import App from './App.tsx'
 import ErrorBoundary from './components/ErrorBoundary'
-import './api/httpInterceptor'
 import { ThemeProvider } from './context/ThemeContext'
 
 createRoot(document.getElementById('root')!).render(
