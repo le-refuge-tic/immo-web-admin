@@ -64,6 +64,7 @@ export default function EtapePhotos({
           form.heureFinMusique ? `Musique jusqu’à ${form.heureFinMusique}` : '',
           form.traiteur ? LIBELLES_TRAITEUR[form.traiteur][0].toUpperCase() + LIBELLES_TRAITEUR[form.traiteur].slice(1) : '',
           `Décoration ${form.deco ? 'autorisée' : 'interdite'} · alcool ${form.alcool ? 'autorisé' : 'interdit'}`,
+          form.insonorisee === null ? '' : (form.insonorisee ? 'Salle insonorisée' : 'Salle non insonorisée'),
         ].filter(Boolean)} />
       </Card>
     </div>

@@ -9,6 +9,10 @@ import { apiMessage } from '../../utils/apiMessage';
 import { useToast } from '../../context/ToastContext'
 import { Card, Section, ChoiceList, Chip, Counter, NumberPicker, MoneyInput, RecapSection } from './formUi'
 import { BLUE, baseInput } from './formStyles'
+import { prixPrincipalDuplex } from './duplexCalculs'
+import { primeValidationCommerciale } from './commissionCommerciale'
+import { getPriceFieldLabel, shouldShowLocationSpecificFields } from './bienFormRules'
+import { erreurFichierVideo, raisonEchecVideo } from '../../utils/videoAnnonce'
 
 // ─── Quartiers — même structure que immo-web-user ─────────────────────────────
 type Quartier = { nom: string; arrondissement: string; ville: string }
@@ -87,11 +91,13 @@ const EQUIPEMENTS_RESIDENTIEL = [
 ]
 
 const EQUIPEMENTS_BOUTIQUE = [
-  { value: 'toilette_interne',  label: 'Toilette interne'        },
+  { value: 'sanitaire',         label: 'Sanitaire'               },
   { value: 'arriere_boutique',  label: 'Arrière-boutique / Stock' },
-  { value: 'sol_carele',        label: 'Sol carrelé'              },
-  { value: 'plafond_staffe',    label: 'Plafond staffé'           },
   { value: 'climatisation',     label: 'Climatisation'            },
+  { value: 'brasseur',          label: 'Brasseur / Ventilateur'   },
+  { value: 'eau_courante',      label: 'Eau courante'             },
+  { value: 'compteur_electrique', label: 'Compteur électrique'   },
+  { value: 'rideau_metallique', label: 'Rideau métallique'        },
 ]
 
 const ALENTOURS_OPTS = [
@@ -129,15 +135,25 @@ export default function PublierBienPage() {
   const navigate = useNavigate()
   const toast = useToast()
 
+  const DRAFTS_KEY = 'publier_bien_drafts'
+  const LEGACY_DRAFT_KEY = 'publier_bien_draft'
+
   const proprietaireInfo = (() => {
     try { return JSON.parse(localStorage.getItem('proprietaire_info') ?? 'null') } catch { return null }
   })()
 
-  const DRAFT_KEY = 'publier_bien_draft'
   const quartierInputRef = useRef<HTMLInputElement>(null)
   const [dropdownRect, setDropdownRect] = useState<{ top: number; left: number; width: number } | null>(null)
 
   const [step, setStep]               = useState(0)
+  const [draftHydrated, setDraftHydrated] = useState(false)
+  const [draftList, setDraftList] = useState<Array<{ id: string; label?: string; updatedAt?: number }>>([])
+  const [showDraftList, setShowDraftList] = useState(false)
+  const [draftId, setDraftId] = useState(() => {
+    const requested = new URLSearchParams(window.location.search).get('draft')
+    if (requested && requested !== 'new') return requested
+    return crypto.randomUUID()
+  })
   const [submitting, setSubmitting]   = useState(false)
   const [error, setError]             = useState('')
   const [created, setCreated]         = useState(false)
@@ -151,7 +167,10 @@ export default function PublierBienPage() {
   const [typeBien, setTypeBien]               = useState('chambre_salon')
   const [typeTransaction, setTypeTransaction] = useState<'location' | 'vente'>('location')
   const [prix, setPrix]                       = useState('')
+  const [prixPromo, setPrixPromo]             = useState('')
   const [estMeuble, setEstMeuble]             = useState(false)
+  const [etatMeubleMaison, setEtatMeubleMaison] = useState<'non_meuble' | 'semi_meuble' | 'meuble'>('non_meuble')
+  const [etatConstructionMaison, setEtatConstructionMaison] = useState<'semi_construite' | 'totalement_construite' | null>(null)
   const [standing, setStanding]               = useState<string | null>(null)
   const [standingAutre, setStandingAutre]     = useState('')
 
@@ -199,8 +218,10 @@ export default function PublierBienPage() {
   const [cautionEau, setCautionEau]           = useState('')
   const [cautionElec, setCautionElec]         = useState('')
   const [electricite, setElectricite]         = useState('non')
+  const [electriciteAutre, setElectriciteAutre] = useState('')
   const [prixKwh, setPrixKwh]                 = useState('')
   const [eau, setEau]                         = useState('non')
+  const [eauAutre, setEauAutre]               = useState('')
   const [forageGestion, setForageGestion]     = useState<string | null>(null)
   const [prixM3, setPrixM3]                   = useState('')
   const [prixForage, setPrixForage]           = useState('')
@@ -214,10 +235,10 @@ export default function PublierBienPage() {
 
   // Terrain
   const [titreTerrain, setTitreTerrain]                     = useState('')
-  const [titreFoncier, setTitreFoncier]                     = useState<boolean | null>(null)
   const [superficieTerrain, setSuperficieTerrain]           = useState('')
   const [superficieUnite, setSuperficieUnite]               = useState<'m2' | 'ha'>('m2')
-  const [documentTerrain, setDocumentTerrain]               = useState<string | null>(null)
+  const [documentTerrain, setDocumentTerrain]               = useState<string[]>([])
+  const [documentAutreDetail, setDocumentAutreDetail]       = useState('')
   const [positionTerrain, setPositionTerrain]               = useState('bord_goudron')
   const [angleRue, setAngleRue]                             = useState(false)
   const [permissionConstruire, setPermissionConstruire]     = useState(false)
@@ -236,7 +257,7 @@ export default function PublierBienPage() {
 
   // ── Persistance du brouillon ──────────────────────────────────────────────
   const draftState = {
-    step, typeBien, typeTransaction, prix, estMeuble, standing, standingAutre,
+    step, typeBien, typeTransaction, prix, prixPromo, estMeuble, etatMeubleMaison, etatConstructionMaison, standing, standingAutre,
     prixLongSejour, prixSejourRestreint, prixHeure, tarifsAutres,
     ville, quartier, arrondissement, indicationAdresse, quartierSearch,
     latitude, longitude, adresseNormalisee, adresseVerifiee,
@@ -244,31 +265,83 @@ export default function PublierBienPage() {
     chambreACouloir, typeCour, nbVoisins, accesVehicule, nbVehicules,
     avanceMois, avanceAutre, avanceAutreText, echeanceMois, echeanceAutre, echeanceAutreText,
     loyerPrepayeMois, loyerPrepayeAutre, loyerPrepayeAutreText,
-    cautionEau, cautionElec, electricite, prixKwh, eau, forageGestion, prixM3, prixForage,
+    cautionEau, cautionElec, electricite, electriciteAutre, prixKwh, eau, eauAutre, forageGestion, prixM3, prixForage,
     equipementsBonus, equipementsAutre, alentours, alentoursAutre, disponibilite,
-    titreTerrain, titreFoncier, superficieTerrain, superficieUnite, documentTerrain,
+    titreTerrain, superficieTerrain, superficieUnite, documentTerrain, documentAutreDetail,
     positionTerrain, angleRue, permissionConstruire, descriptionConstruction, estLoti, detailsSupplementaires,
     typeVoie, visibiliteBoutique, parkingClients,
     description, autresFrais,
   }
 
   const saveDraft = useCallback(() => {
-    try { localStorage.setItem(DRAFT_KEY, JSON.stringify(draftState)) } catch { /* quota */ }
-  }, [JSON.stringify(draftState)]) // eslint-disable-line
+    if (!draftHydrated) return
+    try {
+      const raw = localStorage.getItem(DRAFTS_KEY)
+      const drafts = raw ? JSON.parse(raw) : []
+      const safeDrafts = Array.isArray(drafts) ? drafts : []
+      const label = titreTerrain.trim() || quartier.trim() || TYPES_BIEN.find(t => t.key === typeBien)?.label || 'Brouillon'
+      const record = {
+        id: draftId,
+        label,
+        updatedAt: Date.now(),
+        data: draftState,
+      }
+      const next = [record, ...safeDrafts.filter((item: any) => item?.id !== draftId)]
+      localStorage.setItem(DRAFTS_KEY, JSON.stringify(next.slice(0, 20)))
+      setDraftList(next.slice(0, 20).map((item: any) => ({
+        id: item.id,
+        label: item.label,
+        updatedAt: item.updatedAt,
+      })))
+    } catch { /* quota ou stockage indisponible */ }
+  }, [draftHydrated, draftId, JSON.stringify(draftState)]) // eslint-disable-line
 
   useEffect(() => { saveDraft() }, [saveDraft])
 
   // Restauration au montage
   useEffect(() => {
-    const raw = localStorage.getItem(DRAFT_KEY)
-    if (!raw) return
     try {
-      const d = JSON.parse(raw)
+      let drafts: any[] = []
+      const draftsRaw = localStorage.getItem(DRAFTS_KEY)
+      if (draftsRaw) {
+        const parsed = JSON.parse(draftsRaw)
+        if (Array.isArray(parsed)) drafts = parsed
+      }
+
+      const legacyRaw = localStorage.getItem(LEGACY_DRAFT_KEY)
+      if (legacyRaw && !drafts.length) {
+        try {
+          const legacy = JSON.parse(legacyRaw)
+          const legacyId = crypto.randomUUID()
+          drafts = [{ id: legacyId, label: legacy?.titreTerrain || legacy?.quartier || 'Brouillon', updatedAt: Date.now(), data: legacy }]
+          localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts))
+          localStorage.removeItem(LEGACY_DRAFT_KEY)
+        } catch { /* brouillon legacy corrompu */ }
+      }
+      setDraftList(drafts.map((item: any) => ({
+        id: item.id,
+        label: item.label,
+        updatedAt: item.updatedAt,
+      })))
+
+      const requested = new URLSearchParams(window.location.search).get('draft')
+      const isNew = requested === 'new'
+      let selected = !isNew ? drafts.find((item: any) => item?.id === draftId) : null
+      if (!selected && !isNew && drafts.length) selected = drafts[0]
+      if (!isNew && selected?.id && selected.id !== draftId) setDraftId(selected.id)
+      const d = selected?.data
+      if (!d) {
+        setDraftHydrated(true)
+        return
+      }
       if (d.step !== undefined)        setStep(d.step)
       if (d.typeBien)                  setTypeBien(d.typeBien)
       if (d.typeTransaction)           setTypeTransaction(d.typeTransaction)
       if (d.prix !== undefined)        setPrix(d.prix)
+      if (d.prixPromo !== undefined)   setPrixPromo(d.prixPromo)
       if (d.estMeuble !== undefined)   setEstMeuble(d.estMeuble)
+      if (d.etatMeubleMaison)          setEtatMeubleMaison(d.etatMeubleMaison)
+      if (d.etatConstructionMaison !== undefined) setEtatConstructionMaison(d.etatConstructionMaison)
       if (d.standing !== undefined)    setStanding(d.standing)
       if (d.standingAutre)             setStandingAutre(d.standingAutre)
       if (d.prixLongSejour)            setPrixLongSejour(d.prixLongSejour)
@@ -307,8 +380,10 @@ export default function PublierBienPage() {
       if (d.cautionEau)                setCautionEau(d.cautionEau)
       if (d.cautionElec)               setCautionElec(d.cautionElec)
       if (d.electricite)               setElectricite(d.electricite)
+      if (d.electriciteAutre)          setElectriciteAutre(d.electriciteAutre)
       if (d.prixKwh)                   setPrixKwh(d.prixKwh)
       if (d.eau)                       setEau(d.eau)
+      if (d.eauAutre)                 setEauAutre(d.eauAutre)
       if (d.forageGestion !== undefined) setForageGestion(d.forageGestion)
       if (d.prixM3)                    setPrixM3(d.prixM3)
       if (d.prixForage)                setPrixForage(d.prixForage)
@@ -318,10 +393,14 @@ export default function PublierBienPage() {
       if (d.alentoursAutre)            setAlentoursAutre(d.alentoursAutre)
       if (d.disponibilite)             setDisponibilite(d.disponibilite)
       if (d.titreTerrain)              setTitreTerrain(d.titreTerrain)
-      if (d.titreFoncier !== undefined) setTitreFoncier(d.titreFoncier)
       if (d.superficieTerrain)         setSuperficieTerrain(d.superficieTerrain)
       if (d.superficieUnite)           setSuperficieUnite(d.superficieUnite)
-      if (d.documentTerrain !== undefined) setDocumentTerrain(d.documentTerrain)
+      const savedDocuments = d.documentTerrain !== undefined
+        ? Array.isArray(d.documentTerrain) ? [...d.documentTerrain] : d.documentTerrain ? [d.documentTerrain] : []
+        : []
+      if (d.titreFoncier === true && !savedDocuments.includes('titre_foncier')) savedDocuments.push('titre_foncier')
+      setDocumentTerrain(savedDocuments)
+      if (d.documentAutreDetail)       setDocumentAutreDetail(d.documentAutreDetail)
       if (d.positionTerrain)           setPositionTerrain(d.positionTerrain)
       if (d.angleRue !== undefined)    setAngleRue(d.angleRue)
       if (d.permissionConstruire !== undefined) setPermissionConstruire(d.permissionConstruire)
@@ -334,6 +413,7 @@ export default function PublierBienPage() {
       if (d.description)               setDescription(d.description)
       if (d.autresFrais)               setAutresFrais(d.autresFrais)
     } catch { /* JSON corrompu */ }
+    finally { setDraftHydrated(true) }
   }, []) // eslint-disable-line
 
   // Dérivés
@@ -341,9 +421,8 @@ export default function PublierBienPage() {
   const isBoutique     = typeBien === 'boutique'
   const isSmallUnit    = typeBien === 'entree_coucher' || typeBien === 'chambre_salon'
   const peutEtreMeuble = typeBien === 'appartement' || typeBien === 'villa' || typeBien === 'duplex' || typeBien === 'maison'
-  const isMeuble       = peutEtreMeuble && estMeuble
+  const isMeuble       = peutEtreMeuble && (typeBien === 'maison' ? etatMeubleMaison !== 'non_meuble' : estMeuble)
   const showPieces     = ['appartement', 'villa', 'duplex', 'maison', 'chambre_salon'].includes(typeBien)
-  const hasAtLeastOneTarif = !!(parsePrix(prixLongSejour) || parsePrix(prixSejourRestreint) || parsePrix(prixHeure) || tarifsAutres.some(t => parsePrix(t.prix)))
 
   const superficieM2 = (() => {
     const n = parseFloat(superficieTerrain.replace(',', '.'))
@@ -360,10 +439,30 @@ export default function PublierBienPage() {
     : typeBien
 
   // Commission plateforme : 50% du loyer mensuel, uniquement pour les biens en location.
-  const commissionAgence = (!isTerrain && typeTransaction === 'location') ? (parsePrix(prix) ?? 0) * 0.5 : 0
+  const prixCalcul = isMeuble
+    ? prixPrincipalDuplex({
+        prix_long_sejour: prixLongSejour,
+        prix_sejour_restreint: prixSejourRestreint,
+        prix_heure: prixHeure,
+        autres: tarifsAutres,
+      }, parsePrix)
+    : (parsePrix(prix) ?? 0)
+
+  const commissionAgence = (!isTerrain && typeTransaction === 'location') ? prixCalcul * 0.5 : 0
+  const primeValidationCommercialeEstimee = primeValidationCommerciale(
+    typeBackend,
+    sousType,
+    typeTransaction,
+    prixCalcul,
+    {
+      chambres,
+      meuble: isMeuble,
+      standing,
+    },
+  )
 
   const montantBrut = (() => {
-    const loyer  = parsePrix(prix) ?? 0
+    const loyer  = prixCalcul
     const cEau   = parsePrix(cautionEau) ?? 0
     const cElec  = parsePrix(cautionElec) ?? 0
     const autres = autresFrais.reduce((a, f) => a + (parsePrix(f.prix) ?? 0), 0)
@@ -415,19 +514,31 @@ export default function PublierBienPage() {
   const labelStanding = (v: string) => v === 'autre' ? (standingAutre.trim() || 'Autre à préciser') : (STANDING_OPTS.find(o => o.value === v)?.label ?? v)
   const labelCuisine   = (v: string) => v === 'separee_douche' ? 'Cuisine séparée de la douche' : v === 'americaine' ? 'Cuisine américaine' : (cuisineAutre.trim() || 'Autres')
   const labelCour      = (v: string) => v === 'entree_personnelle' ? 'Entrée personnelle' : 'Cour commune'
-  const labelElec      = (v: string) => { const p = parsePrix(prixKwh); return v === 'sbee' ? 'SBEE' : v === 'decompteur' ? `Décompteur${p !== undefined ? ` (${Math.round(p)} FCFA/kWh)` : ''}` : 'Non' }
+  const labelElec      = (v: string) => {
+    if (v === 'non') return 'Non'
+    if (v === 'compteur_electrique') return 'Compteur électrique'
+    if (v === 'panneaux_solaires') return 'Panneaux solaires'
+    if (v === 'groupe_electrogene') return 'Groupe électrogène'
+    if (v === 'autre') return electriciteAutre.trim() || 'Autre'
+    return 'Non'
+  }
   const labelEau       = (v: string) => {
-    const p = parsePrix(prixForage); const pm3 = parsePrix(prixM3)
-    if (v === 'soneb')            return 'SONEB'
-    if (v === 'decompteur_soneb') return `Décompteur SONEB${pm3 !== undefined ? ` (${Math.round(pm3)} FCFA/m³)` : ''}`
-    if (v === 'forage') { const suf = forageGestion === 'voisins' ? ' (entre voisins)' : forageGestion === 'mensuel' ? ' (abonnement mensuel)' : ''; return `Forage${suf}${p !== undefined ? ` · ${Math.round(p)} FCFA` : ''}` }
+    if (v === 'non') return 'Non'
+    if (v === 'soneb') return 'SONEB'
+    if (v === 'puits') return 'Puits'
+    if (v === 'forage') return 'Forage'
+    if (v === 'autre') return eauAutre.trim() || 'Autre'
     return 'Non'
   }
 
   const goNext = () => {
     if (step === 0) {
-      if (!isMeuble && !parsePrix(prix)) { setError('Veuillez entrer le prix'); return }
-      if (isMeuble && !hasAtLeastOneTarif) { setError('Renseignez au moins un tarif'); return }
+      const prixPrincipal = parsePrix(prix)
+      if (!prixPrincipal) { setError('Veuillez entrer le prix'); return }
+      const prixCash = parsePrix(prixPromo)
+      if (isTerrain && typeTransaction === 'vente' && prixCash !== undefined && prixCash >= prixPrincipal) {
+        setError('Le prix promo doit être inférieur au prix de vente'); return
+      }
     }
     if (step === 1 && !quartier.trim()) { setError('Veuillez sélectionner un quartier'); return }
     if (step === 2 && isTerrain && !titreTerrain.trim()) { setError('Veuillez donner un nom à ce bien'); return }
@@ -453,11 +564,17 @@ export default function PublierBienPage() {
     if (proprietaireInfo) a.proprietaire_info = proprietaireInfo
 
     if (isTerrain) {
-      if (documentTerrain) a.document = documentTerrain
+      if (documentTerrain.length) {
+        a.document = documentTerrain[0]
+        a.documents = documentTerrain
+      }
+      if (documentTerrain.includes('autre') && documentAutreDetail.trim()) {
+        a.document_autre_detail = documentAutreDetail.trim()
+      }
       a.position = positionTerrain; a.angle_rue = angleRue; a.permission_construire = permissionConstruire
       if (permissionConstruire && descriptionConstruction.trim()) a.description_construction = descriptionConstruction.trim()
       if (estLoti !== null) a.loti = estLoti
-      if (titreFoncier !== null) a.titre_foncier = titreFoncier
+      a.titre_foncier = documentTerrain.includes('titre_foncier')
       const details = detailsSupplementaires.filter(d => d.label.trim() && d.valeur.trim())
       if (details.length) a.details_supplementaires = details.map(d => ({ label: d.label.trim(), valeur: d.valeur.trim() }))
       return a
@@ -465,6 +582,10 @@ export default function PublierBienPage() {
 
     if (standing) a.standing = standing
     if (standing === 'autre' && standingAutre.trim()) a.standing_autre = standingAutre.trim()
+    if (typeBien === 'maison') {
+      a.etat_meuble = etatMeubleMaison
+      if (etatConstructionMaison) a.etat_construction = etatConstructionMaison
+    }
     a.disponibilite = disponibilite
     if (equipementsBonus.length || equipementsAutre.trim()) a.equipements = [...equipementsBonus, ...(equipementsAutre.trim() ? [equipementsAutre.trim()] : [])]
     if (alentours.length || alentoursAutre.trim()) a.voisinage = [...alentours, ...(alentoursAutre.trim() ? [alentoursAutre.trim()] : [])]
@@ -473,23 +594,25 @@ export default function PublierBienPage() {
       a.type_voie = typeVoie; a.visibilite = visibiliteBoutique; a.parking_clients = parkingClients
     } else {
       const cEau = parsePrix(cautionEau) ?? 0; const cElec = parsePrix(cautionElec) ?? 0
-      a.type_cuisine = typeCuisine
-      if (typeCuisine === 'autre' && cuisineAutre.trim()) a.cuisine_autre_detail = cuisineAutre.trim()
-      a.type_cour = typeCour
-      if (typeCour === 'commune') a.nb_voisins = nbVoisins
-      if (typeCour === 'commune' && accesVehicule !== null) a.acces_vehicule = accesVehicule
-      if (typeCour === 'commune' && accesVehicule === true) a.nb_vehicules = nbVehicules
-      if (typeBien === 'chambre_salon') a.chambre_couloir = chambreACouloir
-      a.avance_mois = avanceMois
-      if (loyerPrepayeMois > 0) a.loyer_prepaye_mois = loyerPrepayeMois
-      if (typeTransaction === 'location') a.echeance_mois = echeanceMois
-      if (typeTransaction === 'location') a.commission_agence = commissionAgence
+      if (shouldShowLocationSpecificFields(typeTransaction)) {
+        a.type_cuisine = typeCuisine
+        if (typeCuisine === 'autre' && cuisineAutre.trim()) a.cuisine_autre_detail = cuisineAutre.trim()
+        a.type_cour = typeCour
+        if (typeCour === 'commune') a.nb_voisins = nbVoisins
+        if (typeCour === 'commune' && accesVehicule !== null) a.acces_vehicule = accesVehicule
+        if (typeCour === 'commune' && accesVehicule === true) a.nb_vehicules = nbVehicules
+        if (typeBien === 'chambre_salon') a.chambre_couloir = chambreACouloir
+        a.avance_mois = avanceMois
+        if (loyerPrepayeMois > 0) a.loyer_prepaye_mois = loyerPrepayeMois
+        if (typeTransaction === 'location') a.echeance_mois = echeanceMois
+        if (typeTransaction === 'location') a.commission_agence = commissionAgence
+      }
       if (cEau  > 0) a.caution_eau  = cEau
       if (cElec > 0) a.caution_elec = cElec
       a.electricite = electricite
-      if (electricite === 'decompteur' && parsePrix(prixKwh) !== undefined) a.prix_kwh = parsePrix(prixKwh)
+      if (electricite === 'autre' && electriciteAutre.trim()) a.electricite_autre = electriciteAutre.trim()
       a.eau = eau
-      if (eau === 'decompteur_soneb' && parsePrix(prixM3) !== undefined) a.prix_m3 = parsePrix(prixM3)
+      if (eau === 'autre' && eauAutre.trim()) a.eau_autre = eauAutre.trim()
       if (eau === 'forage' && parsePrix(prixForage) !== undefined) a.prix_forage = parsePrix(prixForage)
       if (eau === 'forage' && forageGestion) a.forage_gestion = forageGestion
       if (isMeuble) a.tarifs_meuble = buildTarifsMeuble()
@@ -523,8 +646,12 @@ export default function PublierBienPage() {
     try {
       let prixFinal: number
       if (isMeuble) {
-        prixFinal = parsePrix(prixLongSejour) ?? parsePrix(prixSejourRestreint) ?? parsePrix(prixHeure)
-          ?? (tarifsAutres.length ? parsePrix(tarifsAutres[0].prix) : undefined) ?? 0
+        prixFinal = prixPrincipalDuplex({
+          prix_long_sejour: prixLongSejour,
+          prix_sejour_restreint: prixSejourRestreint,
+          prix_heure: prixHeure,
+          autres: tarifsAutres,
+        }, parsePrix)
       } else {
         prixFinal = parsePrix(prix) ?? 0
       }
@@ -537,12 +664,16 @@ export default function PublierBienPage() {
         type: typeBackend,
         transaction: typeTransaction,
         prix: prixFinal,
+        ...(isTerrain && typeTransaction === 'vente' && parsePrix(prixPromo) !== undefined
+          ? { prix_promo: parsePrix(prixPromo) }
+          : {}),
         frais_visite: 500,
         description: descFull || undefined,
         localisation: {
           adresse: indicationAdresse.trim() || [quartier, arrondissement].filter(Boolean).join(', ') || quartier,
           ville: ville || quartier || undefined,
           quartier: quartier || undefined,
+          arrondissement: arrondissement || undefined,
           latitude: latitude ?? 6.3654,
           longitude: longitude ?? 2.4183,
         },
@@ -565,6 +696,7 @@ export default function PublierBienPage() {
       // Échecs d'envoi des médias : comptés et signalés (le bien, lui, est créé)
       let photosEchouees = 0
       let videoEchouee = false
+      let raisonVideo: string | undefined
       if (photos.length > 0 && bien.id) {
         for (let i = 0; i < photos.length; i++) {
           try {
@@ -576,11 +708,17 @@ export default function PublierBienPage() {
         }
       }
       if (video && bien.id) {
-        try { await postBien.uploadVideo(bien.id, video) } catch { videoEchouee = true }
+        try {
+          await postBien.uploadVideo(bien.id, video)
+        } catch (err) {
+          videoEchouee = true
+          raisonVideo = raisonEchecVideo(err)
+        }
       }
       if (photosEchouees || videoEchouee) {
         const details = [photosEchouees ? `${photosEchouees} photo(s)` : '', videoEchouee ? 'la vidéo' : ''].filter(Boolean).join(' et ')
-        toast(`Bien enregistré, mais ${details} n’ont pas pu être envoyées. Ajoutez-les depuis « Modifier l’annonce ».`, 'error')
+        const raison = raisonVideo ? ` (${raisonVideo})` : ''
+        toast(`Bien enregistré, mais ${details} n’ont pas pu être envoyées${raison}. Ajoutez-les depuis « Modifier l’annonce ».`, 'error')
       }
 
       // Enregistre le quartier ajouté manuellement (avec arrondissement + ville) pour validation admin.
@@ -589,7 +727,15 @@ export default function PublierBienPage() {
       }
 
       localStorage.removeItem('proprietaire_info')
-      localStorage.removeItem(DRAFT_KEY)
+      try {
+        const raw = localStorage.getItem(DRAFTS_KEY)
+        if (raw) {
+          const drafts = JSON.parse(raw)
+          if (Array.isArray(drafts)) {
+            localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts.filter((item: any) => item?.id !== draftId)))
+          }
+        }
+      } catch { /* suppression du brouillon échouée */ }
       setCreated(true)
     } catch (err: any) {
       setError(apiMessage(err) || 'Erreur lors de la création')
@@ -636,6 +782,40 @@ export default function PublierBienPage() {
           <div style={{ flex: 1, minWidth: 0 }}>
             <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-text)' }}>Nouveau bien</span>
             <span style={{ fontSize: 11, color: 'var(--c-muted)', marginLeft: 8 }}>{STEP_LABELS[step]}</span>
+          </div>
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            <button onClick={() => setShowDraftList(open => !open)}
+              style={{ display: 'flex', alignItems: 'center', gap: 5, height: 30, padding: '0 10px', borderRadius: 999, border: '1px solid rgba(99,102,241,0.30)', background: 'rgba(99,102,241,0.10)', color: '#6366F1', cursor: 'pointer', fontSize: 11, fontWeight: 700 }}>
+              Brouillons ({draftList.length})
+            </button>
+            {showDraftList && (
+              <div style={{ position: 'absolute', top: 38, right: 0, width: 300, maxHeight: 360, overflowY: 'auto', zIndex: 50, borderRadius: 12, border: '1px solid var(--c-border)', background: 'var(--c-surface)', boxShadow: '0 12px 32px rgba(0,0,0,0.18)', padding: 8 }}>
+                <button onClick={() => { setShowDraftList(false); window.location.href = '/publier-bien?draft=new' }}
+                  style={{ width: '100%', border: `1px dashed ${BLUE}55`, borderRadius: 8, background: BLUE + '08', color: BLUE, cursor: 'pointer', padding: '9px 8px', fontSize: 12, fontWeight: 700, marginBottom: 6 }}>
+                  + Nouveau brouillon
+                </button>
+                {draftList.length === 0 ? (
+                  <div style={{ padding: '12px 8px', textAlign: 'center', fontSize: 12, color: 'var(--c-muted)' }}>Aucun brouillon enregistré</div>
+                ) : draftList.map(draft => (
+                  <div key={draft.id} style={{ display: 'flex', alignItems: 'center', gap: 4, borderRadius: 8 }}>
+                    <button onClick={() => { setShowDraftList(false); window.location.href = `/publier-bien?draft=${encodeURIComponent(draft.id)}` }}
+                      style={{ flex: 1, minWidth: 0, border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', padding: '10px 8px', color: 'var(--c-text)' }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{draft.label || 'Brouillon sans titre'}</div>
+                      <div style={{ fontSize: 10, color: 'var(--c-muted)', marginTop: 2 }}>{draft.updatedAt ? new Date(draft.updatedAt).toLocaleString() : 'Date inconnue'}</div>
+                    </button>
+                    <button title="Supprimer ce brouillon" onClick={() => {
+                      const next = draftList.filter(item => item.id !== draft.id)
+                      setDraftList(next)
+                      try {
+                        const raw = localStorage.getItem(DRAFTS_KEY)
+                        const parsed = raw ? JSON.parse(raw) : []
+                        if (Array.isArray(parsed)) localStorage.setItem(DRAFTS_KEY, JSON.stringify(parsed.filter((item: any) => item?.id !== draft.id)))
+                      } catch { /* ignore */ }
+                    }} style={{ width: 32, height: 32, border: 'none', background: 'transparent', color: '#EF4444', cursor: 'pointer' }}>✕</button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           {proprietaireInfo && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 999, background: BLUE + '10', border: `1px solid ${BLUE}25`, flexShrink: 0 }}>
@@ -710,12 +890,22 @@ export default function PublierBienPage() {
                 </Card>
               )}
 
-              {peutEtreMeuble && (
+              {peutEtreMeuble && typeBien !== 'maison' && (
                 <Card>
                   <Section title="État du bien" />
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                     <Chip label="Vide" active={!estMeuble} onClick={() => setEstMeuble(false)} />
                     <Chip label="Meublé" active={estMeuble} onClick={() => setEstMeuble(true)} />
+                  </div>
+                </Card>
+              )}
+
+              {typeBien === 'maison' && (
+                <Card>
+                  <Section title="État de construction" />
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    <Chip label="Semi-construite" active={etatConstructionMaison === 'semi_construite'} onClick={() => setEtatConstructionMaison('semi_construite')} />
+                    <Chip label="Totalement construite" active={etatConstructionMaison === 'totalement_construite'} onClick={() => setEtatConstructionMaison('totalement_construite')} />
                   </div>
                 </Card>
               )}
@@ -728,39 +918,14 @@ export default function PublierBienPage() {
                 </div>
               </Card>
 
-              {isMeuble ? (
+              <Card>
+                <Section title={getPriceFieldLabel(typeTransaction)} />
+                <MoneyInput value={prix} onChange={setPrix} />
+              </Card>
+              {isTerrain && typeTransaction === 'vente' && (
                 <Card>
-                  <Section title="Tarification (par durée de séjour)" />
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    {[
-                      { label: 'Court séjour (par nuit)', value: prixSejourRestreint, onChange: setPrixSejourRestreint },
-                      { label: 'Long séjour (mensuel)',   value: prixLongSejour,      onChange: setPrixLongSejour      },
-                      { label: "À l'heure",               value: prixHeure,           onChange: setPrixHeure           },
-                    ].map(row => (
-                      <div key={row.label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: 'var(--c-text)' }}>{row.label}</span>
-                        <div style={{ width: 128 }}><MoneyInput value={row.value} onChange={row.onChange} /></div>
-                      </div>
-                    ))}
-                    {tarifsAutres.map((t, i) => (
-                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <input value={t.label}
-                          onChange={e => setTarifsAutres(a => a.map((x, idx) => idx === i ? { ...x, label: e.target.value } : x))}
-                          placeholder="Libellé" style={{ ...baseInput, flex: 1 }} />
-                        <div style={{ width: 112 }}>
-                          <MoneyInput value={t.prix} onChange={v => setTarifsAutres(a => a.map((x, idx) => idx === i ? { ...x, prix: v } : x))} />
-                        </div>
-                        <button type="button" onClick={() => setTarifsAutres(a => a.filter((_, idx) => idx !== i))} style={{ color: 'var(--s-red)' }}>✕</button>
-                      </div>
-                    ))}
-                    <button type="button" onClick={() => setTarifsAutres(a => [...a, { label: '', prix: '' }])}
-                      style={{ fontSize: 12, fontWeight: 700, color: BLUE, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>+ Ajouter un tarif</button>
-                  </div>
-                </Card>
-              ) : (
-                <Card>
-                  <Section title={typeTransaction === 'location' ? 'Loyer mensuel (FCFA)' : 'Prix de vente (FCFA)'} />
-                  <MoneyInput value={prix} onChange={setPrix} />
+                  <Section title="Prix promo (prix cash) — optionnel" />
+                  <MoneyInput value={prixPromo} onChange={setPrixPromo} placeholder="Facultatif" />
                 </Card>
               )}
             </div>
@@ -970,7 +1135,48 @@ export default function PublierBienPage() {
               </Card>
               <Card>
                 <Section title="Document" />
-                <ChoiceList options={DOCUMENT_TERRAIN_OPTS} value={documentTerrain} onChange={setDocumentTerrain} onDeselect={() => setDocumentTerrain(null)} />
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
+                  {DOCUMENT_TERRAIN_OPTS.map(option => {
+                    const active = documentTerrain.includes(option.value)
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        aria-pressed={active}
+                        onClick={() => setDocumentTerrain(current =>
+                          active ? current.filter(value => value !== option.value) : [...current, option.value]
+                        )}
+                        style={{
+                          width: '100%', minWidth: 0, minHeight: 44, display: 'flex', alignItems: 'flex-start', gap: 9,
+                          padding: '10px 12px', borderRadius: 10,
+                          border: `2px solid ${active ? BLUE : 'var(--c-border)'}`,
+                          background: active ? BLUE + '12' : 'transparent', color: active ? BLUE : 'var(--c-muted)',
+                          fontSize: 12, fontWeight: 700, textAlign: 'left', cursor: 'pointer',
+                        }}
+                      >
+                        <span aria-hidden="true" style={{
+                          width: 18, height: 18, flex: '0 0 18px', boxSizing: 'border-box', marginTop: 1,
+                          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                          border: `1.5px solid ${active ? BLUE : 'var(--c-border)'}`,
+                          borderRadius: 4, background: active ? BLUE : 'transparent', color: 'white',
+                          fontSize: 12, lineHeight: 1,
+                        }}>{active ? '✓' : ''}</span>
+                        <span style={{ flex: 1, minWidth: 0, overflowWrap: 'anywhere', lineHeight: '18px' }}>{option.label}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+                {documentTerrain.includes('autre') && (
+                  <input
+                    value={documentAutreDetail}
+                    onChange={e => setDocumentAutreDetail(e.target.value.slice(0, 100))}
+                    maxLength={100}
+                    placeholder="Précisez le type de document (100 caractères max)"
+                    style={{ ...baseInput, marginTop: 12 }}
+                    onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
+                    onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')}
+                  />
+                )}
               </Card>
               <Card>
                 <Section title="Position" />
@@ -1004,13 +1210,6 @@ export default function PublierBienPage() {
                   <Chip label="Lotie"     active={estLoti === 'lotie'}     onClick={() => setEstLoti('lotie')}     />
                   <Chip label="Non lotie" active={estLoti === 'non_lotie'} onClick={() => setEstLoti('non_lotie')} />
                   <Chip label="Autre"     active={estLoti === 'autre'}     onClick={() => setEstLoti('autre')}     />
-                </div>
-              </Card>
-              <Card>
-                <Section title="Titre foncier ?" />
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                  <Chip label="Oui" active={titreFoncier === true}  onClick={() => setTitreFoncier(true)}  />
-                  <Chip label="Non" active={titreFoncier === false} onClick={() => setTitreFoncier(false)} />
                 </div>
               </Card>
               <Card>
@@ -1153,17 +1352,19 @@ export default function PublierBienPage() {
                   )}
                 </Card>
               )}
-              <Card>
-                <Section title="Type de cuisine" />
-                <ChoiceList options={CUISINE_OPTS} value={typeCuisine} onChange={setTypeCuisine} />
-                {typeCuisine === 'autre' && (
-                  <input value={cuisineAutre} onChange={e => setCuisineAutre(e.target.value)}
-                    placeholder="Précisez le type de cuisine"
-                    style={{ ...baseInput, marginTop: 8 }}
-                    onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
-                    onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
-                )}
-              </Card>
+              {shouldShowLocationSpecificFields(typeTransaction) && (
+                <Card>
+                  <Section title="Type de cuisine" />
+                  <ChoiceList options={CUISINE_OPTS} value={typeCuisine} onChange={setTypeCuisine} />
+                  {typeCuisine === 'autre' && (
+                    <input value={cuisineAutre} onChange={e => setCuisineAutre(e.target.value)}
+                      placeholder="Précisez le type de cuisine"
+                      style={{ ...baseInput, marginTop: 8 }}
+                      onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
+                      onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
+                  )}
+                </Card>
+              )}
               {typeBien === 'chambre_salon' && (
                 <Card>
                   <Section title="Chambre à couloir ?" />
@@ -1173,49 +1374,53 @@ export default function PublierBienPage() {
                   </div>
                 </Card>
               )}
-              <Card>
-                <Section title="Type de cour / Accès" />
-                <ChoiceList options={COUR_OPTS} value={typeCour} onChange={setTypeCour} />
-                {COUR_DESC[typeCour] && <p style={{ fontSize: 12, fontStyle: 'italic', marginTop: 8, color: BLUE }}>{COUR_DESC[typeCour]}</p>}
-                {typeCour === 'commune' && (
-                  <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
-                    <div>
-                      <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: 'var(--c-muted)' }}>Nombre de voisins dans la cour</p>
-                      <Counter label="Voisins" value={nbVoisins} onChange={setNbVoisins} />
-                    </div>
-                    <div>
-                      <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: 'var(--c-muted)' }}>Accès véhicule</p>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                        <Chip label="Oui" active={accesVehicule === true}  onClick={() => setAccesVehicule(true)}  />
-                        <Chip label="Non" active={accesVehicule === false} onClick={() => setAccesVehicule(false)} />
-                      </div>
-                    </div>
-                    {accesVehicule === true && (
+              {shouldShowLocationSpecificFields(typeTransaction) && (
+                <Card>
+                  <Section title="Type de cour / Accès" />
+                  <ChoiceList options={COUR_OPTS} value={typeCour} onChange={setTypeCour} />
+                  {COUR_DESC[typeCour] && <p style={{ fontSize: 12, fontStyle: 'italic', marginTop: 8, color: BLUE }}>{COUR_DESC[typeCour]}</p>}
+                  {typeCour === 'commune' && (
+                    <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
                       <div>
-                        <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: 'var(--c-muted)' }}>Nombre de véhicules</p>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                          {[1, 2, 3, 4, 5].map(n => (
-                            <Chip key={n} label={`${n}`} active={nbVehicules === n} onClick={() => setNbVehicules(n)} />
-                          ))}
+                        <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: 'var(--c-muted)' }}>Nombre de voisins dans la cour</p>
+                        <Counter label="Voisins" value={nbVoisins} onChange={setNbVoisins} />
+                      </div>
+                      <div>
+                        <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: 'var(--c-muted)' }}>Accès véhicule</p>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                          <Chip label="Oui" active={accesVehicule === true}  onClick={() => setAccesVehicule(true)}  />
+                          <Chip label="Non" active={accesVehicule === false} onClick={() => setAccesVehicule(false)} />
                         </div>
                       </div>
-                    )}
-                  </div>
-                )}
-              </Card>
-              <Card>
-                <Section title="Avance (mois de loyer)" />
-                <NumberPicker presets={[0, 1, 2, 3, 4, 5]} unit={n => n === 0 ? 'Aucun' : `${n} mois`}
-                  value={avanceMois} isCustom={avanceAutre}
-                  onPick={n => { setAvanceMois(n); setAvanceAutre(false) }}
-                  onCustomStart={() => setAvanceAutre(true)}
-                  customText={avanceAutreText}
-                  onCustomText={t => { setAvanceAutreText(t); setAvanceMois(Number(t) || 0) }}
-                />
-                {(parsePrix(prix) ?? 0) > 0 && avanceMois > 0 && (
-                  <p style={{ fontSize: 14, fontWeight: 700, marginTop: 8, color: BLUE }}>= {formatFcfa((parsePrix(prix) ?? 0) * avanceMois)}</p>
-                )}
-              </Card>
+                      {accesVehicule === true && (
+                        <div>
+                          <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: 'var(--c-muted)' }}>Nombre de véhicules</p>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                            {[1, 2, 3, 4, 5].map(n => (
+                              <Chip key={n} label={`${n}`} active={nbVehicules === n} onClick={() => setNbVehicules(n)} />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </Card>
+              )}
+              {shouldShowLocationSpecificFields(typeTransaction) && (
+                <Card>
+                  <Section title="Avance (mois de loyer)" />
+                  <NumberPicker presets={[0, 1, 2, 3, 4, 5]} unit={n => n === 0 ? 'Aucun' : `${n} mois`}
+                    value={avanceMois} isCustom={avanceAutre}
+                    onPick={n => { setAvanceMois(n); setAvanceAutre(false) }}
+                    onCustomStart={() => setAvanceAutre(true)}
+                    customText={avanceAutreText}
+                    onCustomText={t => { setAvanceAutreText(t); setAvanceMois(Number(t) || 0) }}
+                  />
+                  {(parsePrix(prix) ?? 0) > 0 && avanceMois > 0 && (
+                    <p style={{ fontSize: 14, fontWeight: 700, marginTop: 8, color: BLUE }}>= {formatFcfa((parsePrix(prix) ?? 0) * avanceMois)}</p>
+                  )}
+                </Card>
+              )}
               {typeTransaction === 'location' && (
                 <Card>
                   <Section title="Échéance du mois" />
@@ -1228,32 +1433,34 @@ export default function PublierBienPage() {
                   />
                 </Card>
               )}
-              <Card>
-                <Section title="Loyer prépayé (optionnel)" />
-                <NumberPicker presets={[0, 1, 2, 3]} unit={n => n === 0 ? 'Aucun' : `${n} mois`}
-                  value={loyerPrepayeMois} isCustom={loyerPrepayeAutre}
-                  onPick={n => { setLoyerPrepayeMois(n); setLoyerPrepayeAutre(false) }}
-                  onCustomStart={() => setLoyerPrepayeAutre(true)}
-                  customText={loyerPrepayeAutreText}
-                  onCustomText={t => { setLoyerPrepayeAutreText(t); setLoyerPrepayeMois(Number(t) || 0) }}
-                />
-                {loyerPrepayeMois > 0 && (
-                  <p style={{ fontSize: 12, fontStyle: 'italic', marginTop: 8, color: BLUE }}>
-                    {loyerPrepayeMois === 1
-                      ? 'Le locataire ne paiera pas de loyer pour le 1er mois après intégration.'
-                      : `Le locataire ne paiera pas de loyer pour les ${loyerPrepayeMois} premiers mois après intégration.`}
-                  </p>
-                )}
-              </Card>
+              {shouldShowLocationSpecificFields(typeTransaction) && (
+                <Card>
+                  <Section title="Loyer prépayé (optionnel)" />
+                  <NumberPicker presets={[0, 1, 2, 3]} unit={n => n === 0 ? 'Aucun' : `${n} mois`}
+                    value={loyerPrepayeMois} isCustom={loyerPrepayeAutre}
+                    onPick={n => { setLoyerPrepayeMois(n); setLoyerPrepayeAutre(false) }}
+                    onCustomStart={() => setLoyerPrepayeAutre(true)}
+                    customText={loyerPrepayeAutreText}
+                    onCustomText={t => { setLoyerPrepayeAutreText(t); setLoyerPrepayeMois(Number(t) || 0) }}
+                  />
+                  {loyerPrepayeMois > 0 && (
+                    <p style={{ fontSize: 12, fontStyle: 'italic', marginTop: 8, color: BLUE }}>
+                      {loyerPrepayeMois === 1
+                        ? 'Le locataire ne paiera pas de loyer pour le 1er mois après intégration.'
+                        : `Le locataire ne paiera pas de loyer pour les ${loyerPrepayeMois} premiers mois après intégration.`}
+                    </p>
+                  )}
+                </Card>
+              )}
               <Card>
                 <Section title="Électricité" />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {([
-                    { value: 'non', label: 'Non', sub: '' },
-                    { value: 'sbee', label: 'SBEE', sub: 'Branchement direct réseau national', logo: (
-                      <img src="/logo-SBEE.png" alt="SBEE" style={{ height: 28, width: 'auto', objectFit: 'contain', borderRadius: 4 }} />
-                    )},
-                    { value: 'decompteur', label: 'Décompteur', sub: 'Compteur individuel dans le logement' },
+                    { value: 'non', label: 'Non', sub: 'Aucune source électrique' },
+                    { value: 'compteur_electrique', label: 'Compteur électrique', sub: 'Compteur individuel sur le logement' },
+                    { value: 'panneaux_solaires', label: 'Panneaux solaires', sub: 'Production solaire locale' },
+                    { value: 'groupe_electrogene', label: 'Groupe électrogène', sub: 'Alimentation de secours' },
+                    { value: 'autre', label: 'Autre', sub: 'Préciser la source ci-dessous' },
                   ] as any[]).map(o => {
                     const isActive = electricite === o.value
                     return (
@@ -1263,18 +1470,19 @@ export default function PublierBienPage() {
                           <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: isActive ? BLUE : 'var(--c-text)' }}>{o.label}</span>
                           {o.sub && <span style={{ display: 'block', fontSize: 12, marginTop: 2, color: 'var(--c-muted)' }}>{o.sub}</span>}
                         </span>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                          {o.logo}
-                          {isActive && <span style={{ fontWeight: 700, color: BLUE }}>✓</span>}
-                        </div>
+                        <span style={{ fontWeight: 700, color: isActive ? BLUE : 'var(--c-muted)' }}>{isActive ? '✓' : ''}</span>
                       </button>
                     )
                   })}
                 </div>
-                {electricite === 'decompteur' && (
+                {electricite === 'autre' && (
                   <div style={{ marginTop: 12 }}>
-                    <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: 'var(--c-muted)' }}>Prix du kWh</p>
-                    <MoneyInput value={prixKwh} onChange={setPrixKwh} placeholder="Ex: 150" />
+                    <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: 'var(--c-muted)' }}>Précisez</p>
+                    <input value={electriciteAutre} onChange={e => setElectriciteAutre(e.target.value)}
+                      placeholder="Ex: panneaux solaires + batterie"
+                      style={{ ...baseInput }}
+                      onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
+                      onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
                   </div>
                 )}
               </Card>
@@ -1282,12 +1490,11 @@ export default function PublierBienPage() {
                 <Section title="Eau" />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {([
-                    { value: 'non', label: 'Non', sub: '' },
-                    { value: 'soneb', label: 'SONEB', sub: 'Branchement direct réseau SONEB', logo: (
-                      <img src="/logo_soneb.png" alt="SONEB" style={{ height: 28, width: 'auto', objectFit: 'contain', borderRadius: 4 }} />
-                    )},
-                    { value: 'decompteur_soneb', label: 'Décompteur SONEB', sub: 'Compteur individuel SONEB' },
+                    { value: 'non', label: 'Non', sub: 'Aucune source d’eau disponible' },
+                    { value: 'soneb', label: 'SONEB', sub: 'Branchement direct réseau SONEB' },
+                    { value: 'puits', label: 'Puits', sub: 'Approvisionnement à partir d’un puits' },
                     { value: 'forage', label: 'Forage', sub: 'Forage dans la cour' },
+                    { value: 'autre', label: 'Autre', sub: 'Préciser la source ci-dessous' },
                   ] as any[]).map(o => {
                     const isActive = eau === o.value
                     return (
@@ -1297,18 +1504,19 @@ export default function PublierBienPage() {
                           <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: isActive ? BLUE : 'var(--c-text)' }}>{o.label}</span>
                           {o.sub && <span style={{ display: 'block', fontSize: 12, marginTop: 2, color: 'var(--c-muted)' }}>{o.sub}</span>}
                         </span>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                          {o.logo}
-                          {isActive && <span style={{ fontWeight: 700, color: BLUE }}>✓</span>}
-                        </div>
+                        <span style={{ fontWeight: 700, color: isActive ? BLUE : 'var(--c-muted)' }}>{isActive ? '✓' : ''}</span>
                       </button>
                     )
                   })}
                 </div>
-                {eau === 'decompteur_soneb' && (
+                {eau === 'autre' && (
                   <div style={{ marginTop: 12 }}>
-                    <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: 'var(--c-muted)' }}>Prix du m³</p>
-                    <MoneyInput value={prixM3} onChange={setPrixM3} placeholder="Ex: 150" />
+                    <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: 'var(--c-muted)' }}>Précisez</p>
+                    <input value={eauAutre} onChange={e => setEauAutre(e.target.value)}
+                      placeholder="Ex: réseau villageois, citerne, source locale"
+                      style={{ ...baseInput }}
+                      onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
+                      onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
                   </div>
                 )}
                 {eau === 'forage' && (
@@ -1329,11 +1537,11 @@ export default function PublierBienPage() {
                   </div>
                 )}
               </Card>
-              {(eau === 'soneb' || eau === 'decompteur_soneb' || electricite !== 'non') && (
+              {(eau === 'soneb' || eau === 'puits' || eau === 'forage' || eau === 'autre' || electricite !== 'non') && (
                 <Card>
                   <Section title="Caution" />
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    {(eau === 'soneb' || eau === 'decompteur_soneb') && (
+                    {(eau === 'soneb' || eau === 'puits' || eau === 'forage' || eau === 'autre') && (
                       <div>
                         <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 6, color: 'var(--c-muted)' }}>Caution eau</p>
                         <MoneyInput value={cautionEau} onChange={setCautionEau} />
@@ -1343,7 +1551,7 @@ export default function PublierBienPage() {
                     {electricite !== 'non' && (
                       <div>
                         <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 6, color: 'var(--c-muted)' }}>
-                          Caution électricité ({electricite === 'sbee' ? 'SBEE' : 'Décompteur'})
+                          Caution électricité ({electricite === 'compteur_electrique' ? 'Compteur électrique' : electricite === 'panneaux_solaires' ? 'Panneaux solaires' : electricite === 'groupe_electrogene' ? 'Groupe électrogène' : 'Autre'})
                         </p>
                         <MoneyInput value={cautionElec} onChange={setCautionElec} />
                         <p style={{ fontSize: 11, marginTop: 4, color: 'var(--c-muted)' }}>Saisir 0 si pas de caution électricité</p>
@@ -1481,16 +1689,40 @@ export default function PublierBienPage() {
                   ...(ville          ? [`Ville : ${ville}`]                   : []),
                   ...(indicationAdresse.trim() ? [`Adresse : ${indicationAdresse.trim()}`] : []),
                 ]} />
-                {!isTerrain && (parsePrix(prix) ?? 0) > 0 && (
+                {prixCalcul > 0 && (
                   <RecapSection title="Prix" items={[
-                    `${typeTransaction === 'location' ? 'Loyer mensuel' : 'Prix de vente'} : ${formatFcfa(parsePrix(prix) ?? 0)}`
+                    `${isMeuble ? 'Tarif principal' : typeTransaction === 'location' ? 'Loyer mensuel' : 'Prix de vente'} : ${formatFcfa(prixCalcul)}`,
+                    ...(isTerrain && typeTransaction === 'vente' && parsePrix(prixPromo) !== undefined
+                      ? [`Prix promo (prix cash) : ${formatFcfa(parsePrix(prixPromo)!)}`]
+                      : []),
                   ]} />
                 )}
+                {isMeuble && (
+                  <RecapSection title="Tous les tarifs meublés" items={[
+                    ...(parsePrix(prixLongSejour) !== undefined
+                      ? [`Long séjour / mois : ${formatFcfa(parsePrix(prixLongSejour)!)} `]
+                      : []),
+                    ...(parsePrix(prixSejourRestreint) !== undefined
+                      ? [`Court séjour / nuit : ${formatFcfa(parsePrix(prixSejourRestreint)!)} `]
+                      : []),
+                    ...(parsePrix(prixHeure) !== undefined
+                      ? [`À l'heure : ${formatFcfa(parsePrix(prixHeure)!)} `]
+                      : []),
+                    ...tarifsAutres
+                      .filter(tarif => parsePrix(tarif.prix) !== undefined)
+                      .map(tarif =>
+                        `${tarif.label.trim() || 'Tarif personnalisé'} : ${formatFcfa(parsePrix(tarif.prix)!)}`
+                      ),
+                  ].map(item => item.trim())} />
+                )}
+                <RecapSection title="Prime de validation estimée" items={[
+                  `${formatFcfa(primeValidationCommercialeEstimee)} après validation de cette annonce`
+                ]} />
                 {!isTerrain && !isBoutique && typeTransaction === 'location' && (
                   <>
                     <RecapSection title="Conditions d'entrée" items={[
                       avanceMois > 0
-                        ? `Avance : ${avanceMois} mois × ${formatFcfa(parsePrix(prix) ?? 0)} = ${formatFcfa((parsePrix(prix) ?? 0) * avanceMois)}`
+                        ? `Avance : ${avanceMois} mois × ${formatFcfa(prixCalcul)} = ${formatFcfa(prixCalcul * avanceMois)}`
                         : 'Avance : Aucune',
                       ...(loyerPrepayeMois > 0 ? [`Loyer prépayé : ${loyerPrepayeMois} mois`] : []),
                       ...((parsePrix(cautionEau)  ?? 0) > 0 ? [`Caution eau : ${formatFcfa(parsePrix(cautionEau)  ?? 0)}`] : []),
@@ -1514,10 +1746,10 @@ export default function PublierBienPage() {
                 )}
                 {!isTerrain && !isBoutique && (
                   <RecapSection title="Confort" items={[
-                    `Cuisine : ${labelCuisine(typeCuisine)}`,
-                    `Accès / Cour : ${labelCour(typeCour)}`,
-                    ...(typeCour === 'commune' ? [`Voisins : ${nbVoisins}`] : []),
-                    ...(typeCour === 'commune' && accesVehicule !== null ? [`Accès véhicule : ${accesVehicule ? `Oui (${nbVehicules} véhicule${nbVehicules > 1 ? 's' : ''})` : 'Non'}`] : []),
+                    ...(typeTransaction === 'location' ? [`Cuisine : ${labelCuisine(typeCuisine)}`] : []),
+                    ...(typeTransaction === 'location' ? [`Accès / Cour : ${labelCour(typeCour)}`] : []),
+                    ...(typeTransaction === 'location' && typeCour === 'commune' ? [`Voisins : ${nbVoisins}`] : []),
+                    ...(typeTransaction === 'location' && typeCour === 'commune' && accesVehicule !== null ? [`Accès véhicule : ${accesVehicule ? `Oui (${nbVehicules} véhicule${nbVehicules > 1 ? 's' : ''})` : 'Non'}`] : []),
                     `Électricité : ${labelElec(electricite)}`,
                     `Eau : ${labelEau(eau)}`,
                     ...(typeBien === 'chambre_salon' ? [`Chambre à couloir : ${chambreACouloir ? 'Oui' : 'Non'}`] : []),
@@ -1643,7 +1875,14 @@ export default function PublierBienPage() {
                     </div>
                     <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--c-text)' }}>Ajouter une vidéo (MP4)</p>
                     <input type="file" accept="video/mp4" style={{ display: 'none' }}
-                      onChange={e => { const f = e.target.files?.[0]; if (f) setVideo(f) }} />
+                      onChange={e => {
+                        const f = e.target.files?.[0]
+                        e.target.value = ''
+                        if (!f) return
+                        const refus = erreurFichierVideo(f)
+                        if (refus) { toast(refus, 'error'); return }
+                        setVideo(f)
+                      }} />
                   </label>
                 )}
               </Card>

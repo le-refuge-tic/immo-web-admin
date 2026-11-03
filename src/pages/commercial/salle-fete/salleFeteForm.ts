@@ -85,6 +85,7 @@ export type SalleFeteForm = ChampsIdentite & ChampsLocalisation & {
   traiteur: Traiteur | null
   deco: boolean | null
   alcool: boolean | null
+  insonorisee: boolean | null
   /** Vide = pas d'heure limite pour la musique */
   heureFinMusique: string
 }
@@ -127,6 +128,7 @@ export function formulaireVide(proprio?: {
     traiteur: null,
     deco: null,
     alcool: null,
+    insonorisee: null,
     heureFinMusique: '',
   }
 }
@@ -162,6 +164,7 @@ function manquesRegles(f: SalleFeteForm): string[] {
   if (f.traiteur === null) m.push('Traiteur (libre, imposé ou inclus)')
   if (f.deco === null) m.push('Décoration autorisée : Oui ou Non')
   if (f.alcool === null) m.push('Alcool autorisé : Oui ou Non')
+  if (f.insonorisee === null) m.push('Salle insonorisée : Oui ou Non')
   if (f.heureFinMusique.trim() && !HEURE.test(f.heureFinMusique)) m.push('Heure de fin de la musique')
   return m
 }
@@ -223,6 +226,7 @@ function detailsPayload(f: SalleFeteForm) {
     traiteur: f.traiteur as Traiteur,
     deco_autorisee: f.deco === true,
     alcool_autorise: f.alcool === true,
+    insonorisee: f.insonorisee === true,
     ...(f.heureFinMusique.trim() ? { heure_fin_musique: f.heureFinMusique } : {}),
   }
 }
@@ -248,7 +252,7 @@ export function construirePayload(f: SalleFeteForm) {
 type BienLu = {
   prix?: number | string | null
   description?: string | null
-  localisation?: { ville?: string | null; quartier?: string | null; adresse?: string | null } | null
+  localisation?: { ville?: string | null; quartier?: string | null; arrondissement?: string | null; adresse?: string | null } | null
   amenites?: { proprietaire_info?: { prenom?: string; nom?: string; telephone?: string; email?: string } } | null
   details_salle_fete?: {
     prix: number; duree_heures: number; heures_min: number; caution: number | null; frais_menage: number | null
@@ -256,6 +260,7 @@ type BienLu = {
     nb_tables: number | null; nb_chaises: number | null; parking: boolean; places_parking: number | null
     heure_ouverture: string; heure_fin_max: string; traiteur: Traiteur
     deco_autorisee: boolean; alcool_autorise: boolean; heure_fin_musique: string | null
+    insonorisee?: boolean
   } | null
   evenements?: { code: string }[]
   equipements_liste?: { code: string }[]
@@ -276,6 +281,7 @@ export function depuisBien(b: BienLu): SalleFeteForm {
     ...separerNomDescription(b.description),
     ville: b.localisation?.ville ?? '',
     quartier: b.localisation?.quartier ?? '',
+    arrondissement: b.localisation?.arrondissement ?? '',
     repere: b.localisation?.adresse ?? '',
     prix: b.prix != null ? String(Math.round(Number(b.prix))) : '',
     evenements: (b.evenements ?? []).map(e => e.code),
@@ -301,6 +307,7 @@ export function depuisBien(b: BienLu): SalleFeteForm {
     traiteur: d.traiteur,
     deco: d.deco_autorisee,
     alcool: d.alcool_autorise,
+    insonorisee: d.insonorisee ?? false,
     heureFinMusique: d.heure_fin_musique ? heure(d.heure_fin_musique) : '',
   }
 }
@@ -314,7 +321,7 @@ export function payloadEdition(f: SalleFeteForm) {
   const d = detailsPayload(f)
   return {
     description: descriptionPayload(f),
-    localisation: { ville: f.ville, quartier: f.quartier, adresse: f.repere.trim() || f.quartier },
+    localisation: { ville: f.ville, quartier: f.quartier, arrondissement: f.arrondissement || undefined, adresse: f.repere.trim() || f.quartier },
     amenites: amenitesProprietairePayload(f),
     details_salle_fete: {
       ...d,

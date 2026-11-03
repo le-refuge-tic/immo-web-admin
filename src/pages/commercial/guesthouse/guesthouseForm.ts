@@ -1,3 +1,4 @@
+import { VIDEO_MAX_MO } from '../../../utils/videoAnnonce'
 /**
  * Formulaire guesthouse : état, règles de chaque étape et corps de POST /biens.
  * Mêmes règles que le backend (voir API_GUESTHOUSE.md) pour éviter les allers-retours.
@@ -14,7 +15,7 @@ export const ETAPES = [
 
 export const PHOTOS_MIN = 4
 export const PHOTOS_MAX = 8
-export const VIDEO_MAX_OCTETS = 30 * 1024 * 1024
+export const VIDEO_MAX_OCTETS = VIDEO_MAX_MO * 1024 * 1024
 
 /** Position par défaut (Cotonou) quand l'adresse n'a pas été vérifiée — même repli que PublierBienPage. */
 export const POSITION_PAR_DEFAUT = { latitude: 6.3654, longitude: 2.4183 }
@@ -212,6 +213,7 @@ export function localisationPayload(f: ChampsLocalisation) {
     adresse: [f.repere.trim(), f.quartier, f.arrondissement].filter(Boolean).join(', '),
     ville: f.ville,
     quartier: f.quartier,
+    arrondissement: f.arrondissement || undefined,
     latitude: f.latitude ?? POSITION_PAR_DEFAUT.latitude,
     longitude: f.longitude ?? POSITION_PAR_DEFAUT.longitude,
   }
@@ -265,7 +267,7 @@ export function construirePayload(f: GuesthouseForm) {
 type BienLu = {
   prix?: number | string | null
   description?: string | null
-  localisation?: { ville?: string | null; quartier?: string | null; adresse?: string | null } | null
+  localisation?: { ville?: string | null; quartier?: string | null; arrondissement?: string | null; adresse?: string | null } | null
   amenites?: { proprietaire_info?: { prenom?: string; nom?: string; telephone?: string; email?: string } } | null
   details_guesthouse?: {
     prix_nuitee: number; caution: number | null; nuitees_min: number; capacite: number; nb_chambres: number
@@ -289,6 +291,7 @@ export function depuisBien(b: BienLu): GuesthouseForm {
     ...separerNomDescription(b.description),
     ville: b.localisation?.ville ?? '',
     quartier: b.localisation?.quartier ?? '',
+    arrondissement: b.localisation?.arrondissement ?? '',
     repere: b.localisation?.adresse ?? '',
     prixNuitee: b.prix != null ? String(Math.round(Number(b.prix))) : '',
     equipements: (b.equipements_liste ?? []).map(e => e.code),
@@ -318,7 +321,7 @@ export function payloadEdition(f: GuesthouseForm) {
   const p = construirePayload(f)
   return {
     description: p.description,
-    localisation: { ville: f.ville, quartier: f.quartier, adresse: f.repere.trim() || f.quartier },
+    localisation: { ville: f.ville, quartier: f.quartier, arrondissement: f.arrondissement || undefined, adresse: f.repere.trim() || f.quartier },
     amenites: p.amenites,
     details_guesthouse: p.details_guesthouse,
     equipements: p.equipements,

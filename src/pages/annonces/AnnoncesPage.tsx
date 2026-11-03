@@ -111,6 +111,7 @@ export default function AnnoncesPage() {
       !search ||
       b.localisation?.ville?.toLowerCase().includes(search.toLowerCase()) ||
       b.localisation?.quartier?.toLowerCase().includes(search.toLowerCase()) ||
+      b.localisation?.arrondissement?.toLowerCase().includes(search.toLowerCase()) ||
       b.description?.toLowerCase().includes(search.toLowerCase()),
     );
 
@@ -246,7 +247,7 @@ export default function AnnoncesPage() {
                     {b.localisation && (
                       <div className="annonce-location">
                         <PinIcon />
-                        {b.localisation.ville}{b.localisation.quartier ? `, ${b.localisation.quartier}` : ''}
+                        {b.localisation.ville}{b.localisation.quartier ? `, ${b.localisation.quartier}` : ''}{b.localisation.arrondissement ? `, ${b.localisation.arrondissement}` : ''}
                       </div>
                     )}
 

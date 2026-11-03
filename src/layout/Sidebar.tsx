@@ -3,7 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import {
   GridIcon, HomeIcon, UsersIcon, SettingsIcon, ShieldIcon, AlertIcon,
   ChevronDownIcon, UserIcon, BuildingIcon, KeyIcon, FileTextIcon, TrendingUpIcon, StarIcon,
-  MessageIcon, WithdrawIcon, ListingsIcon, VisitIcon, ClientsIcon, FlagIcon,
+  MessageIcon, WithdrawIcon, ListingsIcon, VisitIcon, ClientsIcon, FlagIcon, CardIcon,
 } from '../components/Icons';
 import { useAuth } from '../context/AuthContext';
 import { useSidebarBadges } from '../hooks/useSidebarBadges';
@@ -45,6 +45,7 @@ export default function Sidebar({
     ] },
     { id: 'annonces', label: 'Annonces', Icon: HomeIcon, items: [
       { to: '/annonces',   label: 'Toutes les annonces', Icon: HomeIcon },
+      { to: '/mes-annonces', label: 'Mes annonces', Icon: ListingsIcon },
       { to: '/moderation', label: 'Modération',          Icon: AlertIcon },
       { to: '/quartiers',  label: 'Quartiers',           Icon: BuildingIcon },
     ] },
@@ -62,6 +63,7 @@ export default function Sidebar({
       { to: '/finances', label: 'Vue d\'ensemble', Icon: TrendingUpIcon },
       { to: '/loyers',   label: 'Loyers',          Icon: FileTextIcon },
       { to: '/retraits', label: 'Retraits MoMo',   Icon: WithdrawIcon },
+      { to: '/portefeuille-commercial', label: 'Portefeuille', Icon: CardIcon },
     ] },
   ] : [];
 
@@ -72,6 +74,7 @@ export default function Sidebar({
       { to: '/mes-visites',          label: 'Mes visites',     Icon: VisitIcon    },
       { to: '/mes-clients',          label: 'Mes clients',     Icon: ClientsIcon  },
       { to: '/mon-equipe',           label: 'Mon équipe',      Icon: UsersIcon    },
+      { to: '/portefeuille-commercial', label: 'Portefeuille', Icon: CardIcon },
     ] : []),
     { to: '/messages', label: 'Messages', Icon: MessageIcon },
   ];
@@ -85,7 +88,10 @@ export default function Sidebar({
       { to: '/configuration/prospects',      label: 'Prospects',      Icon: UsersIcon    },
       { to: '/configuration/locataires',     label: 'Locataires',     Icon: KeyIcon      },
     ] : []),
-    ...(isSuperAdmin ? [{ to: '/configuration/administrateurs', label: 'Administrateurs', Icon: ShieldIcon }] : []),
+    ...(isSuperAdmin ? [
+      { to: '/configuration/administrateurs', label: 'Administrateurs', Icon: ShieldIcon },
+      { to: '/configuration/frais-visite', label: 'Frais de visite', Icon: CardIcon },
+    ] : []),
   ];
   const allGroups: NavGroup[] = [...groups, { id: 'configuration', label: 'Configuration', Icon: SettingsIcon, items: configSubs }];
 

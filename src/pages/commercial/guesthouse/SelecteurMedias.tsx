@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react'
 import { Card, Section } from '../formUi'
 import { BLUE } from '../formStyles'
 import { PHOTOS_MAX, PHOTOS_MIN, VIDEO_MAX_OCTETS } from './guesthouseForm'
+import { VIDEO_MAX_MO } from '../../../utils/videoAnnonce'
 
 const PHOTO_MAX_OCTETS = 5 * 1024 * 1024
 const TYPES_IMAGE = ['image/png', 'image/jpeg', 'image/webp']
@@ -34,7 +35,7 @@ export default function SelecteurMedias({ photos, setPhotos, video, setVideo, co
   const choisirVideo = (f: File | undefined) => {
     if (!f) return
     if (f.type !== 'video/mp4' || f.size > VIDEO_MAX_OCTETS) {
-      signaler('Vidéo refusée : une seule vidéo MP4 de 30 Mo au plus.')
+      signaler(`Vidéo refusée : une seule vidéo MP4 de ${VIDEO_MAX_MO} Mo au plus.`)
       return
     }
     setVideo(f)
@@ -88,7 +89,7 @@ export default function SelecteurMedias({ photos, setPhotos, video, setVideo, co
           </div>
         ) : (
           <label style={{ fontSize: 13, color: BLUE, fontWeight: 700, cursor: 'pointer' }}>
-            + Ajouter une vidéo (MP4, 30 Mo au plus)
+            + Ajouter une vidéo (MP4, {VIDEO_MAX_MO} Mo au plus)
             <input type="file" accept="video/mp4" style={{ display: 'none' }}
               onChange={e => { choisirVideo(e.target.files?.[0]); e.target.value = '' }} />
           </label>

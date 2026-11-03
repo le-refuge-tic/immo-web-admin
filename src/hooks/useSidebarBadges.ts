@@ -103,7 +103,7 @@ export function useSidebarBadges({ isAdmin, isCommercial, userId }: { isAdmin: b
   }, [isAdmin, set]);
 
   const loadMesAnnonces = useCallback(() => {
-    if (!isCommercial) return;
+    if (!isCommercial && !isAdmin) return;
     getMesBiens.list().then((biens: any[] = []) => {
       const seen = getSeenStatuts(userId);
       // Premier passage : on mémorise l'état actuel sans afficher de badge.
@@ -114,7 +114,7 @@ export function useSidebarBadges({ isAdmin, isCommercial, userId }: { isAdmin: b
       }
       set({ mesAnnonces: biens.filter(b => seen[b.id] !== b.statut_moderation).length });
     }).catch(() => {});
-  }, [isCommercial, userId, set]);
+  }, [isAdmin, isCommercial, userId, set]);
 
   const loadAll = useCallback(() => {
     loadMessages();
