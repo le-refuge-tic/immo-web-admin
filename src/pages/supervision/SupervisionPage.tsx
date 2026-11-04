@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { getMessages, markConvRead, getReadConvIds, setActiveCommercialIds } from '../../api/getMessages';
 import { supervisionApi } from '../../api/commercialSupervisionApi';
 import { getCommerciaux } from '../../api/getCommerciaux';
@@ -177,10 +177,33 @@ function ConfirmDeleteModal({ onConfirm, onCancel }: { onConfirm: () => void; on
 export default function SupervisionPage() {
   const { user: me } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const adminName = me ? displayName(me) : 'Admin';
 
+  /* — navigation dans la page : onglet, personne, conversation et sous-vue vivent dans l'URL,
+       pour que Retour remonte d'un niveau ici (au lieu de quitter la page) et qu'un aller-retour
+       vers un bien retrouve la même vue — */
+  const [params, setParams] = useSearchParams();
+  const tab: 'commerciaux' | 'proprietaires' = params.get('onglet') === 'proprietaires' ? 'proprietaires' : 'commerciaux';
+  const innerTab: 'conversations' | 'biens' = params.get('vue') === 'biens' ? 'biens' : 'conversations';
+  const commercialId  = Number(params.get('commercial')) || null;
+  const proprietaireId = Number(params.get('proprietaire')) || null;
+  const convId        = Number(params.get('conv')) || null;
+  const SANS_PERSONNE = { commercial: null, proprietaire: null, conv: null, vue: null };
+
+  /** Ouvre un niveau (entrée d'historique) ; `remplacer` pour une sous-vue sans historique. */
+  function allerA(changes: Record<string, string | number | null>, remplacer = false) {
+    const next = new URLSearchParams(params);
+    Object.entries(changes).forEach(([k, v]) => (v == null ? next.delete(k) : next.set(k, String(v))));
+    setParams(next, { replace: remplacer, state: { interne: true } });
+  }
+  /** Bouton retour de la page : revient à l'entrée précédente si elle est dans la page, sinon remonte d'un niveau. */
+  function remonter(changes: Record<string, string | number | null>) {
+    if ((location.state as { interne?: boolean } | null)?.interne) navigate(-1);
+    else allerA(changes, true);
+  }
+
   /* — état gauche — */
-  const [tab, setTab]                     = useState<'commerciaux' | 'proprietaires'>('commerciaux');
   const [showPerformance, setShowPerformance] = useState(false);
   const [commerciaux, setCommerciaux]     = useState<any[]>([]);
   const [proprietairesFromApi, setProprietairesFromApi] = useState<any[]>([]);
@@ -191,8 +214,6 @@ export default function SupervisionPage() {
   const [search, setSearch]               = useState('');
 
   /* — état personne sélectionnée — */
-  const [selectedPerson, setSelectedPerson] = useState<{ type: 'commercial' | 'proprietaire'; data: any } | null>(null);
-  const [innerTab, setInnerTab]           = useState<'conversations' | 'biens'>('conversations');
   const [personConvs, setPersonConvs]     = useState<any[]>([]);
   const [personBiens, setPersonBiens]     = useState<any[]>([]);
   const [loadingPersonConvs, setLoadingPersonConvs] = useState(false);
@@ -204,7 +225,6 @@ export default function SupervisionPage() {
   const activeCommercialIdsRef = useRef<Set<number>>(new Set());
 
   /* — état conversation — */
-  const [openConv, setOpenConv]     = useState<any | null>(null);
   const [thread, setThread]         = useState<any[]>([]);
   const [loadingThread, setLoadingThread] = useState(false);
   const [input, setInput]           = useState('');
@@ -214,8 +234,25 @@ export default function SupervisionPage() {
   const [hoveredMsg, setHoveredMsg] = useState<number | null>(null);
   const [claims, setClaims]         = useState<Record<number, { name: string; at: number }>>({});
   const [popover, setPopover]       = useState<number | null>(null);
-  const [mobilePanel, setMobilePanel] = useState<'list' | 'person' | 'thread'>('list');
   const [hoveredConvId, setHoveredConvId] = useState<number | null>(null);
+
+  /* — vue dérivée de l'URL (les listes chargées fournissent les objets) — */
+  const selectedPerson = useMemo<{ type: 'commercial' | 'proprietaire'; data: any } | null>(() => {
+    if (commercialId) {
+      const c = commerciaux.find(x => x.id === commercialId);
+      return c ? { type: 'commercial', data: c } : null;
+    }
+    if (proprietaireId) {
+      const p = proprietairesFromApi.find(x => x.id === proprietaireId);
+      return p ? { type: 'proprietaire', data: p } : null;
+    }
+    return null;
+  }, [commercialId, proprietaireId, commerciaux, proprietairesFromApi]);
+  const openConv = useMemo(
+    () => (convId ? personConvs.find(c => c.id === convId) ?? allConvs.find(c => c.id === convId) ?? null : null),
+    [convId, personConvs, allConvs],
+  );
+  const mobilePanel: 'list' | 'person' | 'thread' = convId ? 'thread' : (commercialId || proprietaireId) ? 'person' : 'list';
 
   const bottomRef     = useRef<HTMLDivElement>(null);
   const textareaRef   = useRef<HTMLTextAreaElement>(null);
@@ -275,8 +312,6 @@ export default function SupervisionPage() {
     if (!selectedPerson) return;
     setPersonConvs([]);
     setPersonBiens([]);
-    setOpenConv(null);
-    setInnerTab('conversations');
     setLoadingPersonConvs(true);
     const apiCall = selectedPerson.type === 'commercial'
       ? supervisionApi.getConversations(selectedPerson.data.id)
@@ -352,9 +387,8 @@ export default function SupervisionPage() {
   /* ── Ouvrir une conversation ── */
   function openConversation(conv: any) {
     if (openConv) clearClaim(openConv.id);
-    setOpenConv(conv);
     setInput('');
-    setMobilePanel('thread');
+    allerA({ conv: conv.id }, !!convId);
     if (selectedPerson?.type === 'commercial') {
       setClaim(conv.id, adminName);
       syncClaims();
@@ -480,7 +514,7 @@ export default function SupervisionPage() {
               { key: 'proprietaires', label: 'Propriétaires', count: proprietairesFromApi.length, unread: 0 },
             ] as const).map(t => (
               <button key={t.key}
-                onClick={() => { setTab(t.key); setSelectedPerson(null); setOpenConv(null); setSearch(''); }}
+                onClick={() => { if (t.key !== tab) allerA({ ...SANS_PERSONNE, onglet: t.key === 'proprietaires' ? t.key : null }); setSearch(''); }}
                 style={{
                   flex: 1, padding: '10px 6px', background: 'none', border: 'none', cursor: 'pointer',
                   fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
@@ -530,7 +564,7 @@ export default function SupervisionPage() {
                 const unread = commercialUnread[c.id] ?? 0;
                 return (
                   <div key={c.id}
-                    onClick={() => { setSelectedPerson({ type: 'commercial', data: c }); setMobilePanel('person'); }}
+                    onClick={() => allerA({ ...SANS_PERSONNE, commercial: c.id }, !!(commercialId || proprietaireId))}
                     style={{
                       padding: '11px 14px', borderBottom: '1px solid var(--c-border)', cursor: 'pointer',
                       background: isActive ? 'var(--t-blue-bg)' : 'transparent',
@@ -575,7 +609,7 @@ export default function SupervisionPage() {
                 const isActive = selectedPerson?.type === 'proprietaire' && selectedPerson.data.id === p.id;
                 return (
                   <div key={p.id}
-                    onClick={() => { setSelectedPerson({ type: 'proprietaire', data: p }); setMobilePanel('person'); }}
+                    onClick={() => allerA({ ...SANS_PERSONNE, proprietaire: p.id }, !!(commercialId || proprietaireId))}
                     style={{
                       padding: '11px 14px', borderBottom: '1px solid var(--c-border)', cursor: 'pointer',
                       background: isActive ? 'var(--t-violet-bg)' : 'transparent',
@@ -628,7 +662,7 @@ export default function SupervisionPage() {
               {/* Header thread */}
               <div style={{ padding: '10px 16px', borderBottom: '1px solid var(--c-border)', background: 'var(--c-card)', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
                 <button
-                  onClick={() => { setOpenConv(null); if (openConv) clearClaim(openConv.id); setMobilePanel('person'); }}
+                  onClick={() => { if (openConv) clearClaim(openConv.id); remonter({ conv: null }); }}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-blue)', padding: 4, display: 'flex', alignItems: 'center' }}
                 >
                   <IcoBack />
@@ -823,7 +857,7 @@ export default function SupervisionPage() {
               <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--c-border)', flexShrink: 0 }}>
                 <button
                   className="sup-back-btn"
-                  onClick={() => { setSelectedPerson(null); setMobilePanel('list'); }}
+                  onClick={() => remonter(SANS_PERSONNE)}
                   style={{ display: 'none', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-blue)', padding: '0 0 10px 0', alignItems: 'center', gap: 4, fontSize: 13, fontWeight: 600 }}
                 >
                   <IcoBack /> Retour
@@ -881,7 +915,7 @@ export default function SupervisionPage() {
                     { key: 'conversations', label: 'Conversations', count: personConvs.length },
                     { key: 'biens',         label: 'Biens publiés', count: selectedPerson.data.nb_biens ?? 0 },
                   ] as const).map(t => (
-                    <button key={t.key} onClick={() => setInnerTab(t.key)}
+                    <button key={t.key} onClick={() => allerA({ vue: t.key === 'biens' ? 'biens' : null }, true)}
                       style={{
                         padding: '10px 0', marginRight: 24, background: 'none', border: 'none', cursor: 'pointer',
                         fontSize: 13, fontWeight: 700,
@@ -980,10 +1014,10 @@ export default function SupervisionPage() {
                     return (
                       <div
                         key={b.id}
-                        onClick={() => navigate(`/annonces/${b.id}`)}
+                        onClick={() => navigate(`/annonces/${b.id}`, { state: { from: 'supervision' } })}
                         role="button"
                         tabIndex={0}
-                        onKeyDown={e => e.key === 'Enter' && navigate(`/annonces/${b.id}`)}
+                        onKeyDown={e => e.key === 'Enter' && navigate(`/annonces/${b.id}`, { state: { from: 'supervision' } })}
                         style={{ padding: '12px 20px', borderBottom: '1px solid var(--c-border)', cursor: 'pointer', transition: 'background 0.15s', background: hoveredBienId === b.id ? 'var(--c-bg)' : '' }}
                         onMouseEnter={() => setHoveredBienId(b.id)}
                         onMouseLeave={() => setHoveredBienId(null)}

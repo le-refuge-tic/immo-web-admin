@@ -49,6 +49,13 @@ const SLOT_STATUS: Record<string, { label: string; color: string }> = {
   countered: { label: 'Contre-proposé',        color: '#7C3AED' },
 };
 
+/** Visite annulée (créneau `declined` avec `annule_par`) : qui l'a annulée, plutôt que « Refusé ». */
+const ANNULE_PAR: Record<string, string> = {
+  client:       'Annulé par le client',
+  gestionnaire: 'Annulé par l’annonceur',
+  admin:        'Annulé par l’équipe Refuge',
+};
+
 const ROLE_LABELS: Record<string, string> = {
   prospect:     'Prospect',
   locataire:    'Locataire',
@@ -482,7 +489,7 @@ export default function MessagesPage() {
                             color: SLOT_STATUS[slotStatus]?.color ?? 'var(--s-yellow)',
                             background: `${SLOT_STATUS[slotStatus]?.color ?? '#D97706'}18`,
                           }}>
-                            {SLOT_STATUS[slotStatus]?.label ?? slotStatus}
+                            {(slotStatus === 'declined' && ANNULE_PAR[m.metadata?.annule_par]) || (SLOT_STATUS[slotStatus]?.label ?? slotStatus)}
                           </span>
                           {peutRepondre && (
                             <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>

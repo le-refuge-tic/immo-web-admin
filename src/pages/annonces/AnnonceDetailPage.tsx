@@ -102,7 +102,9 @@ export default function AnnonceDetailPage() {
   const showToast    = useToast();
   const from         = (location.state as any)?.from;
   const backTo       = from === 'mes-annonces' ? '/mes-annonces' : from === 'moderation' ? '/moderation' : '/annonces';
-  const backLabel    = from === 'moderation' ? 'Retour à la modération' : 'Retour aux annonces';
+  const backLabel    = from === 'moderation' ? 'Retour à la modération' : from === 'supervision' ? 'Retour au suivi des échanges' : 'Retour aux annonces';
+  // Depuis le suivi des échanges : revenir à l'entrée précédente garde la personne et l'onglet ouverts.
+  const retour       = () => (from === 'supervision' ? navigate(-1) : navigate(backTo));
   const userRole     = user?.role_principal ?? user?.role;
   const isCommercial = userRole === 'commercial';
   const isSuperAdmin = userRole === 'super_admin';
@@ -258,7 +260,7 @@ export default function AnnonceDetailPage() {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: '1rem' }}>
         <div style={{ color: 'var(--c-red)', fontWeight: 600 }}>{error}</div>
-        <button className="detail-back-btn" onClick={() => navigate(backTo)}>
+        <button className="detail-back-btn" onClick={retour}>
           <ChevronLeftIcon size={16} /> {backLabel}
         </button>
       </div>
@@ -274,7 +276,7 @@ export default function AnnonceDetailPage() {
     <>
       {/* ── Topbar ── */}
       <div className="immo-topbar">
-        <button className="detail-back-btn" onClick={() => navigate(backTo)}>
+        <button className="detail-back-btn" onClick={retour}>
           <ChevronLeftIcon size={16} />
           {backLabel}
         </button>
