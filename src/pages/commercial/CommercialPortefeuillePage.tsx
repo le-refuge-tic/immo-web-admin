@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getWallet, type WalletTransaction } from '../../api/getWallet';
 import { postRetrait, type Retrait } from '../../api/postRetrait';
 import RetraitRequestModal from './RetraitRequestModal';
+import LigneHistorique from './LigneHistorique';
 import { useAuth } from '../../context/AuthContext';
 
 function formatFcfa(v: number) {
@@ -160,36 +161,7 @@ export default function CommercialPortefeuillePage() {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {filtered.map((t, i) => {
-              const isCredit = t.type === 'depot';
-              const isBonus = t.metadata?.type === 'bonus_admin';
-              return (
-                <div key={t.id} style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '0.75rem 0', borderTop: i === 0 ? 'none' : '1px solid var(--c-border)', gap: 10,
-                }}>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--c-text)' }}>
-                      {isBonus ? 'Bonus' : isCredit ? 'Portefeuille hebdomadaire' : 'Retrait'}
-                    </div>
-                    <div style={{ fontSize: 11, color: 'var(--c-muted)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {t.description} · {formatDate(t.created_at)}
-                    </div>
-                    {t.metadata?.prime_bien != null && (
-                      <div style={{ fontSize: 11, color: 'var(--c-muted)', marginTop: 4 }}>
-                        Bien {formatFcfa(Number(t.metadata.prime_bien))}
-                        {Number(t.metadata.bonus_meuble) > 0 && ` · Meuble +${formatFcfa(Number(t.metadata.bonus_meuble))}`}
-                        {Number(t.metadata.bonus_11e_bien) > 0 && ` · 11e bien +${formatFcfa(Number(t.metadata.bonus_11e_bien))}`}
-                        {t.metadata.plafond_exceptionnel && ` · Plafond exceptionnel ${formatFcfa(50000)}`}
-                      </div>
-                    )}
-                  </div>
-                  <span className={`immo-badge ${isCredit ? (isBonus ? 'badge-warning' : 'badge-active') : 'badge-danger'}`} style={{ flexShrink: 0 }}>
-                    {isCredit ? '+' : '-'}{formatFcfa(t.amount)}
-                  </span>
-                </div>
-              );
-            })}
+            {filtered.map((t, i) => <LigneHistorique key={t.id} t={t} premier={i === 0} />)}
           </div>
         )}
       </div>

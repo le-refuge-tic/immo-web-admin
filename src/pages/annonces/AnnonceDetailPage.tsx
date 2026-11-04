@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { getAdminBien } from '../../api/getAdminBien';
+import CarteConclusion from './CarteConclusion';
 import { patchAdminBien } from '../../api/patchAdminBien';
 import { getGeocoding } from '../../api/getGeocoding';
 import { deleteAdminBien } from '../../api/deleteAdminBien';
@@ -794,6 +795,14 @@ export default function AnnonceDetailPage() {
               )}
             </div>
           </div>}
+
+          {canModerate && mod === 'approuve' && (
+            <CarteConclusion
+              bien={bien}
+              notifier={showToast}
+              onDeclaree={() => getAdminBien.byId(bien.id).then(setBien).catch(() => {})}
+            />
+          )}
 
         </div>
       </div>

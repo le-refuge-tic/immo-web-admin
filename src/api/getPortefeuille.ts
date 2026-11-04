@@ -9,6 +9,9 @@ export type Portefeuille = {
   nb_biens_valides: number;
   montant: number;
   palier_atteint: boolean;
+  /** Palier de la semaine : 20 biens (agent seul) ou 30 biens (binôme, biens de la paire). */
+  seuil_palier?: number;
+  binome?: boolean;
 };
 
 export const getPortefeuille = {

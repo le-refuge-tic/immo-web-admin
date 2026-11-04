@@ -460,6 +460,7 @@ export default function PublierBienPage() {
       chambres,
       meuble: isMeuble,
       standing,
+      disponibilite,
     },
   )
 

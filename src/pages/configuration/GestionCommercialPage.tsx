@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef, type FormEvent } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import RegularisationPrimes from './RegularisationPrimes';
 import { blockInvalidNumberKey } from '../../utils/inputNumbers';
 import { getCommerciaux } from '../../api/getCommerciaux';
 import { deleteCommerciaux } from '../../api/deleteCommerciaux';
@@ -1166,6 +1167,7 @@ export default function GestionCommercialPage() {
             </div>
           </div>
         </div>
+        {(me?.role_principal ?? me?.role) === 'super_admin' && <RegularisationPrimes />}
       </div>
 
       {showModal && canManage && (

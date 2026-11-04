@@ -16,6 +16,7 @@ type Ripple = { id: number; x: number; y: number; size: number };
 export default function PortefeuilleCard({ loading, portefeuille }: { loading: boolean; portefeuille: Portefeuille | null }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [ripples, setRipples] = useState<Ripple[]>([]);
+  const seuil = portefeuille?.seuil_palier ?? 20;
 
   const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
     const el = cardRef.current;
@@ -75,7 +76,7 @@ export default function PortefeuilleCard({ loading, portefeuille }: { loading: b
           ) : portefeuille && (
             <>
               {portefeuille.nb_biens_valides} bien{portefeuille.nb_biens_valides > 1 ? 's' : ''} validé{portefeuille.nb_biens_valides > 1 ? 's' : ''} du {formatDate(portefeuille.semaine_debut)} au {formatDate(new Date(new Date(portefeuille.semaine_fin).getTime() - 86400000).toISOString())}
-              {portefeuille.palier_atteint && ' · Palier 50 000 FCFA atteint !'}
+              {portefeuille.palier_atteint && (portefeuille.binome ? ' · Palier atteint : semaine de la paire portée à 50 000 FCFA' : ' · Palier 50 000 FCFA atteint !')}
             </>
           )}
         </div>
@@ -84,14 +85,14 @@ export default function PortefeuilleCard({ loading, portefeuille }: { loading: b
       {(loading || (portefeuille && !portefeuille.palier_atteint)) && (
         <div style={{ position: 'relative', zIndex: 1, minWidth: 220, flex: '1 1 220px', maxWidth: 320 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.6875rem', opacity: 0.85, marginBottom: '0.375rem' }}>
-            <span>Progression vers le palier (20 biens)</span>
-            {loading ? <Skeleton onGlass width={28} height={11} /> : <span>{portefeuille!.nb_biens_valides}/20</span>}
+            <span>Progression vers le palier ({seuil} biens{portefeuille?.binome ? ' de la paire' : ''})</span>
+            {loading ? <Skeleton onGlass width={28} height={11} /> : <span>{portefeuille!.nb_biens_valides}/{seuil}</span>}
           </div>
           <div style={{ height: 8, borderRadius: 999, background: 'rgba(255,255,255,0.25)', overflow: 'hidden' }}>
             {!loading && (
               <div style={{
                 height: '100%', borderRadius: 999, background: 'var(--c-card)',
-                width: `${Math.min(portefeuille!.nb_biens_valides / 20, 1) * 100}%`,
+                width: `${Math.min(portefeuille!.nb_biens_valides / seuil, 1) * 100}%`,
                 transition: 'width 0.3s ease',
               }} />
             )}
@@ -99,9 +100,7 @@ export default function PortefeuilleCard({ loading, portefeuille }: { loading: b
           <div style={{ fontSize: '0.6875rem', opacity: 0.75, marginTop: '0.375rem' }}>
             {loading ? (
               <Skeleton onGlass width={200} height={11} />
-            ) : portefeuille!.nb_biens_valides < 10
-              ? '1 000 FCFA par bien validé'
-              : '1 500 FCFA par bien validé au-delà du 10e · 50 000 FCFA fixe au 20e'}
+            ) : 'Prime selon le type de bien · +50 % dès le 11e bien d’une même catégorie · semaine portée à 50 000 FCFA au palier' + (portefeuille?.binome ? ' (binôme : primes partagées 50/50)' : '') + '. Détail de chaque crédit dans l’historique.'}
           </div>
         </div>
       )}

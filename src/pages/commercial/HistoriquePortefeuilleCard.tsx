@@ -1,13 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getWallet, type WalletTransaction } from '../../api/getWallet';
-
-function formatFcfa(v: number) {
-  return new Intl.NumberFormat('fr-FR').format(Math.round(v)) + ' FCFA';
-}
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
-}
+import LigneHistorique from './LigneHistorique';
 
 export default function HistoriquePortefeuilleCard() {
   const navigate = useNavigate();
@@ -21,7 +15,7 @@ export default function HistoriquePortefeuilleCard() {
       .finally(() => setLoading(false));
   }, []);
 
-  const credits = transactions.filter(t => t.type === 'depot');
+  const credits = transactions;
   const recent = credits.slice(0, 4);
 
   return (
@@ -38,39 +32,11 @@ export default function HistoriquePortefeuilleCard() {
         <div style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--c-muted)', fontSize: 13 }}>Chargement…</div>
       ) : credits.length === 0 ? (
         <div style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--c-muted)', fontSize: 13 }}>
-          Aucun crédit pour le moment. Votre premier portefeuille hebdomadaire sera crédité le lundi suivant vos premières validations.
+          Aucun mouvement pour le moment. Chaque bien validé est crédité dès sa validation, avec le détail du calcul.
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          {recent.map((t, i) => {
-            const isBonus = t.metadata?.type === 'bonus_admin';
-            return (
-              <div key={t.id} style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '0.75rem 0', borderTop: i === 0 ? 'none' : '1px solid var(--c-border)', gap: 10,
-              }}>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--c-text)' }}>
-                    {isBonus ? 'Bonus' : 'Portefeuille hebdomadaire'}
-                  </div>
-                  <div style={{ fontSize: 11, color: 'var(--c-muted)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {t.description} · {formatDate(t.created_at)}
-                  </div>
-                  {t.metadata?.prime_bien != null && (
-                    <div style={{ fontSize: 11, color: 'var(--c-muted)', marginTop: 4 }}>
-                      Bien {formatFcfa(Number(t.metadata.prime_bien))}
-                      {Number(t.metadata.bonus_meuble) > 0 && ` · Meuble +${formatFcfa(Number(t.metadata.bonus_meuble))}`}
-                      {Number(t.metadata.bonus_11e_bien) > 0 && ` · 11e bien +${formatFcfa(Number(t.metadata.bonus_11e_bien))}`}
-                      {t.metadata.plafond_exceptionnel && ` · Plafond exceptionnel ${formatFcfa(50000)}`}
-                    </div>
-                  )}
-                </div>
-                <span className={`immo-badge ${isBonus ? 'badge-warning' : 'badge-active'}`} style={{ flexShrink: 0 }}>
-                  +{formatFcfa(t.amount)}
-                </span>
-              </div>
-            );
-          })}
+          {recent.map((t, i) => <LigneHistorique key={t.id} t={t} premier={i === 0} />)}
           {credits.length > 4 && (
             <button onClick={() => navigate('/portefeuille-commercial')}
               style={{ marginTop: 10, padding: '8px 0', background: 'none', border: '1px solid var(--c-border)', borderRadius: 8, cursor: 'pointer', fontSize: 12, fontWeight: 600, color: 'var(--c-blue)', width: '100%' }}>
