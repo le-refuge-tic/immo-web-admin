@@ -9,7 +9,6 @@ import { apiMessage } from '../../utils/apiMessage';
 import { useToast } from '../../context/ToastContext'
 import { Card, Section, ChoiceList, Chip, Counter, NumberPicker, MoneyInput, RecapSection } from './formUi'
 import { BLUE, baseInput } from './formStyles'
-import { prixPrincipalDuplex } from './duplexCalculs'
 import { primeValidationCommerciale } from './commissionCommerciale'
 import { getPriceFieldLabel, shouldShowLocationSpecificFields } from './bienFormRules'
 import { erreurFichierVideo, raisonEchecVideo } from '../../utils/videoAnnonce'
@@ -441,14 +440,9 @@ export default function PublierBienPage() {
     : typeBien
 
   // Commission plateforme : 50% du loyer mensuel, uniquement pour les biens en location.
-  const prixCalcul = isMeuble
-    ? prixPrincipalDuplex({
-        prix_long_sejour: prixLongSejour,
-        prix_sejour_restreint: prixSejourRestreint,
-        prix_heure: prixHeure,
-        autres: tarifsAutres,
-      }, parsePrix)
-    : (parsePrix(prix) ?? 0)
+  // Meublé ou non, le prix vient du champ « Prix » : les champs de tarifs
+  // meublés n'existent plus dans le formulaire depuis 8b6b5fa.
+  const prixCalcul = parsePrix(prix) ?? 0
 
   const commissionAgence = (!isTerrain && typeTransaction === 'location') ? prixCalcul * 0.5 : 0
   const primeValidationCommercialeEstimee = primeValidationCommerciale(
@@ -650,17 +644,7 @@ export default function PublierBienPage() {
     if (submitting) return
     setSubmitting(true); setError('')
     try {
-      let prixFinal: number
-      if (isMeuble) {
-        prixFinal = prixPrincipalDuplex({
-          prix_long_sejour: prixLongSejour,
-          prix_sejour_restreint: prixSejourRestreint,
-          prix_heure: prixHeure,
-          autres: tarifsAutres,
-        }, parsePrix)
-      } else {
-        prixFinal = parsePrix(prix) ?? 0
-      }
+      const prixFinal = prixCalcul
 
       const notes = description.trim()
       const titre = isTerrain ? titreTerrain.trim() : ''
