@@ -8,11 +8,16 @@ export type Retrait = {
   user_id: number;
   wallet_id: number;
   montant: number;
-  statut: 'en_attente' | 'approuve' | 'rejete' | 'envoye' | 'echoue';
-  numero_telephone: string;
-  nom_titulaire: string | null;
-  preuve_url: string | null;
-  motif_rejet: string | null;
+  /** en_attente, en_cours, en_attente_fonds, envoye, echoue, rejete (ou approuve : anciennes demandes). */
+  statut: string;
+  numero_telephone?: string;
+  nom_titulaire?: string | null;
+  preuve_url?: string | null;
+  motif_rejet?: string | null;
+  /** Renvoyés par le serveur : destination masquée et phrase prête à afficher (échec remboursé…). */
+  operateur?: string | null;
+  numero_masque?: string;
+  message?: string | null;
   created_at: string;
 };
 

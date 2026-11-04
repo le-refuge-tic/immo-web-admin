@@ -14,10 +14,12 @@ function formatDate(iso: string) {
 }
 
 const STATUT_LABEL: Record<string, string> = {
-  en_attente: 'En attente', approuve: 'Approuvé', rejete: 'Rejeté', envoye: 'Envoyé', echoue: 'Échoué',
+  en_attente: 'En cours de traitement', en_cours: 'Virement en cours', en_attente_fonds: 'En attente de traitement',
+  approuve: 'En cours de traitement', rejete: 'Refusé, remboursé', envoye: 'Envoyé', echoue: 'Échoué, remboursé',
 };
 const STATUT_COLOR: Record<string, string> = {
-  en_attente: '#f59e0b', approuve: '#3b82f6', rejete: '#ef4444', envoye: '#10b981', echoue: '#ef4444',
+  en_attente: '#f59e0b', en_cours: '#3b82f6', en_attente_fonds: '#f59e0b',
+  approuve: '#3b82f6', rejete: '#ef4444', envoye: '#10b981', echoue: '#ef4444',
 };
 
 export default function CommercialPortefeuillePage() {
@@ -107,8 +109,8 @@ export default function CommercialPortefeuillePage() {
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--c-text)' }}>{formatFcfa(r.montant)}</div>
                   <div style={{ fontSize: 11, color: 'var(--c-muted)' }}>{formatDate(r.created_at)}</div>
-                  {r.statut === 'rejete' && r.motif_rejet && (
-                    <div style={{ fontSize: 11, color: 'var(--s-red)', marginTop: 2 }}>{r.motif_rejet}</div>
+                  {(r.statut === 'rejete' || r.statut === 'echoue') && (r.message || r.motif_rejet) && (
+                    <div style={{ fontSize: 11, color: 'var(--s-red)', marginTop: 2 }}>{r.message || r.motif_rejet}</div>
                   )}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>

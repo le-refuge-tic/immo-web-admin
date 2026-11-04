@@ -6,6 +6,7 @@ import { getAdminStats } from '../api/getAdminStats';
 import { getQuartiers } from '../api/getQuartiers';
 import { getMesBiens } from '../api/getMesBiens';
 import { verificationsApi } from '../api/verificationsApi';
+import { compterATraiter } from '../utils/retraitStatut';
 
 const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api/v1';
 const SOCKET_BASE = BASE.replace(/\/api\/v1\/?$/, '');
@@ -86,15 +87,17 @@ export function useSidebarBadges({ isAdmin, isCommercial, userId }: { isAdmin: b
     const [stats, quartiers, retraits, verifications] = await Promise.allSettled([
       getAdminStats.get(),
       getQuartiers.lister('en_attente'),
-      axios.get(`${BASE}/retraits/admin?statut=en_attente`, auth()),
+      axios.get(`${BASE}/retraits/admin`, auth()),
       verificationsApi.list(),
     ]);
     const patch: Partial<SidebarBadges> = {};
     if (stats.status === 'fulfilled') patch.moderation = stats.value?.biens_en_attente ?? 0;
     if (quartiers.status === 'fulfilled') patch.quartiers = Array.isArray(quartiers.value) ? quartiers.value.length : 0;
     if (retraits.status === 'fulfilled') {
+      // Pastille = demandes à traiter par un administrateur (attente de fonds, anciennes demandes manuelles) :
+      // les virements automatiques en cours ou terminés ne demandent aucune action.
       const rd = retraits.value.data;
-      patch.retraits = Array.isArray(rd) ? rd.length : (rd?.data?.length ?? 0);
+      patch.retraits = compterATraiter(Array.isArray(rd) ? rd : (rd?.data ?? []));
     }
     if (verifications.status === 'fulfilled') {
       patch.verifications = Array.isArray(verifications.value) ? verifications.value.length : 0;
