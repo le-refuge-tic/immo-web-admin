@@ -4,6 +4,7 @@ import { getWallet, type WalletTransaction } from '../../api/getWallet';
 import { postRetrait, type Retrait } from '../../api/postRetrait';
 import RetraitRequestModal from './RetraitRequestModal';
 import LigneHistorique from './LigneHistorique';
+import { COULEUR_TON, estEnCours, infoStatut } from '../../utils/retraitCommercial';
 import { useAuth } from '../../context/AuthContext';
 
 function formatFcfa(v: number) {
@@ -12,15 +13,6 @@ function formatFcfa(v: number) {
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
 }
-
-const STATUT_LABEL: Record<string, string> = {
-  en_attente: 'En cours de traitement', en_cours: 'Virement en cours', en_attente_fonds: 'En attente de traitement',
-  approuve: 'En cours de traitement', rejete: 'Refusé, remboursé', envoye: 'Envoyé', echoue: 'Échoué, remboursé',
-};
-const STATUT_COLOR: Record<string, string> = {
-  en_attente: '#f59e0b', en_cours: '#3b82f6', en_attente_fonds: '#f59e0b',
-  approuve: '#3b82f6', rejete: '#ef4444', envoye: '#10b981', echoue: '#ef4444',
-};
 
 export default function CommercialPortefeuillePage() {
   const navigate = useNavigate();
@@ -48,6 +40,24 @@ export default function CommercialPortefeuillePage() {
   }, []);
 
   useEffect(() => { refresh(); }, [refresh]);
+
+  // Un virement en cours se termine tout seul (webhook FedaPay) : la liste et le solde suivent sans
+  // action ; un échec rend le montant au portefeuille, d'où la relecture du solde.
+  const aDesEnCours = retraits.some(r => estEnCours(r.statut));
+  useEffect(() => {
+    if (!aDesEnCours) return;
+    const id = setInterval(async () => {
+      const [w, t, r] = await Promise.all([
+        getWallet.solde('commission_commerciale').catch(() => null),
+        getWallet.transactions('commission_commerciale').catch(() => null),
+        postRetrait.mesRetraits().catch(() => null),
+      ]);
+      if (w) setSolde(Number(w.balance ?? 0));
+      if (Array.isArray(t)) setTrans(t);
+      if (Array.isArray(r)) setRetraits(r);
+    }, 8000);
+    return () => clearInterval(id);
+  }, [aDesEnCours]);
 
   const filtered = filterTx === 'credits'
     ? transactions.filter(t => t.type === 'depot')
@@ -97,38 +107,36 @@ export default function CommercialPortefeuillePage() {
         </button>
       </div>
 
-      {/* Mes demandes de retrait */}
+      {/* Mes demandes de retrait : statut en direct, jamais de détail technique */}
       {retraits.length > 0 && (
         <div className="immo-card" style={{ marginBottom: 24 }}>
           <div className="section-header">
             <span className="section-title">Mes demandes de retrait</span>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {retraits.map(r => (
-              <div key={r.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '8px 0', borderTop: '1px solid var(--c-border)' }}>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--c-text)' }}>{formatFcfa(r.montant)}</div>
-                  <div style={{ fontSize: 11, color: 'var(--c-muted)' }}>{formatDate(r.created_at)}</div>
-                  {(r.statut === 'rejete' || r.statut === 'echoue') && (r.message || r.motif_rejet) && (
-                    <div style={{ fontSize: 11, color: 'var(--s-red)', marginTop: 2 }}>{r.message || r.motif_rejet}</div>
-                  )}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                  {r.statut === 'envoye' && r.preuve_url && (
-                    <a href={r.preuve_url} target="_blank" rel="noopener noreferrer"
-                      style={{ fontSize: 11, fontWeight: 600, color: 'var(--c-blue)', textDecoration: 'none' }}>
-                      Voir la preuve
-                    </a>
-                  )}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }} aria-live="polite">
+            {retraits.map(r => {
+              const { label, ton } = infoStatut(r.statut);
+              const couleur = COULEUR_TON[ton];
+              return (
+                <div key={r.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '8px 0', borderTop: '1px solid var(--c-border)' }}>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--c-text)' }}>{formatFcfa(r.montant)}</div>
+                    <div style={{ fontSize: 11, color: 'var(--c-muted)' }}>
+                      {formatDate(r.created_at)}{r.numero_masque ? ` · vers ${r.numero_masque}` : ''}{r.operateur ? ` · ${r.operateur === 'mtn' ? 'MTN' : r.operateur === 'moov' ? 'Moov' : r.operateur}` : ''}
+                    </div>
+                    {ton === 'echec' && r.message && (
+                      <div style={{ fontSize: 11, color: 'var(--s-red)', marginTop: 2 }}>{r.message}</div>
+                    )}
+                  </div>
                   <span style={{
-                    fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999,
-                    color: STATUT_COLOR[r.statut], background: `${STATUT_COLOR[r.statut]}18`,
+                    fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999, flexShrink: 0,
+                    color: couleur, background: `${couleur}18`,
                   }}>
-                    {STATUT_LABEL[r.statut] ?? r.statut}
+                    {label}
                   </span>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
