@@ -15,6 +15,8 @@ import {
 import { BENIN_VILLES, getQuartiersByVille, ALL_QUARTIERS } from '../../data/beninLocations';
 import { apiMessage } from '../../utils/apiMessage';
 import { TYPES_EDITION, LOCAUX_PRO, coupleEdition, libelleEditionDepuisBien } from '../commercial/bien-classique/bienClassiqueForm';
+import { prixPrincipalDuplex } from '../commercial/duplexCalculs';
+import { libellePrix, prixAvecUnite } from '../../utils/prix';
 
 // ── Icônes SVG locales ────────────────────────────────────────────────────────
 const SaveIcon = () => (
@@ -172,6 +174,8 @@ export default function AnnonceEditPage() {
   const [typeLabel, setTypeLabel]     = useState('');
   const [description, setDescription] = useState('');
   const [prix, setPrix]               = useState('');
+  // Tarifs d'un meublé (null = pas de tarifs meublés : le prix se saisit directement).
+  const [tarifs, setTarifs] = useState<{ long: string; nuit: string; heure: string } | null>(null);
   const [superficie, setSuperficie]   = useState('');
   const [cloture, setCloture]         = useState<boolean | null>(null);
   const [entreePerso, setEntreePerso] = useState<boolean | null>(null);
@@ -237,6 +241,12 @@ export default function AnnonceEditPage() {
         setTypeLabel(libelleEditionDepuisBien(b.type ?? '', a.sous_type ?? ''));
         setDescription(b.description ?? '');
         setPrix(b.prix != null ? String(b.prix) : '');
+        const tm = a.tarifs_meuble;
+        setTarifs(tm ? {
+          long:  tm.prix_long_sejour      != null ? String(tm.prix_long_sejour)      : '',
+          nuit:  tm.prix_sejour_restreint != null ? String(tm.prix_sejour_restreint) : '',
+          heure: tm.prix_heure            != null ? String(tm.prix_heure)            : '',
+        } : null);
 
         if (b.details_maison)  { const s = Number(b.details_maison.superficie);  if (s > 0) setSuperficie(String(s)); setCloture(b.details_maison.cloture ?? null); }
         if (b.details_terrain) { const s = Number(b.details_terrain.superficie); if (s > 0) setSuperficie(String(s)); setCloture(b.details_terrain.cloture ?? null); }
@@ -344,8 +354,21 @@ export default function AnnonceEditPage() {
         if (etatConstructionMaison) sa('etat_construction', etatConstructionMaison);
       }
 
+      // Meublé : les tarifs sont enregistrés et le prix principal en est déduit (mois, nuit, heure, personnalisé).
+      let prixEnvoye = prix ? Number(prix) : undefined;
+      if (tarifs) {
+        const nb = (v: string) => (v.trim() ? Number(v) : undefined);
+        const tarifsMeuble = { ...(amenites.tarifs_meuble ?? {}), prix_long_sejour: nb(tarifs.long), prix_sejour_restreint: nb(tarifs.nuit), prix_heure: nb(tarifs.heure) };
+        ame.tarifs_meuble = tarifsMeuble;
+        const principal = prixPrincipalDuplex({
+          prix_long_sejour: tarifs.long, prix_sejour_restreint: tarifs.nuit, prix_heure: tarifs.heure,
+          autres: ((tarifsMeuble.autres ?? []) as { label?: string; prix?: number | string | null }[]).map(x => ({ label: x.label, prix: x.prix != null ? String(x.prix) : '' })),
+        }, v => (v.trim() ? Number(v) : undefined));
+        prixEnvoye = principal > 0 ? principal : prixEnvoye;
+      }
+
       const payload: any = {
-        type: dbType, description: description||undefined, prix: prix ? Number(prix) : undefined,
+        type: dbType, description: description||undefined, prix: prixEnvoye,
         localisation: { ville:villeVal, quartier:quartierVal||undefined, adresse:adresse||undefined },
         amenites: ame,
         pieces: pieces.map(p => ({ id:p.id > 0 ? p.id : undefined, nom:p.nom, surface:p.surface!==''?Number(p.surface):null, longueur:p.longueur!==''?Number(p.longueur):null, largeur:p.largeur!==''?Number(p.largeur):null })),
@@ -514,9 +537,23 @@ export default function AnnonceEditPage() {
 
               <div style={CARD}>
                 <SectionTitle>Prix & Description</SectionTitle>
-                <Field label="Loyer mensuel (FCFA)" hint="Modifiable après vérification sur site.">
-                  <SInput type="number" min="0" max="999999999" step="1" placeholder="Ex : 50 000" value={prix} onChange={e => setPrix(e.target.value)} onKeyDown={e => blockInvalidNumberKey(e, true)} />
-                </Field>
+                {tarifs ? (
+                  <>
+                    {([
+                      ['long',  'Long séjour — par mois (FCFA)'],
+                      ['nuit',  'Court séjour — par nuit (FCFA)'],
+                      ['heure', 'À l’heure (FCFA)'],
+                    ] as const).map(([cle, label]) => (
+                      <Field key={cle} label={label} hint={cle === 'long' ? 'Le premier tarif renseigné (mois, nuit, heure) devient le prix affiché.' : undefined}>
+                        <SInput type="number" min="0" max="999999999" step="1" placeholder="—" value={tarifs[cle]} onChange={e => setTarifs(t => t && { ...t, [cle]: e.target.value })} onKeyDown={e => blockInvalidNumberKey(e, true)} />
+                      </Field>
+                    ))}
+                  </>
+                ) : (
+                  <Field label={`${bien ? libellePrix(bien) : 'Prix'} (FCFA)`} hint="Modifiable après vérification sur site.">
+                    <SInput type="number" min="0" max="999999999" step="1" placeholder="Ex : 50 000" value={prix} onChange={e => setPrix(e.target.value)} onKeyDown={e => blockInvalidNumberKey(e, true)} />
+                  </Field>
+                )}
                 <Field label="Description">
                   <textarea rows={5} value={description} onChange={e => setDescription(e.target.value)} placeholder="Description détaillée du bien…" style={{ width:'100%', boxSizing:'border-box', background:'var(--c-card)', border:'1.5px solid var(--c-border)', borderRadius:8, padding:'9px 12px', fontSize:13, color:'var(--c-text)', resize:'vertical', fontFamily:'inherit', outline:'none' }}/>
                 </Field>
@@ -775,7 +812,7 @@ export default function AnnonceEditPage() {
               <SectionTitle>Conditions financières</SectionTitle>
               <p style={{ fontSize:12, color:'var(--c-muted)', margin:'0 0 20px', lineHeight:1.6 }}>Ces données sont définies par le propriétaire ou l'agent à la création. Le loyer mensuel est éditable dans l'onglet <strong>Type & Prix</strong>.</p>
               {([
-                ['Loyer mensuel',       bien.prix!=null ? `${Number(bien.prix).toLocaleString('fr-FR')} FCFA / mois` : '—'],
+                [libellePrix(bien),     bien.prix!=null ? prixAvecUnite(bien) : '—'],
                 ['Avance',              amenites.avance_mois!=null ? `${amenites.avance_mois} mois` : '—'],
                 ['Loyer prépayé',       amenites.loyer_prepaye_mois!=null ? `${amenites.loyer_prepaye_mois} mois` : '—'],
                 ['Caution eau',         amenites.caution_eau!=null ? `${Number(amenites.caution_eau).toLocaleString('fr-FR')} FCFA` : '—'],

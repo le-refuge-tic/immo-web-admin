@@ -8,7 +8,7 @@ import { deleteAdminBien } from '../../api/deleteAdminBien';
 import { ChevronLeftIcon, PinIcon, TrashIcon, EditIcon } from '../../components/Icons';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { libellePrix, suffixeUnite } from '../../utils/prix';
+import { libellePrix, suffixeUnite, lignesTarifsMeuble } from '../../utils/prix';
 
 // ── Labels lisibles pour les champs amenites ────────────────────────────────
 const STANDING_LABELS: Record<string, string> = {
@@ -433,6 +433,16 @@ export default function AnnonceDetailPage() {
             <div className="detail-bien-price-type">
               {libellePrix(bien)}
             </div>
+            {lignesTarifsMeuble(bien.amenites).length > 0 && (
+              <div className="detail-info-rows" style={{ marginTop: 10 }}>
+                {lignesTarifsMeuble(bien.amenites).map(t => (
+                  <div key={t.label} className="detail-info-row">
+                    <span>{t.label}</span>
+                    <strong>{formatPrice(t.montant)} FCFA{t.unite}</strong>
+                  </div>
+                ))}
+              </div>
+            )}
             {bien.localisation && (
               <div className="detail-bien-location">
                 <PinIcon size={13} />

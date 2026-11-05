@@ -48,3 +48,22 @@ export function libellePrix(b: BienPrix): string {
   }
   return 'Prix de vente'
 }
+
+type TarifsMeuble = {
+  prix_long_sejour?: number | string | null
+  prix_sejour_restreint?: number | string | null
+  prix_heure?: number | string | null
+  autres?: { label?: string; prix?: number | string | null }[]
+}
+
+/** Tarifs d'un meublé, dans l'ordre du prix principal : mois, nuit, heure, puis personnalisés. */
+export function lignesTarifsMeuble(amenites: { tarifs_meuble?: TarifsMeuble | null } | null | undefined): { label: string; montant: number; unite: string }[] {
+  const t = amenites?.tarifs_meuble
+  if (!t) return []
+  return [
+    { label: 'Long séjour', montant: Number(t.prix_long_sejour ?? 0), unite: ' / mois' },
+    { label: 'Court séjour', montant: Number(t.prix_sejour_restreint ?? 0), unite: ' / nuit' },
+    { label: 'À l’heure', montant: Number(t.prix_heure ?? 0), unite: ' / heure' },
+    ...(t.autres ?? []).map(a => ({ label: a.label?.trim() || 'Autre tarif', montant: Number(a.prix ?? 0), unite: '' })),
+  ].filter(l => l.montant > 0)
+}

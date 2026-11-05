@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { libellePrix, prixAvecUnite, suffixeUnite } from './prix'
+import { libellePrix, lignesTarifsMeuble, prixAvecUnite, suffixeUnite } from './prix'
 
 /** toLocaleString('fr-FR') sépare les milliers par une espace fine insécable (U+202F). */
 const ESPACE_FINE = String.fromCharCode(0x202f)
@@ -57,5 +57,19 @@ describe('salle de fêtes : prix à l’heure', () => {
 
   it('repli si l’API ne renvoie pas unite_prix : déduit du type', () => {
     expect(suffixeUnite({ type: 'salle_fete', transaction: 'location', details_salle_fete: { duree_heures: 6 } })).toBe(' / 6 h')
+  })
+})
+
+describe('lignesTarifsMeuble', () => {
+  it('sans tarifs : aucune ligne', () => {
+    expect(lignesTarifsMeuble(null)).toEqual([])
+  })
+
+  it('mois, nuit, heure puis personnalisés ; montants vides ignorés', () => {
+    expect(lignesTarifsMeuble({ tarifs_meuble: { prix_sejour_restreint: '25000', prix_heure: 5000, autres: [{ prix: 0 }] } }))
+      .toEqual([
+        { label: 'Court séjour', montant: 25000, unite: ' / nuit' },
+        { label: 'À l’heure', montant: 5000, unite: ' / heure' },
+      ])
   })
 })
