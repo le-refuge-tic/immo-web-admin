@@ -46,6 +46,7 @@ const TYPES_BIEN = [
   { key: 'maison',        label: 'Maison'          },
   { key: 'terrain',       label: 'Terrain / Parcelle' },
   { key: 'boutique',      label: 'Boutique'        },
+  { key: 'bureau',        label: 'Bureau'          },
 ]
 
 const STANDING_OPTS = [
@@ -420,6 +421,8 @@ export default function PublierBienPage() {
   // Dérivés
   const isTerrain      = typeBien === 'terrain'
   const isBoutique     = typeBien === 'boutique'
+  // Bureau : même parcours que la boutique (local professionnel, sans pièces).
+  const isLocalPro     = isBoutique || typeBien === 'bureau'
   const isSmallUnit    = typeBien === 'entree_coucher' || typeBien === 'chambre_salon'
   const peutEtreMeuble = typeBien === 'appartement' || typeBien === 'villa' || typeBien === 'duplex' || typeBien === 'maison'
   const isMeuble       = peutEtreMeuble && (typeBien === 'maison' ? etatMeubleMaison !== 'non_meuble' : estMeuble)
@@ -432,7 +435,7 @@ export default function PublierBienPage() {
   })()
 
   const typeBackend = isTerrain ? 'terrain'
-    : (typeBien === 'villa' || typeBien === 'duplex' || typeBien === 'maison' || isBoutique) ? 'maison'
+    : (typeBien === 'villa' || typeBien === 'duplex' || typeBien === 'maison' || isLocalPro) ? 'maison'
     : isMeuble ? 'appart_meuble' : 'appart_vide'
 
   const sousType = typeBien === 'appartement' ? (isMeuble ? 'appart_meuble' : 'appartement')
@@ -466,7 +469,7 @@ export default function PublierBienPage() {
     return loyer * (avanceMois + loyerPrepayeMois) + cEau + cElec + autres + commissionAgence
   })()
 
-  const STEP_LABELS = ['Type & Prix', 'Localisation', isTerrain ? 'Terrain' : isBoutique ? 'Boutique' : 'Confort', 'Honoraires', 'Photos']
+  const STEP_LABELS = ['Type & Prix', 'Localisation', isTerrain ? 'Terrain' : isBoutique ? 'Boutique' : isLocalPro ? 'Bureau' : 'Confort', 'Honoraires', 'Photos']
 
   const filteredQuartiers = quartierSearch.trim()
     ? QUARTIERS.filter(q => normalizeStr(q.nom).includes(normalizeStr(quartierSearch))).slice(0, 60)
@@ -590,7 +593,7 @@ export default function PublierBienPage() {
     if (equipementsBonus.length || equipementsAutre.trim()) a.equipements = [...equipementsBonus, ...(equipementsAutre.trim() ? [equipementsAutre.trim()] : [])]
     if (alentours.length || alentoursAutre.trim()) a.voisinage = [...alentours, ...(alentoursAutre.trim() ? [alentoursAutre.trim()] : [])]
 
-    if (isBoutique) {
+    if (isLocalPro) {
       a.type_voie = typeVoie; a.visibilite = visibiliteBoutique; a.parking_clients = parkingClients
     } else {
       const cEau = parsePrix(cautionEau) ?? 0; const cElec = parsePrix(cautionElec) ?? 0
@@ -624,7 +627,7 @@ export default function PublierBienPage() {
   }
 
   const buildPieces = () => {
-    if (isTerrain || isBoutique) return []
+    if (isTerrain || isLocalPro) return []
     if (typeBien === 'entree_coucher') return [{ nom: 'Chambre', surface: 0 }, { nom: 'Entrée', surface: 0 }]
     if (typeBien === 'chambre_salon') {
       const p: any[] = []
@@ -1229,7 +1232,7 @@ export default function PublierBienPage() {
           )}
 
           {/* ═══ ÉTAPE 2 : BOUTIQUE ═══ */}
-          {step === 2 && isBoutique && (
+          {step === 2 && isLocalPro && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <Card>
                 <Section title="Position sur la voie" />
@@ -1312,7 +1315,7 @@ export default function PublierBienPage() {
           )}
 
           {/* ═══ ÉTAPE 2 : RÉSIDENTIEL ═══ */}
-          {step === 2 && !isTerrain && !isBoutique && (
+          {step === 2 && !isTerrain && !isLocalPro && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {showPieces && (
                 <Card>
@@ -1708,7 +1711,7 @@ export default function PublierBienPage() {
                 <RecapSection title="Prime de validation estimée" items={[
                   `${formatFcfa(primeValidationCommercialeEstimee)} après validation de cette annonce`
                 ]} />
-                {!isTerrain && !isBoutique && typeTransaction === 'location' && (
+                {!isTerrain && !isLocalPro && typeTransaction === 'location' && (
                   <>
                     <RecapSection title="Conditions d'entrée" items={[
                       avanceMois > 0
@@ -1727,14 +1730,14 @@ export default function PublierBienPage() {
                     )}
                   </>
                 )}
-                {!isTerrain && !isBoutique && showPieces && (
+                {!isTerrain && !isLocalPro && showPieces && (
                   <RecapSection title="Pièces" items={[
                     `${chambres} chambre${chambres > 1 ? 's' : ''}`,
                     `${salons} salon${salons > 1 ? 's' : ''}`,
                     ...(typeBien !== 'chambre_salon' ? [`${cuisines} cuisine${cuisines > 1 ? 's' : ''}`, `${douches} douche${douches > 1 ? 's' : ''}`] : []),
                   ]} />
                 )}
-                {!isTerrain && !isBoutique && (
+                {!isTerrain && !isLocalPro && (
                   <RecapSection title="Confort" items={[
                     ...(typeTransaction === 'location' ? [`Cuisine : ${labelCuisine(typeCuisine)}`] : []),
                     ...(typeTransaction === 'location' ? [`Accès / Cour : ${labelCour(typeCour)}`] : []),

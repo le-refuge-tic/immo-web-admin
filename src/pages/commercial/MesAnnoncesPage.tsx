@@ -15,6 +15,8 @@ const TYPE_LABEL: Record<string, string> = {
   maison_individuelle: 'Maison',
   villa_maison:        'Villa / Maison',
   boutique:            'Boutique / Local',
+  bureau:              'Bureau',
+  duplex:              'Duplex',
   terrain:             'Terrain',
   maison:              'Maison',
   appart_vide:         'Appartement',

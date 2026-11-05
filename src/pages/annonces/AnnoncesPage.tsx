@@ -21,6 +21,8 @@ const TYPE_BADGE: Record<string, string> = {
   maison_individuelle: 'MAISON',
   villa_maison:        'VILLA / MAISON',
   boutique:            'BOUTIQUE / LOCAL',
+  bureau:              'BUREAU',
+  duplex:              'DUPLEX',
   terrain:             'TERRAIN',
   // types DB (fallback)
   maison:              'MAISON',
@@ -38,6 +40,8 @@ const TYPE_NAME: Record<string, string> = {
   maison_individuelle: 'Maison',
   villa_maison:        'Villa / Maison',
   boutique:            'Boutique / Local',
+  bureau:              'Bureau',
+  duplex:              'Duplex',
   terrain:             'Terrain',
   maison:              'Maison',
   appart_vide:         'Appartement',

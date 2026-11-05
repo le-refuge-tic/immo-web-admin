@@ -44,6 +44,8 @@ const TYPE_LABELS: Record<string, string> = {
   maison_individuelle: 'Maison',
   terrain:           'Terrain',
   boutique:          'Boutique',
+  bureau:            'Bureau',
+  duplex:            'Duplex',
 };
 
 function sousTypeLabel(d: Demande): string {

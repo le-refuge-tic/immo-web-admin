@@ -36,21 +36,32 @@ const StarIcon = () => (
 );
 
 // ── Mapping types ─────────────────────────────────────────────────────────────
+// Mêmes couples type / sous_type que PublierBienPage à la création.
 const TYPE_OPTIONS = [
   { label: 'Chambre-Salon',     type: 'appart_vide',   sousType: 'chambre_salon'       },
   { label: 'Entrée-Coucher',    type: 'appart_vide',   sousType: 'entree_coucher'      },
   { label: 'Appartement',       type: 'appart_vide',   sousType: 'appartement'         },
-  { label: 'Appart. meublé',    type: 'appart_meuble', sousType: 'appartement'         },
+  { label: 'Appart. meublé',    type: 'appart_meuble', sousType: 'appart_meuble'       },
   { label: 'Villa',             type: 'maison',        sousType: 'villa'               },
+  { label: 'Duplex',            type: 'maison',        sousType: 'duplex'              },
   { label: 'Maison',            type: 'maison',        sousType: 'maison_individuelle' },
-  { label: 'Boutique / Local',  type: 'appart_vide',   sousType: 'boutique'            },
+  { label: 'Boutique / Local',  type: 'maison',        sousType: 'boutique'            },
+  { label: 'Bureau',            type: 'maison',        sousType: 'bureau'              },
   { label: 'Terrain',           type: 'terrain',       sousType: 'terrain'             },
 ] as const;
 
+const SOUS_TYPES_LOCAL_PRO: readonly string[] = ['boutique', 'bureau'];
+
 function getTypeLabel(dbType: string, dbSousType: string) {
-  return TYPE_OPTIONS.find(
+  const exact = TYPE_OPTIONS.find(
     o => o.type === dbType && (o.sousType === dbSousType || (!dbSousType && !o.sousType))
-  )?.label ?? '';
+  );
+  if (exact) return exact.label;
+  // Anciennes valeurs de cette page : appartement meublé en sous_type
+  // « appartement », boutique en type appart_vide.
+  if (dbType === 'appart_meuble' && dbSousType === 'appartement') return 'Appart. meublé';
+  if (dbSousType === 'boutique') return 'Boutique / Local';
+  return '';
 }
 
 // ── Options constantes ────────────────────────────────────────────────────────
@@ -356,7 +367,7 @@ export default function AnnonceEditPage() {
       const dispoVal = dispo === 'autre' ? (autrePrecision.dispo || 'autre') : dispo;
       sa('disponibilite', dispoVal);
       if (voisinage.length) sa('voisinage', voisinage); if (equips.length) sa('equipements', equips);
-      if (dbType === 'maison') {
+      if (dbType === 'maison' && !SOUS_TYPES_LOCAL_PRO.includes(dbST)) {
         sa('etat_meuble', etatMeubleMaison);
         if (etatConstructionMaison) sa('etat_construction', etatConstructionMaison);
       }
@@ -403,7 +414,9 @@ export default function AnnonceEditPage() {
   const opt = TYPE_OPTIONS.find(o => o.label === typeLabel);
   const dbType = opt?.type ?? bien?.type ?? '';
   const dbST   = opt?.sousType ?? '';
-  const isMaison  = dbType === 'maison';
+  // Boutique, bureau : type maison en base, mais sans pièces ni état du meuble.
+  const isLocalPro = SOUS_TYPES_LOCAL_PRO.includes(dbST);
+  const isMaison  = dbType === 'maison' && !isLocalPro;
   const isTerrain = dbType === 'terrain';
   const isAppart  = dbType === 'appart_vide' || dbType === 'appart_meuble';
   const isSmall   = dbST === 'chambre_salon' || dbST === 'entree_coucher';
@@ -605,7 +618,7 @@ export default function AnnonceEditPage() {
           {/* ═══ CONFORT ═══ */}
           {activeTab === 'Confort' && (
             <>
-              {isCommercial ? (
+              {isLocalPro ? null : isCommercial ? (
                 <div style={CARD}>
                   <SectionTitle>Nombre de pièces</SectionTitle>
                   <div style={{ display:'flex', flexDirection:'column' }}>
