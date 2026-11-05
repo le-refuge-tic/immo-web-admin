@@ -98,25 +98,28 @@ export default function EtapeRegles({ form, maj, evenements, erreurEvenements, g
       </Card>
 
       <Card>
-        <Section title="Règles de la salle" required />
+        <Section title="Règles de la salle (facultatif)" />
+        <p style={{ fontSize: 12, color: 'var(--c-muted)', margin: '0 0 12px' }}>
+          Laissez vide si vous ne savez pas. Touchez à nouveau un choix pour l’annuler.
+        </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div>
             <Libelle>Traiteur</Libelle>
             <ChoixUnique ariaLabel="Traiteur" options={TRAITEURS} value={form.traiteur}
-              onChange={v => maj({ traiteur: v })} />
+              onChange={v => maj({ traiteur: form.traiteur === v ? null : v })} />
           </div>
           <div>
             <Libelle>Décoration</Libelle>
-            <OuiNon value={form.deco} oui="Autorisée" non="Interdite" onChange={v => maj({ deco: v })} />
+            <OuiNon value={form.deco} oui="Autorisée" non="Interdite" onChange={v => maj({ deco: form.deco === v ? null : v })} />
           </div>
           <div>
             <Libelle>Alcool</Libelle>
-            <OuiNon value={form.alcool} oui="Autorisé" non="Interdit" onChange={v => maj({ alcool: v })} />
+            <OuiNon value={form.alcool} oui="Autorisé" non="Interdit" onChange={v => maj({ alcool: form.alcool === v ? null : v })} />
           </div>
           <div>
             <Libelle>Insonorisation</Libelle>
             <OuiNon value={form.insonorisee} oui="Insonorisée" non="Non insonorisée"
-              onChange={v => maj({ insonorisee: v })} />
+              onChange={v => maj({ insonorisee: form.insonorisee === v ? null : v })} />
           </div>
         </div>
       </Card>

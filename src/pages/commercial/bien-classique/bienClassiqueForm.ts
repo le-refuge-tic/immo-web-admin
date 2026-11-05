@@ -213,10 +213,6 @@ export function manquesEtape(etape: number, f: BienClassiqueForm, nbPhotos: numb
     }
   }
   if (etape === 1 && !f.quartier.trim()) manques.push('Veuillez sélectionner un quartier')
-  if (etape === 2 && d.isTerrain) {
-    if (!f.titreTerrain.trim()) manques.push('Veuillez donner un nom à ce bien')
-    if (!superficieM2(f)) manques.push('Veuillez indiquer la superficie du terrain')
-  }
   if (etape === 4 && nbPhotos < MIN_PHOTOS) {
     manques.push(`Ajoutez au moins ${MIN_PHOTOS} photos (${nbPhotos} pour l’instant)`)
   }
@@ -331,11 +327,16 @@ export function construirePieces(f: BienClassiqueForm): { nom: string; surface: 
   ]
 }
 
+/** Nom donné à un terrain enregistré sans nom. */
+export const titreTerrainParDefaut = (quartier: string): string =>
+  quartier.trim() ? `Terrain à ${quartier.trim()}` : 'Terrain'
+
 /** Corps de POST /biens pour un bien classique. */
 export function construirePayload(f: BienClassiqueForm, proprietaireInfo?: unknown): Record<string, unknown> {
   const d = derives(f)
   const notes = f.description.trim()
-  const titre = d.isTerrain ? f.titreTerrain.trim() : ''
+  // Nom et superficie d'un terrain sont facultatifs : sans nom, « Terrain à <quartier> ».
+  const titre = d.isTerrain ? (f.titreTerrain.trim() || titreTerrainParDefaut(f.quartier)) : ''
   const description = titre ? (notes ? `${titre}\n\n${notes}` : titre) : notes
   const promo = parsePrix(f.prixPromo)
 

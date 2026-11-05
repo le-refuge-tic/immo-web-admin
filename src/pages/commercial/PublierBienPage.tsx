@@ -960,7 +960,7 @@ export default function PublierBienPage() {
           {step === 2 && isTerrain && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <Card>
-                <Section title="Nom du bien" required />
+                <Section title="Nom du bien (facultatif)" />
                 <textarea value={titreTerrain} onChange={e => setTitreTerrain(e.target.value)} rows={2} maxLength={120}
                   placeholder="Ex: Parcelle bâtie à vendre en angle de rue à Cotonou Saint Jean"
                   style={{ ...baseInput, resize: 'none' }}
@@ -968,7 +968,7 @@ export default function PublierBienPage() {
                   onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />
               </Card>
               <Card>
-                <Section title="Superficie" required />
+                <Section title="Superficie (facultatif)" />
                 <div style={{ display: 'flex', gap: 10 }}>
                   <input type="number" min="0" max={superficieUnite === 'ha' ? 999999 : 9999999999} step={superficieUnite === 'ha' ? 0.01 : 1} value={superficieTerrain} onChange={e => setSuperficieTerrain(e.target.value)} onKeyDown={e => blockInvalidNumberKey(e, superficieUnite !== 'ha')}
                     placeholder={superficieUnite === 'ha' ? 'Ex: 2.5' : 'Ex: 25000'}

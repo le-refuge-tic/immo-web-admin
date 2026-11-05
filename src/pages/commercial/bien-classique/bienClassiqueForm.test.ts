@@ -157,9 +157,8 @@ describe('manquesEtape', () => {
     expect(manquesEtape(1, formulaire({ quartier: ' ' }), 0)).toEqual(['Veuillez sélectionner un quartier'])
   })
 
-  it('étape 2 : un terrain demande un nom et une superficie, pas les autres types', () => {
-    expect(manquesEtape(2, formulaire({ typeBien: 'terrain' }), 0)).toHaveLength(2)
-    expect(manquesEtape(2, formulaire({ typeBien: 'terrain', titreTerrain: 'Parcelle', superficieTerrain: '500' }), 0)).toEqual([])
+  it('étape 2 : nom et superficie d’un terrain facultatifs ; rien n’est exigé', () => {
+    expect(manquesEtape(2, formulaire({ typeBien: 'terrain' }), 0)).toEqual([])
     expect(manquesEtape(2, formulaire({ typeBien: 'bureau' }), 0)).toEqual([])
   })
 
@@ -248,6 +247,12 @@ describe('construirePayload', () => {
     expect(b).toMatchObject({ type: 'terrain', prix_promo: 4500000, details_terrain: { superficie: 500, cloture: false } })
     expect(b.description).toBe('Parcelle Calavi\n\nBelle vue')
     expect(b.pieces).toBeUndefined()
+  })
+
+  it('terrain sans nom ni superficie : titre « Terrain à <quartier> », pas de détails terrain', () => {
+    const b = construirePayload(formulaire({ typeBien: 'terrain', titreTerrain: ' ', superficieTerrain: '', description: 'Plat' }))
+    expect(b.description).toBe('Terrain à Akpakpa\n\nPlat')
+    expect(b.details_terrain).toBeUndefined()
   })
 
   it('en finition : la date de disponibilité est envoyée', () => {

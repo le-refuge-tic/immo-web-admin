@@ -124,10 +124,6 @@ describe('manquesEtape', () => {
       [{ parking: true, placesParking: '0' }, 'places'],
       [{ heureOuverture: '25:00' }, 'ouverture'],
       [{ heureFinMax: '' }, 'fin'],
-      [{ traiteur: null }, 'traiteur'],
-      [{ insonorisee: null }, 'insonoris'],
-      [{ deco: null }, 'décoration'],
-      [{ alcool: null }, 'alcool'],
       [{ heureFinMusique: '23h' }, 'musique'],
     ])('%o → signale « %s »', (over, mot) => {
       expect(manques(i, rempli(over))).toContain(mot)
@@ -139,6 +135,19 @@ describe('manquesEtape', () => {
 
     it('fin après minuit (ouverture 18:00, fin 02:00) : acceptée', () => {
       expect(manquesEtape(i, rempli({ heureOuverture: '18:00', heureFinMax: '02:00' }), 4)).toEqual([])
+    })
+
+    it('traiteur, décoration, alcool et insonorisation facultatifs', () => {
+      const f = rempli({ traiteur: null, deco: null, alcool: null, insonorisee: null })
+      expect(manquesEtape(i, f, 4)).toEqual([])
+      expect(construirePayload(f).details_salle_fete).toMatchObject({
+        traiteur: null, deco_autorisee: null, alcool_autorise: null, insonorisee: null,
+      })
+    })
+
+    it('« non » reste distinct de « non précisé »', () => {
+      const d = construirePayload(rempli({ deco: false, alcool: false, insonorisee: false })).details_salle_fete
+      expect(d).toMatchObject({ deco_autorisee: false, alcool_autorise: false, insonorisee: false })
     })
 
     it('musique tardive facultative', () => {

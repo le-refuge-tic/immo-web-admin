@@ -161,10 +161,6 @@ function manquesRegles(f: SalleFeteForm): string[] {
   if (f.parking && entierFcfa(f.placesParking) === undefined) m.push('Nombre de places de parking (au moins 1)')
   if (!HEURE.test(f.heureOuverture)) m.push('Heure d’ouverture')
   if (!HEURE.test(f.heureFinMax)) m.push('Heure limite de fin')
-  if (f.traiteur === null) m.push('Traiteur (libre, imposé ou inclus)')
-  if (f.deco === null) m.push('Décoration autorisée : Oui ou Non')
-  if (f.alcool === null) m.push('Alcool autorisé : Oui ou Non')
-  if (f.insonorisee === null) m.push('Salle insonorisée : Oui ou Non')
   if (f.heureFinMusique.trim() && !HEURE.test(f.heureFinMusique)) m.push('Heure de fin de la musique')
   return m
 }
@@ -223,10 +219,11 @@ function detailsPayload(f: SalleFeteForm) {
     ...(f.parking ? optionnel('places_parking', f.placesParking, false) : {}),
     heure_ouverture: f.heureOuverture,
     heure_fin_max: f.heureFinMax,
-    traiteur: f.traiteur as Traiteur,
-    deco_autorisee: f.deco === true,
-    alcool_autorise: f.alcool === true,
-    insonorisee: f.insonorisee === true,
+    // Facultatifs : null = non précisé (distinct de « non »).
+    traiteur: f.traiteur,
+    deco_autorisee: f.deco,
+    alcool_autorise: f.alcool,
+    insonorisee: f.insonorisee,
     ...(f.heureFinMusique.trim() ? { heure_fin_musique: f.heureFinMusique } : {}),
   }
 }
@@ -258,9 +255,9 @@ type BienLu = {
     prix: number; duree_heures: number; heures_min: number; caution: number | null; frais_menage: number | null
     capacite: number; superficie_m2: number | null; configuration: Configuration
     nb_tables: number | null; nb_chaises: number | null; parking: boolean; places_parking: number | null
-    heure_ouverture: string; heure_fin_max: string; traiteur: Traiteur
-    deco_autorisee: boolean; alcool_autorise: boolean; heure_fin_musique: string | null
-    insonorisee?: boolean
+    heure_ouverture: string; heure_fin_max: string; traiteur: Traiteur | null
+    deco_autorisee: boolean | null; alcool_autorise: boolean | null; heure_fin_musique: string | null
+    insonorisee?: boolean | null
   } | null
   evenements?: { code: string }[]
   equipements_liste?: { code: string }[]
@@ -307,7 +304,7 @@ export function depuisBien(b: BienLu): SalleFeteForm {
     traiteur: d.traiteur,
     deco: d.deco_autorisee,
     alcool: d.alcool_autorise,
-    insonorisee: d.insonorisee ?? false,
+    insonorisee: d.insonorisee ?? null,
     heureFinMusique: d.heure_fin_musique ? heure(d.heure_fin_musique) : '',
   }
 }
