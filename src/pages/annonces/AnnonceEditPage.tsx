@@ -14,6 +14,7 @@ import {
 } from '../../components/Icons';
 import { BENIN_VILLES, getQuartiersByVille, ALL_QUARTIERS } from '../../data/beninLocations';
 import { apiMessage } from '../../utils/apiMessage';
+import { TYPES_EDITION, LOCAUX_PRO, coupleEdition, libelleEditionDepuisBien } from '../commercial/bien-classique/bienClassiqueForm';
 
 // ── Icônes SVG locales ────────────────────────────────────────────────────────
 const SaveIcon = () => (
@@ -34,35 +35,6 @@ const StarIcon = () => (
     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
   </svg>
 );
-
-// ── Mapping types ─────────────────────────────────────────────────────────────
-// Mêmes couples type / sous_type que PublierBienPage à la création.
-const TYPE_OPTIONS = [
-  { label: 'Chambre-Salon',     type: 'appart_vide',   sousType: 'chambre_salon'       },
-  { label: 'Entrée-Coucher',    type: 'appart_vide',   sousType: 'entree_coucher'      },
-  { label: 'Appartement',       type: 'appart_vide',   sousType: 'appartement'         },
-  { label: 'Appart. meublé',    type: 'appart_meuble', sousType: 'appart_meuble'       },
-  { label: 'Villa',             type: 'maison',        sousType: 'villa'               },
-  { label: 'Duplex',            type: 'maison',        sousType: 'duplex'              },
-  { label: 'Maison',            type: 'maison',        sousType: 'maison_individuelle' },
-  { label: 'Boutique / Local',  type: 'maison',        sousType: 'boutique'            },
-  { label: 'Bureau',            type: 'maison',        sousType: 'bureau'              },
-  { label: 'Terrain',           type: 'terrain',       sousType: 'terrain'             },
-] as const;
-
-const SOUS_TYPES_LOCAL_PRO: readonly string[] = ['boutique', 'bureau'];
-
-function getTypeLabel(dbType: string, dbSousType: string) {
-  const exact = TYPE_OPTIONS.find(
-    o => o.type === dbType && (o.sousType === dbSousType || (!dbSousType && !o.sousType))
-  );
-  if (exact) return exact.label;
-  // Anciennes valeurs de cette page : appartement meublé en sous_type
-  // « appartement », boutique en type appart_vide.
-  if (dbType === 'appart_meuble' && dbSousType === 'appartement') return 'Appart. meublé';
-  if (dbSousType === 'boutique') return 'Boutique / Local';
-  return '';
-}
 
 // ── Options constantes ────────────────────────────────────────────────────────
 const STANDINGS = [
@@ -262,7 +234,7 @@ export default function AnnonceEditPage() {
         if (ALL_QUARTIERS.includes(q)) setSelQ(q); else if (q) { setSelQ('autre'); setAutreQ(q); }
         setAdresse(loc.adresse ?? '');
 
-        setTypeLabel(getTypeLabel(b.type ?? '', a.sous_type ?? ''));
+        setTypeLabel(libelleEditionDepuisBien(b.type ?? '', a.sous_type ?? ''));
         setDescription(b.description ?? '');
         setPrix(b.prix != null ? String(b.prix) : '');
 
@@ -324,7 +296,7 @@ export default function AnnonceEditPage() {
   async function handleSave() {
     setSaving(true); setSaved(false); setError('');
     try {
-      const opt = TYPE_OPTIONS.find(o => o.label === typeLabel);
+      const opt = coupleEdition(typeLabel);
       const dbType = opt?.type ?? bien?.type ?? '', dbST = opt?.sousType ?? '';
       const villeVal    = ville  === 'autre' ? autreVille.trim() : ville;
       const quartierVal = selQ   === 'autre' ? autreQ.trim()     : selQ;
@@ -367,7 +339,7 @@ export default function AnnonceEditPage() {
       const dispoVal = dispo === 'autre' ? (autrePrecision.dispo || 'autre') : dispo;
       sa('disponibilite', dispoVal);
       if (voisinage.length) sa('voisinage', voisinage); if (equips.length) sa('equipements', equips);
-      if (dbType === 'maison' && !SOUS_TYPES_LOCAL_PRO.includes(dbST)) {
+      if (dbType === 'maison' && !LOCAUX_PRO.includes(dbST)) {
         sa('etat_meuble', etatMeubleMaison);
         if (etatConstructionMaison) sa('etat_construction', etatConstructionMaison);
       }
@@ -411,11 +383,11 @@ export default function AnnonceEditPage() {
   }
 
   // ── Dérivés ──────────────────────────────────────────────────────────────────
-  const opt = TYPE_OPTIONS.find(o => o.label === typeLabel);
+  const opt = coupleEdition(typeLabel);
   const dbType = opt?.type ?? bien?.type ?? '';
   const dbST   = opt?.sousType ?? '';
   // Boutique, bureau : type maison en base, mais sans pièces ni état du meuble.
-  const isLocalPro = SOUS_TYPES_LOCAL_PRO.includes(dbST);
+  const isLocalPro = LOCAUX_PRO.includes(dbST);
   const isMaison  = dbType === 'maison' && !isLocalPro;
   const isTerrain = dbType === 'terrain';
   const isAppart  = dbType === 'appart_vide' || dbType === 'appart_meuble';
@@ -533,7 +505,7 @@ export default function AnnonceEditPage() {
               <div style={CARD}>
                 <SectionTitle>Type de bien</SectionTitle>
                 <div className="edit-type-grid" style={{ gap:8 }}>
-                  {TYPE_OPTIONS.map(o => {
+                  {TYPES_EDITION.map(o => {
                     const active = typeLabel === o.label;
                     return <button key={o.label} type="button" onClick={() => setTypeLabel(o.label)} style={{ padding:'10px 8px', borderRadius:8, fontSize:12.5, fontWeight:active?700:400, cursor:'pointer', textAlign:'center', border:active?'2px solid #2563EB':'1.5px solid var(--c-border)', background:active?'var(--t-blue-bg)':'var(--c-card)', color:active?'var(--s-blue)':'var(--c-muted)', boxShadow:active?'0 0 0 3px rgba(37,99,235,.1)':'none', transition:'all .12s' }}>{o.label}</button>;
                   })}

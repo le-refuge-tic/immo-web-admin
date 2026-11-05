@@ -11,6 +11,12 @@ import { Card, Section, ChoiceList, Chip, Counter, NumberPicker, MoneyInput, Rec
 import { BLUE, baseInput } from './formStyles'
 import { primeValidationCommerciale } from './commissionCommerciale'
 import { getPriceFieldLabel, shouldShowLocationSpecificFields } from './bienFormRules'
+import {
+  TYPES_BIEN, MAX_PHOTOS, MIN_PHOTOS, parsePrix, derives,
+  prixPrincipal, commissionAgence as calculerCommissionAgence, montantIntegration,
+  manquesEtape, construirePayload, libellesEtapes,
+  type BienClassiqueForm, type TarifCustom, type DetailCustom,
+} from './bien-classique/bienClassiqueForm'
 import { erreurFichierVideo, raisonEchecVideo } from '../../utils/videoAnnonce'
 
 // ─── Quartiers — même structure que immo-web-user ─────────────────────────────
@@ -29,25 +35,6 @@ const normalizeStr = (s: string) =>
   s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 
 
-type TarifCustom = { label: string; prix: string }
-type DetailCustom = { label: string; valeur: string }
-
-/** Photos par bien : plafond commun à tous les types (décision du 28/10/2026, contrôlé aussi par l'API). */
-const MAX_PHOTOS = 8
-/** Minimum exigé pour publier (l'approbation est refusée en dessous). */
-const MIN_PHOTOS = 2
-
-const TYPES_BIEN = [
-  { key: 'entree_coucher', label: 'Entrée-Coucher' },
-  { key: 'chambre_salon',  label: 'Chambre-Salon'  },
-  { key: 'appartement',   label: 'Appartement'    },
-  { key: 'villa',         label: 'Villa'           },
-  { key: 'duplex',        label: 'Duplex / Grande propriété' },
-  { key: 'maison',        label: 'Maison'          },
-  { key: 'terrain',       label: 'Terrain / Parcelle' },
-  { key: 'boutique',      label: 'Boutique'        },
-  { key: 'bureau',        label: 'Bureau'          },
-]
 
 const STANDING_OPTS = [
   { value: 'sanitaire',              label: 'Sanitaire',              sub: '' },
@@ -119,13 +106,6 @@ const ALENTOURS_OPTS = [
   { value: 'supermarche', label: 'Supermarché / Épicerie' },
   { value: 'plage',       label: 'Plage / Bord de mer'  },
 ]
-
-const parsePrix = (t: string): number | undefined => {
-  const c = t.trim().replace(/\s/g, '').replace(',', '')
-  if (!c) return undefined
-  const n = Number(c)
-  return Number.isFinite(n) ? n : undefined
-}
 
 const formatFcfa = (v: number) => v > 0 ? `${Math.round(v).toLocaleString('fr-FR')} FCFA` : '0 FCFA'
 
@@ -268,7 +248,7 @@ export default function PublierBienPage() {
     avanceMois, avanceAutre, avanceAutreText, echeanceMois, echeanceAutre, echeanceAutreText,
     loyerPrepayeMois, loyerPrepayeAutre, loyerPrepayeAutreText,
     cautionEau, cautionElec, electricite, electriciteAutre, prixKwh, eau, eauAutre, forageGestion, prixM3, prixForage,
-    equipementsBonus, equipementsAutre, alentours, alentoursAutre, disponibilite,
+    equipementsBonus, equipementsAutre, alentours, alentoursAutre, disponibilite, disponibleA,
     titreTerrain, superficieTerrain, superficieUnite, documentTerrain, documentAutreDetail,
     positionTerrain, angleRue, permissionConstruire, descriptionConstruction, estLoti, detailsSupplementaires,
     typeVoie, visibiliteBoutique, parkingClients,
@@ -394,6 +374,7 @@ export default function PublierBienPage() {
       if (d.alentours)                 setAlentours(d.alentours)
       if (d.alentoursAutre)            setAlentoursAutre(d.alentoursAutre)
       if (d.disponibilite)             setDisponibilite(d.disponibilite)
+      if (d.disponibleA)               setDisponibleA(d.disponibleA)
       if (d.titreTerrain)              setTitreTerrain(d.titreTerrain)
       if (d.superficieTerrain)         setSuperficieTerrain(d.superficieTerrain)
       if (d.superficieUnite)           setSuperficieUnite(d.superficieUnite)
@@ -418,36 +399,26 @@ export default function PublierBienPage() {
     finally { setDraftHydrated(true) }
   }, []) // eslint-disable-line
 
-  // Dérivés
-  const isTerrain      = typeBien === 'terrain'
-  const isBoutique     = typeBien === 'boutique'
-  // Bureau : même parcours que la boutique (local professionnel, sans pièces).
-  const isLocalPro     = isBoutique || typeBien === 'bureau'
-  const isSmallUnit    = typeBien === 'entree_coucher' || typeBien === 'chambre_salon'
-  const peutEtreMeuble = typeBien === 'appartement' || typeBien === 'villa' || typeBien === 'duplex' || typeBien === 'maison'
-  const isMeuble       = peutEtreMeuble && (typeBien === 'maison' ? etatMeubleMaison !== 'non_meuble' : estMeuble)
-  const showPieces     = ['appartement', 'villa', 'duplex', 'maison', 'chambre_salon'].includes(typeBien)
+  // Dérivés : toutes les règles viennent de bien-classique/bienClassiqueForm.
+  const form: BienClassiqueForm = {
+    typeBien, typeTransaction, prix, prixPromo, estMeuble, etatMeubleMaison, etatConstructionMaison,
+    standing, standingAutre, prixLongSejour, prixSejourRestreint, prixHeure, tarifsAutres,
+    ville, quartier, arrondissement, indicationAdresse, latitude, longitude,
+    chambres, salons, cuisines, douches, typeCuisine, cuisineAutre, chambreACouloir,
+    typeCour, nbVoisins, accesVehicule, nbVehicules, avanceMois, echeanceMois, loyerPrepayeMois,
+    cautionEau, cautionElec, electricite, electriciteAutre, eau, eauAutre, forageGestion, prixForage,
+    equipementsBonus, equipementsAutre, alentours, alentoursAutre, disponibilite, disponibleA,
+    titreTerrain, superficieTerrain, superficieUnite, documentTerrain, documentAutreDetail,
+    positionTerrain, angleRue, permissionConstruire, descriptionConstruction, estLoti, detailsSupplementaires,
+    typeVoie, visibiliteBoutique, parkingClients, description, autresFrais,
+  }
+  const {
+    isTerrain, isLocalPro, isSmallUnit, peutEtreMeuble, isMeuble, showPieces, typeBackend, sousType,
+  } = derives(form)
 
-  const superficieM2 = (() => {
-    const n = parseFloat(superficieTerrain.replace(',', '.'))
-    if (isNaN(n)) return undefined
-    return Math.round(superficieUnite === 'ha' ? n * 10000 : n)
-  })()
-
-  const typeBackend = isTerrain ? 'terrain'
-    : (typeBien === 'villa' || typeBien === 'duplex' || typeBien === 'maison' || isLocalPro) ? 'maison'
-    : isMeuble ? 'appart_meuble' : 'appart_vide'
-
-  const sousType = typeBien === 'appartement' ? (isMeuble ? 'appart_meuble' : 'appartement')
-    : typeBien === 'maison' ? 'maison_individuelle'
-    : typeBien
-
-  // Commission plateforme : 50% du loyer mensuel, uniquement pour les biens en location.
-  // Meublé ou non, le prix vient du champ « Prix » : les champs de tarifs
-  // meublés n'existent plus dans le formulaire depuis 8b6b5fa.
-  const prixCalcul = parsePrix(prix) ?? 0
-
-  const commissionAgence = (!isTerrain && typeTransaction === 'location') ? prixCalcul * 0.5 : 0
+  // Prix principal : champ Prix, ou premier tarif meublé (mois, nuit, heure, personnalisé).
+  const prixCalcul = prixPrincipal(form)
+  const commissionAgence = calculerCommissionAgence(form)
   const primeValidationCommercialeEstimee = primeValidationCommerciale(
     typeBackend,
     sousType,
@@ -461,15 +432,9 @@ export default function PublierBienPage() {
     },
   )
 
-  const montantBrut = (() => {
-    const loyer  = prixCalcul
-    const cEau   = parsePrix(cautionEau) ?? 0
-    const cElec  = parsePrix(cautionElec) ?? 0
-    const autres = autresFrais.reduce((a, f) => a + (parsePrix(f.prix) ?? 0), 0)
-    return loyer * (avanceMois + loyerPrepayeMois) + cEau + cElec + autres + commissionAgence
-  })()
+  const montantBrut = montantIntegration(form)
 
-  const STEP_LABELS = ['Type & Prix', 'Localisation', isTerrain ? 'Terrain' : isBoutique ? 'Boutique' : isLocalPro ? 'Bureau' : 'Confort', 'Honoraires', 'Photos']
+  const STEP_LABELS = libellesEtapes(typeBien)
 
   const filteredQuartiers = quartierSearch.trim()
     ? QUARTIERS.filter(q => normalizeStr(q.nom).includes(normalizeStr(quartierSearch))).slice(0, 60)
@@ -532,157 +497,19 @@ export default function PublierBienPage() {
   }
 
   const goNext = () => {
-    if (step === 0) {
-      const prixPrincipal = parsePrix(prix)
-      if (!prixPrincipal) { setError('Veuillez entrer le prix'); return }
-      const prixCash = parsePrix(prixPromo)
-      if (isTerrain && typeTransaction === 'vente' && prixCash !== undefined && prixCash >= prixPrincipal) {
-        setError('Le prix promo doit être inférieur au prix de vente'); return
-      }
-    }
-    if (step === 1 && !quartier.trim()) { setError('Veuillez sélectionner un quartier'); return }
-    if (step === 2 && isTerrain && !titreTerrain.trim()) { setError('Veuillez donner un nom à ce bien'); return }
-    if (step === 2 && isTerrain && !superficieM2) { setError('Veuillez indiquer la superficie du terrain'); return }
-    if (step === 4 && photos.length < MIN_PHOTOS) {
-      setError(`Ajoutez au moins ${MIN_PHOTOS} photos (${photos.length} pour l’instant)`); return
-    }
+    const manques = manquesEtape(step, form, photos.length)
+    if (manques.length) { setError(manques[0]); return }
     setError('')
     if (step === 4) { handleCreate(); return }
     setStep(s => s + 1)
     window.scrollTo(0, 0)
   }
 
-  const buildTarifsMeuble = () => {
-    const t: any = {}
-    if (parsePrix(prixLongSejour) !== undefined)      t.prix_long_sejour      = parsePrix(prixLongSejour)
-    if (parsePrix(prixSejourRestreint) !== undefined)  t.prix_sejour_restreint = parsePrix(prixSejourRestreint)
-    if (parsePrix(prixHeure) !== undefined)            t.prix_heure            = parsePrix(prixHeure)
-    const autres = tarifsAutres.filter(x => parsePrix(x.prix) !== undefined)
-    if (autres.length) t.autres = autres.map(x => ({ label: x.label.trim() || 'Autre', prix: parsePrix(x.prix) }))
-    return t
-  }
-
-  const buildAmenites = () => {
-    const a: any = { sous_type: sousType }
-    if (proprietaireInfo) a.proprietaire_info = proprietaireInfo
-
-    if (isTerrain) {
-      if (documentTerrain.length) {
-        a.document = documentTerrain[0]
-        a.documents = documentTerrain
-      }
-      if (documentTerrain.includes('autre') && documentAutreDetail.trim()) {
-        a.document_autre_detail = documentAutreDetail.trim()
-      }
-      a.position = positionTerrain; a.angle_rue = angleRue; a.permission_construire = permissionConstruire
-      if (permissionConstruire && descriptionConstruction.trim()) a.description_construction = descriptionConstruction.trim()
-      if (estLoti !== null) a.loti = estLoti
-      a.titre_foncier = documentTerrain.includes('titre_foncier')
-      const details = detailsSupplementaires.filter(d => d.label.trim() && d.valeur.trim())
-      if (details.length) a.details_supplementaires = details.map(d => ({ label: d.label.trim(), valeur: d.valeur.trim() }))
-      return a
-    }
-
-    if (standing) a.standing = standing
-    if (standing === 'autre' && standingAutre.trim()) a.standing_autre = standingAutre.trim()
-    if (typeBien === 'maison') {
-      a.etat_meuble = etatMeubleMaison
-      if (etatConstructionMaison) a.etat_construction = etatConstructionMaison
-    }
-    a.disponibilite = disponibilite
-    if (equipementsBonus.length || equipementsAutre.trim()) a.equipements = [...equipementsBonus, ...(equipementsAutre.trim() ? [equipementsAutre.trim()] : [])]
-    if (alentours.length || alentoursAutre.trim()) a.voisinage = [...alentours, ...(alentoursAutre.trim() ? [alentoursAutre.trim()] : [])]
-
-    if (isLocalPro) {
-      a.type_voie = typeVoie; a.visibilite = visibiliteBoutique; a.parking_clients = parkingClients
-    } else {
-      const cEau = parsePrix(cautionEau) ?? 0; const cElec = parsePrix(cautionElec) ?? 0
-      if (shouldShowLocationSpecificFields(typeTransaction)) {
-        a.type_cuisine = typeCuisine
-        if (typeCuisine === 'autre' && cuisineAutre.trim()) a.cuisine_autre_detail = cuisineAutre.trim()
-        a.type_cour = typeCour
-        if (typeCour === 'commune') a.nb_voisins = nbVoisins
-        if (typeCour === 'commune' && accesVehicule !== null) a.acces_vehicule = accesVehicule
-        if (typeCour === 'commune' && accesVehicule === true) a.nb_vehicules = nbVehicules
-        if (typeBien === 'chambre_salon') a.chambre_couloir = chambreACouloir
-        a.avance_mois = avanceMois
-        if (loyerPrepayeMois > 0) a.loyer_prepaye_mois = loyerPrepayeMois
-        if (typeTransaction === 'location') a.echeance_mois = echeanceMois
-        if (typeTransaction === 'location') a.commission_agence = commissionAgence
-      }
-      if (cEau  > 0) a.caution_eau  = cEau
-      if (cElec > 0) a.caution_elec = cElec
-      a.electricite = electricite
-      if (electricite === 'autre' && electriciteAutre.trim()) a.electricite_autre = electriciteAutre.trim()
-      a.eau = eau
-      if (eau === 'autre' && eauAutre.trim()) a.eau_autre = eauAutre.trim()
-      if (eau === 'forage' && parsePrix(prixForage) !== undefined) a.prix_forage = parsePrix(prixForage)
-      if (eau === 'forage' && forageGestion) a.forage_gestion = forageGestion
-      if (isMeuble) a.tarifs_meuble = buildTarifsMeuble()
-    }
-
-    const validAutres = autresFrais.filter(f => parsePrix(f.prix) !== undefined)
-    if (validAutres.length) a.autres_frais = validAutres.map(f => ({ label: f.label.trim() || 'Autre frais', montant: parsePrix(f.prix) }))
-    return a
-  }
-
-  const buildPieces = () => {
-    if (isTerrain || isLocalPro) return []
-    if (typeBien === 'entree_coucher') return [{ nom: 'Chambre', surface: 0 }, { nom: 'Entrée', surface: 0 }]
-    if (typeBien === 'chambre_salon') {
-      const p: any[] = []
-      for (let i = 0; i < chambres; i++) p.push({ nom: 'Chambre', surface: 0 })
-      for (let i = 0; i < salons;   i++) p.push({ nom: 'Salon',   surface: 0 })
-      return p
-    }
-    const p: any[] = []
-    for (let i = 0; i < chambres; i++) p.push({ nom: 'Chambre',       surface: 0 })
-    for (let i = 0; i < salons;   i++) p.push({ nom: 'Salon',         surface: 0 })
-    for (let i = 0; i < cuisines; i++) p.push({ nom: 'Cuisine',       surface: 0 })
-    for (let i = 0; i < douches;  i++) p.push({ nom: 'Salle de bain', surface: 0 })
-    return p
-  }
-
   const handleCreate = async () => {
     if (submitting) return
     setSubmitting(true); setError('')
     try {
-      const prixFinal = prixCalcul
-
-      const notes = description.trim()
-      const titre = isTerrain ? titreTerrain.trim() : ''
-      const descFull = titre ? (notes ? `${titre}\n\n${notes}` : titre) : notes
-
-      const body: any = {
-        type: typeBackend,
-        transaction: typeTransaction,
-        prix: prixFinal,
-        ...(isTerrain && typeTransaction === 'vente' && parsePrix(prixPromo) !== undefined
-          ? { prix_promo: parsePrix(prixPromo) }
-          : {}),
-        frais_visite: 500,
-        description: descFull || undefined,
-        localisation: {
-          adresse: indicationAdresse.trim() || [quartier, arrondissement].filter(Boolean).join(', ') || quartier,
-          ville: ville || quartier || undefined,
-          quartier: quartier || undefined,
-          arrondissement: arrondissement || undefined,
-          latitude: latitude ?? 6.3654,
-          longitude: longitude ?? 2.4183,
-        },
-        amenites: buildAmenites(),
-        ...(disponibilite === 'en_finition' && disponibleA ? { disponible_a: disponibleA } : {}),
-      }
-
-      if (isTerrain && superficieM2 !== undefined) {
-        body.details_terrain = { superficie: superficieM2, cloture: false }
-      } else if (typeBackend === 'appart_vide' || typeBackend === 'appart_meuble') {
-        body.details_appart = { entree_personnelle: typeCour === 'entree_personnelle' }
-      }
-
-      const pieces = buildPieces()
-      if (pieces.length) body.pieces = pieces
-
+      const body = construirePayload(form, proprietaireInfo)
       const data = await postBien.create(body)
       const bien = data.data || data.bien || data
 
@@ -911,10 +738,48 @@ export default function PublierBienPage() {
                 </div>
               </Card>
 
-              <Card>
-                <Section title={getPriceFieldLabel(typeTransaction)} />
-                <MoneyInput value={prix} onChange={setPrix} />
-              </Card>
+              {isMeuble ? (
+                <Card>
+                  <Section title="Tarification (par durée de séjour)" />
+                  <p style={{ fontSize: 12, color: 'var(--c-muted)', margin: '0 0 12px' }}>
+                    Au moins un tarif. Le tarif mensuel sert de prix principal (sinon la nuit, puis l’heure).
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {[
+                      { label: 'Long séjour (mensuel)',   value: prixLongSejour,      onChange: setPrixLongSejour },
+                      { label: 'Court séjour (par nuit)', value: prixSejourRestreint, onChange: setPrixSejourRestreint },
+                      { label: 'À l’heure',               value: prixHeure,           onChange: setPrixHeure },
+                    ].map(row => (
+                      <div key={row.label} style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                        <span style={{ flex: '1 1 140px', fontSize: 13, fontWeight: 600, color: 'var(--c-text)' }}>{row.label}</span>
+                        <div style={{ flex: '1 1 140px', maxWidth: 220 }}><MoneyInput value={row.value} onChange={row.onChange} /></div>
+                      </div>
+                    ))}
+                    {tarifsAutres.map((t, i) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                        <input value={t.label} placeholder="Libellé (ex. semaine)"
+                          onChange={e => setTarifsAutres(a => a.map((x, idx) => idx === i ? { ...x, label: e.target.value } : x))}
+                          style={{ ...baseInput, flex: '1 1 140px' }} />
+                        <div style={{ flex: '1 1 120px', maxWidth: 220 }}>
+                          <MoneyInput value={t.prix} onChange={v => setTarifsAutres(a => a.map((x, idx) => idx === i ? { ...x, prix: v } : x))} />
+                        </div>
+                        <button type="button" aria-label="Retirer ce tarif"
+                          onClick={() => setTarifsAutres(a => a.filter((_, idx) => idx !== i))}
+                          style={{ border: 'none', background: 'transparent', color: 'var(--c-muted)', fontSize: 18, cursor: 'pointer', padding: '4px 8px' }}>×</button>
+                      </div>
+                    ))}
+                    <button type="button" onClick={() => setTarifsAutres(a => [...a, { label: '', prix: '' }])}
+                      style={{ alignSelf: 'flex-start', border: 'none', background: 'transparent', color: BLUE, fontSize: 13, fontWeight: 600, cursor: 'pointer', padding: 0 }}>
+                      + Ajouter un tarif
+                    </button>
+                  </div>
+                </Card>
+              ) : (
+                <Card>
+                  <Section title={getPriceFieldLabel(typeTransaction)} />
+                  <MoneyInput value={prix} onChange={setPrix} />
+                </Card>
+              )}
               {isTerrain && typeTransaction === 'vente' && (
                 <Card>
                   <Section title="Prix promo (prix cash) — optionnel" />

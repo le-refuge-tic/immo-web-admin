@@ -47,6 +47,7 @@ function rempli(over: Partial<SalleFeteForm> = {}): SalleFeteForm {
     traiteur: 'libre',
     deco: true,
     alcool: true,
+    insonorisee: true,
     heureFinMusique: '23:00',
     ...over,
   }
@@ -124,6 +125,7 @@ describe('manquesEtape', () => {
       [{ heureOuverture: '25:00' }, 'ouverture'],
       [{ heureFinMax: '' }, 'fin'],
       [{ traiteur: null }, 'traiteur'],
+      [{ insonorisee: null }, 'insonoris'],
       [{ deco: null }, 'décoration'],
       [{ alcool: null }, 'alcool'],
       [{ heureFinMusique: '23h' }, 'musique'],
@@ -235,6 +237,7 @@ describe('construirePayload', () => {
       traiteur: 'libre',
       deco_autorisee: true,
       alcool_autorise: true,
+      insonorisee: true,
       heure_fin_musique: '23:00',
     })
   })
