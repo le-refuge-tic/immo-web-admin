@@ -21,6 +21,7 @@ export interface NumeroRetraitInfo {
   numero_retrait: string | null;
   masque: string | null;
   source: string;
+  /** Dernier opérateur utilisé pour un retrait : sert seulement à pré-remplir le choix (modifiable à chaque demande). */
   operateur_retrait?: OperateurRetrait | null;
   /** Fin de la suspension de 48 h après un changement de numéro ou d'opérateur (date ISO). */
   retraits_suspendus_jusqu_a?: string | null;
@@ -55,11 +56,14 @@ export function formaterFinSuspension(iso: string | null | undefined): string | 
   return d.toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 }
 
-/** Pourquoi aucun retrait n'est possible pour l'instant, ou null. Informations non chargées : null. */
+/**
+ * Pourquoi aucun retrait n'est possible pour l'instant (numéro absent, suspension de 48 h après un
+ * changement de NUMÉRO), ou null. L'opérateur n'en fait pas partie : il se choisit dans le formulaire.
+ * Informations non chargées : null.
+ */
 export function raisonBlocage(info: NumeroRetraitInfo | null): string | null {
   if (!info) return null;
   if (!info.numero_retrait) return 'Aucun numéro de téléphone enregistré sur votre compte.';
-  if (!info.operateur_retrait) return 'Choisissez votre opérateur Mobile Money (MTN ou Moov) pour pouvoir retirer.';
   const fin = formaterFinSuspension(info.retraits_suspendus_jusqu_a);
   if (fin) return `Par sécurité, les retraits sont suspendus jusqu'au ${fin} (changement récent de numéro ou d'opérateur).`;
   return null;

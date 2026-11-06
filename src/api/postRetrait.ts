@@ -23,10 +23,11 @@ export type Retrait = {
 export const postRetrait = {
   /**
    * Débite le portefeuille puis lance tout de suite le virement Mobile Money vers le numéro
-   * enregistré sur le compte. La clé d'idempotence évite un double débit si la demande est renvoyée.
+   * enregistré sur le compte, via l'opérateur choisi pour CE retrait. La clé d'idempotence évite
+   * un double débit si la demande est renvoyée.
    */
-  demander: (montant: number, wallet_type: string, idempotencyKey: string): Promise<Retrait> =>
-    axios.post(`${BASE}/retraits/me`, { montant, wallet_type }, {
+  demander: (montant: number, wallet_type: string, operateur: OperateurRetrait, idempotencyKey: string): Promise<Retrait> =>
+    axios.post(`${BASE}/retraits/me`, { montant, wallet_type, operateur }, {
       headers: { ...auth().headers, 'Idempotency-Key': idempotencyKey },
     }).then(r => r.data),
 
@@ -37,17 +38,17 @@ export const postRetrait = {
   limites: (): Promise<LimitesRetrait> =>
     axios.get(`${BASE}/retraits/limites`, auth()).then(r => r.data),
 
-  /** Numéro Mobile Money (par défaut : téléphone du compte), opérateur et éventuelle suspension. */
+  /** Numéro Mobile Money (par défaut : téléphone du compte), dernier opérateur utilisé et éventuelle suspension. */
   numeroRetrait: (): Promise<NumeroRetraitInfo> =>
     axios.get(`${BASE}/wallets/me/numero-retrait`, auth()).then(r => r.data),
 
   /** Étape 1 : un code SMS part vers le téléphone ACTUEL du compte. */
-  initierNumero: (nouveauNumero: string, operateur: OperateurRetrait, motDePasse: string): Promise<{ session_token: string }> =>
-    axios.post(`${BASE}/wallets/me/numero-retrait/initier`, { nouveau_numero: nouveauNumero, operateur, mot_de_passe: motDePasse }, auth())
+  initierNumero: (nouveauNumero: string, motDePasse: string): Promise<{ session_token: string }> =>
+    axios.post(`${BASE}/wallets/me/numero-retrait/initier`, { nouveau_numero: nouveauNumero, mot_de_passe: motDePasse }, auth())
       .then(r => r.data),
 
-  /** Étape 2 : confirme le code ; tout changement de destination suspend les retraits 48 h. */
-  confirmerNumero: (sessionToken: string, codeOtp: string, nouveauNumero: string, operateur: OperateurRetrait): Promise<{ retraits_suspendus?: boolean }> =>
-    axios.post(`${BASE}/wallets/me/numero-retrait/confirmer`, { session_token: sessionToken, code_otp: codeOtp, nouveau_numero: nouveauNumero, operateur }, auth())
+  /** Étape 2 : confirme le code ; un vrai changement de numéro suspend les retraits 48 h. */
+  confirmerNumero: (sessionToken: string, codeOtp: string, nouveauNumero: string): Promise<{ retraits_suspendus?: boolean }> =>
+    axios.post(`${BASE}/wallets/me/numero-retrait/confirmer`, { session_token: sessionToken, code_otp: codeOtp, nouveau_numero: nouveauNumero }, auth())
       .then(r => r.data),
 };

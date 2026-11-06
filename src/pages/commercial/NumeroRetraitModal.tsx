@@ -1,18 +1,17 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { postRetrait } from '../../api/postRetrait';
 import { apiMessage } from '../../utils/apiMessage';
-import { OPERATEURS, numeroLocal, numeroValide, type OperateurRetrait } from '../../utils/retraitCommercial';
+import { numeroLocal, numeroValide } from '../../utils/retraitCommercial';
 
 /**
- * Numéro et opérateur de retrait Mobile Money, en deux étapes : mot de passe puis code SMS envoyé
- * au téléphone ACTUEL du compte. Le numéro et l'opérateur sont préremplis (par défaut : le
- * téléphone vérifié à la première connexion). Tout changement de destination suspend les retraits
- * 48 h ; choisir seulement l'opérateur d'un numéro inchangé ne suspend rien.
+ * Changement du NUMÉRO de retrait Mobile Money, en deux étapes : mot de passe puis code SMS envoyé
+ * au téléphone ACTUEL du compte. Le numéro est prérempli (par défaut : le téléphone vérifié à la
+ * première connexion). Un vrai changement suspend les retraits 48 h. L'opérateur n'est pas ici : il
+ * se choisit dans le formulaire de retrait, à chaque demande.
  */
 export default function NumeroRetraitModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
   const [step, setStep]               = useState<'form' | 'otp'>('form');
   const [numero, setNumero]           = useState('');
-  const [operateur, setOperateur]     = useState<OperateurRetrait | null>(null);
   const [motDePasse, setMotDePasse]   = useState('');
   const [sessionToken, setSessionToken] = useState('');
   const [otp, setOtp]                 = useState('');
@@ -32,7 +31,6 @@ export default function NumeroRetraitModal({ onClose, onSaved }: { onClose: () =
     postRetrait.numeroRetrait().then(info => {
       if (!actif) return;
       setNumero(prev => prev || numeroLocal(info.numero_retrait));
-      setOperateur(prev => prev ?? info.operateur_retrait ?? null);
     }).catch(() => { /* la personne saisit à la main */ });
     return () => { actif = false; };
   }, []);
@@ -40,11 +38,10 @@ export default function NumeroRetraitModal({ onClose, onSaved }: { onClose: () =
   const initier = async (e: FormEvent) => {
     e.preventDefault();
     if (!numeroValide(numero)) { setError('Numéro invalide : 10 chiffres commençant par 01 (ex. 01XXXXXXXX).'); return; }
-    if (!operateur) { setError("Choisissez l'opérateur de ce numéro : MTN ou Moov."); return; }
     if (!motDePasse) { setError('Entrez votre mot de passe pour confirmer.'); return; }
     setLoading(true); setError('');
     try {
-      const res = await postRetrait.initierNumero(numeroLocal(numero), operateur, motDePasse);
+      const res = await postRetrait.initierNumero(numeroLocal(numero), motDePasse);
       setSessionToken(res.session_token);
       setStep('otp');
     } catch (err) {
@@ -56,11 +53,10 @@ export default function NumeroRetraitModal({ onClose, onSaved }: { onClose: () =
 
   const confirmer = async (e: FormEvent) => {
     e.preventDefault();
-    if (!operateur) return;
     if (!otp.trim()) { setError('Entrez le code reçu par SMS.'); return; }
     setLoading(true); setError('');
     try {
-      const res = await postRetrait.confirmerNumero(sessionToken, otp.trim(), numeroLocal(numero), operateur);
+      const res = await postRetrait.confirmerNumero(sessionToken, otp.trim(), numeroLocal(numero));
       setSuspendus(!!res.retraits_suspendus);
     } catch (err) {
       setError(apiMessage(err) ?? 'Code invalide ou expiré.');
@@ -70,7 +66,7 @@ export default function NumeroRetraitModal({ onClose, onSaved }: { onClose: () =
   };
 
   return (
-    <div role="dialog" aria-modal="true" aria-label="Numéro et opérateur de retrait" style={{
+    <div role="dialog" aria-modal="true" aria-label="Numéro de retrait" style={{
       position: 'fixed', inset: 0, zIndex: 10000,
       background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
@@ -79,14 +75,14 @@ export default function NumeroRetraitModal({ onClose, onSaved }: { onClose: () =
         background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 16,
         padding: '32px 28px', width: '100%', maxWidth: 400, boxShadow: '0 24px 64px rgba(0,0,0,0.22)',
       }} onClick={e => e.stopPropagation()}>
-        <h2 style={{ fontSize: 17, fontWeight: 800, color: 'var(--c-text)', marginBottom: 6 }}>Numéro et opérateur de retrait</h2>
+        <h2 style={{ fontSize: 17, fontWeight: 800, color: 'var(--c-text)', marginBottom: 6 }}>Numéro de retrait</h2>
 
         {suspendus !== null ? (
           <>
             <p style={{ fontSize: 13, color: 'var(--c-text)', lineHeight: 1.6, margin: '12px 0 20px' }}>
               {suspendus
-                ? 'Enregistré. Par sécurité, les retraits sont suspendus pendant 48 h après ce changement.'
-                : 'Opérateur enregistré. Vous pouvez retirer dès maintenant.'}
+                ? 'Numéro de retrait mis à jour. Par sécurité, les retraits sont suspendus pendant 48 h après ce changement.'
+                : 'Ce numéro est déjà votre numéro de retrait : aucun changement.'}
             </p>
             <button className="btn-submit" style={{ width: '100%', justifyContent: 'center', display: 'flex' }}
               onClick={() => { onSaved(); onClose(); }}>Fermer</button>
@@ -94,31 +90,12 @@ export default function NumeroRetraitModal({ onClose, onSaved }: { onClose: () =
         ) : step === 'form' ? (
           <form onSubmit={initier}>
             <p style={{ fontSize: 12, color: 'var(--c-muted)', marginBottom: 16 }}>
-              Un code sera envoyé par SMS sur le téléphone actuel de votre compte. Par sécurité, les retraits sont suspendus 48 h si le numéro ou l&apos;opérateur change.
+              Un code sera envoyé par SMS sur le téléphone actuel de votre compte. Par sécurité, les retraits sont suspendus 48 h si le numéro change. L&apos;opérateur, lui, se choisit à chaque retrait.
             </p>
             <div className="immo-form-field" style={{ marginBottom: 12 }}>
               <label className="immo-form-label" htmlFor="nr-numero">Numéro Mobile Money *</label>
               <input id="nr-numero" className="immo-form-input" type="tel" inputMode="numeric" maxLength={10} placeholder="01XXXXXXXX"
                 value={numero} onChange={e => { setNumero(e.target.value.replace(/\D/g, '').slice(0, 10)); setError(''); }} disabled={loading} autoFocus />
-            </div>
-            <div role="radiogroup" aria-label="Opérateur Mobile Money" style={{ marginBottom: 12 }}>
-              <div className="immo-form-label" style={{ marginBottom: 6 }}>Opérateur de ce numéro *</div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                {OPERATEURS.map(o => {
-                  const choisi = operateur === o.value;
-                  return (
-                    <button key={o.value} type="button" role="radio" aria-checked={choisi} disabled={loading}
-                      onClick={() => { setOperateur(o.value); setError(''); }}
-                      style={{
-                        flex: 1, padding: '10px 0', borderRadius: 10, fontWeight: 700, fontSize: 13, cursor: 'pointer',
-                        border: `1.5px solid ${choisi ? 'var(--c-blue)' : 'var(--c-border)'}`,
-                        background: choisi ? 'var(--c-blue)' : 'var(--c-card)', color: choisi ? '#fff' : 'var(--c-text)',
-                      }}>
-                      {o.label}
-                    </button>
-                  );
-                })}
-              </div>
             </div>
             <div className="immo-form-field" style={{ marginBottom: 12 }}>
               <label className="immo-form-label" htmlFor="nr-mdp">Mot de passe (confirmation) *</label>
@@ -131,7 +108,7 @@ export default function NumeroRetraitModal({ onClose, onSaved }: { onClose: () =
         ) : (
           <form onSubmit={confirmer}>
             <p style={{ fontSize: 13, color: 'var(--c-text)', lineHeight: 1.6, margin: '8px 0 16px' }}>
-              Entrez le code reçu par SMS pour confirmer le numéro <strong>{numero}</strong> ({OPERATEURS.find(o => o.value === operateur)?.label}).
+              Entrez le code reçu par SMS pour confirmer le numéro <strong>{numero}</strong>.
             </p>
             <div className="immo-form-field" style={{ marginBottom: 12 }}>
               <label className="immo-form-label" htmlFor="nr-otp">Code de vérification *</label>

@@ -36,9 +36,11 @@ describe('raisonBlocage', () => {
     expect(raisonBlocage(ok)).toBeNull();
     expect(raisonBlocage(null)).toBeNull();
   });
-  it('demande l’opérateur, signale l’absence de numéro', () => {
-    expect(raisonBlocage({ ...ok, operateur_retrait: null })).toMatch(/MTN ou Moov/);
+  it('signale l’absence de numéro', () => {
     expect(raisonBlocage({ ...ok, numero_retrait: null })).toMatch(/numéro/);
+  });
+  it('l’opérateur n’est jamais un motif de blocage : il se choisit dans le formulaire', () => {
+    expect(raisonBlocage({ ...ok, operateur_retrait: null })).toBeNull();
   });
   it('annonce la suspension de 48 h tant qu’elle court, plus après', () => {
     const futur = new Date(Date.now() + 3600_000).toISOString();

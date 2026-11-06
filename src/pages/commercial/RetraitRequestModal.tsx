@@ -10,8 +10,10 @@ import {
   raisonBlocage,
   type LimitesRetrait,
   type NumeroRetraitInfo,
+  type OperateurRetrait,
 } from '../../utils/retraitCommercial';
 import NumeroRetraitModal from './NumeroRetraitModal';
+import SelecteurOperateur from './SelecteurOperateur';
 
 function formatFcfa(v: number) {
   return new Intl.NumberFormat('fr-FR').format(Math.round(v)) + ' FCFA';
@@ -28,7 +30,8 @@ type Etape = 'saisie' | 'confirmation' | 'resultat';
 /**
  * Demande de retrait d'un commercial. Plus de numéro ni de nom de titulaire à saisir : le virement
  * part immédiatement vers le numéro enregistré sur le compte (téléphone vérifié à la première
- * connexion par défaut) et l'opérateur choisi. Une confirmation précède l'envoi.
+ * connexion par défaut). L'opérateur (MTN ou Moov) se choisit ICI, à chaque demande, sans code SMS ni
+ * suspension ; il est prérempli avec celui du dernier retrait. Une confirmation précède l'envoi.
  */
 export default function RetraitRequestModal({ solde, onClose, onSuccess }: {
   solde: number; onClose: () => void; onSuccess: () => void;
@@ -41,6 +44,8 @@ export default function RetraitRequestModal({ solde, onClose, onSuccess }: {
   const [error, setError]       = useState('');
   const [resultat, setResultat] = useState<{ ok: boolean; texte: string } | null>(null);
   const [showNumero, setShowNumero] = useState(false);
+  // Choix explicite de la personne ; tant qu'elle n'a rien choisi, le dernier opérateur utilisé.
+  const [operateurSaisi, setOperateurSaisi] = useState<OperateurRetrait | null>(null);
   // Une clé par demande : rejouée après une coupure, elle ne débite qu'une fois.
   const cle = useRef<{ valeur: string; montant: number } | null>(null);
 
@@ -63,15 +68,17 @@ export default function RetraitRequestModal({ solde, onClose, onSuccess }: {
   const montantMessage = messageMontant(montant, solde, limites);
   const blocage = raisonBlocage(info);
   const min = limites.min ?? RETRAIT_MINIMUM;
-  const canContinue = !!montant && !montantMessage && !blocage && info !== null;
-  const operateur = libelleOperateur(info?.operateur_retrait);
+  const operateurChoisi = operateurSaisi ?? info?.operateur_retrait ?? null;
+  const operateur = libelleOperateur(operateurChoisi);
+  const canContinue = !!montant && !montantMessage && !blocage && info !== null && !!operateurChoisi;
 
   const envoyer = async () => {
+    if (!operateurChoisi) return;
     setLoading(true);
     setError('');
     if (!cle.current || cle.current.montant !== montantNum) cle.current = { valeur: nouvelleCle(), montant: montantNum };
     try {
-      const retrait = await postRetrait.demander(montantNum, 'commission_commerciale', cle.current.valeur);
+      const retrait = await postRetrait.demander(montantNum, 'commission_commerciale', operateurChoisi, cle.current.valeur);
       cle.current = null;
       setResultat(messageApresDemande(retrait));
       setEtape('resultat');
@@ -202,14 +209,16 @@ export default function RetraitRequestModal({ solde, onClose, onSuccess }: {
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 11, color: 'var(--c-muted)' }}>Envoyé sur</div>
                 <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--c-text)' }}>
-                  {info?.masque || '—'}{operateur ? ` · ${operateur}` : ''}
+                  {info?.masque || '—'}
                 </div>
               </div>
               <button type="button" onClick={() => setShowNumero(true)}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-blue)', fontWeight: 700, fontSize: 12, flexShrink: 0 }}>
-                {info && !info.operateur_retrait ? 'Choisir mon opérateur' : 'Changer'}
+                Changer
               </button>
             </div>
+
+            <SelecteurOperateur valeur={operateurChoisi} onChange={o => { setOperateurSaisi(o); setError(''); }} disabled={loading} />
 
             {blocage && (
               <div role="alert" style={{ marginBottom: 12, padding: '8px 12px', background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 8, fontSize: 12, color: 'var(--c-text)' }}>
