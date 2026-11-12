@@ -11,7 +11,7 @@ import IndicateurEnvois from './IndicateurEnvois';
 const envoyerMedia: Envoyeur = async (bienId, el) => {
   const fichier = el.fichier instanceof File ? el.fichier : new File([el.fichier], el.nom, { type: el.fichier.type });
   if (el.genre === 'video') await postBien.uploadVideo(bienId, fichier);
-  else await postBien.uploadPhoto(bienId, fichier);
+  else await postBien.uploadPhoto(bienId, fichier, el.id);
 };
 
 /** Lot 1 — dialogues de confirmation et envois en arrière-plan, communs à toutes les pages. */

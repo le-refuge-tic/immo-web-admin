@@ -55,7 +55,14 @@ export function avancement(lot: LotEnvoi): Avancement {
 }
 
 let compteur = 0
-const nouvelId = (prefixe: string) => `${prefixe}-${Date.now().toString(36)}-${(compteur++).toString(36)}`
+/**
+ * Identifiant unique d'un élément : il sert aussi de clé d'idempotence (`cle_envoi`) côté API,
+ * pour qu'un envoi repris après un rechargement ne crée pas de doublon.
+ */
+const nouvelId = (prefixe: string) =>
+  typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+    ? `${prefixe}-${crypto.randomUUID()}`
+    : `${prefixe}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}-${(compteur++).toString(36)}`
 
 export function creerLot(params: {
   utilisateurId: number

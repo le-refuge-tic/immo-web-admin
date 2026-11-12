@@ -82,4 +82,11 @@ describe('file d’envoi des médias', () => {
     await executerLot(lot, envoyer, () => {}, { ...sansPause, annule: () => true })
     expect(envoyer).not.toHaveBeenCalled()
   })
+
+  it('identifiants utilisables comme clé d’envoi : uniques, 8 à 64 caractères [A-Za-z0-9_-]', () => {
+    const lot = creerLot({ utilisateurId: 3, bienId: 1, libelle: 'X', photos: [fichier('a'), fichier('b')], video: new File(['v'], 'v.mp4') })
+    const ids = lot.elements.map(e => e.id)
+    expect(new Set(ids).size).toBe(3)
+    for (const id of ids) expect(id).toMatch(/^[A-Za-z0-9_-]{8,64}$/)
+  })
 })
