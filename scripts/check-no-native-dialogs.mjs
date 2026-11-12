@@ -1,3 +1,5 @@
+/* Script en ligne de commande : la sortie console est voulue. */
+/* eslint-disable no-console */
 // Règle du projet : aucune boîte native (window.confirm / alert / prompt).
 // Les confirmations passent par useConfirm (src/shared/dialogues), les alertes par un toast.
 import { readdirSync, readFileSync, statSync } from 'node:fs'

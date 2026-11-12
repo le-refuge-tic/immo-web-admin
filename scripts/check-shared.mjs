@@ -1,10 +1,12 @@
+/* Script en ligne de commande : la sortie console est voulue. */
+/* eslint-disable no-console */
 // src/shared doit rester identique dans immo-web-admin et immo-web-user (logique pure commune :
 // envois de médias, dialogues, référentiel des biens). Vérifié quand l'autre dépôt est cloné à côté.
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
-import { join, relative } from 'node:path'
+import { basename, join, relative } from 'node:path'
 
 const ICI = join(process.cwd(), 'src', 'shared')
-const AUTRE_DEPOT = process.cwd().replace(/[\/]$/, '').endsWith('immo-web-admin') ? 'immo-web-user' : 'immo-web-admin'
+const AUTRE_DEPOT = basename(process.cwd()) === 'immo-web-admin' ? 'immo-web-user' : 'immo-web-admin'
 const LA_BAS = join(process.cwd(), '..', AUTRE_DEPOT, 'src', 'shared')
 if (!existsSync(LA_BAS)) {
   console.log(`check:shared — ${AUTRE_DEPOT} absent à côté de ce dépôt : vérification ignorée.`)
@@ -12,7 +14,11 @@ if (!existsSync(LA_BAS)) {
 }
 const lister = racine => {
   const res = []
-  const parcourir = d => { for (const n of readdirSync(d)) { const p = join(d, n); statSync(p).isDirectory() ? parcourir(p) : res.push(relative(racine, p)) } }
+  const parcourir = d => { for (const n of readdirSync(d)) {
+      const p = join(d, n)
+      if (statSync(p).isDirectory()) parcourir(p)
+      else res.push(relative(racine, p))
+    } }
   parcourir(racine)
   return res.sort()
 }
