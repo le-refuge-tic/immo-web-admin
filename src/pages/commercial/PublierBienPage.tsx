@@ -542,6 +542,9 @@ export default function PublierBienPage() {
           }
         }
       } catch { /* suppression du brouillon échouée */ }
+      // Lot 4 : la prime du commercial n'est montrée qu'après l'envoi, jamais dans le
+      // récapitulatif que le propriétaire peut voir pendant la saisie.
+      toast(`Annonce envoyée. Prime de validation estimée : ${formatFcfa(primeValidationCommercialeEstimee)}, créditée sur votre portefeuille à l’approbation.`, 'info')
       navigate('/mes-annonces')
     } catch (err: any) {
       setError(apiMessage(err) || 'Erreur lors de la création')
@@ -1528,9 +1531,6 @@ export default function PublierBienPage() {
                       ),
                   ].map(item => item.trim())} />
                 )}
-                <RecapSection title="Prime de validation estimée" items={[
-                  `${formatFcfa(primeValidationCommercialeEstimee)} après validation de cette annonce`
-                ]} />
                 {!isTerrain && !isLocalPro && typeTransaction === 'location' && (
                   <>
                     <RecapSection title="Conditions d'entrée" items={[

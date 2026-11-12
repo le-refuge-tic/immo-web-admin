@@ -56,10 +56,10 @@ export default function PublierSalleFetePage() {
   useEffect(() => {
     let annule = false
     salleFeteApi.equipements()
-      .then(g => { if (!annule) { setGroupes(g); setErreurEquipements('') } })
+      .then(g => { if (!annule) { setGroupes(Array.isArray(g) ? g : []); setErreurEquipements('') } })
       .catch(err => { if (!annule) setErreurEquipements(apiMessage(err) ?? 'Impossible de charger les équipements.') })
     salleFeteApi.evenements()
-      .then(e => { if (!annule) { setEvenements(e); setErreurEvenements('') } })
+      .then(e => { if (!annule) { setEvenements(Array.isArray(e) ? e : []); setErreurEvenements('') } })
       .catch(err => { if (!annule) setErreurEvenements(apiMessage(err) ?? 'Impossible de charger les types d’événements.') })
     return () => { annule = true }
   }, [essai])
