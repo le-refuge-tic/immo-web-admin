@@ -1,49 +1,33 @@
 import { guesthouseApi } from '../../../api/guesthouse'
-import { postBien } from '../../../api/postBien'
+import type { DemandeEnvoi } from '../../../shared/uploads/useGestionEnvois'
 
-export type ResultatEnvoi = { bienId: number; photosEchouees: number; videoEchouee: boolean }
+export type Medias = { libelle: string; photos: File[]; video: File | null }
 
 /**
- * Crée le bien (guesthouse, salle de fêtes…) avec `creer`, puis envoie les photos
- * une à une (dans l'ordre choisi, la première sert de couverture) et la vidéo. Une
- * erreur de création remonte à l'appelant ; les échecs de médias sont comptés et
- * signalés, jamais ignorés.
+ * Lot 1 — crée le bien (guesthouse, salle de fêtes, bien classique…) avec
+ * `creer`, puis confie photos et vidéo au gestionnaire d'envois : le
+ * commercial n'attend plus la fin de l'envoi pour quitter la page. Une erreur
+ * de création remonte à l'appelant et rien n'est envoyé.
  */
 export async function envoyerBien(
   creer: (payload: unknown) => Promise<{ id: number }>,
   payload: unknown,
-  photos: File[],
-  video: File | null,
-  onProgres: (pourcent: number) => void,
-): Promise<ResultatEnvoi> {
+  medias: Medias,
+  demarrer: (demande: DemandeEnvoi) => void,
+): Promise<number> {
   const bien = await creer(payload)
-  const total = photos.length + (video ? 1 : 0)
-  let faits = 0
-  let photosEchouees = 0
-  for (const photo of photos) {
-    try {
-      await postBien.uploadPhoto(bien.id, photo)
-    } catch {
-      photosEchouees += 1
-    }
-    faits += 1
-    onProgres(Math.round((faits / total) * 100))
-  }
-  let videoEchouee = false
-  if (video) {
-    try {
-      await postBien.uploadVideo(bien.id, video)
-    } catch {
-      videoEchouee = true
-    }
-    onProgres(100)
-  }
-  return { bienId: bien.id, photosEchouees, videoEchouee }
+  demarrer({
+    bienId: bien.id,
+    libelle: medias.libelle,
+    lien: `/mes-annonces/${bien.id}/modifier`,
+    photos: medias.photos,
+    video: medias.video,
+  })
+  return bien.id
 }
 
 export const envoyerGuesthouse = (
   payload: unknown,
-  photos: File[],
-  video: File | null,
-  onProgres: (pourcent: number) => void,
-): Promise<ResultatEnvoi> => envoyerBien(guesthouseApi.create, payload, photos, video, onProgres)
+  medias: Medias,
+  demarrer: (demande: DemandeEnvoi) => void,
+): Promise<number> => envoyerBien(guesthouseApi.create, payload, medias, demarrer)

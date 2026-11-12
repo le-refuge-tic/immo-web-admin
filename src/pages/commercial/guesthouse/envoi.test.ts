@@ -1,15 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const create = vi.fn()
-const uploadPhoto = vi.fn()
-const uploadVideo = vi.fn()
 vi.mock('../../../api/guesthouse', () => ({ guesthouseApi: { create: (b: unknown) => create(b) } }))
-vi.mock('../../../api/postBien', () => ({
-  postBien: {
-    uploadPhoto: (id: number, f: File) => uploadPhoto(id, f),
-    uploadVideo: (id: number, f: File) => uploadVideo(id, f),
-  },
-}))
 
 const { envoyerGuesthouse } = await import('./envoi')
 
@@ -18,31 +10,24 @@ const photo = (n: string) => new File(['x'], n, { type: 'image/jpeg' })
 describe('envoyerGuesthouse', () => {
   beforeEach(() => {
     create.mockReset().mockResolvedValue({ id: 42 })
-    uploadPhoto.mockReset().mockResolvedValue({})
-    uploadVideo.mockReset().mockResolvedValue({})
   })
 
-  it('crée le bien puis envoie les photos dans l’ordre, puis la vidéo', async () => {
-    const progres = vi.fn()
-    const r = await envoyerGuesthouse({ a: 1 }, [photo('1'), photo('2')], new File(['v'], 'v.mp4'), progres)
+  it('crée le bien puis confie photos et vidéo au gestionnaire d’envois, dans l’ordre', async () => {
+    const demarrer = vi.fn()
+    const video = new File(['v'], 'v.mp4')
+    const id = await envoyerGuesthouse({ a: 1 }, { libelle: 'Villa Fidjrossè', photos: [photo('1'), photo('2')], video }, demarrer)
     expect(create).toHaveBeenCalledWith({ a: 1 })
-    expect(uploadPhoto.mock.calls.map(c => (c[1] as File).name)).toEqual(['1', '2'])
-    expect(uploadVideo).toHaveBeenCalledOnce()
-    expect(progres).toHaveBeenLastCalledWith(100)
-    expect(r).toEqual({ bienId: 42, photosEchouees: 0, videoEchouee: false })
+    expect(id).toBe(42)
+    expect(demarrer).toHaveBeenCalledOnce()
+    const demande = demarrer.mock.calls[0][0]
+    expect(demande).toMatchObject({ bienId: 42, libelle: 'Villa Fidjrossè', lien: '/mes-annonces/42/modifier', video })
+    expect(demande.photos.map((f: File) => f.name)).toEqual(['1', '2'])
   })
 
-  it('compte les photos et la vidéo en échec au lieu de les ignorer', async () => {
-    uploadPhoto.mockRejectedValueOnce(new Error('réseau')).mockResolvedValue({})
-    uploadVideo.mockRejectedValue(new Error('trop lourd'))
-    const r = await envoyerGuesthouse({}, [photo('1'), photo('2'), photo('3')], new File(['v'], 'v.mp4'), () => {})
-    expect(uploadPhoto).toHaveBeenCalledTimes(3)
-    expect(r).toEqual({ bienId: 42, photosEchouees: 1, videoEchouee: true })
-  })
-
-  it('échec de création : l’erreur remonte, aucune photo envoyée', async () => {
+  it('échec de création : l’erreur remonte, aucun envoi démarré', async () => {
     create.mockRejectedValue(new Error('400'))
-    await expect(envoyerGuesthouse({}, [photo('1')], null, () => {})).rejects.toThrow('400')
-    expect(uploadPhoto).not.toHaveBeenCalled()
+    const demarrer = vi.fn()
+    await expect(envoyerGuesthouse({}, { libelle: 'X', photos: [photo('1')], video: null }, demarrer)).rejects.toThrow('400')
+    expect(demarrer).not.toHaveBeenCalled()
   })
 })
