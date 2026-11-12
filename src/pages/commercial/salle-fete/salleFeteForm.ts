@@ -13,6 +13,8 @@ import {
   manquesLocalisation,
   manquesPhotos,
   separerNomDescription,
+  FRAIS_VISITE_DEFAUT,
+  type PolitiqueAnnulation,
   type ChampsIdentite,
   type ChampsLocalisation,
   type TextesIdentite,
@@ -54,6 +56,15 @@ export const TRAITEURS: { value: Traiteur; label: string }[] = [
   { value: 'inclus', label: 'Inclus' },
 ]
 
+/** Lot 3 — pièces annexes (facultatives), mêmes codes que l'API. */
+export type PieceAnnexe = 'cuisine' | 'loges' | 'vestiaires'
+export const PIECES_ANNEXES: { value: PieceAnnexe; label: string }[] = [
+  { value: 'cuisine', label: 'Cuisine' },
+  { value: 'loges', label: 'Loges' },
+  { value: 'vestiaires', label: 'Vestiaires' },
+]
+export { POLITIQUES_ANNULATION } from '../guesthouse/guesthouseForm'
+
 export const LIBELLES_CONFIGURATION = Object.fromEntries(CONFIGURATIONS.map(c => [c.value, c.label]))
 export const LIBELLES_TRAITEUR: Record<Traiteur, string> = {
   libre: 'traiteur libre',
@@ -88,6 +99,13 @@ export type SalleFeteForm = ChampsIdentite & ChampsLocalisation & {
   insonorisee: boolean | null
   /** Vide = pas d'heure limite pour la musique */
   heureFinMusique: string
+  // Lot 3 — facultatifs : '' / null = non précisé.
+  forfaitJournee: string
+  forfaitWeekend: string
+  piecesAnnexes: PieceAnnexe[]
+  nbSanitaires: string
+  accesPmr: boolean | null
+  politiqueAnnulation: PolitiqueAnnulation | null
 }
 
 export function formulaireVide(proprio?: {
@@ -130,6 +148,12 @@ export function formulaireVide(proprio?: {
     alcool: null,
     insonorisee: null,
     heureFinMusique: '',
+    forfaitJournee: '',
+    forfaitWeekend: '',
+    piecesAnnexes: [],
+    nbSanitaires: '',
+    accesPmr: null,
+    politiqueAnnulation: null,
   }
 }
 
@@ -151,6 +175,8 @@ function manquesTarif(f: SalleFeteForm): string[] {
   if (f.configuration === null) m.push('Configuration (intérieur, plein air ou mixte)')
   if (facultatifInvalide(f.nbTables, true)) m.push('Nombre de tables (nombre entier)')
   if (facultatifInvalide(f.nbChaises, true)) m.push('Nombre de chaises (nombre entier)')
+  if (facultatifInvalide(f.forfaitJournee, false)) m.push('Forfait journée (nombre entier de FCFA)')
+  if (facultatifInvalide(f.forfaitWeekend, false)) m.push('Forfait week-end (nombre entier de FCFA)')
   return m
 }
 
@@ -162,6 +188,7 @@ function manquesRegles(f: SalleFeteForm): string[] {
   if (!HEURE.test(f.heureOuverture)) m.push('Heure d’ouverture')
   if (!HEURE.test(f.heureFinMax)) m.push('Heure limite de fin')
   if (f.heureFinMusique.trim() && !HEURE.test(f.heureFinMusique)) m.push('Heure de fin de la musique')
+  if (facultatifInvalide(f.nbSanitaires, true)) m.push('Nombre de sanitaires (nombre entier)')
   return m
 }
 
@@ -225,17 +252,24 @@ function detailsPayload(f: SalleFeteForm) {
     alcool_autorise: f.alcool,
     insonorisee: f.insonorisee,
     ...(f.heureFinMusique.trim() ? { heure_fin_musique: f.heureFinMusique } : {}),
+    // Lot 3 — facultatifs, null = non précisé (aussi pour effacer en modification).
+    forfait_journee: f.forfaitJournee.trim() ? (entierFcfa(f.forfaitJournee) ?? null) : null,
+    forfait_weekend: f.forfaitWeekend.trim() ? (entierFcfa(f.forfaitWeekend) ?? null) : null,
+    pieces_annexes: f.piecesAnnexes,
+    nb_sanitaires: f.nbSanitaires.trim() ? (entierFcfa(f.nbSanitaires, true) ?? null) : null,
+    acces_pmr: f.accesPmr,
+    politique_annulation: f.politiqueAnnulation,
   }
 }
 
 /** Corps de POST /biens (type salle_fete). À n'appeler qu'une fois toutes les étapes valides. */
-export function construirePayload(f: SalleFeteForm) {
+export function construirePayload(f: SalleFeteForm, fraisVisite = FRAIS_VISITE_DEFAUT) {
   const details = detailsPayload(f)
   return {
     type: 'salle_fete' as const,
     transaction: 'location' as const,
     prix: details.prix,
-    frais_visite: 500,
+    frais_visite: fraisVisite,
     description: descriptionPayload(f),
     localisation: localisationPayload(f),
     amenites: amenitesProprietairePayload(f),
@@ -258,6 +292,8 @@ type BienLu = {
     heure_ouverture: string; heure_fin_max: string; traiteur: Traiteur | null
     deco_autorisee: boolean | null; alcool_autorise: boolean | null; heure_fin_musique: string | null
     insonorisee?: boolean | null
+    forfait_journee?: number | null; forfait_weekend?: number | null; pieces_annexes?: PieceAnnexe[]
+    nb_sanitaires?: number | null; acces_pmr?: boolean | null; politique_annulation?: PolitiqueAnnulation | null
   } | null
   evenements?: { code: string }[]
   equipements_liste?: { code: string }[]
@@ -306,6 +342,12 @@ export function depuisBien(b: BienLu): SalleFeteForm {
     alcool: d.alcool_autorise,
     insonorisee: d.insonorisee ?? null,
     heureFinMusique: d.heure_fin_musique ? heure(d.heure_fin_musique) : '',
+    forfaitJournee: texte(d.forfait_journee),
+    forfaitWeekend: texte(d.forfait_weekend),
+    piecesAnnexes: d.pieces_annexes ?? [],
+    nbSanitaires: texte(d.nb_sanitaires),
+    accesPmr: d.acces_pmr ?? null,
+    politiqueAnnulation: d.politique_annulation ?? null,
   }
 }
 

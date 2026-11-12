@@ -248,7 +248,41 @@ describe('construirePayload', () => {
       alcool_autorise: true,
       insonorisee: true,
       heure_fin_musique: '23:00',
+      forfait_journee: null,
+      forfait_weekend: null,
+      pieces_annexes: [],
+      nb_sanitaires: null,
+      acces_pmr: null,
+      politique_annulation: null,
     })
+  })
+
+  it('lot 3 : forfaits, pièces annexes, sanitaires, PMR et annulation transmis', () => {
+    const d = construirePayload(rempli({
+      forfaitJournee: '250 000', forfaitWeekend: '450000', piecesAnnexes: ['cuisine', 'loges'],
+      nbSanitaires: '4', accesPmr: true, politiqueAnnulation: 'stricte',
+    })).details_salle_fete
+    expect(d).toMatchObject({
+      forfait_journee: 250000, forfait_weekend: 450000, pieces_annexes: ['cuisine', 'loges'],
+      nb_sanitaires: 4, acces_pmr: true, politique_annulation: 'stricte',
+    })
+  })
+
+  it('lot 3 : frais de visite fournis par la configuration (plus de 500 F codés en dur)', () => {
+    expect(construirePayload(rempli(), 1000).frais_visite).toBe(1000)
+    expect(construirePayload(rempli()).frais_visite).toBe(500)
+  })
+
+  it('lot 3 : forfait ou sanitaires mal saisis bloquent l’étape concernée', () => {
+    expect(manquesEtape(2, rempli({ forfaitJournee: '12,5' }), 0)).toContain('Forfait journée (nombre entier de FCFA)')
+    expect(manquesEtape(3, rempli({ nbSanitaires: 'x' }), 0)).toContain('Nombre de sanitaires (nombre entier)')
+  })
+
+  it('lot 3 : relu depuis un bien puis renvoyé à l’identique', () => {
+    const f = rempli({ forfaitJournee: '250000', piecesAnnexes: ['vestiaires'], accesPmr: false, politiqueAnnulation: 'souple' })
+    const d = construirePayload(f).details_salle_fete
+    const relu = depuisBien({ prix: d.prix, details_salle_fete: { ...d, superficie_m2: d.superficie_m2 ?? null, nb_tables: d.nb_tables ?? null, nb_chaises: d.nb_chaises ?? null, places_parking: d.places_parking ?? null, caution: d.caution ?? null, frais_menage: d.frais_menage ?? null, heure_fin_musique: d.heure_fin_musique ?? null } as never })
+    expect(relu).toMatchObject({ forfaitJournee: '250000', piecesAnnexes: ['vestiaires'], accesPmr: false, politiqueAnnulation: 'souple' })
   })
 
   it('propriétaire dans amenites.proprietaire_info, téléphone normalisé', () => {

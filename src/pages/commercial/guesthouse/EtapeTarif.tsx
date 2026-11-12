@@ -1,9 +1,11 @@
+import type { ReactNode } from 'react'
 import { Card, Section, Counter, MoneyInput } from '../formUi'
 import { BLUE, baseInput } from '../formStyles'
 import { TYPES_LIT, type Lit } from './guesthouseForm'
 import { Libelle, type EtapeProps } from './ui'
 
-export default function EtapeTarif({ form, maj }: EtapeProps) {
+/** `totaux` : aperçu en direct (lot 3), absent dans l'éditeur. */
+export default function EtapeTarif({ form, maj, totaux }: EtapeProps & { totaux?: ReactNode }) {
   const majLit = (i: number, patch: Partial<Lit>) =>
     maj({ lits: form.lits.map((l, j) => (j === i ? { ...l, ...patch } : l)) })
   const typeLibre = TYPES_LIT.find(t => !form.lits.some(l => l.type === t.value))?.value ?? 'simple'
@@ -27,14 +29,55 @@ export default function EtapeTarif({ form, maj }: EtapeProps) {
             <MoneyInput value={form.caution} onChange={v => maj({ caution: v })} placeholder="0" />
           </div>
           <Counter label="Nuitées minimum" value={form.nuiteesMin} min={1} onChange={v => maj({ nuiteesMin: v })} />
+          <div>
+            <Libelle facultatif>Frais de ménage (par séjour)</Libelle>
+            <MoneyInput value={form.fraisMenage} onChange={v => maj({ fraisMenage: v })} placeholder="0" />
+          </div>
         </div>
       </Card>
+
+      <Card>
+        <Section title="Tarifs longue durée" />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
+          <div>
+            <Libelle facultatif>Tarif semaine (7 nuits)</Libelle>
+            <MoneyInput value={form.prixSemaine} onChange={v => maj({ prixSemaine: v })} placeholder="150000" />
+          </div>
+          <div>
+            <Libelle facultatif>Tarif mois (30 nuits)</Libelle>
+            <MoneyInput value={form.prixMois} onChange={v => maj({ prixMois: v })} placeholder="550000" />
+          </div>
+        </div>
+      </Card>
+
+      {totaux}
 
       <Card>
         <Section title="Capacité" required />
         <Counter label="Voyageurs" value={form.capacite} min={1} onChange={v => maj({ capacite: v })} />
         <Counter label="Chambres" value={form.nbChambres} min={1} onChange={v => maj({ nbChambres: v })} />
         <Counter label="Salles de bain" value={form.nbSallesBain} min={1} onChange={v => maj({ nbSallesBain: v })} />
+        <div style={{ marginTop: 6 }}>
+          <Libelle facultatif>Voyageurs par chambre</Libelle>
+          {form.voyageursParChambre === null
+            ? (
+              <button type="button" onClick={() => maj({ voyageursParChambre: 2 })}
+                style={{ padding: '8px 14px', borderRadius: 10, border: `1px dashed ${BLUE}`, background: 'transparent', color: BLUE, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>
+                + Préciser
+              </button>
+            )
+            : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ flex: 1 }}>
+                  <Counter label="Par chambre" value={form.voyageursParChambre} min={1} onChange={v => maj({ voyageursParChambre: v })} />
+                </div>
+                <button type="button" onClick={() => maj({ voyageursParChambre: null })}
+                  style={{ border: 'none', background: 'none', color: 'var(--c-muted)', cursor: 'pointer', fontSize: 12 }}>
+                  Retirer
+                </button>
+              </div>
+            )}
+        </div>
       </Card>
 
       <Card>

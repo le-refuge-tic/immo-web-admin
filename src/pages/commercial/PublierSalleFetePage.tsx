@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useToast } from '../../context/ToastContext'
 import { useGestionEnvois } from '../../shared/uploads/useGestionEnvois'
+import { totauxSalle } from '../../shared/biens/calculsTarifs'
 import { apiMessage } from '../../utils/apiMessage'
 import { salleFeteApi, type TypeEvenement } from '../../api/salleFete'
 import type { GroupeEquipements } from '../../api/guesthouse'
@@ -14,50 +15,42 @@ import {
   TEXTES_IDENTITE,
   type SalleFeteForm,
 } from './salle-fete/salleFeteForm'
+import { sectionsRecapSalle } from './salle-fete/recap'
 import { envoyerBien } from './guesthouse/envoi'
 import EtapeIdentite from './guesthouse/EtapeIdentite'
 import EtapeLocalisation from './guesthouse/EtapeLocalisation'
 import EtapeTarif from './salle-fete/EtapeTarif'
 import EtapeRegles from './salle-fete/EtapeRegles'
 import EtapePhotos from './salle-fete/EtapePhotos'
-
-const CLE_BROUILLON = 'publier_salle_fete_draft'
+import { useBrouillonFormulaire } from './brouillons/useBrouillonFormulaire'
+import { useActionsFormulaire } from './formulaire-dedie/useActionsFormulaire'
+import BarreActions from './formulaire-dedie/BarreActions'
+import MenuBrouillons from './formulaire-dedie/MenuBrouillons'
+import Recapitulatif from './formulaire-dedie/Recapitulatif'
+import { TotauxSalleBloc } from './formulaire-dedie/BlocTotaux'
 
 function lireJson<T>(cle: string): T | null {
   try { return JSON.parse(localStorage.getItem(cle) ?? 'null') as T | null } catch { return null }
 }
 
-/** Brouillon restauré (formulaire et étape) ; à défaut, propriétaire saisi avant d'arriver ici. */
-function etatInitial(): { form: SalleFeteForm; etape: number } {
-  const brouillon = lireJson<{ form: SalleFeteForm; etape: number }>(CLE_BROUILLON)
-  if (brouillon?.form) return { form: { ...formulaireVide(), ...brouillon.form }, etape: Math.min(brouillon.etape ?? 0, ETAPES.length - 1) }
-  return { form: formulaireVide(lireJson('proprietaire_info')), etape: 0 }
-}
+/** Formulaire vierge, avec le propriétaire saisi avant d'arriver ici s'il y en a un. */
+const formulaireInitial = (): SalleFeteForm => formulaireVide(lireJson('proprietaire_info'))
 
 export default function PublierSalleFetePage() {
   const navigate = useNavigate()
   const toast = useToast()
-  const [{ form: formInitial, etape: etapeInitiale }] = useState(etatInitial)
-  const [form, setForm] = useState<SalleFeteForm>(formInitial)
-  const [etape, setEtape] = useState(etapeInitiale)
+  const { form, maj, etape, setEtape, brouillonId, lister, supprimer, terminer } =
+    useBrouillonFormulaire<SalleFeteForm>('salle_fete', formulaireInitial, ETAPES.length)
+  const { annuler, changerDeType, fraisVisite } = useActionsFormulaire({ brouillonId, supprimerBrouillon: supprimer })
   const [photos, setPhotos] = useState<File[]>([])
   const [video, setVideo] = useState<File | null>(null)
-  const [envoi, setEnvoi] = useState<{ enCours: boolean }>({ enCours: false })
-  const [creeId, setCreeId] = useState<number | null>(null)
+  const [enCours, setEnCours] = useState(false)
   const { demarrer } = useGestionEnvois()
   const [groupes, setGroupes] = useState<GroupeEquipements[] | null>(null)
   const [erreurEquipements, setErreurEquipements] = useState('')
   const [evenements, setEvenements] = useState<TypeEvenement[] | null>(null)
   const [erreurEvenements, setErreurEvenements] = useState('')
   const [essai, setEssai] = useState(0)
-
-  const maj = useCallback((patch: Partial<SalleFeteForm>) => setForm(f => ({ ...f, ...patch })), [])
-
-  // Brouillon : sauvegardé à chaque modification (les fichiers ne peuvent pas l'être)
-  useEffect(() => {
-    if (creeId !== null) return
-    try { localStorage.setItem(CLE_BROUILLON, JSON.stringify({ form, etape })) } catch { /* stockage plein ou désactivé */ }
-  }, [form, etape, creeId])
 
   // Référentiels : chargés ensemble, relancés ensemble par « Réessayer »
   useEffect(() => {
@@ -80,29 +73,31 @@ export default function PublierSalleFetePage() {
     [evenements],
   )
 
+  const totaux = totauxSalle({
+    prix: form.prix, dureeHeures: form.dureeHeures, heuresMin: form.heuresMin, caution: form.caution,
+    fraisMenage: form.fraisMenage, forfaitJournee: form.forfaitJournee, forfaitWeekend: form.forfaitWeekend,
+  })
   const manques = manquesEtape(etape, form, photos.length)
   const derniere = etape === ETAPES.length - 1
-  const bloque = manques.length > 0 || envoi.enCours
 
-  const allerA = (n: number) => { setEtape(n); window.scrollTo({ top: 0, behavior: 'smooth' }) }
+  const allerA = useCallback((n: number) => { setEtape(n); window.scrollTo({ top: 0, behavior: 'smooth' }) }, [setEtape])
 
   const envoyer = async () => {
-    setEnvoi({ enCours: true })
+    setEnCours(true)
     try {
       // Lot 1 : les photos partent en arrière-plan, retour immédiat aux annonces.
-      const id = await envoyerBien(salleFeteApi.create, construirePayload(form), { libelle: form.nom.trim() || 'Salle de fêtes', photos, video }, demarrer)
-      localStorage.removeItem(CLE_BROUILLON)
+      await envoyerBien(salleFeteApi.create, construirePayload(form, fraisVisite), { libelle: form.nom.trim() || 'Salle de fêtes', photos, video }, demarrer)
+      terminer()
       localStorage.removeItem('proprietaire_info')
-      setCreeId(id)
       navigate('/mes-annonces')
     } catch (err) {
-      setEnvoi({ enCours: false })
+      setEnCours(false)
       toast(apiMessage(err) ?? 'L’enregistrement a échoué. Vos informations sont conservées : réessayez.', 'error')
     }
   }
 
   const suivant = () => {
-    if (bloque) return
+    if (manques.length || enCours) return
     if (derniere) void envoyer()
     else allerA(etape + 1)
   }
@@ -115,7 +110,11 @@ export default function PublierSalleFetePage() {
             Nouvelle salle de fêtes
             <span style={{ fontSize: 12, color: 'var(--c-muted)', marginLeft: 8, fontWeight: 500 }}>{ETAPES[etape]}</span>
           </h1>
-          <span style={{ fontSize: 12, fontWeight: 700, color: BLUE }}>{etape + 1}/{ETAPES.length}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <MenuBrouillons famille="salle_fete" lister={lister} courantId={brouillonId} nbEtapes={ETAPES.length}
+              onReprendre={lien => navigate(lien)} onSupprimer={supprimer} onNouveau={() => navigate('/publier-salle-fete')} />
+            <span style={{ fontSize: 12, fontWeight: 700, color: BLUE }}>{etape + 1}/{ETAPES.length}</span>
+          </div>
         </div>
         <div style={{ height: 4, borderRadius: 2, background: 'var(--c-border)', marginTop: 10 }}>
           <div style={{ height: '100%', borderRadius: 2, background: BLUE, width: `${((etape + 1) / ETAPES.length) * 100}%`, transition: 'width 0.3s' }} />
@@ -127,38 +126,28 @@ export default function PublierSalleFetePage() {
 
       {etape === 0 && <EtapeIdentite form={form} maj={maj} textes={TEXTES_IDENTITE} />}
       {etape === 1 && <EtapeLocalisation form={form} maj={maj} />}
-      {etape === 2 && <EtapeTarif form={form} maj={maj} />}
+      {etape === 2 && <EtapeTarif form={form} maj={maj} totaux={<TotauxSalleBloc t={totaux} />} />}
       {etape === 3 && (
         <EtapeRegles form={form} maj={maj} evenements={evenements} erreurEvenements={erreurEvenements}
           groupes={groupes} erreurEquipements={erreurEquipements} reessayer={() => setEssai(n => n + 1)} />
       )}
       {etape === 4 && (
-        <EtapePhotos form={form} photos={photos} setPhotos={setPhotos} video={video} setVideo={setVideo}
-          libellesEquipements={libellesEquipements} libellesEvenements={libellesEvenements}
-          signaler={m => toast(m, 'error')} />
+        <EtapePhotos photos={photos} setPhotos={setPhotos} video={video} setVideo={setVideo}
+          signaler={m => toast(m, 'error')}
+          recap={(
+            <Recapitulatif
+              sections={sectionsRecapSalle(form, libellesEquipements, libellesEvenements)}
+              totaux={<TotauxSalleBloc t={totaux} />}
+              manques={ETAPES.slice(0, -1).map((libelle, i) => ({ etape: i, libelle, champs: manquesEtape(i, form, photos.length) }))}
+              allerA={allerA}
+            />
+          )} />
       )}
 
-      {/* Barre d'actions toujours visible : ce qui manque + boutons. Les boutons se replient sous 400 px. */}
-      <div style={{ position: 'sticky', bottom: 0, marginTop: 16, padding: '12px 0 16px', background: 'var(--c-bg)', borderTop: '1px solid var(--c-border)' }}>
-        {manques.length > 0 && (
-          <p aria-live="polite" style={{ fontSize: 12, color: 'var(--s-red)', margin: '0 0 10px' }}>
-            Il manque : {manques.join(' · ')}
-          </p>
-        )}
-        {envoi.enCours && (
-          <p aria-live="polite" style={{ fontSize: 12, color: BLUE, margin: '0 0 10px' }}>Enregistrement…</p>
-        )}
-        <div style={{ display: 'flex', gap: 10 }}>
-          <button type="button" className="btn-cancel" disabled={envoi.enCours}
-            onClick={() => (etape > 0 ? allerA(etape - 1) : navigate('/publier-bien'))}>
-            {etape > 0 ? 'Précédent' : 'Changer de type'}
-          </button>
-          <button type="button" className="btn-submit" disabled={bloque} aria-disabled={bloque}
-            onClick={suivant} style={{ flex: 1, opacity: bloque ? 0.5 : 1, cursor: bloque ? 'not-allowed' : 'pointer' }}>
-            {derniere ? (envoi.enCours ? 'Envoi…' : 'Envoyer la salle') : 'Suivant'}
-          </button>
-        </div>
-      </div>
+      <BarreActions etape={etape} derniere={derniere} manques={manques} enCours={enCours} libelleEnvoyer="Envoyer la salle"
+        onAnnuler={() => void annuler()}
+        onPrecedent={() => (etape > 0 ? allerA(etape - 1) : void changerDeType())}
+        onSuivant={suivant} />
     </div>
   )
 }
