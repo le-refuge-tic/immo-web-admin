@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import {
-  TYPES_BIEN, TYPES_EDITION, MIN_PHOTOS,
+  TYPES_BIEN, MIN_PHOTOS,
   derives, prixPrincipal, montantIntegration, commissionAgence, manquesEtape,
   construireAmenites, construirePieces, construirePayload,
-  coupleEdition, libelleEditionDepuisBien, libellesEtapes,
+  libellesEtapes,
   type BienClassiqueForm,
 } from './bienClassiqueForm'
+import { choixDepuisBien } from '../../../shared/biens/referentielTypes'
 
 const formulaire = (o: Partial<BienClassiqueForm> = {}): BienClassiqueForm => ({
   typeBien: 'chambre_salon', typeTransaction: 'location', prix: '50000', prixPromo: '',
@@ -269,27 +270,22 @@ describe('construirePayload', () => {
   })
 })
 
-describe('modification — mêmes valeurs qu’à la création', () => {
-  it.each(TYPES_EDITION.map(o => [o.label]))('%s : relu en base, il retrouve le même choix', label => {
-    const c = coupleEdition(label)!
-    expect(libelleEditionDepuisBien(c.type, c.sousType)).toBe(label)
+describe('lot 2 — création et modification lisent le même référentiel', () => {
+  it.each(TYPES_BIEN.map(t => [t.key]))('%s : le couple créé est relu comme le même choix', cle => {
+    for (const meuble of [false, true]) {
+      const d = derives({ typeBien: cle, estMeuble: meuble, etatMeubleMaison: meuble ? 'meuble' : 'non_meuble' })
+      const amenites = d.isMeuble && d.typeBackend === 'maison' ? { etat_meuble: 'meuble' } : {}
+      expect(choixDepuisBien(d.typeBackend, d.sousType, amenites)).toEqual({ cle, meuble: d.isMeuble })
+    }
   })
 
-  it('couples identiques à la création pour boutique, bureau, duplex et appart meublé', () => {
-    expect(coupleEdition('Boutique / Local')).toEqual({ type: 'maison', sousType: 'boutique' })
-    expect(coupleEdition('Bureau')).toEqual({ type: 'maison', sousType: 'bureau' })
-    expect(coupleEdition('Duplex')).toEqual({ type: 'maison', sousType: 'duplex' })
-    expect(coupleEdition('Appart. meublé')).toEqual({ type: 'appart_meuble', sousType: 'appart_meuble' })
+  it('local commercial : parcours boutique, type maison', () => {
+    const d = derives({ typeBien: 'local_commercial', estMeuble: false, etatMeubleMaison: 'non_meuble' })
+    expect(d).toMatchObject({ isLocalPro: true, typeBackend: 'maison', sousType: 'local_commercial', peutEtreMeuble: false })
   })
 
-  it('anciennes valeurs reconnues', () => {
-    expect(libelleEditionDepuisBien('appart_meuble', 'appartement')).toBe('Appart. meublé')
-    expect(libelleEditionDepuisBien('appart_vide', 'boutique')).toBe('Boutique / Local')
-    expect(libelleEditionDepuisBien('maison', null)).toBe('Maison')
-  })
-
-  it('guesthouse et salle de fêtes ne sont pas des choix de modification', () => {
-    expect(libelleEditionDepuisBien('guesthouse', null)).toBe('')
-    expect(libelleEditionDepuisBien('salle_fete', null)).toBe('')
+  it('guesthouse et salle de fêtes ne sont pas des types du formulaire classique', () => {
+    expect(TYPES_BIEN.map(t => t.key)).not.toContain('guesthouse')
+    expect(TYPES_BIEN.map(t => t.key)).not.toContain('salle_fete')
   })
 })

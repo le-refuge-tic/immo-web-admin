@@ -5,6 +5,16 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ## [Non publié]
 
+### Ajouté (lot 2 — référentiel des types)
+- Référentiel unique des types de biens (`src/shared/biens/referentielTypes.ts`, copie de
+  `GET /referentiels/types-biens`, identique à immo-web-user).
+- « Publier un bien » : choix du type en deux temps (catégorie en cartes, puis sous-type en
+  puces) ; « Court séjour » et « Événementiel » ouvrent le formulaire dédié après confirmation
+  (une annulation laisse le choix intact). Nouveau sous-type : local commercial / showroom.
+- Modification d'une annonce : même sélecteur, case « Appartement meublé » ; un type en base non
+  reconnu est signalé au lieu d'un choix vide (`TYPES_EDITION` et `libelleEditionDepuisBien`
+  remplacés par le référentiel).
+
 ### Ajouté
 - Boîtes de confirmation communes (`useConfirm`, `src/shared/dialogues`) : focus piégé, fermeture
   par Échap, bouton principal rouge pour une action destructive. Le script
