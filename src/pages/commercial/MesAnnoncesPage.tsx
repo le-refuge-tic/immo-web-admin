@@ -4,6 +4,24 @@ import { getMesBiens } from '../../api/getMesBiens';
 import { markBiensAsSeen } from '../../hooks/useSidebarBadges';
 import { useAuth } from '../../context/AuthContext';
 import { useConfirm } from '../../shared/dialogues/useConfirm';
+import {
+  LIBELLES_FAMILLE, supprimerBrouillon, tousLesBrouillons, type ResumeBrouillon,
+} from './brouillons/brouillonsLocaux';
+
+
+/** Brouillons de tous les formulaires ; reprend une fois l'ancien brouillon unique du bien classique. */
+function lireBrouillons(): ResumeBrouillon[] {
+  try {
+    const legacy = localStorage.getItem(LEGACY_DRAFT_KEY);
+    if (legacy && !localStorage.getItem(DRAFTS_KEY)) {
+      const data = JSON.parse(legacy);
+      const migrated = [{ id: crypto.randomUUID(), label: data?.titreTerrain || data?.quartier || 'Brouillon', updatedAt: Date.now(), data }];
+      localStorage.setItem(DRAFTS_KEY, JSON.stringify(migrated));
+      localStorage.removeItem(LEGACY_DRAFT_KEY);
+    }
+  } catch { /* brouillon illisible : ignoré */ }
+  return tousLesBrouillons();
+}
 import { prixAvecUnite } from '../../utils/prix';
 
 /* ─── Helpers ─────────────────────────────────────────────── */
@@ -139,56 +157,12 @@ export default function MesAnnoncesPage() {
   const [biens, setBiens]       = useState<any[]>([]);
   const [loading, setLoading]   = useState(true);
   const [showProprietaireModal, setShowProprietaireModal] = useState(false);
-  const [drafts, setDrafts] = useState<any[]>([]);
+  // Lot 3 : tous les brouillons (biens, guesthouses, salles), libellé tiré du nom, vraie date.
+  const [drafts, setDrafts] = useState<ResumeBrouillon[]>(lireBrouillons);
   const [showDraftMenu, setShowDraftMenu] = useState(false);
   const [showCreateMenu, setShowCreateMenu] = useState(false);
   const [filterType, setFilterType]     = useState('');
   const [filterStatus, setFilterStatus] = useState('');
-
-  useEffect(() => {
-    try {
-      const allDrafts: any[] = [];
-      const raw = localStorage.getItem(DRAFTS_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) {
-          allDrafts.push(...parsed.map((draft: any) => ({ ...draft, storageKey: DRAFTS_KEY, type: 'bien' })));
-        }
-      } else {
-        const legacy = localStorage.getItem(LEGACY_DRAFT_KEY);
-        if (legacy) {
-          const data = JSON.parse(legacy);
-          const id = crypto.randomUUID();
-          const migrated = [{ id, label: data?.titreTerrain || data?.quartier || 'Brouillon', updatedAt: Date.now(), data }];
-          localStorage.setItem(DRAFTS_KEY, JSON.stringify(migrated));
-          localStorage.removeItem(LEGACY_DRAFT_KEY);
-          allDrafts.push(...migrated.map((draft: any) => ({ ...draft, storageKey: DRAFTS_KEY, type: 'bien' })));
-        }
-      }
-
-      const guesthouse = JSON.parse(localStorage.getItem('publier_guesthouse_draft') ?? 'null');
-      if (guesthouse?.form) {
-        allDrafts.push({
-          id: 'guesthouse-draft',
-          label: guesthouse.form.titre || guesthouse.form.quartier || 'Guesthouse',
-          updatedAt: null,
-          storageKey: 'publier_guesthouse_draft',
-          type: 'guesthouse',
-        });
-      }
-      const salleFete = JSON.parse(localStorage.getItem('publier_salle_fete_draft') ?? 'null');
-      if (salleFete?.form) {
-        allDrafts.push({
-          id: 'salle-fete-draft',
-          label: salleFete.form.nom || salleFete.form.titre || salleFete.form.quartier || 'Salle de fêtes',
-          updatedAt: null,
-          storageKey: 'publier_salle_fete_draft',
-          type: 'salle-fete',
-        });
-      }
-      setDrafts(allDrafts);
-    } catch { /* ignore */ }
-  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -227,21 +201,16 @@ export default function MesAnnoncesPage() {
   const enAttente   = biens.filter(b => b.statut_moderation === 'en_attente').length;
   const rejetes     = biens.filter(b => b.statut_moderation === 'rejete').length;
 
-  const deleteDraft = async (draft: any) => {
+  const deleteDraft = async (draft: ResumeBrouillon) => {
     const ok = await confirmer({
       titre: 'Supprimer ce brouillon ?',
-      message: 'Les informations saisies seront définitivement perdues.',
+      message: `« ${draft.libelle} » : les informations saisies seront définitivement perdues.`,
       confirmer: 'Supprimer',
       danger: true,
     })
     if (!ok) return
-    if (draft.storageKey && draft.storageKey !== DRAFTS_KEY) {
-      localStorage.removeItem(draft.storageKey)
-    } else {
-      const next = drafts.filter(item => item.id !== draft.id && item.storageKey === DRAFTS_KEY)
-      localStorage.setItem(DRAFTS_KEY, JSON.stringify(next.map(({ storageKey, type, ...item }) => item)))
-    }
-    const next = drafts.filter(item => item.id !== draft.id || item.storageKey !== draft.storageKey)
+    supprimerBrouillon(draft.famille, draft.id)
+    const next = tousLesBrouillons()
     setDrafts(next)
     if (!next.length) setShowDraftMenu(false)
   }
@@ -323,17 +292,17 @@ export default function MesAnnoncesPage() {
                     <div key={draft.id} style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 8 }}>
                       <button onClick={() => {
                         setShowDraftMenu(false);
-                        if (draft.type === 'guesthouse') window.location.href = '/publier-guesthouse';
-                        else if (draft.type === 'salle-fete') window.location.href = '/publier-salle-fete';
-                        else window.location.href = `/publier-bien?draft=${encodeURIComponent(draft.id)}`;
+                        // Le lien ouvre le bon brouillon (?draft=<id>), quel que soit le type.
+                        if (draft.famille === 'bien') window.location.href = draft.lien;
+                        else navigate(draft.lien);
                       }}
                         style={{ flex: 1, minWidth: 0, border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', padding: '10px 8px', color: 'var(--c-text)' }}>
-                        <div style={{ fontSize: 12, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{draft.label || 'Brouillon sans titre'}</div>
+                        <div style={{ fontSize: 12, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{draft.libelle}</div>
                         <div style={{ fontSize: 10, color: 'var(--c-muted)', marginTop: 2 }}>
-                          {draft.updatedAt ? formatDate(new Date(draft.updatedAt).toISOString()) : 'Date inconnue'}
+                          {LIBELLES_FAMILLE[draft.famille]} · {draft.updatedAt ? formatDate(new Date(draft.updatedAt).toISOString()) : 'Date inconnue'}
                         </div>
                       </button>
-                      <button onClick={() => deleteDraft(draft)} title="Supprimer le brouillon"
+                      <button onClick={() => void deleteDraft(draft)} title="Supprimer le brouillon" aria-label={`Supprimer le brouillon ${draft.libelle}`}
                         style={{ width: 32, height: 32, flexShrink: 0, border: 'none', background: 'transparent', color: 'var(--s-red, #ef4444)', cursor: 'pointer', borderRadius: 8 }}>
                         ✕
                       </button>

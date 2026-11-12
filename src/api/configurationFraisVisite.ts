@@ -6,6 +6,9 @@ const auth = () => ({
 });
 
 export const configurationFraisVisite = {
+  /** Lot 3 — montant public (sans rôle requis) : frais de visite posés à la création d'un bien. */
+  public: () =>
+    axios.get<{ montant: number }>(`${BASE}/configuration/frais-visite`).then(r => r.data),
   get: () =>
     axios.get<{ montant: number }>(`${BASE}/admin/configuration/frais-visite`, auth()).then(r => r.data),
   update: (montant: number) =>
