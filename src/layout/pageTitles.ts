@@ -6,7 +6,7 @@ const TITRES: [string, string][] = [
   ['/mon-equipe', 'Mon équipe'], ['/portefeuille-commercial', 'Mon portefeuille'], ['/publier-bien', 'Publier un bien'],
   ['/messages', 'Messages'], ['/supervision', 'Suivi des échanges'], ['/utilisateurs', 'Utilisateurs'],
   ['/loyers', 'Loyers'], ['/finances', 'Finances'], ['/feedbacks', 'Feedbacks'], ['/reclamations', 'Réclamations'],
-  ['/liaisons', 'Liaisons gestion'], ['/retraits', 'Retraits MoMo'],
+  ['/liaisons', 'Liaisons gestion'], ['/retraits', 'Retraits MoMo'], ['/remboursements', 'Remboursements'],
   ['/configuration/profil', 'Mon profil'], ['/configuration/commerciaux', 'Commerciaux'],
   ['/configuration/equipes', 'Équipes'], ['/configuration/proprietaires', 'Propriétaires'],
   ['/configuration/prospects', 'Prospects'], ['/configuration/locataires', 'Locataires'],

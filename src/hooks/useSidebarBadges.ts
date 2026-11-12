@@ -1,3 +1,4 @@
+import { remboursementsAdmin } from '../api/remboursementsAdmin';
 import { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
@@ -49,11 +50,13 @@ export type SidebarBadges = {
   moderation: number;
   quartiers: number;
   retraits: number;
+  /** Remboursements de frais de visite à verser. */
+  remboursements: number;
   mesAnnonces: number;
   verifications: number;
 };
 
-const EMPTY: SidebarBadges = { supervision: 0, messages: 0, moderation: 0, quartiers: 0, retraits: 0, mesAnnonces: 0, verifications: 0 };
+const EMPTY: SidebarBadges = { supervision: 0, messages: 0, moderation: 0, quartiers: 0, retraits: 0, remboursements: 0, mesAnnonces: 0, verifications: 0 };
 
 /**
  * Compteurs de la sidebar, regroupés : un seul socket, un seul polling de
@@ -84,11 +87,12 @@ export function useSidebarBadges({ isAdmin, isCommercial, userId }: { isAdmin: b
 
   const loadAdmin = useCallback(async () => {
     if (!isAdmin) return;
-    const [stats, quartiers, retraits, verifications] = await Promise.allSettled([
+    const [stats, quartiers, retraits, verifications, remboursements] = await Promise.allSettled([
       getAdminStats.get(),
       getQuartiers.lister('en_attente'),
       axios.get(`${BASE}/retraits/admin`, auth()),
       verificationsApi.list(),
+      remboursementsAdmin.lister({ statut: 'a_rembourser', limit: 1 }),
     ]);
     const patch: Partial<SidebarBadges> = {};
     if (stats.status === 'fulfilled') patch.moderation = stats.value?.biens_en_attente ?? 0;
@@ -99,6 +103,7 @@ export function useSidebarBadges({ isAdmin, isCommercial, userId }: { isAdmin: b
       const rd = retraits.value.data;
       patch.retraits = compterATraiter(Array.isArray(rd) ? rd : (rd?.data ?? []));
     }
+    if (remboursements.status === 'fulfilled') patch.remboursements = remboursements.value?.a_rembourser?.nombre ?? 0;
     if (verifications.status === 'fulfilled') {
       patch.verifications = Array.isArray(verifications.value) ? verifications.value.length : 0;
     }

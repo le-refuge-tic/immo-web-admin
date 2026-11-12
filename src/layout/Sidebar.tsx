@@ -63,6 +63,7 @@ export default function Sidebar({
       { to: '/finances', label: 'Vue d\'ensemble', Icon: TrendingUpIcon },
       { to: '/loyers',   label: 'Loyers',          Icon: FileTextIcon },
       { to: '/retraits', label: 'Retraits MoMo',   Icon: WithdrawIcon },
+      { to: '/remboursements', label: 'Remboursements', Icon: WithdrawIcon },
       { to: '/portefeuille-commercial', label: 'Portefeuille', Icon: CardIcon },
     ] },
   ] : [];
@@ -101,6 +102,7 @@ export default function Sidebar({
     '/moderation':   badges.moderation,
     '/quartiers':    badges.quartiers,
     '/retraits':     badges.retraits,
+    '/remboursements': badges.remboursements,
     '/mes-annonces': badges.mesAnnonces,
     '/verifications': badges.verifications,
   } as Record<string, number>)[to] ?? 0;
