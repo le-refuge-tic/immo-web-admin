@@ -15,11 +15,11 @@ interface EnCours { demande: DemandeChoix<unknown>; resoudre: (v: unknown) => vo
 const SELECTEUR_FOCUS = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
 /** Focus piégé dans la boîte, Échap pour fermer, focus rendu à la fermeture. */
-function usePiegeFocus(ref: RefObject<HTMLDivElement | null>, ouvert: boolean, fermer: () => void) {
+function usePiegeFocus(ref: RefObject<HTMLDivElement | null>, demande: unknown, fermer: () => void) {
   const fermerRef = useRef(fermer)
   useEffect(() => { fermerRef.current = fermer }, [fermer])
   useEffect(() => {
-    if (!ouvert) return
+    if (!demande) return
     const precedent = document.activeElement as HTMLElement | null
     const focusables = () => Array.from(ref.current?.querySelectorAll<HTMLElement>(SELECTEUR_FOCUS) ?? [])
     const initial = ref.current?.querySelector<HTMLElement>('[data-autofocus]') ?? focusables()[0]
@@ -39,7 +39,7 @@ function usePiegeFocus(ref: RefObject<HTMLDivElement | null>, ouvert: boolean, f
       document.removeEventListener('keydown', surTouche)
       precedent?.focus?.()
     }
-  }, [ouvert, ref])
+  }, [demande, ref])
 }
 
 let compteur = 0
@@ -72,7 +72,8 @@ export function ConfirmProvider({ Rendu, children }: { Rendu: ComponentType<Prop
     setFile(prev => prev.filter(d => d !== courant))
   }, [courant])
 
-  usePiegeFocus(refDialogue, !!courant, () => repondre(null))
+  // Chaque demande (même enchaînée à la précédente) reçoit le focus et le rend à la fermeture.
+  usePiegeFocus(refDialogue, courant, () => repondre(null))
 
   const valeur = useMemo(() => ({ confirmer, choisir }), [confirmer, choisir])
   return (

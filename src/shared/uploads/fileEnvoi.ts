@@ -22,6 +22,8 @@ export interface ElementEnvoi {
 
 export interface LotEnvoi {
   id: string
+  /** Compte qui a lancé l'envoi : jamais repris par un autre compte. */
+  utilisateurId: number
   bienId: number
   /** « Villa Fidjrossè » : affiché dans l'indicateur et les toasts. */
   libelle: string
@@ -56,6 +58,7 @@ let compteur = 0
 const nouvelId = (prefixe: string) => `${prefixe}-${Date.now().toString(36)}-${(compteur++).toString(36)}`
 
 export function creerLot(params: {
+  utilisateurId: number
   bienId: number
   libelle: string
   lien?: string
@@ -71,7 +74,7 @@ export function creerLot(params: {
       ? [{ id: nouvelId('v'), genre: 'video' as const, fichier: params.video, nom: nomDe(params.video, 'video.mp4'), statut: 'attente' as const, essais: 0 }]
       : []),
   ]
-  return { id: nouvelId('lot'), bienId: params.bienId, libelle: params.libelle, lien: params.lien, elements, creeLe: Date.now() }
+  return { id: nouvelId('lot'), utilisateurId: params.utilisateurId, bienId: params.bienId, libelle: params.libelle, lien: params.lien, elements, creeLe: Date.now() }
 }
 
 /** Remet en attente les éléments échoués (ou interrompus par un rechargement). */
@@ -105,11 +108,18 @@ export async function executerLot(
   depart: LotEnvoi,
   envoyer: Envoyeur,
   onMaj: (lot: LotEnvoi) => void,
-  options: { concurrence?: number; essaisMax?: number; pause?: (essai: number) => Promise<void> } = {},
+  options: {
+    concurrence?: number
+    essaisMax?: number
+    pause?: (essai: number) => Promise<void>
+    /** Vrai après une déconnexion : plus aucun fichier ne part. */
+    annule?: () => boolean
+  } = {},
 ): Promise<LotEnvoi> {
   const concurrence = options.concurrence ?? CONCURRENCE_MAX
   const essaisMax = options.essaisMax ?? ESSAIS_MAX
   const pause = options.pause ?? ((essai: number) => new Promise<void>(r => setTimeout(r, 1000 * essai)))
+  const annule = options.annule ?? (() => false)
   let lot = depart
 
   const maj = (id: string, changement: Partial<ElementEnvoi>) => {
@@ -120,7 +130,7 @@ export async function executerLot(
   const traiter = async (id: string) => {
     for (;;) {
       const el = lot.elements.find(e => e.id === id)
-      if (!el) return
+      if (!el || annule()) return
       maj(id, { statut: 'en_cours', essais: el.essais + 1 })
       try {
         await envoyer(lot.bienId, el)
@@ -145,7 +155,15 @@ export async function executerLot(
   // La couverture d'abord, seule : elle reste la première photo du bien.
   const couverture = lot.elements.find(e => e.genre === 'photo')?.id
   const file = photos.filter(id => id !== couverture)
-  if (couverture && photos.includes(couverture)) await traiter(couverture)
+  if (couverture && photos.includes(couverture)) {
+    await traiter(couverture)
+    // Couverture refusée : les autres photos attendent, sinon l'une d'elles deviendrait
+    // la couverture du bien. « Réessayer » renverra la couverture en premier.
+    if (lot.elements.find(e => e.id === couverture)?.statut === 'echec') {
+      for (const id of [...file, ...enAttente('video')]) maj(id, { statut: 'echec', erreur: 'En attente de la photo de couverture' })
+      return lot
+    }
+  }
 
   const travailleurs = Array.from({ length: Math.min(concurrence, file.length) }, async () => {
     for (let id = file.shift(); id; id = file.shift()) await traiter(id)

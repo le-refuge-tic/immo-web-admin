@@ -8,12 +8,23 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { avancement, creerLot, executerLot, preparerReprise, type Envoyeur, type LotEnvoi } from './fileEnvoi'
 import { ContexteEnvois, MESSAGE_DEPART, messageEchec, messageFin, type DemandeEnvoi, type Notifier } from './useGestionEnvois'
-import { enregistrerLot, lireLots, supprimerLot } from './stockageEnvoi'
+import { enregistrerEtat, enregistrerNouveauLot, lireLots, supprimerLot } from './stockageEnvoi'
 
-export function GestionEnvoisProvider({ envoyer, notifier, children }: { envoyer: Envoyeur; notifier: Notifier; children: ReactNode }) {
+/**
+ * `utilisateurId` : compte connecté (null = déconnecté). Au changement de compte,
+ * les envois en cours s'arrêtent et seuls les envois du nouveau compte sont proposés.
+ */
+export function GestionEnvoisProvider({ envoyer, notifier, utilisateurId, children }: {
+  envoyer: Envoyeur
+  notifier: Notifier
+  utilisateurId: number | null
+  children: ReactNode
+}) {
   const [lots, setLots] = useState<LotEnvoi[]>([])
   const [interrompus, setInterrompus] = useState<LotEnvoi[]>([])
   const actifs = useRef(new Set<string>())
+  // Lots arrêtés par une déconnexion : leurs dernières mises à jour sont ignorées.
+  const arretes = useRef(new Set<string>())
   const envoyerRef = useRef(envoyer)
   const notifierRef = useRef(notifier)
   useEffect(() => { envoyerRef.current = envoyer; notifierRef.current = notifier }, [envoyer, notifier])
@@ -22,37 +33,49 @@ export function GestionEnvoisProvider({ envoyer, notifier, children }: { envoyer
     setLots(prev => (prev.some(l => l.id === lot.id) ? prev.map(l => (l.id === lot.id ? lot : l)) : [...prev, lot]))
   }, [])
 
-  const lancer = useCallback((depart: LotEnvoi) => {
+  const lancer = useCallback((depart: LotEnvoi, nouveau: boolean) => {
     if (actifs.current.has(depart.id)) return
     actifs.current.add(depart.id)
     remplacer(depart)
-    void enregistrerLot(depart)
+    void (nouveau ? enregistrerNouveauLot(depart) : enregistrerEtat(depart))
+    const arrete = () => arretes.current.has(depart.id)
     const pourEnvoi: Envoyeur = (bienId, el) => envoyerRef.current(bienId, el)
     void executerLot(depart, pourEnvoi, lot => {
+      if (arrete()) return
       remplacer(lot)
-      void enregistrerLot(lot)
-    }).then(fin => {
+      void enregistrerEtat(lot)
+    }, { annule: arrete }).then(fin => {
       actifs.current.delete(fin.id)
+      if (arrete()) return
       if (avancement(fin).echecs > 0) {
         remplacer(fin)
-        void enregistrerLot(fin)
+        void enregistrerEtat(fin)
         notifierRef.current(messageEchec(fin), 'error')
         return
       }
       setLots(prev => prev.filter(l => l.id !== fin.id))
-      void supprimerLot(fin.id)
+      void supprimerLot(fin)
       notifierRef.current(messageFin(fin.libelle), 'success')
     })
   }, [remplacer])
 
-  // Envois laissés en plan par un rechargement : proposés à la reprise.
+  // Changement de compte (ou déconnexion) : arrêt des envois du compte précédent,
+  // puis envois laissés en plan par un rechargement proposés à la reprise.
+  const [pourUtilisateur, setPourUtilisateur] = useState(utilisateurId)
+  if (pourUtilisateur !== utilisateurId) {
+    setPourUtilisateur(utilisateurId)
+    setLots([])
+    setInterrompus([])
+  }
   useEffect(() => {
+    for (const id of actifs.current) arretes.current.add(id)
+    if (utilisateurId === null) return
     let actif = true
-    void lireLots().then(trouves => {
+    void lireLots(utilisateurId).then(trouves => {
       if (actif && trouves.length) setInterrompus(trouves.filter(l => !actifs.current.has(l.id)))
     })
     return () => { actif = false }
-  }, [])
+  }, [utilisateurId])
 
   const enCours = lots.some(l => avancement(l).enCours)
   useEffect(() => {
@@ -63,24 +86,25 @@ export function GestionEnvoisProvider({ envoyer, notifier, children }: { envoyer
   }, [enCours])
 
   const demarrer = useCallback((demande: DemandeEnvoi) => {
-    if (!demande.photos.length && !demande.video) return
-    lancer(creerLot(demande))
+    if (utilisateurId === null || (!demande.photos.length && !demande.video)) return
+    lancer(creerLot({ ...demande, utilisateurId }), true)
     notifierRef.current(MESSAGE_DEPART, 'info')
-  }, [lancer])
+  }, [lancer, utilisateurId])
 
   const reprendre = useCallback((lotId: string) => {
     const lot = interrompus.find(l => l.id === lotId) ?? lots.find(l => l.id === lotId)
     if (!lot) return
     setInterrompus(prev => prev.filter(l => l.id !== lotId))
-    lancer(preparerReprise(lot))
+    lancer(preparerReprise(lot), false)
   }, [interrompus, lots, lancer])
 
   const abandonner = useCallback((lotId: string) => {
     if (actifs.current.has(lotId)) return
+    const lot = interrompus.find(l => l.id === lotId) ?? lots.find(l => l.id === lotId)
     setInterrompus(prev => prev.filter(l => l.id !== lotId))
     setLots(prev => prev.filter(l => l.id !== lotId))
-    void supprimerLot(lotId)
-  }, [])
+    if (lot) void supprimerLot(lot)
+  }, [interrompus, lots])
 
   const valeur = useMemo(() => ({ lots, interrompus, demarrer, reprendre, abandonner }), [lots, interrompus, demarrer, reprendre, abandonner])
   return <ContexteEnvois.Provider value={valeur}>{children}</ContexteEnvois.Provider>
