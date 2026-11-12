@@ -8,6 +8,8 @@ import { getQuartiers } from '../../api/getQuartiers'
 import { apiMessage } from '../../utils/apiMessage';
 import { useToast } from '../../context/ToastContext'
 import { useGestionEnvois } from '../../shared/uploads/useGestionEnvois'
+import { useConfirm } from '../../shared/dialogues/useConfirm'
+import SelecteurTypeBien from '../../components/SelecteurTypeBien'
 import { envoyerBien } from './guesthouse/envoi'
 import { Card, Section, ChoiceList, Chip, Counter, NumberPicker, MoneyInput, RecapSection } from './formUi'
 import { BLUE, baseInput } from './formStyles'
@@ -119,6 +121,7 @@ export default function PublierBienPage() {
   const navigate = useNavigate()
   const toast = useToast()
   const { demarrer } = useGestionEnvois()
+  const { confirmer } = useConfirm()
 
   const DRAFTS_KEY = 'publier_bien_drafts'
   const LEGACY_DRAFT_KEY = 'publier_bien_draft'
@@ -635,29 +638,19 @@ export default function PublierBienPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <Card>
                 <Section title="Type de bien" />
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  {TYPES_BIEN.map(t => (
-                    <button key={t.key} type="button" onClick={() => setTypeBien(t.key)}
-                      style={{
-                        padding: '10px 14px', borderRadius: 12, border: `2px solid`, fontSize: 12, fontWeight: 700, transition: 'all 0.15s',
-                        borderColor: typeBien === t.key ? BLUE : 'var(--c-border)',
-                        background: typeBien === t.key ? BLUE : 'transparent',
-                        color: typeBien === t.key ? 'white' : 'var(--c-muted)',
-                      }}>
-                      {t.label}
-                    </button>
-                  ))}
-                  {/* Guesthouse : formulaire dédié (location meublée à la nuitée) */}
-                  <button type="button" onClick={() => navigate('/publier-guesthouse')}
-                    style={{ padding: '10px 14px', borderRadius: 12, border: '2px solid var(--c-border)', fontSize: 12, fontWeight: 700, background: 'transparent', color: 'var(--c-muted)', cursor: 'pointer' }}>
-                    Guesthouse
-                  </button>
-                  {/* Salle de fêtes : formulaire dédié (location à l'heure) */}
-                  <button type="button" onClick={() => navigate('/publier-salle-fete')}
-                    style={{ padding: '10px 14px', borderRadius: 12, border: '2px solid var(--c-border)', fontSize: 12, fontWeight: 700, background: 'transparent', color: 'var(--c-muted)', cursor: 'pointer' }}>
-                    Salle de fêtes
-                  </button>
-                </div>
+                <SelecteurTypeBien
+                  valeur={typeBien}
+                  onChange={setTypeBien}
+                  onFormulaireDedie={async st => {
+                    // Guesthouse et salle de fêtes ont leur propre formulaire (prix à la nuitée ou à l'heure).
+                    const ok = await confirmer({
+                      titre: `Publier une ${st.libelle.toLowerCase()} ?`,
+                      message: 'Ce type a son propre formulaire. Votre saisie actuelle reste dans vos brouillons.',
+                      confirmer: 'Ouvrir le formulaire',
+                    })
+                    if (ok) navigate(st.formulaire === 'guesthouse' ? '/publier-guesthouse' : '/publier-salle-fete')
+                  }}
+                />
               </Card>
 
               {isSmallUnit && (

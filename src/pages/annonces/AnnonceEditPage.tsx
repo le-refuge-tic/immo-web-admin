@@ -14,7 +14,9 @@ import {
 } from '../../components/Icons';
 import { BENIN_VILLES, getQuartiersByVille, ALL_QUARTIERS } from '../../data/beninLocations';
 import { apiMessage } from '../../utils/apiMessage';
-import { TYPES_EDITION, LOCAUX_PRO, coupleEdition, libelleEditionDepuisBien } from '../commercial/bien-classique/bienClassiqueForm';
+import { LOCAUX_PRO } from '../commercial/bien-classique/bienClassiqueForm';
+import { choixDepuisBien, coupleBackend, sousTypeParCle, type ChoixType } from '../../shared/biens/referentielTypes';
+import SelecteurTypeBien from '../../components/SelecteurTypeBien';
 import { prixPrincipalDuplex } from '../commercial/duplexCalculs';
 import { libellePrix, prixAvecUnite } from '../../utils/prix';
 
@@ -171,7 +173,8 @@ export default function AnnonceEditPage() {
   const qRef = useRef<HTMLDivElement>(null);
 
   // Type & Prix
-  const [typeLabel, setTypeLabel]     = useState('');
+  // Lot 2 : choix lu dans le référentiel unique ; null = type en base non reconnu, à choisir.
+  const [choixType, setChoixType]     = useState<ChoixType | null>(null);
   const [description, setDescription] = useState('');
   const [prix, setPrix]               = useState('');
   // Tarifs d'un meublé (null = pas de tarifs meublés : le prix se saisit directement).
@@ -238,7 +241,7 @@ export default function AnnonceEditPage() {
         if (ALL_QUARTIERS.includes(q)) setSelQ(q); else if (q) { setSelQ('autre'); setAutreQ(q); }
         setAdresse(loc.adresse ?? '');
 
-        setTypeLabel(libelleEditionDepuisBien(b.type ?? '', a.sous_type ?? ''));
+        setChoixType(choixDepuisBien(b.type ?? '', a.sous_type ?? '', a));
         setDescription(b.description ?? '');
         setPrix(b.prix != null ? String(b.prix) : '');
         const tm = a.tarifs_meuble;
@@ -306,8 +309,8 @@ export default function AnnonceEditPage() {
   async function handleSave() {
     setSaving(true); setSaved(false); setError('');
     try {
-      const opt = coupleEdition(typeLabel);
-      const dbType = opt?.type ?? bien?.type ?? '', dbST = opt?.sousType ?? '';
+      const opt = choixType ? coupleBackend(choixType) : null;
+      const dbType = opt?.type ?? bien?.type ?? '', dbST = opt?.sous_type ?? '';
       const villeVal    = ville  === 'autre' ? autreVille.trim() : ville;
       const quartierVal = selQ   === 'autre' ? autreQ.trim()     : selQ;
 
@@ -406,9 +409,9 @@ export default function AnnonceEditPage() {
   }
 
   // ── Dérivés ──────────────────────────────────────────────────────────────────
-  const opt = coupleEdition(typeLabel);
+  const opt = choixType ? coupleBackend(choixType) : null;
   const dbType = opt?.type ?? bien?.type ?? '';
-  const dbST   = opt?.sousType ?? '';
+  const dbST   = opt?.sous_type ?? '';
   // Boutique, bureau : type maison en base, mais sans pièces ni état du meuble.
   const isLocalPro = LOCAUX_PRO.includes(dbST);
   const isMaison  = dbType === 'maison' && !isLocalPro;
@@ -527,12 +530,23 @@ export default function AnnonceEditPage() {
             <>
               <div style={CARD}>
                 <SectionTitle>Type de bien</SectionTitle>
-                <div className="edit-type-grid" style={{ gap:8 }}>
-                  {TYPES_EDITION.map(o => {
-                    const active = typeLabel === o.label;
-                    return <button key={o.label} type="button" onClick={() => setTypeLabel(o.label)} style={{ padding:'10px 8px', borderRadius:8, fontSize:12.5, fontWeight:active?700:400, cursor:'pointer', textAlign:'center', border:active?'2px solid #2563EB':'1.5px solid var(--c-border)', background:active?'var(--t-blue-bg)':'var(--c-card)', color:active?'var(--s-blue)':'var(--c-muted)', boxShadow:active?'0 0 0 3px rgba(37,99,235,.1)':'none', transition:'all .12s' }}>{o.label}</button>;
-                  })}
-                </div>
+                {!choixType && (
+                  <p role="alert" style={{ fontSize:12.5, color:'var(--s-red)', margin:'0 0 10px' }}>
+                    Type actuel non reconnu ({bien?.type}{bien?.amenites?.sous_type ? ` / ${bien.amenites.sous_type}` : ''}) : choisissez-le ci-dessous.
+                  </p>
+                )}
+                <SelecteurTypeBien
+                  valeur={choixType?.cle ?? ''}
+                  formulaires={['classique']}
+                  onChange={cle => setChoixType(prev => ({ cle, meuble: !!sousTypeParCle(cle)?.meuble && !!prev?.meuble }))}
+                />
+                {choixType?.cle === 'appartement' && (
+                  <label style={{ display:'flex', alignItems:'center', gap:8, marginTop:12, fontSize:13, color:'var(--c-text)' }}>
+                    <input type="checkbox" checked={choixType.meuble}
+                      onChange={e => setChoixType({ cle: 'appartement', meuble: e.target.checked })} />
+                    Appartement meublé
+                  </label>
+                )}
               </div>
 
               <div style={CARD}>
