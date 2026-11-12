@@ -4,6 +4,7 @@ import { getAdminUser } from '../../api/getAdminUser';
 import { patchAdminUser } from '../../api/patchAdminUser';
 import { deleteAdminUser } from '../../api/deleteAdminUser';
 import { apiMessage } from '../../utils/apiMessage';
+import { useToast } from '../../context/ToastContext';
 
 const TABS = [
   { key: '',             label: 'Tous'          },
@@ -35,6 +36,7 @@ function formatDate(d: string) {
 const LIMIT = 12;
 
 export default function UtilisateursPage() {
+  const showToast = useToast();
   const [activeTab, setActiveTab]         = useState('');
   const [users, setUsers]                 = useState([] as any[]);
   const [total, setTotal]                 = useState(0);
@@ -86,7 +88,7 @@ export default function UtilisateursPage() {
       setConfirmId(null);
       await load();
     } catch (err: any) {
-      alert(apiMessage(err) ?? 'Erreur lors de la suppression.');
+      showToast(apiMessage(err) ?? 'Erreur lors de la suppression.', 'error');
     } finally {
       setDeletingId(null);
     }

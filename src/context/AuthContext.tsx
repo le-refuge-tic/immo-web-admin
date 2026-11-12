@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { getAuth } from '../api/getAuth';
 import { postAuth } from '../api/postAuth';
+import { viderLots } from '../shared/uploads/stockageEnvoi';
 
 const AuthContext = createContext(null as any);
 
@@ -50,6 +51,8 @@ export function AuthProvider({ children }: { children: any }) {
     try { await postAuth.logout(); } catch { /* ignore */ }
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
+    // Les photos en attente d'envoi ne restent pas sur l'appareil après la déconnexion.
+    void viderLots();
     setUser(null);
   };
 

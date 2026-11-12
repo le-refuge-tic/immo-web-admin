@@ -233,7 +233,7 @@ export default function ModerationPage() {
     setLoadError('');
     try {
       const [res, st] = await Promise.all([
-        getAdminBien.list({ statut_moderation: 'en_attente', limit: LIMIT, page, ...(query ? { search: query } : {}) }),
+        getAdminBien.list({ statut_moderation: 'en_attente', statut_medias: 'complet', limit: LIMIT, page, ...(query ? { search: query } : {}) }),
         getAdminBien.moderationStats().catch(() => null),
       ]);
       if (requestId !== requestIdRef.current) return;
