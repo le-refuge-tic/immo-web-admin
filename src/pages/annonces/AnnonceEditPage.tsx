@@ -15,7 +15,9 @@ import {
 import { BENIN_VILLES, getQuartiersByVille, ALL_QUARTIERS } from '../../data/beninLocations';
 import { apiMessage } from '../../utils/apiMessage';
 import { LOCAUX_PRO } from '../commercial/bien-classique/bienClassiqueForm';
-import { choixDepuisBien, coupleBackend, sousTypeParCle, type ChoixType } from '../../shared/biens/referentielTypes';
+import { choixDepuisBien, coupleBackend, donneesPerduesConversion, sousTypeParCle, type ChoixType } from '../../shared/biens/referentielTypes';
+import { useConfirm } from '../../shared/dialogues/useConfirm';
+import { useToast } from '../../context/ToastContext';
 import SelecteurTypeBien from '../../components/SelecteurTypeBien';
 import { prixPrincipalDuplex } from '../commercial/duplexCalculs';
 import { libellePrix, prixAvecUnite } from '../../utils/prix';
@@ -153,6 +155,8 @@ export default function AnnonceEditPage() {
   const { user } = useAuth();
   const myRole   = user?.role_principal ?? user?.role;
   const isCommercial = myRole === 'commercial';
+  const { confirmer } = useConfirm();
+  const showToast = useToast();
 
   const [bien, setBien]           = useState<any>(null);
   const [loading, setLoading]     = useState(true);
@@ -306,84 +310,129 @@ export default function AnnonceEditPage() {
   }, []);
 
   // ── Sauvegarde ──────────────────────────────────────────────────────────────
+  /** Corps de PATCH /admin/biens/:id tel que l'écran le montre (sert aussi à savoir si rien n'a changé). */
+  function construireCorps(): any {
+    const opt = choixType ? coupleBackend(choixType) : null;
+    const dbType = opt?.type ?? bien?.type ?? '', dbST = opt?.sous_type ?? '';
+    const villeVal    = ville  === 'autre' ? autreVille.trim() : ville;
+    const quartierVal = selQ   === 'autre' ? autreQ.trim()     : selQ;
+
+    const ame: Record<string,any> = {};
+    // null = "non précisé" → envoyé au backend pour effacer la valeur précédente
+    const sa = (k: string, v: any) => { if (v !== undefined) ame[k] = v === '' ? null : v; };
+    const chip = (k: string, v: string, field: string) => {
+      if (!v) { ame[k] = null; return; }
+      sa(k, v === 'autre' ? (autrePrecision[field] || 'autre') : v);
+    };
+    if (dbST) sa('sous_type', dbST);
+    if (echeanceMois) sa('echeance_mois', Number(echeanceMois));
+    sa('chambre_couloir', couloir);
+    sa('standing', standing);
+    if (standing === 'autre') sa('standing_autre', autrePrecision['standing'] || '');
+    chip('type_cuisine', typeCuisine, 'cuisine');
+    sa('cour', cour);
+    if (cour) {
+      chip('type_cour', typeCour, 'type_cour');
+      if (typeCour === 'commune' && nbVoisins) sa('nb_voisins', Number(nbVoisins));
+    } else {
+      ame['nb_voisins'] = null;
+    }
+    sa('arriere_cour', arriereCour); sa('boyerie', boyerie);
+    if (boyerie) chip('boyerie_type', boyerieType, 'boyerie_type');
+    sa('parking', parking); if (parking && parkingCap) sa('parking_capacite', Number(parkingCap));
+    sa('acces_vehicule', accesVeh); if (accesVeh && nbVeh) sa('nb_vehicules', Number(nbVeh));
+    sa('armoires_chambre', armoiresCh);
+    const elecVal = elec === 'autre' ? (autrePrecision.elec || 'autre') : elec;
+    sa('electricite', elecVal);
+    if (elec==='decompteur' && prixKwh) sa('prix_kwh', Number(prixKwh));
+    const eauVal = eau === 'autre' ? (autrePrecision.eau || 'autre') : eau;
+    sa('eau', eauVal);
+    if (eau==='soneb') {
+      const sg = sonebG === 'autre' ? (autrePrecision.soneb_gestion || 'autre') : sonebG;
+      if (sg) { sa('soneb_gestion', sg); if (sonebG==='prix_m3' && prixM3) sa('prix_m3', Number(prixM3)); }
+    }
+    if (eau==='forage') { sa('forage_payant', forageP); if (forageP && prixForage) sa('prix_forage', Number(prixForage)); }
+    const dispoVal = dispo === 'autre' ? (autrePrecision.dispo || 'autre') : dispo;
+    sa('disponibilite', dispoVal);
+    if (voisinage.length) sa('voisinage', voisinage); if (equips.length) sa('equipements', equips);
+    if (dbType === 'maison' && !LOCAUX_PRO.includes(dbST)) {
+      sa('etat_meuble', etatMeubleMaison);
+      if (etatConstructionMaison) sa('etat_construction', etatConstructionMaison);
+    }
+
+    // Meublé : les tarifs sont enregistrés et le prix principal en est déduit (mois, nuit, heure, personnalisé).
+    let prixEnvoye = prix ? Number(prix) : undefined;
+    if (tarifs) {
+      const nb = (v: string) => (v.trim() ? Number(v) : undefined);
+      const tarifsMeuble = { ...(amenites.tarifs_meuble ?? {}), prix_long_sejour: nb(tarifs.long), prix_sejour_restreint: nb(tarifs.nuit), prix_heure: nb(tarifs.heure) };
+      ame.tarifs_meuble = tarifsMeuble;
+      const principal = prixPrincipalDuplex({
+        prix_long_sejour: tarifs.long, prix_sejour_restreint: tarifs.nuit, prix_heure: tarifs.heure,
+        autres: ((tarifsMeuble.autres ?? []) as { label?: string; prix?: number | string | null }[]).map(x => ({ label: x.label, prix: x.prix != null ? String(x.prix) : '' })),
+      }, v => (v.trim() ? Number(v) : undefined));
+      prixEnvoye = principal > 0 ? principal : prixEnvoye;
+    }
+
+    const payload: any = {
+      type: dbType, description: description||undefined, prix: prixEnvoye,
+      localisation: { ville:villeVal, quartier:quartierVal||undefined, adresse:adresse||undefined },
+      amenites: ame,
+      pieces: pieces.map(p => ({ id:p.id > 0 ? p.id : undefined, nom:p.nom, surface:p.surface!==''?Number(p.surface):null, longueur:p.longueur!==''?Number(p.longueur):null, largeur:p.largeur!==''?Number(p.largeur):null })),
+    };
+    if      (dbType==='maison')                              payload.details_maison  = { superficie:superficie?Number(superficie):0, cloture:cloture??false };
+    else if (dbType==='terrain')                             payload.details_terrain = { superficie:superficie?Number(superficie):0, cloture:cloture??false };
+    else if (dbType==='appart_vide'||dbType==='appart_meuble') payload.details_appart  = { entree_personnelle:entreePerso??false };
+
+  return payload;
+  }
+
   async function handleSave() {
     setSaving(true); setSaved(false); setError('');
     try {
-      const opt = choixType ? coupleBackend(choixType) : null;
-      const dbType = opt?.type ?? bien?.type ?? '', dbST = opt?.sous_type ?? '';
-      const villeVal    = ville  === 'autre' ? autreVille.trim() : ville;
-      const quartierVal = selQ   === 'autre' ? autreQ.trim()     : selQ;
-
-      const ame: Record<string,any> = {};
-      // null = "non précisé" → envoyé au backend pour effacer la valeur précédente
-      const sa = (k: string, v: any) => { if (v !== undefined) ame[k] = v === '' ? null : v; };
-      const chip = (k: string, v: string, field: string) => {
-        if (!v) { ame[k] = null; return; }
-        sa(k, v === 'autre' ? (autrePrecision[field] || 'autre') : v);
-      };
-      if (dbST) sa('sous_type', dbST);
-      if (echeanceMois) sa('echeance_mois', Number(echeanceMois));
-      sa('chambre_couloir', couloir);
-      sa('standing', standing);
-      if (standing === 'autre') sa('standing_autre', autrePrecision['standing'] || '');
-      chip('type_cuisine', typeCuisine, 'cuisine');
-      sa('cour', cour);
-      if (cour) {
-        chip('type_cour', typeCour, 'type_cour');
-        if (typeCour === 'commune' && nbVoisins) sa('nb_voisins', Number(nbVoisins));
+      const payload = construireCorps();
+      // Lot 5 : changement de type par un admin → conversion explicite, après confirmation.
+      if (changementType && choixType && !isCommercial) {
+        const pertes = donneesPerduesConversion(bien, choixType);
+        const ok = await confirmer({
+          titre: `Changer le type en « ${sousTypeParCle(choixType.cle)?.libelle ?? choixType.cle} » ?`,
+          message: pertes.length
+            ? <>Seront définitivement supprimés : <ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>{pertes.map(x => <li key={x}>{x}</li>)}</ul></>
+            : 'Aucune donnée ne sera perdue.',
+          confirmer: 'Changer le type',
+          danger: pertes.length > 0,
+        });
+        if (!ok) return;
+        await patchAdminBien.convertir(numId, { cle: choixType.cle, meuble: choixType.meuble, ...(payload.prix ? { prix: payload.prix } : {}) });
+      }
+      const maj = await patchAdminBien.update(numId, payload);
+      setReference(JSON.stringify(construireCorps()));
+      if (maj?.modification_en_attente) {
+        showToast('Modification envoyée en validation : l’annonce actuelle reste en ligne jusqu’à la décision d’un administrateur.', 'info');
+        setBien((b: any) => ({ ...b, modification_en_attente: maj.modification_en_attente }));
       } else {
-        ame['nb_voisins'] = null;
+        showToast('Modifications enregistrées.');
+        const frais = await getAdminBien.byId(numId);
+        setBien(frais);
+        setReference(null);
       }
-      sa('arriere_cour', arriereCour); sa('boyerie', boyerie);
-      if (boyerie) chip('boyerie_type', boyerieType, 'boyerie_type');
-      sa('parking', parking); if (parking && parkingCap) sa('parking_capacite', Number(parkingCap));
-      sa('acces_vehicule', accesVeh); if (accesVeh && nbVeh) sa('nb_vehicules', Number(nbVeh));
-      sa('armoires_chambre', armoiresCh);
-      const elecVal = elec === 'autre' ? (autrePrecision.elec || 'autre') : elec;
-      sa('electricite', elecVal);
-      if (elec==='decompteur' && prixKwh) sa('prix_kwh', Number(prixKwh));
-      const eauVal = eau === 'autre' ? (autrePrecision.eau || 'autre') : eau;
-      sa('eau', eauVal);
-      if (eau==='soneb') {
-        const sg = sonebG === 'autre' ? (autrePrecision.soneb_gestion || 'autre') : sonebG;
-        if (sg) { sa('soneb_gestion', sg); if (sonebG==='prix_m3' && prixM3) sa('prix_m3', Number(prixM3)); }
-      }
-      if (eau==='forage') { sa('forage_payant', forageP); if (forageP && prixForage) sa('prix_forage', Number(prixForage)); }
-      const dispoVal = dispo === 'autre' ? (autrePrecision.dispo || 'autre') : dispo;
-      sa('disponibilite', dispoVal);
-      if (voisinage.length) sa('voisinage', voisinage); if (equips.length) sa('equipements', equips);
-      if (dbType === 'maison' && !LOCAUX_PRO.includes(dbST)) {
-        sa('etat_meuble', etatMeubleMaison);
-        if (etatConstructionMaison) sa('etat_construction', etatConstructionMaison);
-      }
-
-      // Meublé : les tarifs sont enregistrés et le prix principal en est déduit (mois, nuit, heure, personnalisé).
-      let prixEnvoye = prix ? Number(prix) : undefined;
-      if (tarifs) {
-        const nb = (v: string) => (v.trim() ? Number(v) : undefined);
-        const tarifsMeuble = { ...(amenites.tarifs_meuble ?? {}), prix_long_sejour: nb(tarifs.long), prix_sejour_restreint: nb(tarifs.nuit), prix_heure: nb(tarifs.heure) };
-        ame.tarifs_meuble = tarifsMeuble;
-        const principal = prixPrincipalDuplex({
-          prix_long_sejour: tarifs.long, prix_sejour_restreint: tarifs.nuit, prix_heure: tarifs.heure,
-          autres: ((tarifsMeuble.autres ?? []) as { label?: string; prix?: number | string | null }[]).map(x => ({ label: x.label, prix: x.prix != null ? String(x.prix) : '' })),
-        }, v => (v.trim() ? Number(v) : undefined));
-        prixEnvoye = principal > 0 ? principal : prixEnvoye;
-      }
-
-      const payload: any = {
-        type: dbType, description: description||undefined, prix: prixEnvoye,
-        localisation: { ville:villeVal, quartier:quartierVal||undefined, adresse:adresse||undefined },
-        amenites: ame,
-        pieces: pieces.map(p => ({ id:p.id > 0 ? p.id : undefined, nom:p.nom, surface:p.surface!==''?Number(p.surface):null, longueur:p.longueur!==''?Number(p.longueur):null, largeur:p.largeur!==''?Number(p.largeur):null })),
-      };
-      if      (dbType==='maison')                              payload.details_maison  = { superficie:superficie?Number(superficie):0, cloture:cloture??false };
-      else if (dbType==='terrain')                             payload.details_terrain = { superficie:superficie?Number(superficie):0, cloture:cloture??false };
-      else if (dbType==='appart_vide'||dbType==='appart_meuble') payload.details_appart  = { entree_personnelle:entreePerso??false };
-
-      await patchAdminBien.update(numId, payload);
       setSaved(true); setTimeout(() => setSaved(false), 2500);
-    } catch (e: any) { setError(apiMessage(e) ?? 'Erreur lors de la sauvegarde.'); }
+    } catch (e: any) {
+      const message = apiMessage(e) ?? 'Erreur lors de la sauvegarde.';
+      setError(message);
+      showToast(message, 'error');
+    }
     finally { setSaving(false); }
+  }
+
+  /** Lot 5 — vers une guesthouse ou une salle : les détails obligatoires se saisissent sur la page de conversion. */
+  async function convertirEnDedie(cle: string, libelle: string) {
+    const pertes = donneesPerduesConversion(bien, { cle, meuble: false });
+    const ok = await confirmer({
+      titre: `Convertir en ${libelle.toLowerCase()} ?`,
+      message: <>Vous allez saisir les détails obligatoires de ce type.{pertes.length > 0 && <> À la conversion, seront supprimés : <ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>{pertes.map(x => <li key={x}>{x}</li>)}</ul></>}</>,
+      confirmer: 'Continuer',
+    });
+    if (ok) navigate(`/annonces/${numId}/convertir/${cle}`);
   }
 
   // ── Photos ──────────────────────────────────────────────────────────────────
@@ -423,7 +472,22 @@ export default function AnnonceEditPage() {
   const filteredQ = qSearch.trim() ? qList.filter((q: string) => q.toLowerCase().includes(qSearch.toLowerCase())) : qList;
   const amenites  = bien?.amenites ?? {};
   const isOwner   = bien?.user?.role === 'proprietaire';
-  const isLocked  = isCommercial && bien?.statut_moderation === 'approuve';
+  // Lot 5 : un bien publié reste modifiable par le commercial ; la modification part en validation.
+  const enValidation = isCommercial && bien?.statut_moderation === 'approuve';
+  const isLocked = false;
+  // Rien d'enregistré tant que rien n'a changé ; « Retour » prévient avant de perdre une saisie.
+  const coupleInitial = bien ? { type: bien.type, sous_type: bien.amenites?.sous_type ?? '' } : null;
+  const coupleChoisi = choixType ? coupleBackend(choixType) : null;
+  const changementType = !!coupleInitial && !!coupleChoisi
+    && (coupleChoisi.type !== coupleInitial.type || coupleChoisi.sous_type !== coupleInitial.sous_type);
+  const corpsCourant = !loading && bien && !['guesthouse', 'salle_fete'].includes(bien.type) ? JSON.stringify(construireCorps()) : null;
+  const [reference, setReference] = useState<string | null>(null);
+  if (corpsCourant && reference === null) setReference(corpsCourant);
+  const modifie = changementType || (corpsCourant !== null && reference !== null && corpsCourant !== reference);
+  const retour = async () => {
+    if (modifie && !(await confirmer({ titre: 'Quitter sans enregistrer ?', message: 'Vos changements seront perdus.', confirmer: 'Quitter sans enregistrer', danger: true }))) return;
+    navigate(-1);
+  };
 
   // Compteurs de pièces (mode simplifié commercial — identique à la création) :
   // les lignes détaillées (superficie/longueur/largeur) restent gérées par l'admin.
@@ -457,18 +521,18 @@ export default function AnnonceEditPage() {
 
   // Guesthouse : éditeur dédié (le type ne peut pas être changé, l'API le refuse)
   if (bien.type === 'guesthouse') {
-    return <GuesthouseEditor bien={bien} isLocked={isLocked} onBack={() => navigate(-1)} />;
+    return <GuesthouseEditor bien={bien} isLocked={isLocked} onBack={() => navigate(-1)} enValidation={enValidation} peutConvertir={!isCommercial} onConverti={() => window.location.reload()} />;
   }
   // Salle de fêtes : éditeur dédié, de même (l'onglet Honoraires parlerait de loyer mensuel)
   if (bien.type === 'salle_fete') {
-    return <SalleFeteEditor bien={bien} isLocked={isLocked} onBack={() => navigate(-1)} />;
+    return <SalleFeteEditor bien={bien} isLocked={isLocked} onBack={() => navigate(-1)} enValidation={enValidation} peutConvertir={!isCommercial} onConverti={() => window.location.reload()} />;
   }
 
   return (
     <>
       {/* ── Topbar ─────────────────────────────────────────────────────────── */}
       <div style={TOP_STYLE}>
-        <button onClick={() => navigate(-1)} style={{ display:'flex',alignItems:'center',gap:5,background:'none',border:'none',cursor:'pointer',color:'var(--c-muted)',fontSize:12,padding:'5px 8px',borderRadius:6,fontWeight:500,flexShrink:0 }}>
+        <button onClick={() => void retour()} style={{ display:'flex',alignItems:'center',gap:5,background:'none',border:'none',cursor:'pointer',color:'var(--c-muted)',fontSize:12,padding:'5px 8px',borderRadius:6,fontWeight:500,flexShrink:0 }}>
           <ChevronLeftIcon size={13}/> Retour
         </button>
         <div style={{ width:1,height:16,background:'var(--c-surface-2)',flexShrink:0 }}/>
@@ -477,17 +541,21 @@ export default function AnnonceEditPage() {
         {error && <span style={{ fontSize:11,color:'var(--s-red)',flexShrink:0,maxWidth:240,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{error}</span>}
         {!isLocked && (
           <button
-            onClick={handleSave} disabled={saving}
-            style={{ display:'flex',alignItems:'center',gap:6,flexShrink:0,background:saved?'#16A34A':'#2563EB',color:'#fff',border:'none',borderRadius:8,padding:'10px 22px',fontSize:13,fontWeight:600,cursor:saving?'not-allowed':'pointer',opacity:saving?.7:1,transition:'background .2s',whiteSpace:'nowrap' }}
+            onClick={handleSave} disabled={saving || !modifie} title={modifie ? undefined : 'Aucun changement à enregistrer'}
+            style={{ display:'flex',alignItems:'center',gap:6,flexShrink:0,background:saved?'#16A34A':'#2563EB',color:'#fff',border:'none',borderRadius:8,padding:'10px 22px',fontSize:13,fontWeight:600,cursor:saving||!modifie?'not-allowed':'pointer',opacity:saving||!modifie?.5:1,transition:'background .2s',whiteSpace:'nowrap' }}
           >
             {saved ? <CheckIcon size={13}/> : <SaveIcon/>}
             {saving ? 'Sauvegarde…' : saved ? 'Sauvegardé !' : 'Sauvegarder'}
           </button>
         )}
       </div>
-      {isLocked && (
-        <div style={{ padding:'10px 24px', background:'var(--t-yellow-bg)', borderBottom:'1px solid var(--t-yellow-bd)', fontSize:12.5, color:'var(--s-yellow)' }}>
-          Ce bien est déjà approuvé : il ne peut plus être modifié depuis cette page. Contactez un administrateur si un changement est nécessaire.
+      {bien?.modification_en_attente ? (
+        <div role="status" style={{ padding:'10px 24px', background:'var(--t-blue-bg)', borderBottom:'1px solid var(--t-blue-bd)', fontSize:12.5, color:'var(--s-blue)' }}>
+          Une modification de ce bien attend la décision d’un administrateur. L’annonce actuelle reste en ligne en attendant ; un nouvel envoi remplace la modification en attente.
+        </div>
+      ) : enValidation && (
+        <div role="note" style={{ padding:'10px 24px', background:'var(--t-yellow-bg)', borderBottom:'1px solid var(--t-yellow-bd)', fontSize:12.5, color:'var(--s-yellow)' }}>
+          Ce bien est publié : vos modifications partiront en validation. L’annonce actuelle reste en ligne jusqu’à la décision d’un administrateur. Les photos d’un bien publié ne sont modifiables que par un administrateur.
         </div>
       )}
 
@@ -537,7 +605,8 @@ export default function AnnonceEditPage() {
                 )}
                 <SelecteurTypeBien
                   valeur={choixType?.cle ?? ''}
-                  formulaires={['classique']}
+                  formulaires={isCommercial ? ['classique'] : undefined}
+                  onFormulaireDedie={st => void convertirEnDedie(st.cle, st.libelle)}
                   onChange={cle => setChoixType(prev => ({ cle, meuble: !!sousTypeParCle(cle)?.meuble && !!prev?.meuble }))}
                 />
                 {choixType?.cle === 'appartement' && (

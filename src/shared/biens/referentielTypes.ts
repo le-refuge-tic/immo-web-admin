@@ -192,3 +192,35 @@ export function parametresFiltre(cle: string): { type?: string; sous_type?: stri
   if (f.sous_types) p.sous_type = f.sous_types.join(',')
   return p
 }
+
+// ── Lot 5 : changement de type ────────────────────────────────────────────────────────────
+
+/**
+ * Ce qu'un changement de type efface (même règle que POST /admin/biens/:id/convertir),
+ * à lister dans la boîte de confirmation. Vide si rien n'est perdu.
+ */
+export function donneesPerduesConversion(
+  bien: { type: string; amenites?: Record<string, unknown> | null; pieces?: unknown[] | null; equipements_liste?: unknown[] | null; evenements?: unknown[] | null },
+  cible: ChoixType,
+): string[] {
+  const avant = choixDepuisBien(bien.type, bien.amenites?.sous_type as string | undefined, bien.amenites)
+  const stAvant = avant ? sousTypeParCle(avant.cle) : undefined
+  const st = sousTypeParCle(cible.cle)
+  const couple = coupleBackend(cible)
+  if (!st || !couple) return []
+  const pertes: string[] = []
+  const nb = (l?: unknown[] | null) => (Array.isArray(l) ? l.length : 0)
+  if (bien.type === 'guesthouse' && couple.type !== 'guesthouse') pertes.push('les détails de la guesthouse (prix à la nuit, lits, horaires, règles)')
+  if (bien.type === 'salle_fete' && couple.type !== 'salle_fete') pertes.push('les détails de la salle (tarif horaire, capacité, horaires, règles)')
+  if (bien.type === 'maison' && couple.type !== 'maison') pertes.push('les détails de la maison (superficie, clôture)')
+  if ((bien.type === 'appart_vide' || bien.type === 'appart_meuble') && couple.type !== 'appart_vide' && couple.type !== 'appart_meuble') pertes.push('les détails de l’appartement')
+  if (bien.type === 'terrain' && couple.type !== 'terrain') pertes.push('les détails du terrain (superficie, titre foncier)')
+  const garderPieces = st.categorie === 'residentiel' && st.formulaire === 'classique'
+  if (!garderPieces && nb(bien.pieces) > 0) pertes.push(`les pièces (${nb(bien.pieces)})`)
+  if (couple.type !== bien.type && nb(bien.equipements_liste) > 0) pertes.push('les équipements cochés')
+  if (couple.type !== 'salle_fete' && nb(bien.evenements) > 0) pertes.push('les types d’événements acceptés')
+  if (stAvant?.categorie === 'residentiel' && st.categorie !== 'residentiel' && stAvant.formulaire === 'classique') pertes.push('les informations de logement (chambres, cuisine, cour, standing)')
+  if (stAvant?.categorie === 'commercial' && st.categorie !== 'commercial') pertes.push('les informations de local commercial (voie, visibilité, parking clients)')
+  if (stAvant?.meuble && avant?.meuble && !st.meuble) pertes.push('les tarifs meublés')
+  return pertes
+}

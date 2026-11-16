@@ -11,6 +11,7 @@ import DashboardPage from './pages/dashboard/DashboardPage';
 import AnnoncesPage       from './pages/annonces/AnnoncesPage';
 import AnnonceDetailPage  from './pages/annonces/AnnonceDetailPage';
 import AnnonceEditPage    from './pages/annonces/AnnonceEditPage';
+import ConversionDediePage from './pages/annonces/ConversionDediePage';
 import MessagesPage from './pages/messages/MessagesPage';
 import UtilisateursPage from './pages/utilisateurs/UtilisateursPage';
 import ProfilPage from './pages/configuration/ProfilPage';
@@ -70,6 +71,7 @@ export default function App() {
             <Route path="annonces"           element={<AdminRoute><AnnoncesPage /></AdminRoute>} />
             <Route path="annonces/:id"      element={<AdminRoute><AnnonceDetailPage /></AdminRoute>} />
             <Route path="annonces/:id/modifier" element={<AdminRoute><AnnonceEditPage /></AdminRoute>} />
+            <Route path="annonces/:id/convertir/:cle" element={<AdminRoute><ConversionDediePage /></AdminRoute>} />
             <Route path="commercial-dashboard" element={<CommercialDashboardPage />} />
             <Route path="mes-annonces"              element={<MesAnnoncesPage />} />
             <Route path="mes-annonces/:id"          element={<AnnonceDetailPage />} />

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   CATEGORIES_BIENS, FILTRES_TYPE, SOUS_TYPES_BIENS, categoriesAvec, choixDepuisBien, correspondAuFiltre,
-  coupleBackend, libelleBien, parametresFiltre, sousTypesDe,
+  coupleBackend, donneesPerduesConversion, libelleBien, parametresFiltre, sousTypesDe,
 } from './referentielTypes'
 
 // Mêmes cas que le backend (src/biens/referentiel/referentiel-types-biens.spec.ts).
@@ -106,5 +106,24 @@ describe('filtres de type (accueil, recherche)', () => {
   it('chaque filtre a une clé unique, « Tous » en premier', () => {
     expect(FILTRES_TYPE[0].cle).toBe('')
     expect(new Set(FILTRES_TYPE.map(f => f.cle)).size).toBe(FILTRES_TYPE.length)
+  })
+})
+
+describe('lot 5 — données perdues au changement de type', () => {
+  const maison = { type: 'maison', amenites: { sous_type: 'villa', etat_meuble: 'meuble' }, pieces: [{}, {}] }
+  it('villa meublée → terrain : détails, pièces, logement, tarifs meublés', () => {
+    expect(donneesPerduesConversion(maison, { cle: 'terrain', meuble: false })).toEqual([
+      'les détails de la maison (superficie, clôture)',
+      'les pièces (2)',
+      'les informations de logement (chambres, cuisine, cour, standing)',
+      'les tarifs meublés',
+    ])
+  })
+  it('villa → duplex (même famille) : rien n’est perdu', () => {
+    expect(donneesPerduesConversion({ ...maison, amenites: { sous_type: 'villa' } }, { cle: 'duplex', meuble: false })).toEqual([])
+  })
+  it('guesthouse → villa : détails guesthouse et équipements', () => {
+    expect(donneesPerduesConversion({ type: 'guesthouse', amenites: { sous_type: 'guesthouse' }, equipements_liste: [{}] }, { cle: 'villa', meuble: false }))
+      .toEqual(['les détails de la guesthouse (prix à la nuit, lits, horaires, règles)', 'les équipements cochés'])
   })
 })
