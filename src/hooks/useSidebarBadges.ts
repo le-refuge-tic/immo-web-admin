@@ -8,6 +8,7 @@ import { getQuartiers } from '../api/getQuartiers';
 import { getMesBiens } from '../api/getMesBiens';
 import { verificationsApi } from '../api/verificationsApi';
 import { compterATraiter } from '../utils/retraitStatut';
+import { EVENEMENT_ALERTES } from '../layout/alertes/alertes';
 
 const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api/v1';
 const SOCKET_BASE = BASE.replace(/\/api\/v1\/?$/, '');
@@ -158,6 +159,8 @@ export function useSidebarBadges({ isAdmin, isCommercial, userId }: { isAdmin: b
     socket.on('message', loadMessages);
     socket.on('messages:maj', loadMessages);
     socket.on('moderation:maj', loadAdmin);
+    // Lot 8 : relais vers la cloche des alertes (même connexion).
+    socket.on('alertes:maj', (e: unknown) => window.dispatchEvent(new CustomEvent(EVENEMENT_ALERTES, { detail: e })));
     socket.on('connect', loadAll);
     return () => { socket.disconnect(); };
   }, [userId, loadAll, loadMessages, loadAdmin]);

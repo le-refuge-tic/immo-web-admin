@@ -1,5 +1,6 @@
 import { useAuth } from '../context/AuthContext';
 import logoUrl from '../assets/logo_complet.jpeg';
+import ClocheAlertes from './alertes/ClocheAlertes';
 
 export default function Topbar({
   minimized,
@@ -78,6 +79,7 @@ export default function Topbar({
 
       {/* Droite */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        {user && <ClocheAlertes estAdmin={role === 'admin' || role === 'super_admin'} />}
         <div className="immo-admin-block">
           <div className="immo-admin-text">
             <div className="immo-admin-name">
