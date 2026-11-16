@@ -50,3 +50,33 @@ export function OuiNon({ value, onChange, oui = 'Oui', non = 'Non' }: {
     </div>
   )
 }
+
+/**
+ * Lot 3 — choix unique facultatif : un second clic sur l'option choisie la retire
+ * (retour à « non précisé »).
+ */
+export function ChoixFacultatif<V extends string>({ options, value, onChange, libelle }: {
+  options: { value: V; label: string; aide?: string }[]
+  value: V | null
+  onChange: (v: V | null) => void
+  libelle: string
+}) {
+  return (
+    <div role="radiogroup" aria-label={libelle} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 8 }}>
+      {options.map(o => {
+        const actif = value === o.value
+        return (
+          <button key={o.value} type="button" role="radio" aria-checked={actif}
+            onClick={() => onChange(actif ? null : o.value)}
+            style={{
+              textAlign: 'left', padding: '10px 12px', borderRadius: 10, cursor: 'pointer',
+              border: `2px solid ${actif ? BLUE : 'var(--c-border)'}`, background: actif ? BLUE + '12' : 'transparent',
+            }}>
+            <span style={{ display: 'block', fontSize: 13, fontWeight: 700, color: actif ? BLUE : 'var(--c-text)' }}>{o.label}</span>
+            {o.aide && <span style={{ display: 'block', fontSize: 11, color: 'var(--c-muted)', marginTop: 2 }}>{o.aide}</span>}
+          </button>
+        )
+      })}
+    </div>
+  )
+}

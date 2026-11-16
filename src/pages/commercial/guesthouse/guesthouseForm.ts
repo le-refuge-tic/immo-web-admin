@@ -29,6 +29,19 @@ export const TYPES_LIT = [
 
 export type Lit = { type: string; nombre: number }
 export type AccesGarage = 'prive' | 'commun'
+export type PolitiqueAnnulation = 'souple' | 'moderee' | 'stricte'
+export type ModeReservation = 'instantanee' | 'sur_demande'
+
+/** Lot 3 — politiques d'annulation (facultatives), mêmes valeurs que l'API. */
+export const POLITIQUES_ANNULATION: { value: PolitiqueAnnulation; label: string; aide: string }[] = [
+  { value: 'souple', label: 'Souple', aide: 'Remboursement intégral jusqu’à 24 h avant' },
+  { value: 'moderee', label: 'Modérée', aide: 'Remboursement intégral jusqu’à 5 jours avant' },
+  { value: 'stricte', label: 'Stricte', aide: '50 % remboursés jusqu’à 7 jours avant' },
+]
+export const MODES_RESERVATION: { value: ModeReservation; label: string; aide: string }[] = [
+  { value: 'instantanee', label: 'Instantanée', aide: 'Réservation confirmée tout de suite' },
+  { value: 'sur_demande', label: 'Sur demande', aide: 'Le propriétaire accepte chaque réservation' },
+]
 
 export type GuesthouseForm = {
   nom: string
@@ -59,6 +72,13 @@ export type GuesthouseForm = {
   animaux: boolean
   fetes: boolean
   fumeur: boolean
+  // Lot 3 — facultatifs : '' / null = non précisé.
+  prixSemaine: string
+  prixMois: string
+  fraisMenage: string
+  voyageursParChambre: number | null
+  politiqueAnnulation: PolitiqueAnnulation | null
+  modeReservation: ModeReservation | null
 }
 
 /** Champs communs aux formulaires de guesthouse et de salle de fêtes (étapes « Identité » et « Localisation »). */
@@ -113,6 +133,12 @@ export function formulaireVide(proprio?: {
     animaux: false,
     fetes: false,
     fumeur: false,
+    prixSemaine: '',
+    prixMois: '',
+    fraisMenage: '',
+    voyageursParChambre: null,
+    politiqueAnnulation: null,
+    modeReservation: null,
   }
 }
 
@@ -160,6 +186,9 @@ function manquesTarif(f: GuesthouseForm): string[] {
   if (f.nbChambres < 1) m.push('Nombre de chambres (au moins 1)')
   if (!f.lits.length || f.lits.some(l => l.nombre < 1)) m.push('Lits (au moins un lit)')
   if (f.nbSallesBain < 1) m.push('Nombre de salles de bain (au moins 1)')
+  if (f.prixSemaine.trim() && entierFcfa(f.prixSemaine) === undefined) m.push('Tarif semaine (nombre entier de FCFA)')
+  if (f.prixMois.trim() && entierFcfa(f.prixMois) === undefined) m.push('Tarif mois (nombre entier de FCFA)')
+  if (f.fraisMenage.trim() && entierFcfa(f.fraisMenage, true) === undefined) m.push('Frais de ménage (nombre entier de FCFA)')
   return m
 }
 
@@ -231,15 +260,23 @@ export function amenitesProprietairePayload(f: ChampsIdentite) {
   }
 }
 
-/** Corps de POST /biens (type guesthouse). À n'appeler qu'une fois toutes les étapes valides. */
-export function construirePayload(f: GuesthouseForm) {
+/** Frais de visite par défaut tant que la configuration n'est pas lue (même repli que l'API). */
+export const FRAIS_VISITE_DEFAUT = 500
+
+const optionnelOuNull = (v: string, zeroOk = false) => (v.trim() ? (entierFcfa(v, zeroOk) ?? null) : null)
+
+/**
+ * Corps de POST /biens (type guesthouse). À n'appeler qu'une fois toutes les étapes valides.
+ * `fraisVisite` vient de GET /configuration/frais-visite (plus de montant codé en dur).
+ */
+export function construirePayload(f: GuesthouseForm, fraisVisite = FRAIS_VISITE_DEFAUT) {
   const caution = f.caution.trim() ? entierFcfa(f.caution, true) : undefined
   const prix = entierFcfa(f.prixNuitee) ?? 0
   return {
     type: 'guesthouse' as const,
     transaction: 'location' as const,
     prix,
-    frais_visite: 500,
+    frais_visite: fraisVisite,
     description: descriptionPayload(f),
     localisation: localisationPayload(f),
     amenites: amenitesProprietairePayload(f),
@@ -258,6 +295,13 @@ export function construirePayload(f: GuesthouseForm) {
       animaux_autorises: f.animaux,
       fetes_autorisees: f.fetes,
       fumeur_autorise: f.fumeur,
+      // Lot 3 — facultatifs, null = non précisé (aussi pour effacer en modification).
+      politique_annulation: f.politiqueAnnulation,
+      prix_semaine: optionnelOuNull(f.prixSemaine),
+      prix_mois: optionnelOuNull(f.prixMois),
+      frais_menage: optionnelOuNull(f.fraisMenage, true),
+      voyageurs_par_chambre: f.voyageursParChambre,
+      mode_reservation: f.modeReservation,
     },
     equipements: f.equipements,
   }
@@ -274,6 +318,8 @@ type BienLu = {
     lits: Lit[]; nb_salles_bain: number; garage: boolean; type_acces_garage: AccesGarage | null
     heure_arrivee: string; heure_depart: string
     animaux_autorises: boolean; fetes_autorisees: boolean; fumeur_autorise: boolean
+    politique_annulation?: PolitiqueAnnulation | null; prix_semaine?: number | null; prix_mois?: number | null
+    frais_menage?: number | null; voyageurs_par_chambre?: number | null; mode_reservation?: ModeReservation | null
   } | null
   equipements_liste?: { code: string }[]
 }
@@ -313,6 +359,12 @@ export function depuisBien(b: BienLu): GuesthouseForm {
     animaux: d.animaux_autorises,
     fetes: d.fetes_autorisees,
     fumeur: d.fumeur_autorise,
+    prixSemaine: d.prix_semaine != null ? String(d.prix_semaine) : '',
+    prixMois: d.prix_mois != null ? String(d.prix_mois) : '',
+    fraisMenage: d.frais_menage != null ? String(d.frais_menage) : '',
+    voyageursParChambre: d.voyageurs_par_chambre ?? null,
+    politiqueAnnulation: d.politique_annulation ?? null,
+    modeReservation: d.mode_reservation ?? null,
   }
 }
 

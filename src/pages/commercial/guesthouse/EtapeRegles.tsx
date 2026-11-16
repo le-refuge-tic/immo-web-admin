@@ -2,7 +2,8 @@ import { Card, Section } from '../formUi'
 import { baseInput } from '../formStyles'
 import type { GroupeEquipements } from '../../../api/guesthouse'
 import ChoixEquipements from './ChoixEquipements'
-import { Libelle, OuiNon, type EtapeProps } from './ui'
+import { ChoixFacultatif, Libelle, OuiNon, type EtapeProps } from './ui'
+import { MODES_RESERVATION, POLITIQUES_ANNULATION } from './guesthouseForm'
 
 type Props = EtapeProps & {
   groupes: GroupeEquipements[] | null
@@ -58,6 +59,22 @@ export default function EtapeRegles({ form, maj, groupes, erreur, reessayer }: P
           <div><Libelle>Animaux</Libelle><OuiNon value={form.animaux} oui="Autorisés" non="Interdits" onChange={v => maj({ animaux: v })} /></div>
           <div><Libelle>Fêtes</Libelle><OuiNon value={form.fetes} oui="Autorisées" non="Interdites" onChange={v => maj({ fetes: v })} /></div>
           <div><Libelle>Fumeur</Libelle><OuiNon value={form.fumeur} oui="Autorisé" non="Interdit" onChange={v => maj({ fumeur: v })} /></div>
+        </div>
+      </Card>
+
+      <Card>
+        <Section title="Réservation et annulation" />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div>
+            <Libelle facultatif>Mode de réservation</Libelle>
+            <ChoixFacultatif libelle="Mode de réservation" options={MODES_RESERVATION} value={form.modeReservation}
+              onChange={v => maj({ modeReservation: v })} />
+          </div>
+          <div>
+            <Libelle facultatif>Politique d’annulation</Libelle>
+            <ChoixFacultatif libelle="Politique d’annulation" options={POLITIQUES_ANNULATION} value={form.politiqueAnnulation}
+              onChange={v => maj({ politiqueAnnulation: v })} />
+          </div>
         </div>
       </Card>
     </div>

@@ -191,6 +191,41 @@ describe('construirePayload', () => {
   })
 })
 
+describe('lot 3 — champs facultatifs', () => {
+  it('absents : envoyés à null (non précisés)', () => {
+    expect(construirePayload(rempli()).details_guesthouse).toMatchObject({
+      politique_annulation: null, prix_semaine: null, prix_mois: null,
+      frais_menage: null, voyageurs_par_chambre: null, mode_reservation: null,
+    })
+  })
+
+  it('renseignés : transmis en entiers', () => {
+    expect(construirePayload(rempli({
+      prixSemaine: '150 000', prixMois: '550000', fraisMenage: '0', voyageursParChambre: 2,
+      politiqueAnnulation: 'moderee', modeReservation: 'sur_demande',
+    })).details_guesthouse).toMatchObject({
+      prix_semaine: 150000, prix_mois: 550000, frais_menage: 0, voyageurs_par_chambre: 2,
+      politique_annulation: 'moderee', mode_reservation: 'sur_demande',
+    })
+  })
+
+  it('tarif semaine ou ménage mal saisis : l’étape Tarif le signale', () => {
+    const m = manquesEtape(2, rempli({ prixSemaine: 'abc', fraisMenage: '-5' }), 0)
+    expect(m).toContain('Tarif semaine (nombre entier de FCFA)')
+    expect(m).toContain('Frais de ménage (nombre entier de FCFA)')
+  })
+
+  it('frais de visite fournis par la configuration', () => {
+    expect(construirePayload(rempli(), 1000).frais_visite).toBe(1000)
+  })
+
+  it('relus depuis un bien', () => {
+    const d = construirePayload(rempli({ prixMois: '550000', modeReservation: 'instantanee' })).details_guesthouse
+    expect(depuisBien({ details_guesthouse: { ...d, caution: d.caution ?? null, type_acces_garage: d.type_acces_garage ?? null } as never }))
+      .toMatchObject({ prixMois: '550000', modeReservation: 'instantanee', prixSemaine: '' })
+  })
+})
+
 describe('depuisBien / payloadEdition (éditeur)', () => {
   const bienComplet = {
     id: 7,

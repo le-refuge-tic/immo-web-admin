@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Card, Section, Counter, MoneyInput } from '../formUi'
 import { BLUE, baseInput } from '../formStyles'
 import { Libelle } from '../guesthouse/ui'
@@ -11,7 +12,8 @@ import { ChoixUnique, NombreEntier, type EtapeProps } from './ui'
 
 const DUREES = Array.from({ length: DUREE_HEURES_MAX }, (_, i) => i + 1)
 
-export default function EtapeTarif({ form, maj }: EtapeProps) {
+/** `totaux` : aperçu en direct (lot 3), absent dans l'éditeur. */
+export default function EtapeTarif({ form, maj, totaux }: EtapeProps & { totaux?: ReactNode }) {
   const apercu = apercuPrix(form.prix, form.dureeHeures)
 
   return (
@@ -60,6 +62,22 @@ export default function EtapeTarif({ form, maj }: EtapeProps) {
           </div>
         </div>
       </Card>
+
+      <Card>
+        <Section title="Forfaits" />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
+          <div>
+            <Libelle facultatif>Forfait journée</Libelle>
+            <MoneyInput value={form.forfaitJournee} onChange={v => maj({ forfaitJournee: v })} placeholder="250000" />
+          </div>
+          <div>
+            <Libelle facultatif>Forfait week-end</Libelle>
+            <MoneyInput value={form.forfaitWeekend} onChange={v => maj({ forfaitWeekend: v })} placeholder="450000" />
+          </div>
+        </div>
+      </Card>
+
+      {totaux}
 
       <Card>
         <Section title="Capacité et configuration" required />

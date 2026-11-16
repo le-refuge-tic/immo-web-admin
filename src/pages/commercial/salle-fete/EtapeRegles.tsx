@@ -3,8 +3,8 @@ import { baseInput } from '../formStyles'
 import type { GroupeEquipements } from '../../../api/guesthouse'
 import type { TypeEvenement } from '../../../api/salleFete'
 import ChoixEquipements from '../guesthouse/ChoixEquipements'
-import { Libelle, OuiNon } from '../guesthouse/ui'
-import { TRAITEURS, finLendemain } from './salleFeteForm'
+import { ChoixFacultatif, Libelle, OuiNon } from '../guesthouse/ui'
+import { PIECES_ANNEXES, POLITIQUES_ANNULATION, TRAITEURS, finLendemain } from './salleFeteForm'
 import { ChoixUnique, NombreEntier, type EtapeProps } from './ui'
 
 type Props = EtapeProps & {
@@ -120,6 +120,35 @@ export default function EtapeRegles({ form, maj, evenements, erreurEvenements, g
             <Libelle>Insonorisation</Libelle>
             <OuiNon value={form.insonorisee} oui="Insonorisée" non="Non insonorisée"
               onChange={v => maj({ insonorisee: form.insonorisee === v ? null : v })} />
+          </div>
+        </div>
+      </Card>
+
+      <Card>
+        <Section title="Espaces et accessibilité (facultatif)" />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div>
+            <Libelle>Pièces annexes</Libelle>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {PIECES_ANNEXES.map(p => (
+                <Chip key={p.value} label={p.label} active={form.piecesAnnexes.includes(p.value)}
+                  onClick={() => maj({ piecesAnnexes: basculer(form.piecesAnnexes, p.value) as typeof form.piecesAnnexes })} />
+              ))}
+            </div>
+          </div>
+          <div>
+            <Libelle>Sanitaires</Libelle>
+            <NombreEntier value={form.nbSanitaires} onChange={v => maj({ nbSanitaires: v })} unite="sanitaires" placeholder="4" max={200} ariaLabel="Nombre de sanitaires" />
+          </div>
+          <div>
+            <Libelle>Accès PMR (personnes à mobilité réduite)</Libelle>
+            <OuiNon value={form.accesPmr} oui="Accessible" non="Non accessible"
+              onChange={v => maj({ accesPmr: form.accesPmr === v ? null : v })} />
+          </div>
+          <div>
+            <Libelle>Politique d’annulation</Libelle>
+            <ChoixFacultatif libelle="Politique d’annulation" options={POLITIQUES_ANNULATION} value={form.politiqueAnnulation}
+              onChange={v => maj({ politiqueAnnulation: v })} />
           </div>
         </div>
       </Card>
