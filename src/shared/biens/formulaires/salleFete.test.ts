@@ -10,8 +10,8 @@ import {
   finLendemain,
   libelleHoraires,
   type SalleFeteForm,
-} from './salleFeteForm'
-import { PHOTOS_MAX, PHOTOS_MIN } from '../guesthouse/guesthouseForm'
+} from './salleFete'
+import { PHOTOS_MAX, PHOTOS_MIN } from './guesthouse'
 
 function rempli(over: Partial<SalleFeteForm> = {}): SalleFeteForm {
   return {

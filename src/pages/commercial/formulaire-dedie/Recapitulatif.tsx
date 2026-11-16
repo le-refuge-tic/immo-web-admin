@@ -1,12 +1,9 @@
 import type { ReactNode } from 'react'
 import { BLUE } from '../formStyles'
+import type { SectionRecap } from '../../../shared/biens/formulaires/recapitulatif'
 
-export type SectionRecap = {
-  titre: string
-  /** Étape à rouvrir avec « Modifier ». */
-  etape: number
-  lignes: string[]
-}
+export type { SectionRecap }
+
 
 /**
  * Lot 3 — récapitulatif final : sections avec « Modifier » (retour à l'étape concernée),

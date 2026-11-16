@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { formulaireVide as guesthouseVide } from '../guesthouse/guesthouseForm'
-import { formulaireVide as salleVide } from '../salle-fete/salleFeteForm'
-import { sectionsRecapGuesthouse } from '../guesthouse/recap'
-import { sectionsRecapSalle } from '../salle-fete/recap'
+import { formulaireVide as guesthouseVide } from './guesthouse'
+import { formulaireVide as salleVide } from './salleFete'
+import { sectionsRecapGuesthouse } from './recapGuesthouse'
+import { sectionsRecapSalle } from './recapSalle'
 
 describe('récapitulatifs (lot 3)', () => {
   it('guesthouse : chaque section renvoie à son étape ; champs facultatifs absents = pas de ligne', () => {

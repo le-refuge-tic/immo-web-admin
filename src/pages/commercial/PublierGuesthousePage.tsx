@@ -51,7 +51,7 @@ export default function PublierGuesthousePage() {
   useEffect(() => {
     let annule = false
     guesthouseApi.equipements()
-      .then(g => { if (!annule) { setGroupes(g); setErreurEquipements('') } })
+      .then(g => { if (!annule) { setGroupes(Array.isArray(g) ? g : []); setErreurEquipements('') } })
       .catch(err => { if (!annule) setErreurEquipements(apiMessage(err) ?? 'Impossible de charger les équipements.') })
     return () => { annule = true }
   }, [essaiEquipements])

@@ -9,7 +9,7 @@ import {
   depuisBien,
   payloadEdition,
   type GuesthouseForm,
-} from './guesthouseForm'
+} from './guesthouse'
 
 function rempli(over: Partial<GuesthouseForm> = {}): GuesthouseForm {
   return {
