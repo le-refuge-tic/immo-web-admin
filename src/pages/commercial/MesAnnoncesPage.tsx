@@ -4,6 +4,7 @@ import { getMesBiens } from '../../api/getMesBiens';
 import { markBiensAsSeen } from '../../hooks/useSidebarBadges';
 import { useAuth } from '../../context/AuthContext';
 import { useConfirm } from '../../shared/dialogues/useConfirm';
+import { useVersionBrouillons } from '../../shared/brouillons/useSynchroBrouillons';
 import {
   LIBELLES_FAMILLE, supprimerBrouillon, tousLesBrouillons, type ResumeBrouillon,
 } from './brouillons/brouillonsLocaux';
@@ -159,6 +160,13 @@ export default function MesAnnoncesPage() {
   const [showProprietaireModal, setShowProprietaireModal] = useState(false);
   // Lot 3 : tous les brouillons (biens, guesthouses, salles), libellé tiré du nom, vraie date.
   const [drafts, setDrafts] = useState<ResumeBrouillon[]>(lireBrouillons);
+  // Lot 6 : relue après une synchronisation (brouillon repris d'un autre appareil, ou supprimé).
+  const versionBrouillons = useVersionBrouillons();
+  const [versionLue, setVersionLue] = useState(versionBrouillons);
+  if (versionLue !== versionBrouillons) {
+    setVersionLue(versionBrouillons);
+    setDrafts(tousLesBrouillons());
+  }
   const [showDraftMenu, setShowDraftMenu] = useState(false);
   const [showCreateMenu, setShowCreateMenu] = useState(false);
   const [filterType, setFilterType]     = useState('');

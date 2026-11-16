@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   BROUILLONS_MAX, enregistrerBrouillon, libelleParNom, lireBrouillon, listerBrouillons,
-  supprimerBrouillon, tousLesBrouillons, type Stockage,
+  supprimerBrouillon, tousLesBrouillons, magasinsAdministration, CLE_BIENS, type Stockage,
 } from './brouillonsLocaux'
 
 function stockage(init: Record<string, string> = {}): Stockage & { donnees: Record<string, string> } {
@@ -81,5 +81,24 @@ describe('brouillons locaux', () => {
     ])
     expect(tous.find(b => b.id === 'g1')?.lien).toBe('/publier-guesthouse?draft=g1')
     expect(tous.find(b => b.id === 'c1')?.lien).toBe('/publier-bien?draft=c1')
+  })
+
+  it('lot 6 : magasins de synchronisation (guesthouse, salle, bien classique)', () => {
+    const s = stockage({ [CLE_BIENS]: JSON.stringify([{ id: 'c1', label: 'Villa · Akpakpa', updatedAt: 5, data: { quartier: 'Akpakpa' } }]) })
+    enregistrerBrouillon<Form>(brouillon('g1', 'Villa Awa', 7), libelle, s)
+    const [gh, salle, bien] = magasinsAdministration(s)
+    expect(gh.lire()).toEqual([{ cle: 'g1', famille: 'guesthouse', libelle: 'Villa Awa', etape: 2, majLe: 7, donnees: { nom: 'Villa Awa' } }])
+    expect(bien.lire()).toEqual([{ cle: 'c1', famille: 'bien', libelle: 'Villa · Akpakpa', etape: 0, majLe: 5, donnees: { quartier: 'Akpakpa' } }])
+
+    // Écritures venues du serveur, au format de chaque formulaire
+    salle.ecrire({ cle: 's1', famille: 'salle_fete', libelle: 'Salle', etape: 1, majLe: 9, donnees: { nom: 'Salle' } })
+    bien.ecrire({ cle: 'c1', famille: 'bien', libelle: 'Villa · Fidjrossè', etape: 0, majLe: 8, donnees: { quartier: 'Fidjrossè' } })
+    expect(tousLesBrouillons(s).map(b => [b.id, b.libelle, b.updatedAt])).toEqual([
+      ['s1', 'Salle', 9], ['c1', 'Villa · Fidjrossè', 8], ['g1', 'Villa Awa', 7],
+    ])
+    expect(JSON.parse(s.donnees[CLE_BIENS])[0]).toMatchObject({ id: 'c1', data: { quartier: 'Fidjrossè' } })
+
+    bien.retirer('c1'); gh.vider()
+    expect(tousLesBrouillons(s).map(b => b.id)).toEqual(['s1'])
   })
 })

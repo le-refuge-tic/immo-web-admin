@@ -1,3 +1,5 @@
+import { signalerBrouillonsModifies, useVersionDistante } from '../../shared/brouillons/useSynchroBrouillons'
+import BandeauVersionDistante from '../../components/BandeauVersionDistante'
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { postBien } from '../../api/postBien'
@@ -135,6 +137,8 @@ export default function PublierBienPage() {
 
   const [step, setStep]               = useState(0)
   const [draftHydrated, setDraftHydrated] = useState(false)
+  /** Lot 6 : date du brouillon connue de cette page (lu ou écrit par elle). */
+  const versionBrouillon = useRef(0)
   const [draftList, setDraftList] = useState<Array<{ id: string; label?: string; updatedAt?: number }>>([])
   const [showDraftList, setShowDraftList] = useState(false)
   const [draftId, setDraftId] = useState(() => {
@@ -265,6 +269,11 @@ export default function PublierBienPage() {
       const raw = localStorage.getItem(DRAFTS_KEY)
       const drafts = raw ? JSON.parse(raw) : []
       const safeDrafts = Array.isArray(drafts) ? drafts : []
+      // Lot 6 : jamais par-dessus une version plus récente venue d'un autre appareil (bandeau),
+      // et pas de nouvelle date sans changement (rien à renvoyer au serveur).
+      const existant = safeDrafts.find((item: { id?: string }) => item?.id === draftId) as { updatedAt?: number; data?: unknown } | undefined
+      if (existant && (existant.updatedAt ?? 0) > versionBrouillon.current) return
+      if (existant && JSON.stringify(existant.data) === JSON.stringify(draftState)) return
       const label = titreTerrain.trim() || quartier.trim() || TYPES_BIEN.find(t => t.key === typeBien)?.label || 'Brouillon'
       const record = {
         id: draftId,
@@ -272,8 +281,10 @@ export default function PublierBienPage() {
         updatedAt: Date.now(),
         data: draftState,
       }
+      versionBrouillon.current = record.updatedAt
       const next = [record, ...safeDrafts.filter((item: any) => item?.id !== draftId)]
       localStorage.setItem(DRAFTS_KEY, JSON.stringify(next.slice(0, 20)))
+      signalerBrouillonsModifies()
       setDraftList(next.slice(0, 20).map((item: any) => ({
         id: item.id,
         label: item.label,
@@ -283,6 +294,13 @@ export default function PublierBienPage() {
   }, [draftHydrated, draftId, JSON.stringify(draftState)]) // eslint-disable-line
 
   useEffect(() => { saveDraft() }, [saveDraft])
+  const lireVersionStockee = () => {
+    try {
+      const liste = JSON.parse(localStorage.getItem(DRAFTS_KEY) ?? '[]')
+      return ((Array.isArray(liste) ? liste : []) as { id?: string; updatedAt?: number }[]).find(item => item?.id === draftId)?.updatedAt ?? 0
+    } catch { return 0 }
+  }
+  const versionDistante = useVersionDistante(() => lireVersionStockee() > versionBrouillon.current)
 
   // Restauration au montage
   useEffect(() => {
@@ -315,6 +333,7 @@ export default function PublierBienPage() {
       let selected = !isNew ? drafts.find((item: any) => item?.id === draftId) : null
       if (!selected && !isNew && drafts.length) selected = drafts[0]
       if (!isNew && selected?.id && selected.id !== draftId) setDraftId(selected.id)
+      versionBrouillon.current = selected?.updatedAt ?? 0
       const d = selected?.data
       if (!d) {
         setDraftHydrated(true)
@@ -539,6 +558,7 @@ export default function PublierBienPage() {
           const drafts = JSON.parse(raw)
           if (Array.isArray(drafts)) {
             localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts.filter((item: any) => item?.id !== draftId)))
+            signalerBrouillonsModifies()
           }
         }
       } catch { /* suppression du brouillon échouée */ }
@@ -556,6 +576,13 @@ export default function PublierBienPage() {
 
   return (
     <>
+    {versionDistante.conflit && (
+      <div style={{ maxWidth: PW, margin: '12px auto 0', padding: '0 16px' }}>
+        <BandeauVersionDistante
+          onCharger={() => window.location.assign(`/publier-bien?draft=${encodeURIComponent(draftId)}`)}
+          onGarder={() => { versionBrouillon.current = lireVersionStockee(); versionDistante.fermer(); saveDraft() }} />
+      </div>
+    )}
     {/* ── Sticky header : progression + proprio ── */}
     <div style={{ position: 'sticky', top: 0, zIndex: 20, background: 'var(--c-card)', borderBottom: '1px solid var(--c-border)' }}>
       <div style={{ maxWidth: PW, width: '100%', margin: '0 auto', padding: '10px 16px' }}>

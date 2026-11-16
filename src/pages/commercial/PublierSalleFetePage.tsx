@@ -23,6 +23,7 @@ import EtapeTarif from './salle-fete/EtapeTarif'
 import EtapeRegles from './salle-fete/EtapeRegles'
 import EtapePhotos from './salle-fete/EtapePhotos'
 import { useBrouillonFormulaire } from './brouillons/useBrouillonFormulaire'
+import BandeauVersionDistante from '../../components/BandeauVersionDistante'
 import { useActionsFormulaire } from './formulaire-dedie/useActionsFormulaire'
 import BarreActions from './formulaire-dedie/BarreActions'
 import MenuBrouillons from './formulaire-dedie/MenuBrouillons'
@@ -39,7 +40,7 @@ const formulaireInitial = (): SalleFeteForm => formulaireVide(lireJson('propriet
 export default function PublierSalleFetePage() {
   const navigate = useNavigate()
   const toast = useToast()
-  const { form, maj, etape, setEtape, brouillonId, lister, supprimer, terminer } =
+  const { form, maj, etape, setEtape, brouillonId, lister, supprimer, terminer, conflit } =
     useBrouillonFormulaire<SalleFeteForm>('salle_fete', formulaireInitial, ETAPES.length)
   const { annuler, changerDeType, fraisVisite } = useActionsFormulaire({ brouillonId, supprimerBrouillon: supprimer })
   const [photos, setPhotos] = useState<File[]>([])
@@ -123,6 +124,7 @@ export default function PublierSalleFetePage() {
           Brouillon enregistré automatiquement sur cet appareil (sauf les photos et la vidéo).
         </p>
       </header>
+      {conflit && <BandeauVersionDistante onCharger={conflit.charger} onGarder={conflit.garder} />}
 
       {etape === 0 && <EtapeIdentite form={form} maj={maj} textes={TEXTES_IDENTITE} />}
       {etape === 1 && <EtapeLocalisation form={form} maj={maj} />}
