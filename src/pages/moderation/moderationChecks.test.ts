@@ -64,4 +64,10 @@ describe('modération salle de fêtes', () => {
   it('libellé du type', () => {
     expect(TYPE_LABELS.salle_fete).toBe('Salle de fêtes')
   })
+
+  it('lot 7 : les photos rattachées aux pièces comptent (comme l’API)', () => {
+    const pieces = [{ photos: photos(1) }, { photos: [{ id: 99, url: 'https://x/99.jpg' }] }]
+    expect(blocageApprobation({ type: 'appart_vide', photos: [], pieces })).toBeNull()
+    expect(moderationChecks({ type: 'appart_vide', photos: [], pieces })[0]).toMatchObject({ ok: true })
+  })
 })

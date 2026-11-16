@@ -5,6 +5,16 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ## [Non publié]
 
+### Corrigé (lot 7 — modération)
+- L'admin ne pouvait pas approuver le bien d'un propriétaire dont les photos étaient rattachées
+  aux pièces : la file de modération ne comptait que les photos du bien (la fiche et l'API,
+  elles, comptaient tout). Un seul comptage partagé (`src/shared/biens/approbation.ts`).
+- Fiche d'annonce : le vrai message de l'API s'affiche au lieu de « Une erreur est survenue ».
+
+### Ajouté (lot 7)
+- Confirmation avant d'approuver ; « Approuver » désactivé avec le motif du blocage.
+- Dialogues Rejeter / Publier sous conditions / Retirer la publication, texte obligatoire.
+
 ### Ajouté (lot 6 — brouillons sur tous les appareils)
 - Brouillons des formulaires de publication (bien, guesthouse, salle) synchronisés avec le
   serveur : un commercial les retrouve sur un autre appareil ; « Mes annonces » se met à jour.

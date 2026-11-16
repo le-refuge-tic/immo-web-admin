@@ -9,6 +9,11 @@ import { ChevronLeftIcon, PinIcon, TrashIcon, EditIcon } from '../../components/
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { libellePrix, suffixeUnite, lignesTarifsMeuble } from '../../utils/prix';
+import { apiMessage } from '../../utils/apiMessage';
+import { useConfirm } from '../../shared/dialogues/useConfirm';
+import { photosDuBien } from '../../shared/biens/approbation';
+import { blocageApprobation } from '../moderation/moderationChecks';
+import DialogueDecision, { type DecisionTexte } from './DialogueDecision';
 
 // ── Labels lisibles pour les champs amenites ────────────────────────────────
 const STANDING_LABELS: Record<string, string> = {
@@ -117,9 +122,10 @@ export default function AnnonceDetailPage() {
   const [error, setError]       = useState('');
   const [saving, setSaving]     = useState(false);
   const [photoIdx, setPhotoIdx] = useState(0);
-  const [action, setAction]     = useState(null as any);
-  const [motif, setMotif]       = useState('');
-  const [conditions, setConditions] = useState('');
+  // Lot 7 : rejet, conditions et retrait passent par un dialogue avec texte obligatoire.
+  const [action, setAction]     = useState<DecisionTexte | null>(null);
+  const [erreurDecision, setErreurDecision] = useState('');
+  const { confirmer } = useConfirm();
   const [fraisVisite, setFraisVisite] = useState('0');
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -159,36 +165,40 @@ export default function AnnonceDetailPage() {
       .catch(() => setAdresseGps(''));
   }, [bien?.localisation?.latitude, bien?.localisation?.longitude]);
 
-  const allPhotos: any[] = bien
-    ? [
-        ...(bien.photos ?? []),
-        ...(bien.pieces ?? []).flatMap((p: any) => p.photos ?? []),
-      ]
-    : [];
+  // Lot 7 : même comptage que la file de modération et l'API (bien + pièces, sans doublon).
+  const allPhotos: any[] = bien ? photosDuBien(bien) : [];
 
   const MODERATION_LABELS: Record<string, string> = {
     approuve:     'Bien approuvé et publié.',
     rejete:       'Bien rejeté.',
     conditionnel: 'Bien passé en conditionnel.',
-    en_attente:   'Approbation révoquée.',
+    en_attente:   'Publication retirée : l’auteur est prévenu.',
   };
 
   async function handleModerate(statut: string, extra?: any) {
     setSaving(true);
+    setErreurDecision('');
     try {
       await patchAdminBien.moderate(bien.id, { statut_moderation: statut, ...extra });
       const updated = await getAdminBien.byId(bien.id);
       setBien(updated);
       setFraisVisite(String(updated.frais_visite ?? 0));
       setAction(null);
-      setMotif('');
-      setConditions('');
       showToast(MODERATION_LABELS[statut] ?? 'Statut mis à jour.', statut === 'rejete' ? 'error' : statut === 'conditionnel' ? 'info' : 'success');
-    } catch {
-      showToast('Une erreur est survenue.', 'error');
+    } catch (err) {
+      // Lot 7 : le vrai motif de l'API (photos manquantes, détails…), plus « Une erreur est survenue ».
+      const message = apiMessage(err) ?? 'La décision n’a pas pu être enregistrée. Vérifiez votre connexion et réessayez.';
+      setErreurDecision(message);
+      showToast(message, 'error');
     } finally {
       setSaving(false);
     }
+  }
+
+  function confirmerDecision(texte: string) {
+    if (action === 'rejeter') void handleModerate('rejete', { motif_refus: texte });
+    else if (action === 'conditionnel') void handleModerate('conditionnel', { conditions_speciales: texte });
+    else if (action === 'revoquer') void handleModerate('en_attente', { motif_refus: texte });
   }
 
   async function handleSaveProprietaire() {
@@ -217,19 +227,23 @@ export default function AnnonceDetailPage() {
   }
 
   async function handleApprove() {
+    const ok = await confirmer({
+      titre: `Approuver et publier le bien n° ${bien.id} ?`,
+      message: `L’annonce sera visible de tous, avec des frais de visite de ${Number(fraisVisite || 0).toLocaleString('fr-FR')} FCFA. L’auteur est prévenu.`,
+      confirmer: 'Approuver et publier',
+    });
+    if (!ok) return;
     setSaving(true);
     try {
-      if (Number(fraisVisite) !== Number(bien.frais_visite)) {
-        await patchAdminBien.update(bien.id, { frais_visite: Number(fraisVisite) });
-      }
-      await patchAdminBien.moderate(bien.id, { statut_moderation: 'approuve' });
+      // Un seul appel : si l'API refuse l'approbation, les frais de visite ne changent pas non plus.
+      await patchAdminBien.moderate(bien.id, { statut_moderation: 'approuve', frais_visite: Number(fraisVisite) });
       const updated = await getAdminBien.byId(bien.id);
       setBien(updated);
       setFraisVisite(String(updated.frais_visite ?? 0));
       setAction(null);
       showToast('Bien approuvé et publié.');
-    } catch {
-      showToast('Une erreur est survenue.', 'error');
+    } catch (err) {
+      showToast(apiMessage(err) ?? 'L’approbation a échoué. Vérifiez votre connexion et réessayez.', 'error');
     } finally {
       setSaving(false);
     }
@@ -271,6 +285,7 @@ export default function AnnonceDetailPage() {
   if (!bien) return null;
 
   const mod   = bien.statut_moderation ?? 'en_attente';
+  const blocage = blocageApprobation(bien);
   const badge = MOD_BADGE[mod] ?? MOD_BADGE.en_attente;
 
   return (
@@ -684,13 +699,13 @@ export default function AnnonceDetailPage() {
           {canModerate && <div className="detail-card detail-card--actions">
             <div className="detail-section-title">Actions de modération</div>
 
-            {action === null ? (
               <div className="detail-action-btns">
                 {mod !== 'approuve' && (
                   <button
                     className="detail-btn detail-btn--approve"
-                    onClick={handleApprove}
-                    disabled={saving}
+                    onClick={() => void handleApprove()}
+                    disabled={saving || !!blocage}
+                    aria-describedby={blocage ? 'blocage-approbation' : undefined}
                   >
                     ✓ Approuver
                   </button>
@@ -698,7 +713,7 @@ export default function AnnonceDetailPage() {
                 {mod !== 'rejete' && (
                   <button
                     className="detail-btn detail-btn--reject"
-                    onClick={() => setAction('rejeter')}
+                    onClick={() => { setErreurDecision(''); setAction('rejeter'); }}
                     disabled={saving}
                   >
                     ✗ Rejeter
@@ -707,7 +722,7 @@ export default function AnnonceDetailPage() {
                 {mod !== 'conditionnel' && (
                   <button
                     className="detail-btn detail-btn--cond"
-                    onClick={() => setAction('conditionnel')}
+                    onClick={() => { setErreurDecision(''); setAction('conditionnel'); }}
                     disabled={saving}
                   >
                     ⚠ Conditionnel
@@ -716,57 +731,19 @@ export default function AnnonceDetailPage() {
                 {mod === 'approuve' && (
                   <button
                     className="detail-btn detail-btn--revoke"
-                    onClick={() => handleModerate('en_attente')}
+                    onClick={() => { setErreurDecision(''); setAction('revoquer'); }}
                     disabled={saving}
                   >
-                    ↩ Révoquer l'approbation
+                    ↩ Retirer la publication
                   </button>
                 )}
               </div>
-            ) : action === 'rejeter' ? (
-              <div className="detail-action-form">
-                <label className="detail-form-label">Motif de refus <span style={{ color: 'var(--c-red)' }}>*</span></label>
-                <textarea
-                  className="detail-form-textarea"
-                  placeholder="Expliquer la raison du rejet…"
-                  value={motif}
-                  onChange={e => setMotif(e.target.value)}
-                  rows={4}
-                  autoFocus
-                />
-                <div className="detail-form-row">
-                  <button className="detail-btn detail-btn--cancel" onClick={() => setAction(null)}>Annuler</button>
-                  <button
-                    className="detail-btn detail-btn--reject"
-                    disabled={!motif.trim() || saving}
-                    onClick={() => handleModerate('rejete', { motif_refus: motif.trim() })}
-                  >
-                    {saving ? 'Enregistrement…' : 'Confirmer le rejet'}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="detail-action-form">
-                <label className="detail-form-label">Conditions spéciales</label>
-                <textarea
-                  className="detail-form-textarea"
-                  placeholder="Conditions imposées pour publication…"
-                  value={conditions}
-                  onChange={e => setConditions(e.target.value)}
-                  rows={4}
-                  autoFocus
-                />
-                <div className="detail-form-row">
-                  <button className="detail-btn detail-btn--cancel" onClick={() => setAction(null)}>Annuler</button>
-                  <button
-                    className="detail-btn detail-btn--cond"
-                    disabled={saving}
-                    onClick={() => handleModerate('conditionnel', { conditions_speciales: conditions.trim() })}
-                  >
-                    {saving ? 'Enregistrement…' : 'Confirmer'}
-                  </button>
-                </div>
-              </div>
+            {mod !== 'approuve' && blocage && (
+              <p id="blocage-approbation" role="note" style={{ fontSize: 12, color: 'var(--s-red)', margin: '8px 0 0' }}>{blocage}</p>
+            )}
+            {action && (
+              <DialogueDecision decision={action} bienId={bien.id} enCours={saving} erreur={erreurDecision}
+                onAnnuler={() => setAction(null)} onConfirmer={confirmerDecision} />
             )}
 
             <div className="detail-delete-zone">
