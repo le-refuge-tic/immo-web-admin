@@ -235,10 +235,8 @@ export default function AnnonceDetailPage() {
     if (!ok) return;
     setSaving(true);
     try {
-      if (Number(fraisVisite) !== Number(bien.frais_visite)) {
-        await patchAdminBien.update(bien.id, { frais_visite: Number(fraisVisite) });
-      }
-      await patchAdminBien.moderate(bien.id, { statut_moderation: 'approuve' });
+      // Un seul appel : si l'API refuse l'approbation, les frais de visite ne changent pas non plus.
+      await patchAdminBien.moderate(bien.id, { statut_moderation: 'approuve', frais_visite: Number(fraisVisite) });
       const updated = await getAdminBien.byId(bien.id);
       setBien(updated);
       setFraisVisite(String(updated.frais_visite ?? 0));
