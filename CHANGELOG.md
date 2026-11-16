@@ -5,6 +5,20 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ## [Non publié]
 
+### Ajouté (lot 5 — modification des biens)
+- Modération : onglet « Modifications en attente » (compteur) ; pour chaque bien, ce qui change
+  entre l'annonce en ligne et la version proposée ; « Approuver » (confirmation) ou « Refuser »
+  (motif obligatoire, transmis à l'auteur).
+- Conversion de type par l'admin, avec la liste des données supprimées dans la confirmation :
+  depuis la fiche (changement de type), vers une guesthouse ou une salle
+  (`/annonces/:id/convertir/:cle`, détails obligatoires du type cible) et vers un bien classique
+  depuis une guesthouse ou une salle.
+
+### Modifié (lot 5)
+- Commercial sur un bien publié : la modification part en validation (bandeau, notification) au
+  lieu d'être refusée ; les photos d'un bien publié restent réservées à l'administration.
+- « Enregistrer » inactif tant que rien n'a changé ; « Quitter sans enregistrer ? » au retour.
+
 ### Ajouté (lot 3 — formulaires guesthouse et salle de fêtes)
 - Barre d'actions : « Annuler » (dialogue : continuer la saisie, supprimer ou garder le brouillon),
   « Changer de type » avec confirmation, « Précédent », « Suivant » / « Envoyer ».
