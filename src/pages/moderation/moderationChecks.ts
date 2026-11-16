@@ -1,12 +1,13 @@
 import { suffixeUnite } from '../../utils/prix';
+import { manquesApprobation, photosDuBien, photosMinimumPourType } from '../../shared/biens/approbation';
 
 /** Contrôles automatiques affichés dans le panneau de détail de la modération. */
 export type ModerationCheck = { label: string; ok: boolean };
 
-/** Photos exigées pour publier une guesthouse ou une salle de fêtes (même règle que l'API). */
-const PHOTOS_MIN_APPROBATION = 4;
+/** Photos exigées pour publier une guesthouse ou une salle de fêtes (référentiel, comme l'API). */
+const PHOTOS_MIN_APPROBATION = photosMinimumPourType('guesthouse');
 /** Photos exigées pour publier un bien classique (maison, appartement, terrain), comme l'API. */
-export const PHOTOS_MIN_BIEN = 2;
+export const PHOTOS_MIN_BIEN = photosMinimumPourType('maison');
 
 /** Types qui ont leurs propres détails : sans eux, pas d'approbation (l'API refuse). */
 const TYPES_AVEC_DETAILS: Record<string, { cle: string; manque: string; renseignes: string; absents: string }> = {
@@ -24,22 +25,15 @@ const TYPES_AVEC_DETAILS: Record<string, { cle: string; manque: string; renseign
   },
 };
 
-const nbPhotosDe = (b: any) => (Array.isArray(b?.photos) ? b.photos.length : 0);
+/** Lot 7 : photos du bien et de ses pièces, un seul comptage partagé avec la fiche (et l'API). */
+const nbPhotosDe = (b: any) => photosDuBien(b ?? {}).length;
 
 /**
- * Motif pour lequel l'approbation est impossible, ou null.
- * Guesthouse et salle de fêtes : détails complets et 4 photos ; autres biens : 2 photos (l'API refuse sinon).
+ * Motif pour lequel l'approbation est impossible, ou null (mêmes règles que l'API :
+ * détails des guesthouses et salles, minimum de photos du référentiel).
  */
 export function blocageApprobation(b: any): string | null {
-  const regles = TYPES_AVEC_DETAILS[b?.type];
-  if (!regles) {
-    const n = nbPhotosDe(b);
-    return n < PHOTOS_MIN_BIEN ? `Approbation impossible : il faut au moins ${PHOTOS_MIN_BIEN} photos (${n} actuellement).` : null;
-  }
-  const manques: string[] = [];
-  if (!b[regles.cle]) manques.push(regles.manque);
-  const n = nbPhotosDe(b);
-  if (n < PHOTOS_MIN_APPROBATION) manques.push(`au moins ${PHOTOS_MIN_APPROBATION} photos (${n} actuellement)`);
+  const manques = manquesApprobation(b ?? {});
   return manques.length ? `Approbation impossible : il manque ${manques.join(' et ')}.` : null;
 }
 
