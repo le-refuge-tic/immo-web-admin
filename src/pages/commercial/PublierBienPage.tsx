@@ -1,3 +1,4 @@
+import { signalerBrouillonsModifies } from '../../shared/brouillons/useSynchroBrouillons'
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { postBien } from '../../api/postBien'
@@ -274,6 +275,7 @@ export default function PublierBienPage() {
       }
       const next = [record, ...safeDrafts.filter((item: any) => item?.id !== draftId)]
       localStorage.setItem(DRAFTS_KEY, JSON.stringify(next.slice(0, 20)))
+      signalerBrouillonsModifies()
       setDraftList(next.slice(0, 20).map((item: any) => ({
         id: item.id,
         label: item.label,
@@ -539,6 +541,7 @@ export default function PublierBienPage() {
           const drafts = JSON.parse(raw)
           if (Array.isArray(drafts)) {
             localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts.filter((item: any) => item?.id !== draftId)))
+            signalerBrouillonsModifies()
           }
         }
       } catch { /* suppression du brouillon échouée */ }

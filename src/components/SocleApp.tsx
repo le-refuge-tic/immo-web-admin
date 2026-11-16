@@ -1,10 +1,13 @@
-import { useCallback, type ReactNode } from 'react';
+import { useCallback, useMemo, type ReactNode } from 'react';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 import { ConfirmProvider } from '../shared/dialogues/confirmation';
 import { GestionEnvoisProvider } from '../shared/uploads/GestionEnvois';
 import type { Envoyeur } from '../shared/uploads/fileEnvoi';
 import { postBien } from '../api/postBien';
+import { brouillonsApi } from '../api/brouillonsApi';
+import { stockageEtatLocal, useSynchroBrouillons } from '../shared/brouillons/useSynchroBrouillons';
+import { magasinsAdministration } from '../pages/commercial/brouillons/brouillonsLocaux';
 import ConfirmDialog from './ConfirmDialog';
 import IndicateurEnvois from './IndicateurEnvois';
 
@@ -14,11 +17,18 @@ const envoyerMedia: Envoyeur = async (bienId, el) => {
   else await postBien.uploadPhoto(bienId, fichier, el.id);
 };
 
-/** Lot 1 — dialogues de confirmation et envois en arrière-plan, communs à toutes les pages. */
+const stockageSynchro = stockageEtatLocal('brouillons_synchro');
+
+/**
+ * Lot 1 — dialogues de confirmation et envois en arrière-plan, communs à toutes les pages.
+ * Lot 6 — brouillons de publication synchronisés avec le serveur tant qu'un compte est connecté.
+ */
 export default function SocleApp({ children }: { children: ReactNode }) {
   const showToast = useToast();
   const { user } = useAuth();
   const utilisateurId: number | null = user?.id ?? null;
+  const magasins = useMemo(() => magasinsAdministration(), []);
+  useSynchroBrouillons({ compte: utilisateurId, api: brouillonsApi, magasins, stockage: stockageSynchro });
   const notifier = useCallback((message: string, ton: 'success' | 'error' | 'info') => showToast(message, ton), [showToast]);
   return (
     <ConfirmProvider Rendu={ConfirmDialog}>

@@ -1,9 +1,13 @@
 /**
  * Lot 3 — brouillons des formulaires de publication : plusieurs par type, chacun avec un
  * identifiant, une date, l'étape atteinte et un libellé tiré du nom saisi. Stockés dans le
- * navigateur (localStorage) ; le lot 6 les synchronisera côté serveur.
+ * navigateur (localStorage), qui sert de cache hors ligne ; le lot 6 les synchronise avec le
+ * serveur (`magasinsAdministration`, src/shared/brouillons).
  * Logique pure, stockage injectable : testée dans brouillonsLocaux.test.ts.
  */
+import type { EntreeBrouillon } from '../../../shared/brouillons/planSynchro'
+import type { MagasinBrouillons } from '../../../shared/brouillons/synchroniser'
+import { signalerBrouillonsModifies } from '../../../shared/brouillons/useSynchroBrouillons'
 
 export type FamilleBrouillon = 'bien' | 'guesthouse' | 'salle_fete'
 
@@ -98,6 +102,7 @@ export function enregistrerBrouillon<T>(b: Brouillon<T>, libelleDe: (d: T) => st
   const autres = listerBrouillons(b.famille, libelleDe, s).filter(x => x.id !== b.id)
   const suivants = [b, ...autres].sort((x, y) => y.updatedAt - x.updatedAt).slice(0, BROUILLONS_MAX)
   try { s.setItem(CLES[b.famille].liste, JSON.stringify(suivants)) } catch { /* stockage plein ou désactivé */ }
+  signalerBrouillonsModifies()
 }
 
 export function supprimerBrouillon(famille: FamilleBrouillon, id: string, s: Stockage = localStorage): void {
@@ -105,6 +110,7 @@ export function supprimerBrouillon(famille: FamilleBrouillon, id: string, s: Sto
   const brut = lireJson(s, cle)
   if (!Array.isArray(brut)) return
   try { s.setItem(cle, JSON.stringify(brut.filter((b: { id?: string }) => b?.id !== id))) } catch { /* rien */ }
+  signalerBrouillonsModifies()
 }
 
 /** Libellé d'un brouillon guesthouse ou salle : le nom saisi, sinon le type. */
@@ -126,4 +132,46 @@ export function tousLesBrouillons(s: Stockage = localStorage): ResumeBrouillon[]
       etape: typeof b.step === 'number' ? b.step : 0, updatedAt: b.updatedAt ?? 0, lien: lienBrouillon('bien', b.id),
     }))
   return [...dedies, ...biens].sort((a, b) => b.updatedAt - a.updatedAt)
+}
+
+/** Enregistrement du formulaire de bien classique (format de PublierBienPage). */
+interface BrouillonBienClassique { id: string; label?: string; updatedAt?: number; step?: number; data?: Record<string, unknown> }
+
+function lireBiens(s: Stockage): BrouillonBienClassique[] {
+  const brut = lireJson(s, CLE_BIENS)
+  return (Array.isArray(brut) ? brut : []).filter((b: { id?: unknown }) => typeof b?.id === 'string')
+}
+
+/**
+ * Lot 6 — les trois stockages de brouillons de l'administration, au format de la
+ * synchronisation avec le serveur (src/shared/brouillons).
+ */
+export function magasinsAdministration(s: Stockage = localStorage): MagasinBrouillons[] {
+  const dedie = (famille: Exclude<FamilleBrouillon, 'bien'>): MagasinBrouillons => ({
+    familles: [famille],
+    lire: () => listerBrouillons<Record<string, unknown>>(famille, libelleParNom(famille), s).map(b => ({
+      cle: b.id, famille, libelle: b.libelle, etape: b.etape, majLe: b.updatedAt, donnees: b.donnees,
+    })),
+    ecrire: (e: EntreeBrouillon) => enregistrerBrouillon({
+      id: e.cle, famille, libelle: e.libelle, etape: e.etape, updatedAt: e.majLe, donnees: e.donnees,
+    }, libelleParNom(famille), s),
+    retirer: cle => supprimerBrouillon(famille, cle, s),
+    vider: () => { try { s.removeItem(CLES[famille].liste) } catch { /* rien */ } },
+  })
+  const biens: MagasinBrouillons = {
+    familles: ['bien'],
+    lire: () => lireBiens(s).map(b => ({
+      cle: b.id, famille: 'bien', libelle: b.label || 'Brouillon sans titre',
+      etape: typeof b.step === 'number' ? b.step : 0, majLe: b.updatedAt ?? 0, donnees: b.data ?? {},
+    })),
+    ecrire: e => {
+      const record: BrouillonBienClassique = { id: e.cle, label: e.libelle, updatedAt: e.majLe, step: e.etape, data: e.donnees }
+      const suivants = [record, ...lireBiens(s).filter(b => b.id !== e.cle)]
+        .sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0)).slice(0, BROUILLONS_MAX)
+      try { s.setItem(CLE_BIENS, JSON.stringify(suivants)) } catch { /* stockage plein */ }
+    },
+    retirer: cle => supprimerBrouillon('bien', cle, s),
+    vider: () => { try { s.removeItem(CLE_BIENS) } catch { /* rien */ } },
+  }
+  return [dedie('guesthouse'), dedie('salle_fete'), biens]
 }

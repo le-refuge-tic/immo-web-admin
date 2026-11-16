@@ -5,6 +5,12 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ## [Non publié]
 
+### Ajouté (lot 6 — brouillons sur tous les appareils)
+- Brouillons des formulaires de publication (bien, guesthouse, salle) synchronisés avec le
+  serveur : un commercial les retrouve sur un autre appareil ; « Mes annonces » se met à jour.
+  Le navigateur sert de cache hors ligne ; les photos restent sur l'appareil. Un autre compte
+  connecté sur le même navigateur ne récupère jamais ces brouillons.
+
 ### Ajouté (lot 5 — modification des biens)
 - Modération : onglet « Modifications en attente » (compteur) ; pour chaque bien, ce qui change
   entre l'annonce en ligne et la version proposée ; « Approuver » (confirmation) ou « Refuser »
