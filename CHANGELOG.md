@@ -5,6 +5,12 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ## [Non publié]
 
+### Ajouté (lot 8 — notifications)
+- Cloche des alertes dans la barre du haut : liste, « Tout marquer comme lu », lien vers la
+  modération (bien à valider, modification en attente) ou vers la fiche du bien ; toast quand une
+  alerte de modération arrive pendant la session. Avant, l'administration n'affichait aucune alerte.
+- Tableau des notifications dans le README.
+
 ### Corrigé (lot 7 — modération)
 - L'admin ne pouvait pas approuver le bien d'un propriétaire dont les photos étaient rattachées
   aux pièces : la file de modération ne comptait que les photos du bien (la fiche et l'API,
