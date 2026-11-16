@@ -8,6 +8,7 @@
  * corps envoyé à l'API.
  */
 import { prixPrincipalDuplex } from '../duplexCalculs'
+import { SOUS_TYPES_BIENS, coupleBackend } from '../../../shared/biens/referentielTypes'
 
 export type Transaction = 'location' | 'vente'
 export type TarifCustom = { label: string; prix: string }
@@ -24,24 +25,18 @@ export const TAUX_COMMISSION_AGENCE = 0.5
 /** Position par défaut (Cotonou) quand l'adresse n'a pas été géolocalisée. */
 const POSITION_PAR_DEFAUT = { latitude: 6.3654, longitude: 2.4183 }
 
-export const TYPES_BIEN = [
-  { key: 'entree_coucher', label: 'Entrée-Coucher' },
-  { key: 'chambre_salon',  label: 'Chambre-Salon' },
-  { key: 'appartement',    label: 'Appartement' },
-  { key: 'villa',          label: 'Villa' },
-  { key: 'duplex',         label: 'Duplex / Grande propriété' },
-  { key: 'maison',         label: 'Maison' },
-  { key: 'terrain',        label: 'Terrain / Parcelle' },
-  { key: 'boutique',       label: 'Boutique' },
-  { key: 'bureau',         label: 'Bureau' },
-] as const
+// Lot 2 : types et sous-types viennent du référentiel unique (src/shared/biens).
+const CLASSIQUES = SOUS_TYPES_BIENS.filter(s => s.formulaire === 'classique')
 
-export type TypeBienCle = typeof TYPES_BIEN[number]['key']
+/** Sous-types du formulaire de bien classique (clé et libellé). */
+export const TYPES_BIEN = CLASSIQUES.map(s => ({ key: s.cle, label: s.libelle }))
 
-const MEUBLABLES: readonly string[] = ['appartement', 'villa', 'duplex', 'maison']
+export type TypeBienCle = string
+
+const MEUBLABLES: readonly string[] = CLASSIQUES.filter(s => s.meuble).map(s => s.cle)
 const AVEC_PIECES: readonly string[] = ['appartement', 'villa', 'duplex', 'maison', 'chambre_salon']
-const BASE_MAISON: readonly string[] = ['villa', 'duplex', 'maison', 'boutique', 'bureau']
-export const LOCAUX_PRO: readonly string[] = ['boutique', 'bureau']
+/** Locaux professionnels (boutique, bureau, local commercial) : parcours boutique. */
+export const LOCAUX_PRO: readonly string[] = CLASSIQUES.filter(s => s.categorie === 'commercial').map(s => s.cle)
 
 export const parsePrix = (t: string | undefined | null): number | undefined => {
   const c = (t ?? '').trim().replace(/\s/g, '').replace(',', '')
@@ -127,12 +122,9 @@ export function derives(f: Pick<BienClassiqueForm, 'typeBien' | 'estMeuble' | 'e
   const isLocalPro = LOCAUX_PRO.includes(t)
   const peutEtreMeuble = MEUBLABLES.includes(t)
   const isMeuble = peutEtreMeuble && (t === 'maison' ? f.etatMeubleMaison !== 'non_meuble' : f.estMeuble)
-  const typeBackend = isTerrain ? 'terrain'
-    : BASE_MAISON.includes(t) ? 'maison'
-    : isMeuble ? 'appart_meuble' : 'appart_vide'
-  const sousType = t === 'appartement' ? (isMeuble ? 'appart_meuble' : 'appartement')
-    : t === 'maison' ? 'maison_individuelle'
-    : t
+  const couple = coupleBackend({ cle: t, meuble: isMeuble })
+  const typeBackend = couple?.type ?? 'appart_vide'
+  const sousType = couple?.sous_type ?? t
   return {
     isTerrain,
     isBoutique,
@@ -368,49 +360,4 @@ export function construirePayload(f: BienClassiqueForm, proprietaireInfo?: unkno
   const pieces = construirePieces(f)
   if (pieces.length) body.pieces = pieces
   return body
-}
-
-// ── Modification d'un bien existant ──────────────────────────────────────────
-
-/** Choix proposés à la modification (le meublé d'un appartement change son type en base). */
-export const TYPES_EDITION = [
-  { label: 'Chambre-Salon',    typeBien: 'chambre_salon',  meuble: false },
-  { label: 'Entrée-Coucher',   typeBien: 'entree_coucher', meuble: false },
-  { label: 'Appartement',      typeBien: 'appartement',    meuble: false },
-  { label: 'Appart. meublé',   typeBien: 'appartement',    meuble: true  },
-  { label: 'Villa',            typeBien: 'villa',          meuble: false },
-  { label: 'Duplex',           typeBien: 'duplex',         meuble: false },
-  { label: 'Maison',           typeBien: 'maison',         meuble: false },
-  { label: 'Boutique / Local', typeBien: 'boutique',       meuble: false },
-  { label: 'Bureau',           typeBien: 'bureau',         meuble: false },
-  { label: 'Terrain',          typeBien: 'terrain',        meuble: false },
-] as const
-
-/** Couple { type, sous_type } en base pour un choix de modification — mêmes règles qu'à la création. */
-export function coupleEdition(label: string): { type: string; sousType: string } | null {
-  const o = TYPES_EDITION.find(x => x.label === label)
-  if (!o) return null
-  const d = derives({
-    typeBien: o.typeBien,
-    estMeuble: o.meuble,
-    etatMeubleMaison: o.meuble ? 'meuble' : 'non_meuble',
-  })
-  return { type: d.typeBackend, sousType: d.sousType }
-}
-
-/**
- * Choix de modification correspondant à un bien lu en base. Reconnaît aussi les
- * anciennes valeurs (appart meublé en sous_type « appartement », boutique en
- * appart_vide, maison sans sous-type).
- */
-export function libelleEditionDepuisBien(type: string, sousType: string | null | undefined): string {
-  const s = sousType ?? ''
-  if (type === 'appart_meuble' && (s === 'appartement' || s === 'appart_meuble' || !s)) return 'Appart. meublé'
-  if (s === 'maison_individuelle' || (type === 'maison' && !s)) return 'Maison'
-  const exact = TYPES_EDITION.find(o => {
-    const c = coupleEdition(o.label)
-    return c?.type === type && c.sousType === s
-  })
-  if (exact) return exact.label
-  return TYPES_EDITION.find(o => o.typeBien === s)?.label ?? ''
 }
