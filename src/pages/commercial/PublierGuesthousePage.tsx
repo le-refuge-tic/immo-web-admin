@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useToast } from '../../context/ToastContext'
+import { useGestionEnvois } from '../../shared/uploads/useGestionEnvois'
 import { apiMessage } from '../../utils/apiMessage'
 import { guesthouseApi, type GroupeEquipements } from '../../api/guesthouse'
 import { BLUE } from './formStyles'
@@ -39,8 +40,9 @@ export default function PublierGuesthousePage() {
   const [etape, setEtape] = useState(etapeInitiale)
   const [photos, setPhotos] = useState<File[]>([])
   const [video, setVideo] = useState<File | null>(null)
-  const [envoi, setEnvoi] = useState<{ enCours: boolean; progres: number }>({ enCours: false, progres: 0 })
+  const [envoi, setEnvoi] = useState<{ enCours: boolean }>({ enCours: false })
   const [creeId, setCreeId] = useState<number | null>(null)
+  const { demarrer } = useGestionEnvois()
   const [groupes, setGroupes] = useState<GroupeEquipements[] | null>(null)
   const [erreurEquipements, setErreurEquipements] = useState('')
   const [essaiEquipements, setEssaiEquipements] = useState(0)
@@ -73,23 +75,16 @@ export default function PublierGuesthousePage() {
   const allerA = (n: number) => { setEtape(n); window.scrollTo({ top: 0, behavior: 'smooth' }) }
 
   const envoyer = async () => {
-    setEnvoi({ enCours: true, progres: 0 })
+    setEnvoi({ enCours: true })
     try {
-      const r = await envoyerGuesthouse(construirePayload(form), photos, video, p => setEnvoi({ enCours: true, progres: p }))
+      // Lot 1 : les photos partent en arrière-plan, retour immédiat aux annonces.
+      const id = await envoyerGuesthouse(construirePayload(form), { libelle: form.nom.trim() || 'Guesthouse', photos, video }, demarrer)
       localStorage.removeItem(CLE_BROUILLON)
       localStorage.removeItem('proprietaire_info')
-      setCreeId(r.bienId)
-      if (r.photosEchouees || r.videoEchouee) {
-        const details = [
-          r.photosEchouees ? `${r.photosEchouees} photo(s)` : '',
-          r.videoEchouee ? 'la vidéo' : '',
-        ].filter(Boolean).join(' et ')
-        toast(`Guesthouse enregistrée, mais ${details} n’ont pas pu être envoyées. Ajoutez-les depuis « Modifier » : 4 photos sont exigées pour la publication.`, 'error')
-      } else {
-        toast('Guesthouse envoyée. Elle sera visible après validation par un administrateur.', 'success')
-      }
+      setCreeId(id)
+      navigate('/mes-annonces')
     } catch (err) {
-      setEnvoi({ enCours: false, progres: 0 })
+      setEnvoi({ enCours: false })
       toast(apiMessage(err) ?? 'L’enregistrement a échoué. Vos informations sont conservées : réessayez.', 'error')
     }
   }
@@ -98,21 +93,6 @@ export default function PublierGuesthousePage() {
     if (bloque) return
     if (derniere) void envoyer()
     else allerA(etape + 1)
-  }
-
-  if (creeId !== null) {
-    return (
-      <div style={{ maxWidth: 480, margin: '64px auto', padding: '32px 24px', textAlign: 'center' }}>
-        <h1 style={{ fontSize: 20, color: 'var(--c-text)' }}>Guesthouse envoyée</h1>
-        <p style={{ color: 'var(--c-muted)', fontSize: 14 }}>
-          Statut : en attente de validation. Vous la retrouvez dans vos annonces avec le badge « Guesthouse ».
-        </p>
-        <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 20 }}>
-          <button className="btn-cancel" onClick={() => navigate(`/mes-annonces/${creeId}/modifier`)}>Voir / modifier</button>
-          <button className="btn-submit" onClick={() => navigate('/mes-annonces')}>Mes annonces</button>
-        </div>
-      </div>
-    )
   }
 
   return (
@@ -153,7 +133,7 @@ export default function PublierGuesthousePage() {
           </p>
         )}
         {envoi.enCours && (
-          <p aria-live="polite" style={{ fontSize: 12, color: BLUE, margin: '0 0 10px' }}>Envoi en cours… {envoi.progres}%</p>
+          <p aria-live="polite" style={{ fontSize: 12, color: BLUE, margin: '0 0 10px' }}>Enregistrement…</p>
         )}
         <div style={{ display: 'flex', gap: 10 }}>
           <button type="button" className="btn-cancel" disabled={envoi.enCours}

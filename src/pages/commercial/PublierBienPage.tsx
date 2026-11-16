@@ -7,6 +7,8 @@ import { getGeocoding } from '../../api/getGeocoding'
 import { getQuartiers } from '../../api/getQuartiers'
 import { apiMessage } from '../../utils/apiMessage';
 import { useToast } from '../../context/ToastContext'
+import { useGestionEnvois } from '../../shared/uploads/useGestionEnvois'
+import { envoyerBien } from './guesthouse/envoi'
 import { Card, Section, ChoiceList, Chip, Counter, NumberPicker, MoneyInput, RecapSection } from './formUi'
 import { BLUE, baseInput } from './formStyles'
 import { primeValidationCommerciale } from './commissionCommerciale'
@@ -17,7 +19,7 @@ import {
   manquesEtape, construirePayload, libellesEtapes,
   type BienClassiqueForm, type TarifCustom, type DetailCustom,
 } from './bien-classique/bienClassiqueForm'
-import { erreurFichierVideo, raisonEchecVideo } from '../../utils/videoAnnonce'
+import { erreurFichierVideo } from '../../utils/videoAnnonce'
 
 // ─── Quartiers — même structure que immo-web-user ─────────────────────────────
 type Quartier = { nom: string; arrondissement: string; ville: string }
@@ -116,6 +118,7 @@ const formatFcfa = (v: number) => v > 0 ? `${Math.round(v).toLocaleString('fr-FR
 export default function PublierBienPage() {
   const navigate = useNavigate()
   const toast = useToast()
+  const { demarrer } = useGestionEnvois()
 
   const DRAFTS_KEY = 'publier_bien_drafts'
   const LEGACY_DRAFT_KEY = 'publier_bien_draft'
@@ -138,10 +141,8 @@ export default function PublierBienPage() {
   })
   const [submitting, setSubmitting]   = useState(false)
   const [error, setError]             = useState('')
-  const [created, setCreated]         = useState(false)
   const [photos, setPhotos]           = useState<File[]>([])
   const [video, setVideo]             = useState<File | null>(null)
-  const [uploadProgress, setUploadProgress] = useState(0)
   const [hoveredDropzone, setHoveredDropzone] = useState<string | null>(null)
   const [hoveredQuartierIdx, setHoveredQuartierIdx] = useState<number | null>(null)
 
@@ -510,36 +511,18 @@ export default function PublierBienPage() {
     setSubmitting(true); setError('')
     try {
       const body = construirePayload(form, proprietaireInfo)
-      const data = await postBien.create(body)
-      const bien = data.data || data.bien || data
-
-      // Échecs d'envoi des médias : comptés et signalés (le bien, lui, est créé)
-      let photosEchouees = 0
-      let videoEchouee = false
-      let raisonVideo: string | undefined
-      if (photos.length > 0 && bien.id) {
-        for (let i = 0; i < photos.length; i++) {
-          try {
-            await postBien.uploadPhoto(bien.id, photos[i])
-          } catch {
-            photosEchouees += 1
-          }
-          setUploadProgress(Math.round(((i + 1) / photos.length) * 100))
-        }
-      }
-      if (video && bien.id) {
-        try {
-          await postBien.uploadVideo(bien.id, video)
-        } catch (err) {
-          videoEchouee = true
-          raisonVideo = raisonEchecVideo(err)
-        }
-      }
-      if (photosEchouees || videoEchouee) {
-        const details = [photosEchouees ? `${photosEchouees} photo(s)` : '', videoEchouee ? 'la vidéo' : ''].filter(Boolean).join(' et ')
-        const raison = raisonVideo ? ` (${raisonVideo})` : ''
-        toast(`Bien enregistré, mais ${details} n’ont pas pu être envoyées${raison}. Ajoutez-les depuis « Modifier l’annonce ».`, 'error')
-      }
+      // Lot 1 : création, puis photos et vidéo confiées au gestionnaire d'envois.
+      const typeLibelle = TYPES_BIEN.find(t => t.key === typeBien)?.label ?? 'Bien'
+      const libelle = titreTerrain.trim() || [typeLibelle, quartier.trim()].filter(Boolean).join(' ')
+      await envoyerBien(
+        async payload => {
+          const data = await postBien.create(payload)
+          return data.data || data.bien || data
+        },
+        body,
+        { libelle, photos, video },
+        demarrer,
+      )
 
       // Enregistre le quartier ajouté manuellement (avec arrondissement + ville) pour validation admin.
       if (quartierManuel && quartier.trim()) {
@@ -556,32 +539,11 @@ export default function PublierBienPage() {
           }
         }
       } catch { /* suppression du brouillon échouée */ }
-      setCreated(true)
+      navigate('/mes-annonces')
     } catch (err: any) {
       setError(apiMessage(err) || 'Erreur lors de la création')
       setSubmitting(false)
     }
-  }
-
-  // Écran succès
-  if (created) {
-    return (
-      <div style={{ maxWidth: 480, margin: '64px auto', padding: '32px 24px', textAlign: 'center' }}>
-        <div style={{ width: 72, height: 72, borderRadius: '50%', background: BLUE + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={BLUE} strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-        <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--c-text)', marginBottom: 8 }}>Bien soumis avec succes</h2>
-        <p style={{ fontSize: 13, color: 'var(--c-muted)', maxWidth: 320, margin: '0 auto 24px' }}>
-          En attente de validation par l'administrateur. Vous serez notifie une fois approuve.
-        </p>
-        <button onClick={() => navigate('/mes-annonces')}
-          style={{ padding: '12px 32px', borderRadius: 10, fontWeight: 700, background: BLUE, color: 'white', border: 'none', cursor: 'pointer', fontSize: 14 }}>
-          Voir mes annonces
-        </button>
-      </div>
-    )
   }
 
   const PW = 688
@@ -1688,16 +1650,6 @@ export default function PublierBienPage() {
                       {photos.length}/{MAX_PHOTOS} photo{photos.length > 1 ? 's' : ''} — encore {MAX_PHOTOS - photos.length} possible{MAX_PHOTOS - photos.length > 1 ? 's' : ''}
                     </p>
                   </>
-                )}
-                {submitting && uploadProgress > 0 && (
-                  <div style={{ marginTop: 12 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4, color: 'var(--c-muted)' }}>
-                      <span>Upload photos…</span><span>{uploadProgress}%</span>
-                    </div>
-                    <div style={{ height: 8, borderRadius: 4, background: 'var(--c-surface-2)' }}>
-                      <div style={{ height: '100%', borderRadius: 4, transition: 'width 0.3s', width: `${uploadProgress}%`, background: BLUE }} />
-                    </div>
-                  </div>
                 )}
               </Card>
 

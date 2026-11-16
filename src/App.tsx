@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
+import SocleApp from './components/SocleApp';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AdminRoute, SuperAdminRoute } from './components/RoleRoute';
 import AdminLayout from './layout/AdminLayout';
@@ -53,6 +54,7 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <ToastProvider>
+        <SocleApp>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route
@@ -108,6 +110,7 @@ export default function App() {
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>
+        </SocleApp>
         </ToastProvider>
       </AuthProvider>
     </BrowserRouter>

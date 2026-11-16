@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getMesBiens } from '../../api/getMesBiens';
 import { markBiensAsSeen } from '../../hooks/useSidebarBadges';
 import { useAuth } from '../../context/AuthContext';
+import { useConfirm } from '../../shared/dialogues/useConfirm';
 import { prixAvecUnite } from '../../utils/prix';
 
 /* ─── Helpers ─────────────────────────────────────────────── */
@@ -124,11 +125,17 @@ const STATUS_CARD: Record<string, { label: string; bg: string; color: string; sh
   en_attente:   { label: 'En attente',   bg: '#D97706', color: '#fff', shadow: 'rgba(217,119,6,0.30)'   },
   rejete:       { label: 'Rejeté',       bg: '#DC2626', color: '#fff', shadow: 'rgba(220,38,38,0.30)'   },
   conditionnel: { label: 'Conditionnel', bg: '#7C3AED', color: '#fff', shadow: 'rgba(124,58,237,0.30)'  },
+  photos_en_cours: { label: 'Photos en cours', bg: '#2563EB', color: '#fff', shadow: 'rgba(37,99,235,0.30)' },
 };
+
+/** Lot 1 : un bien en attente dont les photos ne sont pas toutes arrivées n'est pas encore à valider. */
+const cleStatutCarte = (b: any) =>
+  b.statut_moderation === 'en_attente' && b.statut_medias === 'en_cours' ? 'photos_en_cours' : b.statut_moderation;
 
 export default function MesAnnoncesPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { confirmer } = useConfirm();
   const [biens, setBiens]       = useState<any[]>([]);
   const [loading, setLoading]   = useState(true);
   const [showProprietaireModal, setShowProprietaireModal] = useState(false);
@@ -220,8 +227,14 @@ export default function MesAnnoncesPage() {
   const enAttente   = biens.filter(b => b.statut_moderation === 'en_attente').length;
   const rejetes     = biens.filter(b => b.statut_moderation === 'rejete').length;
 
-  const deleteDraft = (draft: any) => {
-    if (!window.confirm('Supprimer ce brouillon ?')) return
+  const deleteDraft = async (draft: any) => {
+    const ok = await confirmer({
+      titre: 'Supprimer ce brouillon ?',
+      message: 'Les informations saisies seront définitivement perdues.',
+      confirmer: 'Supprimer',
+      danger: true,
+    })
+    if (!ok) return
     if (draft.storageKey && draft.storageKey !== DRAFTS_KEY) {
       localStorage.removeItem(draft.storageKey)
     } else {
@@ -441,7 +454,7 @@ export default function MesAnnoncesPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(270px, 1fr))', gap: 16, padding: 16 }}>
             {biensFiltered.map((b: any) => {
               const cover = b.photos?.find((p: any) => p.is_cover) ?? b.photos?.[0];
-              const sc = STATUS_CARD[b.statut_moderation];
+              const sc = STATUS_CARD[cleStatutCarte(b)];
               return (
                 <div key={b.id} style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid var(--c-border)', background: 'var(--c-card)', display: 'flex', flexDirection: 'column', transition: 'box-shadow 0.15s', cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}
                   onClick={() => b.statut_moderation === 'approuve'

@@ -5,9 +5,11 @@ const auth = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('
 export const postBien = {
   create: (dto: any) => axios.post(`${BASE}/biens`, dto, auth()).then(r => r.data),
   delete: (id: number) => axios.delete(`${BASE}/biens/${id}`, auth()).then(r => r.data),
-  uploadPhoto: (id: number, file: File) => {
+  /** `cleEnvoi` : clé d'idempotence (une reprise ne crée pas de doublon). */
+  uploadPhoto: (id: number, file: File, cleEnvoi?: string) => {
     const fd = new FormData();
     fd.append('photo', file);
+    if (cleEnvoi) fd.append('cle_envoi', cleEnvoi);
     return axios.post(`${BASE}/biens/${id}/photos`, fd, auth()).then(r => r.data);
   },
   uploadVideo: (id: number, file: File) => {
