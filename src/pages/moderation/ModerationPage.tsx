@@ -6,6 +6,7 @@ import { patchAdminBien } from '../../api/patchAdminBien';
 import { refreshSidebarBadges } from '../../hooks/useSidebarBadges';
 import ModerationRisqueLabel from './ModerationRisqueLabel';
 import ModerationDetail from './ModerationDetail';
+import ModificationsEnAttente from './ModificationsEnAttente';
 import { MOTIFS_REFUS, TYPE_LABELS, formatPrix, auteurNom, blocageApprobation } from './moderationChecks';
 import { suffixeUnite } from '../../utils/prix';
 import { apiMessage } from '../../utils/apiMessage';
@@ -202,7 +203,8 @@ function ModerationModal({
 
 // ── Page principale ──────────────────────────────────────────────────────────
 
-type Stats = { en_attente: number; rejete: number; traitees_7j: number };
+type Stats = { en_attente: number; rejete: number; traitees_7j: number; modifications?: number };
+type Onglet = 'annonces' | 'modifications';
 
 export default function ModerationPage() {
   const [biens, setBiens]       = useState<any[]>([]);
@@ -217,6 +219,7 @@ export default function ModerationPage() {
   // Téléphone : la file et le détail s'affichent l'un après l'autre.
   const [showDetailMobile, setShowDetailMobile] = useState(false);
   const [modal, setModal] = useState<{ bien: any; type: ActionType } | null>(null);
+  const [onglet, setOnglet] = useState<Onglet>('annonces');
   const listRef = useRef<HTMLUListElement>(null);
   // Numéro de la dernière requête : une réponse plus ancienne arrivée après coup est ignorée.
   const requestIdRef = useRef(0);
@@ -268,7 +271,7 @@ export default function ModerationPage() {
   // Raccourcis clavier : ↑/↓ pour naviguer, A pour approuver, R pour rejeter.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (modal || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (onglet !== 'annonces' || modal || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
       // Une autre fenêtre est ouverte (ex. téléphone requis) : pas de raccourci derrière elle.
       if (document.querySelector('[aria-modal="true"]')) return;
       const el = e.target as HTMLElement;
@@ -292,7 +295,7 @@ export default function ModerationPage() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [biens, selectedId, selected, modal]);
+  }, [biens, selectedId, selected, modal, onglet]);
 
   const select = (id: number) => { setSelectedId(id); setShowDetailMobile(true); };
 
@@ -333,7 +336,16 @@ export default function ModerationPage() {
           <div className="mod-shortcuts" aria-hidden="true"><kbd>↑</kbd><kbd>↓</kbd> naviguer · <kbd>A</kbd> approuver · <kbd>R</kbd> rejeter</div>
         </div>
 
-        {loadError ? (
+        <div role="tablist" aria-label="File de modération" style={{ display: 'flex', gap: 8, margin: '0 0 12px' }}>
+          {([['annonces', `Nouvelles annonces (${stats?.en_attente ?? total})`], ['modifications', `Modifications en attente (${stats?.modifications ?? 0})`]] as [Onglet, string][]).map(([cle, libelle]) => (
+            <button key={cle} type="button" role="tab" aria-selected={onglet === cle} onClick={() => setOnglet(cle)}
+              className={onglet === cle ? 'btn-submit' : 'btn-cancel'}>{libelle}</button>
+          ))}
+        </div>
+
+        {onglet === 'modifications' ? (
+          <ModificationsEnAttente onChange={() => void load()} />
+        ) : loadError ? (
           <div className="immo-card mod-empty" role="alert">
             <span>{loadError}</span>
             <button type="button" className="btn-cancel" onClick={() => void load()}>Réessayer</button>
