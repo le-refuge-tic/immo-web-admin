@@ -3,9 +3,11 @@ import { useSearchParams } from 'react-router-dom'
 import {
   enregistrerBrouillon, libelleParNom, lireBrouillon, listerBrouillons, nouvelIdBrouillon, supprimerBrouillon,
 } from './brouillonsLocaux'
+import { useVersionDistante } from '../../../shared/brouillons/useSynchroBrouillons'
 
 type FamilleDediee = 'guesthouse' | 'salle_fete'
-type Etat<T> = { form: T; etape: number; id: string }
+/** `version` : date du brouillon lu (lot 6, pour ne jamais écraser une version plus récente). */
+type Etat<T> = { form: T; etape: number; id: string; version: number }
 
 /**
  * Lot 3 — formulaire guesthouse ou salle de fêtes adossé à un brouillon : `?draft=<id>` reprend
@@ -20,13 +22,19 @@ export function useBrouillonFormulaire<T extends { nom: string }>(famille: Famil
   const charger = (id: string | null): Etat<T> => {
     const b = id ? lireBrouillon<T>(famille, id, libelleDe) : null
     return b
-      ? { form: { ...vide(), ...b.donnees }, etape: Math.min(b.etape, nbEtapes - 1), id: b.id }
-      : { form: vide(), etape: 0, id: nouvelIdBrouillon() }
+      ? { form: { ...vide(), ...b.donnees }, etape: Math.min(b.etape, nbEtapes - 1), id: b.id, version: b.updatedAt }
+      : { form: vide(), etape: 0, id: nouvelIdBrouillon(), version: 0 }
   }
 
   const [etat, setEtat] = useState<Etat<T>>(() => charger(idDemande))
   const [version, setVersion] = useState(0)
   const termine = useRef(false)
+  /** Date de la dernière écriture faite par cette page (lot 6). */
+  const derniereEcriture = useRef(0)
+  const versionConnue = () => Math.max(etat.version, derniereEcriture.current)
+  const versionStockee = () => lireBrouillon<T>(famille, etat.id, libelleDe)?.updatedAt ?? 0
+  // Version plus récente reçue d'un autre appareil : plus d'écriture jusqu'au choix de l'utilisateur.
+  const versionDistante = useVersionDistante(() => versionStockee() > versionConnue())
 
   // Autre brouillon choisi dans le menu (nouveau ?draft=) : rechargé pendant le rendu.
   const [idSuivi, setIdSuivi] = useState(idDemande)
@@ -47,13 +55,19 @@ export function useBrouillonFormulaire<T extends { nom: string }>(famille: Famil
   const vierge = useMemo(() => JSON.stringify(vide()), [vide])
   useEffect(() => {
     if (termine.current) return
-    const deja = listerBrouillons<T>(famille, libelleDe).some(b => b.id === etat.id)
-    if (!deja && etat.etape === 0 && JSON.stringify(etat.form) === vierge) return
+    const stocke = lireBrouillon<T>(famille, etat.id, libelleDe)
+    if (!stocke && etat.etape === 0 && JSON.stringify(etat.form) === vierge) return
+    if (stocke && stocke.updatedAt > Math.max(etat.version, derniereEcriture.current)) return
+    // Rien de changé (ouverture de la page) : la date ne bouge pas, rien n'est renvoyé au serveur.
+    if (stocke && stocke.etape === etat.etape && JSON.stringify({ ...vide(), ...stocke.donnees }) === JSON.stringify(etat.form)) return
+    const updatedAt = Date.now()
     enregistrerBrouillon({
-      id: etat.id, famille, libelle: libelleDe(etat.form), etape: etat.etape, updatedAt: Date.now(), donnees: etat.form,
+      id: etat.id, famille, libelle: libelleDe(etat.form), etape: etat.etape, updatedAt, donnees: etat.form,
     }, libelleDe)
+    derniereEcriture.current = updatedAt
+    const deja = !!stocke
     if (!deja) setParams(p => { p.set('draft', etat.id); return p }, { replace: true })
-  }, [etat, famille, libelleDe, vierge, setParams])
+  }, [etat, famille, libelleDe, vierge, vide, setParams])
 
   const maj = useCallback((patch: Partial<T>) => setEtat(e => ({ ...e, form: { ...e.form, ...patch } })), [])
   const setEtape = useCallback((etape: number) => setEtat(e => ({ ...e, etape })), [])
@@ -63,7 +77,7 @@ export function useBrouillonFormulaire<T extends { nom: string }>(famille: Famil
     supprimerBrouillon(famille, id)
     setVersion(v => v + 1)
     if (id === etat.id) {
-      setEtat({ form: vide(), etape: 0, id: nouvelIdBrouillon() })
+      setEtat({ form: vide(), etape: 0, id: nouvelIdBrouillon(), version: 0 })
       setIdSuivi(null)
       setParams(p => { p.delete('draft'); return p }, { replace: true })
     }
@@ -78,5 +92,11 @@ export function useBrouillonFormulaire<T extends { nom: string }>(famille: Famil
   /** Liste à jour (lue à l'ouverture du menu, après l'enregistrement de la dernière saisie). */
   const lister = useCallback(() => listerBrouillons<T>(famille, libelleDe), [famille, libelleDe])
 
-  return { form: etat.form, maj, etape: etat.etape, setEtape, brouillonId: existe ? etat.id : null, lister, supprimer, terminer }
+  /** Lot 6 : choix devant une version plus récente venue d'un autre appareil. */
+  const conflit = versionDistante.conflit ? {
+    charger: () => { derniereEcriture.current = 0; setEtat(charger(etat.id)); versionDistante.fermer() },
+    garder: () => { derniereEcriture.current = versionStockee(); setEtat(e => ({ ...e })); versionDistante.fermer() },
+  } : null
+
+  return { form: etat.form, maj, etape: etat.etape, setEtape, brouillonId: existe ? etat.id : null, lister, supprimer, terminer, conflit }
 }

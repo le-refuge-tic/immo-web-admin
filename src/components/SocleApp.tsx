@@ -7,7 +7,7 @@ import type { Envoyeur } from '../shared/uploads/fileEnvoi';
 import { postBien } from '../api/postBien';
 import { brouillonsApi } from '../api/brouillonsApi';
 import { stockageEtatLocal, useSynchroBrouillons } from '../shared/brouillons/useSynchroBrouillons';
-import { magasinsAdministration } from '../pages/commercial/brouillons/brouillonsLocaux';
+import { CLE_ETAT_SYNCHRO, magasinsAdministration } from '../pages/commercial/brouillons/brouillonsLocaux';
 import ConfirmDialog from './ConfirmDialog';
 import IndicateurEnvois from './IndicateurEnvois';
 
@@ -17,7 +17,7 @@ const envoyerMedia: Envoyeur = async (bienId, el) => {
   else await postBien.uploadPhoto(bienId, fichier, el.id);
 };
 
-const stockageSynchro = stockageEtatLocal('brouillons_synchro');
+const stockageSynchro = stockageEtatLocal(CLE_ETAT_SYNCHRO);
 
 /**
  * Lot 1 — dialogues de confirmation et envois en arrière-plan, communs à toutes les pages.

@@ -16,7 +16,8 @@ export interface ApiBrouillons {
   lister: () => Promise<ResumeServeur[]>
   lire: (cle: string) => Promise<ResumeServeur & { donnees: Record<string, unknown> }>
   enregistrer: (e: EntreeBrouillon) => Promise<{ maj_le: number; applique: boolean }>
-  supprimer: (cle: string) => Promise<void>
+  /** Ne supprime que si la version du serveur n'est pas plus récente que `majLeMax`. */
+  supprimer: (cle: string, majLeMax: number) => Promise<void>
 }
 
 export interface EtatEnregistre {
@@ -35,6 +36,20 @@ export interface ResultatSynchro {
   echecs: number
 }
 
+/**
+ * Rattache les brouillons de l'appareil au compte connecté : ceux d'un autre compte sont retirés
+ * (ils sont sur le serveur, à lui). À appeler dès la connexion, avant d'afficher une liste.
+ * Renvoie l'état de synchronisation du compte.
+ */
+export function preparerCompte(compte: number, magasins: readonly MagasinBrouillons[], stockage: StockageEtat): { etat: EtatSynchro; vide: boolean } {
+  const enregistre = stockage.lire()
+  const autreCompte = !!enregistre && enregistre.compte !== compte
+  if (autreCompte) magasins.forEach(m => m.vider())
+  const etat: EtatSynchro = enregistre?.compte === compte ? { ...enregistre.etat } : {}
+  stockage.ecrire({ compte, etat })
+  return { etat, vide: autreCompte }
+}
+
 const famillesDe = (magasins: readonly MagasinBrouillons[], famille: string) => magasins.find(m => m.familles.includes(famille))
 
 /**
@@ -49,17 +64,11 @@ export async function synchroniser({ compte, api, magasins, stockage, complete }
   stockage: StockageEtat
   complete: boolean
 }): Promise<ResultatSynchro> {
-  const enregistre = stockage.lire()
-  let modifiesIci = false
-  let echecs = 0
   // Brouillons d'un autre compte sur ce navigateur : ils sont à lui (et sur le serveur), pas à nous.
-  if (enregistre && enregistre.compte !== compte) {
-    magasins.forEach(m => m.vider())
-    modifiesIci = true
-  }
-  const etat: EtatSynchro = enregistre?.compte === compte ? { ...enregistre.etat } : {}
+  const { etat, vide } = preparerCompte(compte, magasins, stockage)
+  let modifiesIci = vide
+  let echecs = 0
   const sauver = () => stockage.ecrire({ compte, etat })
-  sauver()
 
   const ici = magasins.flatMap(m => m.lire())
   const plan = complete
@@ -69,10 +78,14 @@ export async function synchroniser({ compte, api, magasins, stockage, complete }
   const tenter = async (operation: () => Promise<void>) => {
     try { await operation() } catch { echecs += 1 } finally { sauver() }
   }
+  /** Relu juste avant d'écrire : une saisie faite pendant la passe n'est jamais écrasée. */
+  const majLeIci = (magasin: MagasinBrouillons, cle: string) => magasin.lire().find(e => e.cle === cle)?.majLe
   const recuperer = async (cle: string) => {
     const b = await api.lire(cle)
     const magasin = famillesDe(magasins, b.famille)
     if (!magasin) return
+    const actuel = majLeIci(magasin, cle)
+    if (actuel !== undefined && actuel > b.maj_le) return
     magasin.ecrire({ cle: b.cle, famille: b.famille, libelle: b.libelle, etape: b.etape, majLe: b.maj_le, donnees: b.donnees })
     etat[cle] = b.maj_le
     modifiesIci = true
@@ -89,14 +102,17 @@ export async function synchroniser({ compte, api, magasins, stockage, complete }
   for (const s of plan.recuperer) await tenter(() => recuperer(s.cle))
   for (const e of plan.retirerIci) {
     await tenter(async () => {
-      famillesDe(magasins, e.famille)?.retirer(e.cle)
+      const magasin = famillesDe(magasins, e.famille)
+      const actuel = magasin ? majLeIci(magasin, e.cle) : undefined
+      if (actuel !== undefined && actuel > e.majLe) return // modifié pendant la passe : envoyé à la suivante
+      magasin?.retirer(e.cle)
       delete etat[e.cle]
       modifiesIci = true
     })
   }
-  for (const cle of plan.supprimerServeur) {
+  for (const { cle, majLe } of plan.supprimerServeur) {
     await tenter(async () => {
-      await api.supprimer(cle)
+      await api.supprimer(cle, majLe)
       delete etat[cle]
     })
   }

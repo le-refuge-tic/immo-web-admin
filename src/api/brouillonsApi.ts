@@ -15,6 +15,6 @@ export const brouillonsApi: ApiBrouillons = {
     axios.post(`${BASE}/brouillons-biens`, {
       espace: ESPACE, cle: e.cle, famille: e.famille, libelle: e.libelle.slice(0, 120), etape: e.etape, donnees: e.donnees, maj_le: e.majLe,
     }, auth()).then(r => r.data),
-  supprimer: (cle: string) =>
-    axios.delete(`${BASE}/brouillons-biens/${encodeURIComponent(cle)}`, { ...auth(), params: { espace: ESPACE } }).then(() => undefined),
+  supprimer: (cle: string, majLeMax: number) =>
+    axios.delete(`${BASE}/brouillons-biens/${encodeURIComponent(cle)}`, { ...auth(), params: { espace: ESPACE, maj_le_max: majLeMax } }).then(() => undefined),
 };

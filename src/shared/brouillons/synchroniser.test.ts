@@ -28,7 +28,7 @@ function serveur(initiaux: Distant[] = []): ApiBrouillons & { contenu: Map<strin
       contenu.set(e.cle, { cle: e.cle, famille: e.famille, libelle: e.libelle, etape: e.etape, maj_le: e.majLe, donnees: e.donnees })
       return { maj_le: e.majLe, applique: true }
     }),
-    supprimer: vi.fn(async (cle: string) => { contenu.delete(cle) }),
+    supprimer: vi.fn(async (cle: string, majLeMax: number) => { const d = contenu.get(cle); if (d && d.maj_le <= majLeMax) contenu.delete(cle) }),
   }
 }
 
@@ -99,5 +99,19 @@ describe('synchronisation des brouillons', () => {
     const r = await synchroniser({ compte: 7, api, magasins: [gh], stockage: s, complete: true })
     expect(r.echecs).toBe(1)
     expect(s.valeur?.etat).toEqual({ b: 10 })
+  })
+
+  it('saisie pendant la passe : ni écrasée par la version du serveur, ni retirée', async () => {
+    const gh = magasin('guesthouse', [entree('a', 10), entree('b', 10)])
+    const api = serveur([distant('a', 20)])
+    // L'utilisateur tape pendant la lecture du serveur.
+    api.lister = vi.fn(async () => {
+      gh.contenu.set('a', entree('a', 30))
+      gh.contenu.set('b', entree('b', 40))
+      return [{ cle: 'a', famille: 'guesthouse', libelle: 'a', etape: 0, maj_le: 20 }]
+    })
+    await synchroniser({ compte: 7, api, magasins: [gh], stockage: stockage({ compte: 7, etat: { a: 10, b: 10 } }), complete: true })
+    expect(gh.contenu.get('a')?.majLe).toBe(30)
+    expect(gh.contenu.get('b')?.majLe).toBe(40)
   })
 })

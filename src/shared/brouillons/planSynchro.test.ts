@@ -20,14 +20,17 @@ describe('plan de synchronisation des brouillons', () => {
     expect(cles(p.recuperer)).toEqual(['ailleurs'])
   })
 
-  it('supprimé sur un autre appareil : retiré ici', () => {
+  it('supprimé sur un autre appareil : retiré ici, sauf saisie plus récente ici (renvoyée)', () => {
     const p = planifierSynchro([ici('a', 10)], [], { a: 10 })
     expect(cles(p.retirerIci)).toEqual(['a'])
     expect(p.envoyer).toEqual([])
+    const modifieIci = planifierSynchro([ici('a', 25)], [], { a: 10 })
+    expect(modifieIci.retirerIci).toEqual([])
+    expect(cles(modifieIci.envoyer)).toEqual(['a'])
   })
 
   it('supprimé ici : supprimé du serveur, sauf s’il y a été modifié depuis', () => {
-    expect(planifierSynchro([], [serveur('a', 10)], { a: 10 }).supprimerServeur).toEqual(['a'])
+    expect(planifierSynchro([], [serveur('a', 10)], { a: 10 }).supprimerServeur).toEqual([{ cle: 'a', majLe: 10 }])
     const modifieAilleurs = planifierSynchro([], [serveur('a', 30)], { a: 10 })
     expect(modifieAilleurs.supprimerServeur).toEqual([])
     expect(cles(modifieAilleurs.recuperer)).toEqual(['a'])

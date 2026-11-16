@@ -9,6 +9,18 @@ export const EVENEMENT_BROUILLONS_SYNCHRONISES = 'brouillons:synchronises'
 /** Délai après la dernière saisie avant l'envoi au serveur. */
 export const DELAI_ENVOI_MS = 1500
 
+/** Passe forcée de la synchronisation active (une seule par application). */
+let passeForcee: (() => Promise<void>) | null = null
+
+/**
+ * Avant une déconnexion : envoie les dernières saisies au serveur (au plus `delaiMs`), pour
+ * qu'elles survivent à l'effacement des brouillons de l'appareil.
+ */
+export async function synchroniserAvantDeconnexion(delaiMs = 3000): Promise<void> {
+  if (!passeForcee) return
+  await Promise.race([passeForcee().catch(() => {}), new Promise(r => setTimeout(r, delaiMs))])
+}
+
 export function signalerBrouillonsModifies(): void {
   try { window.dispatchEvent(new Event(EVENEMENT_BROUILLONS_MODIFIES)) } catch { /* hors navigateur */ }
 }
@@ -43,24 +55,30 @@ export function useSynchroBrouillons({ compte, api, magasins, stockage }: {
   useEffect(() => {
     if (compte == null) return
     let actif = true
-    let enCours = false
+    let enCours: Promise<void> | null = null
     let aRelancer: boolean | null = null
     let minuteur: ReturnType<typeof setTimeout> | undefined
 
-    const lancer = async (complete: boolean): Promise<void> => {
-      if (!actif) return
-      if (enCours) { aRelancer = aRelancer === true || complete; return }
-      enCours = true
+    const passe = async (complete: boolean): Promise<void> => {
       try {
         const r = await synchroniser({ compte, ...deps.current, complete })
         if (r.modifiesIci) window.dispatchEvent(new Event(EVENEMENT_BROUILLONS_SYNCHRONISES))
       } catch {
         // Serveur injoignable : les brouillons restent sur l'appareil, nouvel essai plus tard.
-      } finally {
-        enCours = false
+      }
+    }
+    const lancer = async (complete: boolean): Promise<void> => {
+      if (!actif) return
+      if (enCours) { aRelancer = aRelancer === true || complete; return }
+      enCours = passe(complete)
+      try { await enCours } finally {
+        enCours = null
         if (aRelancer !== null) { const c = aRelancer; aRelancer = null; void lancer(c) }
       }
     }
+    // Déconnexion : attendre la passe en cours, puis une passe complète.
+    const forcer = async () => { if (enCours) await enCours; await passe(true) }
+    passeForcee = forcer
 
     // Passe complète aussi après une saisie : elle propage les suppressions et ne remplace jamais
     // une version plus récente d'un autre appareil (la liste relue est légère, sans les données).
@@ -74,6 +92,7 @@ export function useSynchroBrouillons({ compte, api, magasins, stockage }: {
     window.addEventListener('online', surReseau)
     return () => {
       actif = false
+      if (passeForcee === forcer) passeForcee = null
       clearTimeout(minuteur)
       window.removeEventListener(EVENEMENT_BROUILLONS_MODIFIES, surSaisie)
       document.removeEventListener('visibilitychange', surRetour)
@@ -95,4 +114,21 @@ export function useVersionBrouillons(): number {
     }
   }, [])
   return version
+}
+
+/**
+ * Formulaire ouvert pendant qu'une version plus récente du même brouillon arrive d'un autre
+ * appareil : `conflit` passe à vrai (le formulaire cesse d'écrire tant que l'utilisateur n'a
+ * pas choisi entre cette version et sa saisie).
+ */
+export function useVersionDistante(estPlusRecente: () => boolean): { conflit: boolean; fermer: () => void } {
+  const [conflit, setConflit] = useState(false)
+  const verifier = useRef(estPlusRecente)
+  useEffect(() => { verifier.current = estPlusRecente })
+  useEffect(() => {
+    const surSynchro = () => { if (verifier.current()) setConflit(true) }
+    window.addEventListener(EVENEMENT_BROUILLONS_SYNCHRONISES, surSynchro)
+    return () => window.removeEventListener(EVENEMENT_BROUILLONS_SYNCHRONISES, surSynchro)
+  }, [])
+  return { conflit, fermer: () => setConflit(false) }
 }

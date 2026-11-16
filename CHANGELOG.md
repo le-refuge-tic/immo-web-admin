@@ -10,6 +10,9 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
   serveur : un commercial les retrouve sur un autre appareil ; « Mes annonces » se met à jour.
   Le navigateur sert de cache hors ligne ; les photos restent sur l'appareil. Un autre compte
   connecté sur le même navigateur ne récupère jamais ces brouillons.
+- Formulaire ouvert pendant qu'une version plus récente arrive d'un autre appareil : rien n'est
+  écrasé, bandeau « Charger cette version » / « Garder ma saisie ». Ouvrir un brouillon ne le
+  re-date plus. Dernières saisies envoyées avant la déconnexion.
 
 ### Ajouté (lot 5 — modification des biens)
 - Modération : onglet « Modifications en attente » (compteur) ; pour chaque bien, ce qui change

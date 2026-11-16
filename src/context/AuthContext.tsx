@@ -2,6 +2,17 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { getAuth } from '../api/getAuth';
 import { postAuth } from '../api/postAuth';
 import { viderLots } from '../shared/uploads/stockageEnvoi';
+import { preparerCompte } from '../shared/brouillons/synchroniser';
+import { stockageEtatLocal, synchroniserAvantDeconnexion } from '../shared/brouillons/useSynchroBrouillons';
+import { CLE_ETAT_SYNCHRO, magasinsAdministration } from '../pages/commercial/brouillons/brouillonsLocaux';
+
+/**
+ * Lot 6 — dès que le compte est connu : les brouillons d'un autre compte laissés sur ce
+ * navigateur sont retirés avant tout affichage (ils sont sur le serveur, à lui).
+ */
+function rattacherBrouillons(profile: { id?: unknown } | null): void {
+  if (typeof profile?.id === 'number') preparerCompte(profile.id, magasinsAdministration(), stockageEtatLocal(CLE_ETAT_SYNCHRO));
+}
 
 const AuthContext = createContext(null as any);
 
@@ -13,7 +24,7 @@ export function AuthProvider({ children }: { children: any }) {
     const token = localStorage.getItem('access_token');
     if (!token) { setLoading(false); return; }
     getAuth.profile()
-      .then(setUser)
+      .then(profile => { rattacherBrouillons(profile); setUser(profile); })
       .catch((err: any) => {
         // Ne supprimer le token que si le serveur confirme qu'il est invalide (401/403).
         // Une erreur réseau (Render endormi, timeout) ne doit pas déconnecter l'utilisateur.
@@ -30,6 +41,7 @@ export function AuthProvider({ children }: { children: any }) {
     localStorage.setItem('access_token', tokens.access_token);
     localStorage.setItem('refresh_token', tokens.refresh_token);
     const profile = await getAuth.profile();
+    rattacherBrouillons(profile);
     setUser(profile);
   };
 
@@ -48,6 +60,8 @@ export function AuthProvider({ children }: { children: any }) {
   };
 
   const logout = async () => {
+    // Lot 6 : dernières saisies envoyées au serveur avant la sortie (au plus 3 s).
+    await synchroniserAvantDeconnexion();
     try { await postAuth.logout(); } catch { /* ignore */ }
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
@@ -58,6 +72,7 @@ export function AuthProvider({ children }: { children: any }) {
 
   const refreshUser = async () => {
     const profile = await getAuth.profile(); // peut lever — l'appelant doit catcher
+    rattacherBrouillons(profile);
     setUser(profile);
   };
 

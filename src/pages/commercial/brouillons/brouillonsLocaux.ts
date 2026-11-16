@@ -43,6 +43,8 @@ const CLES: Record<Exclude<FamilleBrouillon, 'bien'>, { liste: string; ancienne:
 }
 /** Brouillons du formulaire de bien classique (format existant de PublierBienPage). */
 export const CLE_BIENS = 'publier_bien_drafts'
+/** Lot 6 : état de synchronisation (compte rattaché aux brouillons de ce navigateur). */
+export const CLE_ETAT_SYNCHRO = 'brouillons_synchro'
 
 export const LIBELLES_FAMILLE: Record<FamilleBrouillon, string> = {
   bien: 'Bien',

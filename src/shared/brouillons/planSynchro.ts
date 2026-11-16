@@ -38,8 +38,8 @@ export interface PlanSynchro {
   recuperer: ResumeServeur[]
   /** Supprimés sur un autre appareil. */
   retirerIci: EntreeBrouillon[]
-  /** Supprimés sur cet appareil. */
-  supprimerServeur: string[]
+  /** Supprimés sur cet appareil (la version serveur vue, pour ne jamais supprimer plus récent). */
+  supprimerServeur: { cle: string; majLe: number }[]
 }
 
 export function planifierSynchro(ici: readonly EntreeBrouillon[], serveur: readonly ResumeServeur[], etat: EtatSynchro): PlanSynchro {
@@ -52,16 +52,17 @@ export function planifierSynchro(ici: readonly EntreeBrouillon[], serveur: reado
     if (s) {
       if (e.majLe > s.maj_le) plan.envoyer.push(e)
       else if (s.maj_le > e.majLe) plan.recuperer.push(s)
-    } else if (etat[e.cle] !== undefined) {
+    } else if (etat[e.cle] !== undefined && e.majLe <= etat[e.cle]) {
       plan.retirerIci.push(e)
     } else {
+      // Jamais envoyé, ou modifié ici depuis une suppression faite ailleurs : (re)créé.
       plan.envoyer.push(e)
     }
   }
   for (const s of serveur) {
     if (locaux.has(s.cle)) continue
     const connu = etat[s.cle]
-    if (connu !== undefined && s.maj_le <= connu) plan.supprimerServeur.push(s.cle)
+    if (connu !== undefined && s.maj_le <= connu) plan.supprimerServeur.push({ cle: s.cle, majLe: s.maj_le })
     else plan.recuperer.push(s)
   }
   return plan
