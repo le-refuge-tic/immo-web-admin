@@ -14,7 +14,7 @@ const MOTIF_MIN = 5;
 type Decision = 'approuver' | 'rejeter';
 
 /** Fenêtre de refus : le motif est transmis à l'auteur de la modification. */
-function RefusModification({ bien, onClose, onDone }: { bien: any; onClose: () => void; onDone: () => void }) {
+function RefusModification({ bien, onClose, onDone, onEchec }: { bien: any; onClose: () => void; onDone: () => void; onEchec: () => void }) {
   const [motif, setMotif] = useState('');
   const [enCours, setEnCours] = useState(false);
   const [erreur, setErreur] = useState('');
@@ -32,12 +32,13 @@ function RefusModification({ bien, onClose, onDone }: { bien: any; onClose: () =
     setEnCours(true);
     setErreur('');
     try {
-      await patchAdminBien.deciderModification(bien.id, { decision: 'rejeter', motif: motif.trim() });
+      await patchAdminBien.deciderModification(bien.id, { decision: 'rejeter', motif: motif.trim(), soumise_le: bien.modification_en_attente?.soumise_le });
       onDone();
       onClose();
     } catch (err) {
       setErreur(apiMessage(err) ?? 'Le refus n’a pas pu être enregistré. Réessayez.');
       setEnCours(false);
+      onEchec();
     }
   };
 
@@ -116,11 +117,12 @@ export default function ModificationsEnAttente({ onChange }: { onChange: () => v
     if (!ok) return;
     setEnCours(true);
     try {
-      await patchAdminBien.deciderModification(bien.id, { decision: 'approuver' });
+      await patchAdminBien.deciderModification(bien.id, { decision: 'approuver', soumise_le: bien.modification_en_attente?.soumise_le });
       toast('Modification approuvée : l’annonce est à jour.', 'success');
       apresDecision();
     } catch (err) {
       toast(apiMessage(err) ?? 'L’approbation a échoué.', 'error');
+      void charger(); // version changée entre-temps (409) : la file affiche la nouvelle
     } finally {
       setEnCours(false);
     }
@@ -143,7 +145,7 @@ export default function ModificationsEnAttente({ onChange }: { onChange: () => v
 
   return (
     <>
-      {refus && <RefusModification bien={refus} onClose={() => setRefus(null)} onDone={() => { toast('Modification refusée : l’auteur est prévenu.', 'success'); apresDecision(); }} />}
+      {refus && <RefusModification bien={refus} onClose={() => setRefus(null)} onEchec={() => void charger()} onDone={() => { toast('Modification refusée : l’auteur est prévenu.', 'success'); apresDecision(); }} />}
       <div className="mod-split">
         <div className="mod-queue-col">
           <ul className="mod-queue" aria-label="Modifications en attente" aria-busy={chargement}>

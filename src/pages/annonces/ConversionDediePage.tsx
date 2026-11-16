@@ -101,13 +101,12 @@ export default function ConversionDediePage() {
     try {
       if (estGuesthouse) {
         const p = G.construirePayload(form as G.GuesthouseForm);
-        await patchAdminBien.convertir(numId, { cle: 'guesthouse', details_guesthouse: p.details_guesthouse, equipements: p.equipements });
+        await patchAdminBien.convertir(numId, { cle: 'guesthouse', description: G.descriptionPayload(form), details_guesthouse: p.details_guesthouse, equipements: p.equipements });
       } else {
         const p = S.construirePayload(form as S.SalleFeteForm);
-        await patchAdminBien.convertir(numId, { cle: 'salle_fete', details_salle_fete: p.details_salle_fete, equipements: p.equipements, evenements: p.evenements });
+        await patchAdminBien.convertir(numId, { cle: 'salle_fete', description: G.descriptionPayload(form), details_salle_fete: p.details_salle_fete, equipements: p.equipements, evenements: p.evenements });
       }
-      // Le nom d'une guesthouse ou d'une salle est la 1re ligne de la description.
-      await patchAdminBien.update(numId, { description: G.descriptionPayload(form) });
+      // Le nom (1re ligne de la description) est écrit dans la même opération que la conversion.
       toast(`Bien converti en ${cible.libelle.toLowerCase()}. Vérifiez ses photos (${cible.photos_min} au minimum pour être publié).`, 'success');
       navigate(`/annonces/${numId}/modifier`, { replace: true });
     } catch (err) {

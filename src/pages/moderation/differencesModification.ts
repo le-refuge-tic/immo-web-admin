@@ -71,7 +71,12 @@ export function differencesModification(bien: Record<string, unknown>, corps: Re
     if (cle === 'localisation' && valeur && typeof valeur === 'object') comparer('Localisation', bien.localisation as Record<string, unknown>, valeur as Record<string, unknown>)
     else if (cle === 'amenites' && valeur && typeof valeur === 'object') comparer('', bien.amenites as Record<string, unknown>, valeur as Record<string, unknown>)
     else if ((cle === 'details_guesthouse' || cle === 'details_salle_fete') && valeur && typeof valeur === 'object') comparer('Détails', bien[cle] as Record<string, unknown>, valeur as Record<string, unknown>)
-    else if (cle === 'pieces' && Array.isArray(valeur)) {
+    else if ((cle === 'equipements' || cle === 'evenements') && Array.isArray(valeur)) {
+      const liste = bien[cle === 'equipements' ? 'equipements_liste' : 'evenements']
+      const avant = (Array.isArray(liste) ? liste : []).map(x => String((x as { code?: unknown }).code)).sort().join(', ')
+      const apres = valeur.map(String).sort().join(', ')
+      if (avant !== apres) diffs.push({ champ: cle === 'equipements' ? 'Équipements' : 'Événements', avant: avant || '—', apres: apres || '—' })
+    } else if (cle === 'pieces' && Array.isArray(valeur)) {
       const avant = Array.isArray(bien.pieces) ? bien.pieces.length : 0
       if (avant !== valeur.length) diffs.push({ champ: 'Pièces', avant: String(avant), apres: String(valeur.length) })
     } else if (!egal(bien[cle], valeur)) diffs.push({ champ: libelle('', cle), avant: lisible(bien[cle]), apres: lisible(valeur) })

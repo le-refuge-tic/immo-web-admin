@@ -15,6 +15,6 @@ export const patchAdminBien = {
     axios.post(`${BASE}/admin/biens/${id}/convertir`, payload, auth()).then(r => r.data),
 
   /** Lot 5 — décision sur la modification en attente d'un bien approuvé. */
-  deciderModification: (id: number, payload: { decision: 'approuver' | 'rejeter'; motif?: string }) =>
+  deciderModification: (id: number, payload: { decision: 'approuver' | 'rejeter'; soumise_le: string; motif?: string }) =>
     axios.patch(`${BASE}/admin/biens/${id}/modification`, payload, auth()).then(r => r.data),
 };

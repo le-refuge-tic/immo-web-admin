@@ -41,4 +41,12 @@ describe('différences d’une modification en attente', () => {
     expect(differencesModification({ details_guesthouse: { prix_nuitee: 25000 } }, { details_guesthouse: { prix_nuitee: 30000 } }))
       .toEqual([{ champ: 'Détails · Prix par nuit', avant: lisible(25000), apres: lisible(30000) }])
   })
+
+  it('équipements et événements comparés aux listes du bien, sans tenir compte de l’ordre', () => {
+    const enLigne = { equipements_liste: [{ code: 'wifi' }, { code: 'climatisation' }], evenements: [{ code: 'mariage' }] }
+    expect(differencesModification(enLigne, { equipements: ['climatisation', 'wifi'], evenements: ['mariage'] })).toEqual([])
+    expect(differencesModification(enLigne, { equipements: ['wifi'] })).toEqual([
+      { champ: 'Équipements', avant: 'climatisation, wifi', apres: 'wifi' },
+    ])
+  })
 })
