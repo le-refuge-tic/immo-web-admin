@@ -5,6 +5,16 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ## [Non publié]
 
+### Corrigé (lot 16 — portefeuille)
+- Portefeuille : une erreur de l'API n'est plus affichée comme un solde à 0 (« — » et message
+  avec « Réessayer ») ; historique chargé par pages de 20 (« Afficher plus »).
+- Les admins touchent la prime de publication (même grille que les commerciaux) : la page
+  l'indique.
+
+### Ajouté (lot 16)
+- Parité de la grille des primes avec le backend : 864 cas de référence partagés
+  (`cas-grille-primes.json`), testés des deux côtés ; `npm run check:grille` vérifie la copie.
+
 ### Ajouté (lot 8 — notifications)
 - Cloche des alertes dans la barre du haut : liste, « Tout marquer comme lu », lien vers la
   modération (bien à valider, modification en attente) ou vers la fiche du bien ; toast quand une

@@ -1,0 +1,9506 @@
+[
+ {
+  "type": "appart_vide",
+  "sous_type": "chambre_salon",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "chambre_salon"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "chambre_salon",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "chambre_salon",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "chambre_salon",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "chambre_salon"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "chambre_salon",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "chambre_salon",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "chambre_salon",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "chambre_salon"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "chambre_salon",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "chambre_salon",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "chambre_salon"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "chambre_salon"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "chambre_salon"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "chambre_salon"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "chambre_salon"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "chambre_salon"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "chambre_salon"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "chambre_salon"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "chambre_salon"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true
+  },
+  "prime": 7500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "entree_coucher",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "entree_coucher"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "entree_coucher",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "entree_coucher",
+   "meuble": true
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "entree_coucher",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "entree_coucher",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "entree_coucher",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "entree_coucher"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "entree_coucher",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "entree_coucher",
+   "meuble": true
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "entree_coucher",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "entree_coucher",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "entree_coucher",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "entree_coucher"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "entree_coucher",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "entree_coucher",
+   "meuble": true
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "entree_coucher",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "entree_coucher",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "entree_coucher",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "entree_coucher"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "entree_coucher",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "entree_coucher",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "entree_coucher",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "entree_coucher",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "entree_coucher",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "entree_coucher"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "entree_coucher",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "entree_coucher",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "entree_coucher",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "entree_coucher",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "entree_coucher",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "entree_coucher"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "entree_coucher",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "entree_coucher",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "entree_coucher",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "entree_coucher",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "entree_coucher",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "entree_coucher"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "entree_coucher",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "entree_coucher",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "entree_coucher",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "entree_coucher",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "entree_coucher",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "entree_coucher"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "entree_coucher",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "entree_coucher",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "entree_coucher",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "entree_coucher",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "entree_coucher",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "entree_coucher"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "entree_coucher",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "entree_coucher",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "entree_coucher",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "entree_coucher",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "entree_coucher",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "entree_coucher"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "entree_coucher",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "entree_coucher",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "entree_coucher",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "entree_coucher",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "entree_coucher",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "entree_coucher"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "entree_coucher",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "entree_coucher",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "entree_coucher",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "entree_coucher",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "entree_coucher",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "entree_coucher"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "entree_coucher",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "entree_coucher",
+   "meuble": true
+  },
+  "prime": 7500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "entree_coucher",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "entree_coucher",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "appartement",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "appartement"
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "appartement",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "appartement",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "appartement",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "appartement"
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "appartement",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "appartement",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "appartement",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "appartement"
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "appartement",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "appartement",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "appartement"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "appartement"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "appartement"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "appartement"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "appartement"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "appartement"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "appartement"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "appartement"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "appartement"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true
+  },
+  "prime": 7500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "studio",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "studio"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "studio",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "studio",
+   "meuble": true
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "studio",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "studio",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "studio",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "studio"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "studio",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "studio",
+   "meuble": true
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "studio",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "studio",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "studio",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "studio"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "studio",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "studio",
+   "meuble": true
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "studio",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "studio",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "studio",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "studio"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "studio",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "studio",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "studio",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "studio",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "studio",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "studio"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "studio",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "studio",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "studio",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "studio",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "studio",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "studio"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "studio",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "studio",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "studio",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "studio",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "studio",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "studio"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "studio",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "studio",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "studio",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "studio",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "studio",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "studio"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "studio",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "studio",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "studio",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "studio",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "studio",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "studio"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "studio",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "studio",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "studio",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "studio",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "studio",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "studio"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "studio",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "studio",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "studio",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "studio",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "studio",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "studio"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "studio",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "studio",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "studio",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "studio",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "studio",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "studio"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "studio",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "studio",
+   "meuble": true
+  },
+  "prime": 7500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "studio",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "studio",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "boutique",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "boutique"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "boutique",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true
+  },
+  "prime": 1000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "boutique",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "boutique",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "boutique"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "boutique",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true
+  },
+  "prime": 1000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "boutique",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "boutique",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "boutique"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "boutique",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true
+  },
+  "prime": 1000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "boutique",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "boutique"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "boutique"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "boutique"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "boutique"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "boutique"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "boutique"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "boutique"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "boutique"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "boutique"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true
+  },
+  "prime": 7500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "bureau",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "bureau"
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "bureau",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "bureau",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "bureau",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "bureau"
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "bureau",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "bureau",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "bureau",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "bureau"
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "bureau",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "bureau",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "bureau"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "bureau"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "bureau"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "bureau"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "bureau"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "bureau"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "bureau"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "bureau"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "bureau"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true
+  },
+  "prime": 7500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "local_commercial",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "local_commercial"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "local_commercial",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "local_commercial",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "local_commercial",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "local_commercial"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "local_commercial",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "local_commercial",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "local_commercial",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "local_commercial"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "local_commercial",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "local_commercial",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "local_commercial"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "local_commercial"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "local_commercial"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "local_commercial"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "local_commercial"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "local_commercial"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "local_commercial"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "local_commercial"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "local_commercial"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true
+  },
+  "prime": 7500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 7500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 7500
+ },
+ {
+  "type": "appart_vide",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appartement",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "appartement"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appartement",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appartement",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appartement",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "appartement"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appartement",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appartement",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appartement",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "appartement"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appartement",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appartement",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "appartement"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "appartement"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "appartement"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "appartement"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "appartement"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "appartement"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "appartement"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "appartement"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "appartement"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true
+  },
+  "prime": 7500
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appartement",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "appartement",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "chambre_salon",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "chambre_salon"
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "chambre_salon",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "chambre_salon",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "chambre_salon",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "chambre_salon"
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "chambre_salon",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "chambre_salon",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "chambre_salon",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "chambre_salon"
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "chambre_salon",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "chambre_salon",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "chambre_salon"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "chambre_salon"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "chambre_salon"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "chambre_salon"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "chambre_salon"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "chambre_salon"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "chambre_salon"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "chambre_salon"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "chambre_salon"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true
+  },
+  "prime": 7500
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "chambre_salon",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "chambre_salon",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appart_meuble",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "appart_meuble"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appart_meuble",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "appart_meuble",
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appart_meuble",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "appart_meuble",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appart_meuble",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "appart_meuble"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appart_meuble",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "appart_meuble",
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appart_meuble",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "appart_meuble",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appart_meuble",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "appart_meuble"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appart_meuble",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "appart_meuble",
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appart_meuble",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "appart_meuble",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1500
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appart_meuble",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "appart_meuble"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appart_meuble",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "appart_meuble",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appart_meuble",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "appart_meuble",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appart_meuble",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "appart_meuble"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appart_meuble",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "appart_meuble",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appart_meuble",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "appart_meuble",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appart_meuble",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "appart_meuble"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appart_meuble",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "appart_meuble",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appart_meuble",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "appart_meuble",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appart_meuble",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "appart_meuble"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appart_meuble",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "appart_meuble",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appart_meuble",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "appart_meuble",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appart_meuble",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "appart_meuble"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appart_meuble",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "appart_meuble",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appart_meuble",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "appart_meuble",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appart_meuble",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "appart_meuble"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appart_meuble",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "appart_meuble",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appart_meuble",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "appart_meuble",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appart_meuble",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "appart_meuble"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appart_meuble",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "appart_meuble",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appart_meuble",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "appart_meuble",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appart_meuble",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "appart_meuble"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appart_meuble",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "appart_meuble",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appart_meuble",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "appart_meuble",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appart_meuble",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "appart_meuble"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appart_meuble",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "appart_meuble",
+   "meuble": true
+  },
+  "prime": 7500
+ },
+ {
+  "type": "appart_meuble",
+  "sous_type": "appart_meuble",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "appart_meuble",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "maison",
+  "sous_type": "villa",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "villa"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": "villa",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "villa",
+   "meuble": true
+  },
+  "prime": 2500
+ },
+ {
+  "type": "maison",
+  "sous_type": "villa",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "villa",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": "villa",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "villa"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": "villa",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "villa",
+   "meuble": true
+  },
+  "prime": 2500
+ },
+ {
+  "type": "maison",
+  "sous_type": "villa",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "villa",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": "villa",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "villa"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": "villa",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "villa",
+   "meuble": true
+  },
+  "prime": 2500
+ },
+ {
+  "type": "maison",
+  "sous_type": "villa",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "villa",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": "villa",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "villa"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "villa",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "villa",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "villa",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "villa",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "villa",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "villa"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "villa",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "villa",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "villa",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "villa",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "villa",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "villa"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "villa",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "villa",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "villa",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "villa",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "villa",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "villa"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "villa",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "villa",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "villa",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "villa",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "villa",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "villa"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "villa",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "villa",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "villa",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "villa",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "villa",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "villa"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "villa",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "villa",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "villa",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "villa",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "villa",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "villa"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "villa",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "villa",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "villa",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "villa",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "villa",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "villa"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "villa",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "villa",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "villa",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "villa",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "villa",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "villa"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "maison",
+  "sous_type": "villa",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "villa",
+   "meuble": true
+  },
+  "prime": 7500
+ },
+ {
+  "type": "maison",
+  "sous_type": "villa",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "villa",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "maison",
+  "sous_type": "duplex",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "duplex"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": "duplex",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "duplex",
+   "meuble": true
+  },
+  "prime": 2500
+ },
+ {
+  "type": "maison",
+  "sous_type": "duplex",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "duplex",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": "duplex",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "duplex"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": "duplex",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "duplex",
+   "meuble": true
+  },
+  "prime": 2500
+ },
+ {
+  "type": "maison",
+  "sous_type": "duplex",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "duplex",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": "duplex",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "duplex"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": "duplex",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "duplex",
+   "meuble": true
+  },
+  "prime": 2500
+ },
+ {
+  "type": "maison",
+  "sous_type": "duplex",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "duplex",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": "duplex",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "duplex"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "duplex",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "duplex",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "duplex",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "duplex",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "duplex",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "duplex"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "duplex",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "duplex",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "duplex",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "duplex",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "duplex",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "duplex"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "duplex",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "duplex",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "duplex",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "duplex",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "duplex",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "duplex"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "duplex",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "duplex",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "duplex",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "duplex",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "duplex",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "duplex"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "duplex",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "duplex",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "duplex",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "duplex",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "duplex",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "duplex"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "duplex",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "duplex",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "duplex",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "duplex",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "duplex",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "duplex"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "duplex",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "duplex",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "duplex",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "duplex",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "duplex",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "duplex"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "duplex",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "duplex",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "duplex",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "duplex",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "duplex",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "duplex"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "maison",
+  "sous_type": "duplex",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "duplex",
+   "meuble": true
+  },
+  "prime": 7500
+ },
+ {
+  "type": "maison",
+  "sous_type": "duplex",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "duplex",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "maison",
+  "sous_type": "grande_propriete",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "grande_propriete"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": "grande_propriete",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "grande_propriete",
+   "meuble": true
+  },
+  "prime": 2500
+ },
+ {
+  "type": "maison",
+  "sous_type": "grande_propriete",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "grande_propriete",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": "grande_propriete",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "grande_propriete"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": "grande_propriete",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "grande_propriete",
+   "meuble": true
+  },
+  "prime": 2500
+ },
+ {
+  "type": "maison",
+  "sous_type": "grande_propriete",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "grande_propriete",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": "grande_propriete",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "grande_propriete"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": "grande_propriete",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "grande_propriete",
+   "meuble": true
+  },
+  "prime": 2500
+ },
+ {
+  "type": "maison",
+  "sous_type": "grande_propriete",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "grande_propriete",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": "grande_propriete",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "grande_propriete"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "grande_propriete",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "grande_propriete",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "grande_propriete",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "grande_propriete",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "grande_propriete",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "grande_propriete"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "grande_propriete",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "grande_propriete",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "grande_propriete",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "grande_propriete",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "grande_propriete",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "grande_propriete"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "grande_propriete",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "grande_propriete",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "grande_propriete",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "grande_propriete",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "grande_propriete",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "grande_propriete"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "grande_propriete",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "grande_propriete",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "grande_propriete",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "grande_propriete",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "grande_propriete",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "grande_propriete"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "grande_propriete",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "grande_propriete",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "grande_propriete",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "grande_propriete",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "grande_propriete",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "grande_propriete"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "grande_propriete",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "grande_propriete",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "grande_propriete",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "grande_propriete",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "grande_propriete",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "grande_propriete"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "grande_propriete",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "grande_propriete",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "grande_propriete",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "grande_propriete",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "grande_propriete",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "grande_propriete"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "grande_propriete",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "grande_propriete",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "grande_propriete",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "grande_propriete",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "grande_propriete",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "grande_propriete"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "maison",
+  "sous_type": "grande_propriete",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "grande_propriete",
+   "meuble": true
+  },
+  "prime": 7500
+ },
+ {
+  "type": "maison",
+  "sous_type": "grande_propriete",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "grande_propriete",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "maison",
+  "sous_type": "maison",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "maison"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": "maison",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "maison",
+   "meuble": true
+  },
+  "prime": 2500
+ },
+ {
+  "type": "maison",
+  "sous_type": "maison",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "maison",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": "maison",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "maison"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": "maison",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "maison",
+   "meuble": true
+  },
+  "prime": 2500
+ },
+ {
+  "type": "maison",
+  "sous_type": "maison",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "maison",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": "maison",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "maison"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": "maison",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "maison",
+   "meuble": true
+  },
+  "prime": 2500
+ },
+ {
+  "type": "maison",
+  "sous_type": "maison",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "maison",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": "maison",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "maison"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "maison",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "maison",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "maison",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "maison",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "maison",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "maison"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "maison",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "maison",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "maison",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "maison",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "maison",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "maison"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "maison",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "maison",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "maison",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "maison",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "maison",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "maison"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "maison",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "maison",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "maison",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "maison",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "maison",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "maison"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "maison",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "maison",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "maison",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "maison",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "maison",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "maison"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "maison",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "maison",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "maison",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "maison",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "maison",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "maison"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "maison",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "maison",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "maison",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "maison",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "maison",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "maison"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "maison",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "maison",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "maison",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "maison",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "maison",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "maison"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "maison",
+  "sous_type": "maison",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "maison",
+   "meuble": true
+  },
+  "prime": 7500
+ },
+ {
+  "type": "maison",
+  "sous_type": "maison",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "maison",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "maison",
+  "sous_type": "boutique",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "boutique"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "maison",
+  "sous_type": "boutique",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true
+  },
+  "prime": 1000
+ },
+ {
+  "type": "maison",
+  "sous_type": "boutique",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "maison",
+  "sous_type": "boutique",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "boutique"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "maison",
+  "sous_type": "boutique",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true
+  },
+  "prime": 1000
+ },
+ {
+  "type": "maison",
+  "sous_type": "boutique",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "maison",
+  "sous_type": "boutique",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "boutique"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "maison",
+  "sous_type": "boutique",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true
+  },
+  "prime": 1000
+ },
+ {
+  "type": "maison",
+  "sous_type": "boutique",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "maison",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "boutique"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "boutique"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "boutique"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "boutique"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "boutique"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "boutique"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "boutique"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "boutique"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "boutique"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "maison",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true
+  },
+  "prime": 7500
+ },
+ {
+  "type": "maison",
+  "sous_type": "boutique",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "boutique",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "maison",
+  "sous_type": "bureau",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "bureau"
+  },
+  "prime": 1500
+ },
+ {
+  "type": "maison",
+  "sous_type": "bureau",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true
+  },
+  "prime": 1500
+ },
+ {
+  "type": "maison",
+  "sous_type": "bureau",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1500
+ },
+ {
+  "type": "maison",
+  "sous_type": "bureau",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "bureau"
+  },
+  "prime": 1500
+ },
+ {
+  "type": "maison",
+  "sous_type": "bureau",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true
+  },
+  "prime": 1500
+ },
+ {
+  "type": "maison",
+  "sous_type": "bureau",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1500
+ },
+ {
+  "type": "maison",
+  "sous_type": "bureau",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "bureau"
+  },
+  "prime": 1500
+ },
+ {
+  "type": "maison",
+  "sous_type": "bureau",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true
+  },
+  "prime": 1500
+ },
+ {
+  "type": "maison",
+  "sous_type": "bureau",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1500
+ },
+ {
+  "type": "maison",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "bureau"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "bureau"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "bureau"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "bureau"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "bureau"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "bureau"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "bureau"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "bureau"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "bureau"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "maison",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true
+  },
+  "prime": 7500
+ },
+ {
+  "type": "maison",
+  "sous_type": "bureau",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "bureau",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "maison",
+  "sous_type": "local_commercial",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "local_commercial"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": "local_commercial",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": "local_commercial",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": "local_commercial",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "local_commercial"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": "local_commercial",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": "local_commercial",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": "local_commercial",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "local_commercial"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": "local_commercial",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": "local_commercial",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "local_commercial"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "local_commercial"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "local_commercial"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "local_commercial"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "local_commercial"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "local_commercial"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "local_commercial"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "local_commercial"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "local_commercial"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "maison",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true
+  },
+  "prime": 7500
+ },
+ {
+  "type": "maison",
+  "sous_type": "local_commercial",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "local_commercial",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "maison",
+  "sous_type": "complexe",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "complexe"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "maison",
+  "sous_type": "complexe",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "complexe",
+   "meuble": true
+  },
+  "prime": 1500
+ },
+ {
+  "type": "maison",
+  "sous_type": "complexe",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "complexe",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "maison",
+  "sous_type": "complexe",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "complexe"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "maison",
+  "sous_type": "complexe",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "complexe",
+   "meuble": true
+  },
+  "prime": 1500
+ },
+ {
+  "type": "maison",
+  "sous_type": "complexe",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "complexe",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "maison",
+  "sous_type": "complexe",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "complexe"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "maison",
+  "sous_type": "complexe",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "complexe",
+   "meuble": true
+  },
+  "prime": 1500
+ },
+ {
+  "type": "maison",
+  "sous_type": "complexe",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "complexe",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1000
+ },
+ {
+  "type": "maison",
+  "sous_type": "complexe",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "complexe"
+  },
+  "prime": 6000
+ },
+ {
+  "type": "maison",
+  "sous_type": "complexe",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "complexe",
+   "meuble": true
+  },
+  "prime": 6000
+ },
+ {
+  "type": "maison",
+  "sous_type": "complexe",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "complexe",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 6000
+ },
+ {
+  "type": "maison",
+  "sous_type": "complexe",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "complexe"
+  },
+  "prime": 6000
+ },
+ {
+  "type": "maison",
+  "sous_type": "complexe",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "complexe",
+   "meuble": true
+  },
+  "prime": 6000
+ },
+ {
+  "type": "maison",
+  "sous_type": "complexe",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "complexe",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 6000
+ },
+ {
+  "type": "maison",
+  "sous_type": "complexe",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "complexe"
+  },
+  "prime": 6000
+ },
+ {
+  "type": "maison",
+  "sous_type": "complexe",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "complexe",
+   "meuble": true
+  },
+  "prime": 6000
+ },
+ {
+  "type": "maison",
+  "sous_type": "complexe",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "complexe",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 6000
+ },
+ {
+  "type": "maison",
+  "sous_type": "complexe",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "complexe"
+  },
+  "prime": 10000
+ },
+ {
+  "type": "maison",
+  "sous_type": "complexe",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "complexe",
+   "meuble": true
+  },
+  "prime": 10000
+ },
+ {
+  "type": "maison",
+  "sous_type": "complexe",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "complexe",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 10000
+ },
+ {
+  "type": "maison",
+  "sous_type": "complexe",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "complexe"
+  },
+  "prime": 10000
+ },
+ {
+  "type": "maison",
+  "sous_type": "complexe",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "complexe",
+   "meuble": true
+  },
+  "prime": 10000
+ },
+ {
+  "type": "maison",
+  "sous_type": "complexe",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "complexe",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 10000
+ },
+ {
+  "type": "maison",
+  "sous_type": "complexe",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "complexe"
+  },
+  "prime": 10000
+ },
+ {
+  "type": "maison",
+  "sous_type": "complexe",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "complexe",
+   "meuble": true
+  },
+  "prime": 10000
+ },
+ {
+  "type": "maison",
+  "sous_type": "complexe",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "complexe",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 10000
+ },
+ {
+  "type": "maison",
+  "sous_type": "complexe",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "complexe"
+  },
+  "prime": 10000
+ },
+ {
+  "type": "maison",
+  "sous_type": "complexe",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "complexe",
+   "meuble": true
+  },
+  "prime": 10000
+ },
+ {
+  "type": "maison",
+  "sous_type": "complexe",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "complexe",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 10000
+ },
+ {
+  "type": "maison",
+  "sous_type": "complexe",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "complexe"
+  },
+  "prime": 10000
+ },
+ {
+  "type": "maison",
+  "sous_type": "complexe",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "complexe",
+   "meuble": true
+  },
+  "prime": 10000
+ },
+ {
+  "type": "maison",
+  "sous_type": "complexe",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "complexe",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 10000
+ },
+ {
+  "type": "maison",
+  "sous_type": "complexe",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "complexe"
+  },
+  "prime": 10000
+ },
+ {
+  "type": "maison",
+  "sous_type": "complexe",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "complexe",
+   "meuble": true
+  },
+  "prime": 10000
+ },
+ {
+  "type": "maison",
+  "sous_type": "complexe",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "complexe",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 10000
+ },
+ {
+  "type": "maison",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 2500
+ },
+ {
+  "type": "maison",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 2500
+ },
+ {
+  "type": "maison",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 2500
+ },
+ {
+  "type": "maison",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "maison",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "maison",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "maison",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 7500
+ },
+ {
+  "type": "maison",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 7500
+ },
+ {
+  "type": "maison",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "terrain",
+  "sous_type": "parcelle",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "parcelle"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "terrain",
+  "sous_type": "parcelle",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "parcelle",
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "terrain",
+  "sous_type": "parcelle",
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": "parcelle",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "terrain",
+  "sous_type": "parcelle",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "parcelle"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "terrain",
+  "sous_type": "parcelle",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "parcelle",
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "terrain",
+  "sous_type": "parcelle",
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": "parcelle",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "terrain",
+  "sous_type": "parcelle",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "parcelle"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "terrain",
+  "sous_type": "parcelle",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "parcelle",
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "terrain",
+  "sous_type": "parcelle",
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": "parcelle",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "terrain",
+  "sous_type": "parcelle",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "parcelle"
+  },
+  "prime": 1500
+ },
+ {
+  "type": "terrain",
+  "sous_type": "parcelle",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "parcelle",
+   "meuble": true
+  },
+  "prime": 1500
+ },
+ {
+  "type": "terrain",
+  "sous_type": "parcelle",
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": "parcelle",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1500
+ },
+ {
+  "type": "terrain",
+  "sous_type": "parcelle",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "parcelle"
+  },
+  "prime": 1500
+ },
+ {
+  "type": "terrain",
+  "sous_type": "parcelle",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "parcelle",
+   "meuble": true
+  },
+  "prime": 1500
+ },
+ {
+  "type": "terrain",
+  "sous_type": "parcelle",
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": "parcelle",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1500
+ },
+ {
+  "type": "terrain",
+  "sous_type": "parcelle",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "parcelle"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "terrain",
+  "sous_type": "parcelle",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "parcelle",
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "terrain",
+  "sous_type": "parcelle",
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": "parcelle",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "terrain",
+  "sous_type": "parcelle",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "parcelle"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "terrain",
+  "sous_type": "parcelle",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "parcelle",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "terrain",
+  "sous_type": "parcelle",
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": "parcelle",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "terrain",
+  "sous_type": "parcelle",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "parcelle"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "terrain",
+  "sous_type": "parcelle",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "parcelle",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "terrain",
+  "sous_type": "parcelle",
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": "parcelle",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "terrain",
+  "sous_type": "parcelle",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "parcelle"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "terrain",
+  "sous_type": "parcelle",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "parcelle",
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "terrain",
+  "sous_type": "parcelle",
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": "parcelle",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "terrain",
+  "sous_type": "parcelle",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "parcelle"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "terrain",
+  "sous_type": "parcelle",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "parcelle",
+   "meuble": true
+  },
+  "prime": 7500
+ },
+ {
+  "type": "terrain",
+  "sous_type": "parcelle",
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": "parcelle",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "terrain",
+  "sous_type": "parcelle",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "parcelle"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "terrain",
+  "sous_type": "parcelle",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "parcelle",
+   "meuble": true
+  },
+  "prime": 7500
+ },
+ {
+  "type": "terrain",
+  "sous_type": "parcelle",
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": "parcelle",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "terrain",
+  "sous_type": "parcelle",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "parcelle"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "terrain",
+  "sous_type": "parcelle",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "parcelle",
+   "meuble": true
+  },
+  "prime": 7500
+ },
+ {
+  "type": "terrain",
+  "sous_type": "parcelle",
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": "parcelle",
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "terrain",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 2000
+ },
+ {
+  "type": "terrain",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "terrain",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "terrain",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 2000
+ },
+ {
+  "type": "terrain",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "terrain",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "terrain",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 2000
+ },
+ {
+  "type": "terrain",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "terrain",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "terrain",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 1500
+ },
+ {
+  "type": "terrain",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 1500
+ },
+ {
+  "type": "terrain",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1500
+ },
+ {
+  "type": "terrain",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 1500
+ },
+ {
+  "type": "terrain",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 1500
+ },
+ {
+  "type": "terrain",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 1500
+ },
+ {
+  "type": "terrain",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 3000
+ },
+ {
+  "type": "terrain",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 3000
+ },
+ {
+  "type": "terrain",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 3000
+ },
+ {
+  "type": "terrain",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 5000
+ },
+ {
+  "type": "terrain",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "terrain",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "terrain",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 5000
+ },
+ {
+  "type": "terrain",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "terrain",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "terrain",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 5000
+ },
+ {
+  "type": "terrain",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 5000
+ },
+ {
+  "type": "terrain",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 5000
+ },
+ {
+  "type": "terrain",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 7500
+ },
+ {
+  "type": "terrain",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 7500
+ },
+ {
+  "type": "terrain",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "terrain",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 7500
+ },
+ {
+  "type": "terrain",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 7500
+ },
+ {
+  "type": "terrain",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "terrain",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 7500
+ },
+ {
+  "type": "terrain",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 7500
+ },
+ {
+  "type": "terrain",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 7500
+ },
+ {
+  "type": "guesthouse",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 2000
+ },
+ {
+  "type": "guesthouse",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "guesthouse",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "guesthouse",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 2000
+ },
+ {
+  "type": "guesthouse",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "guesthouse",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "guesthouse",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 2000
+ },
+ {
+  "type": "guesthouse",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "guesthouse",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "guesthouse",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 2000
+ },
+ {
+  "type": "guesthouse",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "guesthouse",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "guesthouse",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 2000
+ },
+ {
+  "type": "guesthouse",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "guesthouse",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "guesthouse",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 2000
+ },
+ {
+  "type": "guesthouse",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "guesthouse",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "guesthouse",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 2000
+ },
+ {
+  "type": "guesthouse",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "guesthouse",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "guesthouse",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 2000
+ },
+ {
+  "type": "guesthouse",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "guesthouse",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "guesthouse",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 2000
+ },
+ {
+  "type": "guesthouse",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "guesthouse",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "guesthouse",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 2000
+ },
+ {
+  "type": "guesthouse",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "guesthouse",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "guesthouse",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 2000
+ },
+ {
+  "type": "guesthouse",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "guesthouse",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "guesthouse",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 2000
+ },
+ {
+  "type": "guesthouse",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "guesthouse",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "salle_fete",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 2000
+ },
+ {
+  "type": "salle_fete",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "salle_fete",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 25000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "salle_fete",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 2000
+ },
+ {
+  "type": "salle_fete",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "salle_fete",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 150000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "salle_fete",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 2000
+ },
+ {
+  "type": "salle_fete",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "salle_fete",
+  "sous_type": null,
+  "transaction": "location",
+  "prix": 600000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "salle_fete",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 2000
+ },
+ {
+  "type": "salle_fete",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "salle_fete",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 2000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "salle_fete",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 2000
+ },
+ {
+  "type": "salle_fete",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "salle_fete",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 3000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "salle_fete",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 2000
+ },
+ {
+  "type": "salle_fete",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "salle_fete",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 8000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "salle_fete",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 2000
+ },
+ {
+  "type": "salle_fete",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "salle_fete",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 15000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "salle_fete",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 2000
+ },
+ {
+  "type": "salle_fete",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "salle_fete",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 19000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "salle_fete",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 2000
+ },
+ {
+  "type": "salle_fete",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "salle_fete",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 20000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "salle_fete",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 2000
+ },
+ {
+  "type": "salle_fete",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "salle_fete",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 30000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "salle_fete",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 2000
+ },
+ {
+  "type": "salle_fete",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "salle_fete",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 50000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ },
+ {
+  "type": "salle_fete",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": null
+  },
+  "prime": 2000
+ },
+ {
+  "type": "salle_fete",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true
+  },
+  "prime": 2000
+ },
+ {
+  "type": "salle_fete",
+  "sous_type": null,
+  "transaction": "vente",
+  "prix": 60000000,
+  "amenites": {
+   "sous_type": null,
+   "meuble": true,
+   "disponibilite": "en_finition"
+  },
+  "prime": 2000
+ }
+]

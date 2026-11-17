@@ -6,6 +6,11 @@ import RetraitRequestModal from './RetraitRequestModal';
 import LigneHistorique from './LigneHistorique';
 import { COULEUR_TON, estEnCours, infoStatut } from '../../utils/retraitCommercial';
 import { useAuth } from '../../context/AuthContext';
+import { apiMessage } from '../../utils/apiMessage';
+import { ajouterPage, resteAPrendre } from './historiquePagine';
+
+const TYPE_WALLET = 'commission_commerciale';
+const PAR_PAGE = 20;
 
 function formatFcfa(v: number) {
   return new Intl.NumberFormat('fr-FR').format(Math.round(v)) + ' FCFA';
@@ -19,27 +24,56 @@ export default function CommercialPortefeuillePage() {
   const { user } = useAuth();
   const role = user?.role_principal ?? user?.role ?? '';
   const dashboardPath = role === 'commercial' ? '/commercial-dashboard' : '/dashboard';
+  const estAdmin = role === 'admin' || role === 'super_admin';
   const [solde, setSolde]           = useState(0);
   const [transactions, setTrans]    = useState<WalletTransaction[]>([]);
+  const [total, setTotal]           = useState(0);
+  const [page, setPage]             = useState(1);
+  const [chargementSuite, setChargementSuite] = useState(false);
   const [retraits, setRetraits]     = useState<Retrait[]>([]);
   const [loading, setLoading]       = useState(true);
+  // Lot 16 : une erreur de l'API n'est plus jamais affichée comme un solde à 0.
+  const [erreur, setErreur]         = useState('');
   const [showModal, setShowModal]   = useState(false);
   const [filterTx, setFilterTx]    = useState<'tous' | 'credits' | 'retraits'>('tous');
 
   const refresh = useCallback(async () => {
     setLoading(true);
-    const [w, t, r] = await Promise.all([
-      getWallet.solde('commission_commerciale').catch(() => ({ balance: 0 } as any)),
-      getWallet.transactions('commission_commerciale').catch(() => []),
-      postRetrait.mesRetraits().catch(() => []),
-    ]);
-    setSolde(Number(w?.balance ?? 0));
-    setTrans(Array.isArray(t) ? t : []);
-    setRetraits(Array.isArray(r) ? r : []);
-    setLoading(false);
+    setErreur('');
+    try {
+      const [w, h, r] = await Promise.all([
+        getWallet.solde(TYPE_WALLET),
+        getWallet.historique(TYPE_WALLET, 1, PAR_PAGE),
+        postRetrait.mesRetraits(),
+      ]);
+      setSolde(Number(w?.balance ?? 0));
+      setTrans(Array.isArray(h?.data) ? h.data : []);
+      setTotal(Number(h?.total) || 0);
+      setPage(1);
+      setRetraits(Array.isArray(r) ? r : []);
+    } catch (err) {
+      setErreur(apiMessage(err) ?? 'Impossible de charger votre portefeuille. Vérifiez votre connexion et réessayez.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  useEffect(() => { refresh(); }, [refresh]);
+  const chargerSuite = async () => {
+    setChargementSuite(true);
+    try {
+      const h = await getWallet.historique(TYPE_WALLET, page + 1, PAR_PAGE);
+      setTrans(prev => ajouterPage(prev, Array.isArray(h?.data) ? h.data : []));
+      setTotal(Number(h?.total) || 0);
+      setPage(p => p + 1);
+    } catch (err) {
+      setErreur(apiMessage(err) ?? "La suite de l'historique n'a pas pu être chargée.");
+    } finally {
+      setChargementSuite(false);
+    }
+  };
+
+  // Chargement différé : les setState arrivent hors du rendu de l'effet.
+  useEffect(() => { void Promise.resolve().then(refresh); }, [refresh]);
 
   // Un virement en cours se termine tout seul (webhook FedaPay) : la liste et le solde suivent sans
   // action ; un échec rend le montant au portefeuille, d'où la relecture du solde.
@@ -47,13 +81,14 @@ export default function CommercialPortefeuillePage() {
   useEffect(() => {
     if (!aDesEnCours) return;
     const id = setInterval(async () => {
-      const [w, t, r] = await Promise.all([
-        getWallet.solde('commission_commerciale').catch(() => null),
-        getWallet.transactions('commission_commerciale').catch(() => null),
+      // Suivi discret : un échec ponctuel garde l'affichage précédent (pas de faux zéro).
+      const [w, h, r] = await Promise.all([
+        getWallet.solde(TYPE_WALLET).catch(() => null),
+        getWallet.historique(TYPE_WALLET, 1, PAR_PAGE).catch(() => null),
         postRetrait.mesRetraits().catch(() => null),
       ]);
       if (w) setSolde(Number(w.balance ?? 0));
-      if (Array.isArray(t)) setTrans(t);
+      if (h && Array.isArray(h.data)) { setTrans(prev => ajouterPage(h.data, prev)); setTotal(Number(h.total) || 0); }
       if (Array.isArray(r)) setRetraits(r);
     }, 8000);
     return () => clearInterval(id);
@@ -79,8 +114,19 @@ export default function CommercialPortefeuillePage() {
       </div>
       <div style={{ marginBottom: 24 }}>
         <h2 style={{ fontSize: '1.375rem', fontWeight: 800, color: 'var(--c-text)', margin: 0 }}>Mon portefeuille</h2>
-        <p style={{ fontSize: '0.8125rem', color: 'var(--c-muted)', margin: '0.25rem 0 0' }}>Solde, retraits & historique</p>
+        <p style={{ fontSize: '0.8125rem', color: 'var(--c-muted)', margin: '0.25rem 0 0' }}>
+          {estAdmin
+            ? 'Vos primes de publication (même grille que les commerciaux), retraits et historique'
+            : 'Solde, retraits & historique'}
+        </p>
       </div>
+
+      {erreur && (
+        <div role="alert" className="immo-card" style={{ marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, borderColor: 'var(--c-red)' }}>
+          <span style={{ fontSize: 13, color: 'var(--c-red)' }}>{erreur}</span>
+          <button type="button" className="btn-cancel" onClick={() => void refresh()}>Réessayer</button>
+        </div>
+      )}
 
       {/* Carte solde */}
       <div style={{
@@ -92,12 +138,12 @@ export default function CommercialPortefeuillePage() {
           Sommes disponibles
         </div>
         <div style={{ fontSize: '2rem', fontWeight: 800, marginBottom: 20 }}>
-          {loading ? '—' : formatFcfa(solde)}
+          {loading || erreur ? '—' : formatFcfa(solde)}
         </div>
         <button
           className="btn-submit"
           onClick={() => setShowModal(true)}
-          disabled={loading || solde < 500}
+          disabled={loading || !!erreur || solde < 500}
           style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,0.18)', border: '1px solid rgba(255,255,255,0.3)', boxShadow: 'none' }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -165,6 +211,10 @@ export default function CommercialPortefeuillePage() {
 
         {loading ? (
           <div style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--c-muted)', fontSize: 13 }}>Chargement…</div>
+        ) : erreur && transactions.length === 0 ? (
+          <div style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--c-muted)', fontSize: 13 }}>
+            Historique indisponible pour le moment.
+          </div>
         ) : filtered.length === 0 ? (
           <div style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--c-muted)', fontSize: 13 }}>
             Aucune transaction pour le moment.
@@ -172,6 +222,13 @@ export default function CommercialPortefeuillePage() {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             {filtered.map((t, i) => <LigneHistorique key={t.id} t={t} premier={i === 0} />)}
+          </div>
+        )}
+        {!loading && resteAPrendre(transactions.length, total) && (
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: 12 }}>
+            <button type="button" className="btn-cancel" disabled={chargementSuite} onClick={() => void chargerSuite()}>
+              {chargementSuite ? 'Chargement…' : `Afficher plus (${transactions.length}/${total})`}
+            </button>
           </div>
         )}
       </div>
