@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { blockInvalidNumberKey } from '../../utils/inputNumbers';
 import { getAdminBien } from '../../api/getAdminBien';
 import { patchAdminBien } from '../../api/patchAdminBien';
 import GuesthouseEditor from '../commercial/guesthouse/GuesthouseEditor';
@@ -21,6 +20,7 @@ import { useToast } from '../../context/ToastContext';
 import SelecteurTypeBien from '../../components/SelecteurTypeBien';
 import { prixPrincipalDuplex } from '../commercial/duplexCalculs';
 import { libellePrix, prixAvecUnite } from '../../utils/prix';
+import { NumberInput, type NumberInputProps } from '../../shared/saisie/champs';
 
 // ── Icônes SVG locales ────────────────────────────────────────────────────────
 const SaveIcon = () => (
@@ -74,6 +74,12 @@ function Field({ label, children, hint }: { label: string; children: React.React
 function SInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
   const [f, setF] = useState(false);
   return <input {...props} style={{ width:'100%', boxSizing:'border-box', background:'var(--c-card)', border:`1.5px solid ${f ? 'var(--c-blue)' : 'var(--c-border)'}`, borderRadius:8, padding:'9px 12px', fontSize:13, color:'var(--c-text)', outline:'none', transition:'border-color .15s', ...props.style }}
+    onFocus={e => { setF(true); props.onFocus?.(e); }} onBlur={e => { setF(false); props.onBlur?.(e); }} />;
+}
+/** Lot 15 : champ numérique (chiffres seulement, collage compris), même habillage que SInput. */
+function SNombre(props: NumberInputProps) {
+  const [f, setF] = useState(false);
+  return <NumberInput {...props} style={{ width:'100%', boxSizing:'border-box', background:'var(--c-card)', border:`1.5px solid ${f ? 'var(--c-blue)' : 'var(--c-border)'}`, borderRadius:8, padding:'9px 12px', fontSize:13, color:'var(--c-text)', outline:'none', transition:'border-color .15s', ...props.style }}
     onFocus={e => { setF(true); props.onFocus?.(e); }} onBlur={e => { setF(false); props.onBlur?.(e); }} />;
 }
 function SSelect({ value, onChange, children }: { value: string; onChange: (v: string) => void; children: React.ReactNode }) {
@@ -628,13 +634,13 @@ export default function AnnonceEditPage() {
                       ['heure', 'À l’heure (FCFA)'],
                     ] as const).map(([cle, label]) => (
                       <Field key={cle} label={label} hint={cle === 'long' ? 'Le premier tarif renseigné (mois, nuit, heure) devient le prix affiché.' : undefined}>
-                        <SInput type="number" min="0" max="999999999" step="1" placeholder="—" value={tarifs[cle]} onChange={e => setTarifs(t => t && { ...t, [cle]: e.target.value })} onKeyDown={e => blockInvalidNumberKey(e, true)} />
+                        <SNombre milliers min={0} max={999999999} placeholder="—" value={tarifs[cle]} onChange={e => setTarifs(t => t && { ...t, [cle]: e.target.value })} />
                       </Field>
                     ))}
                   </>
                 ) : (
                   <Field label={`${bien ? libellePrix(bien) : 'Prix'} (FCFA)`} hint="Modifiable après vérification sur site.">
-                    <SInput type="number" min="0" max="999999999" step="1" placeholder="Ex : 50 000" value={prix} onChange={e => setPrix(e.target.value)} onKeyDown={e => blockInvalidNumberKey(e, true)} />
+                    <SNombre milliers min={0} max={999999999} placeholder="Ex : 50 000" value={prix} onChange={e => setPrix(e.target.value)} />
                   </Field>
                 )}
                 <Field label="Description">
@@ -645,7 +651,7 @@ export default function AnnonceEditPage() {
               {(isMaison || isTerrain) && (
                 <div style={CARD}>
                   <SectionTitle>Terrain / Bâti</SectionTitle>
-                  <Field label="Superficie totale (m²)"><SInput type="number" min="0" max="9999999" step="0.01" placeholder="Ex : 200" value={superficie} onChange={e => setSuperficie(e.target.value)} onKeyDown={e => blockInvalidNumberKey(e)} /></Field>
+                  <Field label="Superficie totale (m²)"><SNombre decimales min={0} max={9999999} placeholder="Ex : 200" value={superficie} onChange={e => setSuperficie(e.target.value)} /></Field>
                   <Toggle label="Terrain / maison clôturé(e)" value={cloture} onChange={setCloture} />
                 </div>
               )}
@@ -732,9 +738,9 @@ export default function AnnonceEditPage() {
                     {pieces.map((p, i) => (
                       <div key={p.id} className="edit-piece-row" style={{ gap:10, padding:14, background:'var(--c-surface-2)', borderRadius:8, border:'1px solid var(--c-border)' }}>
                         <div><label style={{ fontSize:11, fontWeight:600, color:'var(--c-muted)', display:'block', marginBottom:5 }}>Pièce</label><SInput value={p.nom} onChange={e => setPieces(ps => ps.map((x,j) => j===i?{...x,nom:e.target.value}:x))} /></div>
-                        <div><label style={{ fontSize:11, fontWeight:600, color:'var(--c-muted)', display:'block', marginBottom:5 }}>Superficie (m²)</label><SInput type="number" min="0" max="9999" step="0.5" placeholder="—" value={p.surface} onChange={e => setPieces(ps => ps.map((x,j) => j===i?{...x,surface:e.target.value}:x))} onKeyDown={e => blockInvalidNumberKey(e)} /></div>
-                        <div><label style={{ fontSize:11, fontWeight:600, color:'var(--c-muted)', display:'block', marginBottom:5 }}>Longueur (m)</label><SInput type="number" min="0" max="999" step="0.1" placeholder="Optionnel" value={p.longueur} onChange={e => setPieces(ps => ps.map((x,j) => j===i?{...x,longueur:e.target.value}:x))} onKeyDown={e => blockInvalidNumberKey(e)} /></div>
-                        <div><label style={{ fontSize:11, fontWeight:600, color:'var(--c-muted)', display:'block', marginBottom:5 }}>Largeur (m)</label><SInput type="number" min="0" max="999" step="0.1" placeholder="Optionnel" value={p.largeur} onChange={e => setPieces(ps => ps.map((x,j) => j===i?{...x,largeur:e.target.value}:x))} onKeyDown={e => blockInvalidNumberKey(e)} /></div>
+                        <div><label style={{ fontSize:11, fontWeight:600, color:'var(--c-muted)', display:'block', marginBottom:5 }}>Superficie (m²)</label><SNombre decimales min={0} max={9999} placeholder="—" value={p.surface} onChange={e => setPieces(ps => ps.map((x,j) => j===i?{...x,surface:e.target.value}:x))} /></div>
+                        <div><label style={{ fontSize:11, fontWeight:600, color:'var(--c-muted)', display:'block', marginBottom:5 }}>Longueur (m)</label><SNombre decimales min={0} max={999} placeholder="Optionnel" value={p.longueur} onChange={e => setPieces(ps => ps.map((x,j) => j===i?{...x,longueur:e.target.value}:x))} /></div>
+                        <div><label style={{ fontSize:11, fontWeight:600, color:'var(--c-muted)', display:'block', marginBottom:5 }}>Largeur (m)</label><SNombre decimales min={0} max={999} placeholder="Optionnel" value={p.largeur} onChange={e => setPieces(ps => ps.map((x,j) => j===i?{...x,largeur:e.target.value}:x))} /></div>
                       </div>
                     ))}
                   </div>
@@ -774,14 +780,14 @@ export default function AnnonceEditPage() {
                     </Field>
                     {typeCour==='commune' && (
                       <Field label="Nb de ménages dans la concession">
-                        <SInput type="number" min="0" max="999" step="1" placeholder="Ex : 4" value={nbVoisins} onChange={e => setNbVoisins(e.target.value)} onKeyDown={e => blockInvalidNumberKey(e, true)} />
+                        <SNombre min={0} max={999} placeholder="Ex : 4" value={nbVoisins} onChange={e => setNbVoisins(e.target.value)} />
                       </Field>
                     )}
                     {!isCommercial && <Toggle label="Arrière-cour" value={arriereCour} onChange={setArriereCour} />}
                   </div>
                 )}
                 <Toggle label="Accès véhicule (portail suffisamment large)" value={accesVeh} onChange={setAccesVeh} />
-                {accesVeh && <div style={{ paddingLeft:16, paddingTop:8, paddingBottom:4 }}><Field label="Nb de véhicules pouvant entrer"><SInput type="number" min="1" max="99" step="1" placeholder="Ex : 1" value={nbVeh} onChange={e => setNbVeh(e.target.value)} onKeyDown={e => blockInvalidNumberKey(e, true)} /></Field></div>}
+                {accesVeh && <div style={{ paddingLeft:16, paddingTop:8, paddingBottom:4 }}><Field label="Nb de véhicules pouvant entrer"><SNombre min={1} max={99} placeholder="Ex : 1" value={nbVeh} onChange={e => setNbVeh(e.target.value)} /></Field></div>}
                 {!isCommercial && (
                   <>
                     <Toggle label="Boyerie (chambre domestique)" value={boyerie} onChange={setBoyerie} />
@@ -797,7 +803,7 @@ export default function AnnonceEditPage() {
                       </div>
                     )}
                     <Toggle label="Parking" value={parking} onChange={setParking} />
-                    {parking && <div style={{ paddingLeft:16, paddingTop:8, paddingBottom:4 }}><Field label="Capacité (nb véhicules)"><SInput type="number" min="1" max="99" step="1" placeholder="Ex : 2" value={parkingCap} onChange={e => setParkingCap(e.target.value)} onKeyDown={e => blockInvalidNumberKey(e, true)} /></Field></div>}
+                    {parking && <div style={{ paddingLeft:16, paddingTop:8, paddingBottom:4 }}><Field label="Capacité (nb véhicules)"><SNombre min={1} max={99} placeholder="Ex : 2" value={parkingCap} onChange={e => setParkingCap(e.target.value)} /></Field></div>}
                     {isSmall && <Toggle label="Armoires encastrées dans la chambre" value={armoiresCh} onChange={setArmoiresCh} />}
                   </>
                 )}
@@ -842,7 +848,7 @@ export default function AnnonceEditPage() {
                   </div>
                   {elec==='autre' && <SInput style={{ marginTop:10 }} placeholder="Précisez la source d'électricité…" value={autrePrecision.elec??''} onChange={e => setAutrePrecision(p=>({...p, elec:e.target.value}))} />}
                 </Field>
-                {elec==='decompteur' && <div style={{ paddingLeft:16, paddingBottom:8 }}><Field label="Prix au kWh (FCFA)"><SInput type="number" min="0" max="9999" step="1" placeholder="Ex : 125" value={prixKwh} onChange={e => setPrixKwh(e.target.value)} onKeyDown={e => blockInvalidNumberKey(e, true)} /></Field></div>}
+                {elec==='decompteur' && <div style={{ paddingLeft:16, paddingBottom:8 }}><Field label="Prix au kWh (FCFA)"><SNombre min={0} max={9999} placeholder="Ex : 125" value={prixKwh} onChange={e => setPrixKwh(e.target.value)} /></Field></div>}
 
                 <Field label="Eau">
                   <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
@@ -861,13 +867,13 @@ export default function AnnonceEditPage() {
                       </div>
                       {sonebG==='autre' && <SInput style={{ marginTop:8 }} placeholder="Précisez…" value={autrePrecision.soneb_gestion??''} onChange={e => setAutrePrecision(p=>({...p, soneb_gestion:e.target.value}))} />}
                     </Field>
-                    {sonebG==='prix_m3' && <Field label="Prix au m³ (FCFA)"><SInput type="number" min="0" max="99999" step="1" placeholder="Ex : 450" value={prixM3} onChange={e => setPrixM3(e.target.value)} onKeyDown={e => blockInvalidNumberKey(e, true)} /></Field>}
+                    {sonebG==='prix_m3' && <Field label="Prix au m³ (FCFA)"><SNombre min={0} max={99999} placeholder="Ex : 450" value={prixM3} onChange={e => setPrixM3(e.target.value)} /></Field>}
                   </div>
                 )}
                 {eau==='forage' && (
                   <div style={{ paddingLeft:16, paddingBottom:8 }}>
                     <Toggle label="Forage payant" value={forageP} onChange={setForageP} />
-                    {forageP && <div style={{ paddingTop:8 }}><Field label="Prix au m³ — forage (FCFA)"><SInput type="number" min="0" max="99999" step="1" placeholder="Ex : 500" value={prixForage} onChange={e => setPrixForage(e.target.value)} onKeyDown={e => blockInvalidNumberKey(e, true)} /></Field></div>}
+                    {forageP && <div style={{ paddingTop:8 }}><Field label="Prix au m³ — forage (FCFA)"><SNombre min={0} max={99999} placeholder="Ex : 500" value={prixForage} onChange={e => setPrixForage(e.target.value)} /></Field></div>}
                   </div>
                 )}
                 <Field label="Disponibilité">
@@ -909,7 +915,7 @@ export default function AnnonceEditPage() {
               ))}
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'11px 0', borderBottom:'1px solid var(--c-border)', gap:12 }}>
                 <span style={{ fontSize:13, color:'var(--c-muted)', flexShrink:0 }}>Échéance paiement (jour du mois)</span>
-                <SInput type="number" min="1" max="31" step="1" placeholder="Ex : 5" value={echeanceMois} onChange={e => setEcheanceMois(e.target.value)} onKeyDown={e => blockInvalidNumberKey(e, true)} style={{ maxWidth:120, textAlign:'right' }} />
+                <SNombre min={1} max={31} placeholder="Ex : 5" value={echeanceMois} onChange={e => setEcheanceMois(e.target.value)} style={{ maxWidth:120, textAlign:'right' }} />
               </div>
               <div style={{ marginTop:16, padding:14, background:'var(--t-blue-bg)', borderRadius:8, border:'1px solid var(--t-blue-bd)' }}>
                 <p style={{ fontSize:12, color:'var(--s-blue)', margin:0, lineHeight:1.7 }}>

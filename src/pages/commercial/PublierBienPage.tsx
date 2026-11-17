@@ -4,7 +4,6 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { postBien } from '../../api/postBien'
 import { BENIN_LOCATION_DATA } from '../../data/beninLocations'
-import { blockInvalidNumberKey } from '../../utils/inputNumbers'
 import { getGeocoding } from '../../api/getGeocoding'
 import { getQuartiers } from '../../api/getQuartiers'
 import { apiMessage } from '../../utils/apiMessage';
@@ -24,6 +23,7 @@ import {
   type BienClassiqueForm, type TarifCustom, type DetailCustom,
 } from './bien-classique/bienClassiqueForm'
 import { erreurFichierVideo } from '../../utils/videoAnnonce'
+import { NumberInput } from '../../shared/saisie/champs'
 
 // ─── Quartiers — même structure que immo-web-user ─────────────────────────────
 type Quartier = { nom: string; arrondissement: string; ville: string }
@@ -955,7 +955,7 @@ export default function PublierBienPage() {
               <Card>
                 <Section title="Superficie (facultatif)" />
                 <div style={{ display: 'flex', gap: 10 }}>
-                  <input type="number" min="0" max={superficieUnite === 'ha' ? 999999 : 9999999999} step={superficieUnite === 'ha' ? 0.01 : 1} value={superficieTerrain} onChange={e => setSuperficieTerrain(e.target.value)} onKeyDown={e => blockInvalidNumberKey(e, superficieUnite !== 'ha')}
+                  <NumberInput decimales={superficieUnite === 'ha'} min={0} max={superficieUnite === 'ha' ? 999999 : 9999999999} value={superficieTerrain} onChange={e => setSuperficieTerrain(e.target.value)}
                     placeholder={superficieUnite === 'ha' ? 'Ex: 2.5' : 'Ex: 25000'}
                     style={{ ...baseInput, flex: 1, minWidth: 0 }}
                     onFocus={e => (e.currentTarget.style.borderColor = BLUE)}

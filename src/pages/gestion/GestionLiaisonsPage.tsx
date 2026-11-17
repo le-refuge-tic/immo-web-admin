@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getDemandes } from '../../api/getDemandes';
-import { blockInvalidNumberKey } from '../../utils/inputNumbers';
 import { apiMessage } from '../../utils/apiMessage';
+import { DateInput, ErreurChamp, NumberInput } from '../../shared/saisie/champs';
+import { idErreur, useValidation } from '../../shared/saisie/validation';
+import { schemaLiaison } from '../../validation/schemas';
 
 type Demande = {
   id: number;
@@ -65,8 +67,9 @@ export default function GestionLiaisonsPage() {
   const [loading, setLoading]   = useState(false);
   const [selected, setSelected] = useState<Demande | null>(null);
   const [form, setForm]         = useState({ date_debut: '', jour_echeance: '10', loyer_prepaye_mois: '0', notes: '' });
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError]       = useState('');
+  const v = useValidation('liaison', schemaLiaison, form);
+  const submitting = v.envoiEnCours;
   const [confirmRejetId, setConfirmRejetId] = useState<number | null>(null);
 
   const load = useCallback(async () => {
@@ -81,24 +84,18 @@ export default function GestionLiaisonsPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  async function handleValider() {
-    if (!selected || !form.date_debut) { setError('La date de début est requise.'); return; }
-    setSubmitting(true);
+  function handleValider() {
+    if (!selected) return;
     setError('');
-    try {
-      await getDemandes.valider(selected.id, {
-        date_debut:          form.date_debut,
-        jour_echeance:       Number(form.jour_echeance) || 10,
-        loyer_prepaye_mois:  Number(form.loyer_prepaye_mois) || 0,
-        notes:               form.notes || undefined,
-      });
-      setSelected(null);
-      load();
-    } catch (e: any) {
-      setError(apiMessage(e) ?? 'Erreur serveur');
-    } finally {
-      setSubmitting(false);
-    }
+    void v.soumettre(async d => {
+      try {
+        await getDemandes.valider(selected.id, d);
+        setSelected(null);
+        load();
+      } catch (e: any) {
+        setError(apiMessage(e) ?? 'Erreur serveur');
+      }
+    });
   }
 
   async function handleRejeter(d: Demande) {
@@ -233,40 +230,44 @@ export default function GestionLiaisonsPage() {
               {sousTypeLabel(selected)} · {locAdresse(selected)}
             </p>
 
-            <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 6 }}>
+            <label htmlFor="liaison-date_debut" style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 6 }}>
               Date de début du contrat *
             </label>
-            <input
-              type="date"
+            <DateInput
               value={form.date_debut}
               onChange={e => setForm(f => ({ ...f, date_debut: e.target.value }))}
-              style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--c-border)', borderRadius: 10, fontSize: 14, boxSizing: 'border-box', marginBottom: 14 }}
+              style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--c-border)', borderRadius: 10, fontSize: 14, boxSizing: 'border-box' }}
+              {...v.propsChamp('date_debut')}
             />
+            <ErreurChamp id={idErreur('liaison', 'date_debut')} message={v.erreurs.date_debut} />
+            <div style={{ marginBottom: 14 }} />
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>
+                <label htmlFor="liaison-jour_echeance" style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>
                   Jour d'échéance (défaut : 10)
                 </label>
-                <input
-                  type="number" min={1} max={28} step={1}
+                <NumberInput
+                  min={1} max={28}
                   value={form.jour_echeance}
                   onChange={e => setForm(f => ({ ...f, jour_echeance: e.target.value }))}
-                  onKeyDown={e => blockInvalidNumberKey(e, true)}
                   style={{ width: '100%', padding: '9px 12px', border: '1px solid var(--c-border)', borderRadius: 10, fontSize: 13, boxSizing: 'border-box' }}
+                  {...v.propsChamp('jour_echeance')}
                 />
+                <ErreurChamp id={idErreur('liaison', 'jour_echeance')} message={v.erreurs.jour_echeance} />
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>
+                <label htmlFor="liaison-loyer_prepaye_mois" style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>
                   Mois de loyer prépayé
                 </label>
-                <input
-                  type="number" min={0} max={12} step={1}
+                <NumberInput
+                  min={0} max={12}
                   value={form.loyer_prepaye_mois}
                   onChange={e => setForm(f => ({ ...f, loyer_prepaye_mois: e.target.value }))}
-                  onKeyDown={e => blockInvalidNumberKey(e, true)}
                   style={{ width: '100%', padding: '9px 12px', border: '1px solid var(--c-border)', borderRadius: 10, fontSize: 13, boxSizing: 'border-box' }}
+                  {...v.propsChamp('loyer_prepaye_mois')}
                 />
+                <ErreurChamp id={idErreur('liaison', 'loyer_prepaye_mois')} message={v.erreurs.loyer_prepaye_mois} />
               </div>
             </div>
 
@@ -277,6 +278,7 @@ export default function GestionLiaisonsPage() {
               value={form.notes}
               onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
               rows={2}
+              maxLength={1000}
               style={{ width: '100%', padding: '9px 12px', border: '1px solid var(--c-border)', borderRadius: 10, fontSize: 13, boxSizing: 'border-box', resize: 'vertical', marginBottom: 14 }}
               placeholder="Conditions particulières, remarques…"
             />
@@ -298,7 +300,7 @@ export default function GestionLiaisonsPage() {
                 className="immo-btn"
                 style={{ background: '#10B981', color: '#fff', border: 'none', minWidth: 120 }}
                 onClick={handleValider}
-                disabled={submitting || !form.date_debut}
+                disabled={submitting}
               >
                 {submitting ? 'En cours…' : 'Confirmer la liaison'}
               </button>

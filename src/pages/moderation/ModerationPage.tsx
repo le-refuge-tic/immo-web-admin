@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { SearchIcon, ChevronLeftIcon, ChevronRightIcon } from '../../components/Icons';
-import { blockInvalidNumberKey } from '../../utils/inputNumbers';
 import { getAdminBien } from '../../api/getAdminBien';
 import { patchAdminBien } from '../../api/patchAdminBien';
 import { refreshSidebarBadges } from '../../hooks/useSidebarBadges';
@@ -10,6 +9,9 @@ import ModificationsEnAttente from './ModificationsEnAttente';
 import { MOTIFS_REFUS, TYPE_LABELS, formatPrix, auteurNom, blocageApprobation } from './moderationChecks';
 import { suffixeUnite } from '../../utils/prix';
 import { apiMessage } from '../../utils/apiMessage';
+import { ErreurChamp, NumberInput } from '../../shared/saisie/champs';
+import { idErreur, useValidation } from '../../shared/saisie/validation';
+import { schemaFraisModeration, schemaMotifRefus } from '../../validation/schemas';
 
 const LIMIT = 10;
 const SEARCH_DEBOUNCE_MS = 350;
@@ -43,34 +45,28 @@ function ModerationModal({
     return () => document.removeEventListener('keydown', handleEscape);
   }, [onClose]);
 
-  const canSubmit = isApprove
-    ? fraisVisite.trim() !== '' && Number(fraisVisite) >= 0
-    : motif.trim().length >= 5;
+  // Lot 15 : approbation → frais (0 à 999 999) ; refus → motif (5 à 500 caractères).
+  const vFrais = useValidation('mod', schemaFraisModeration, { frais: fraisVisite });
+  const vMotif = useValidation('mod', schemaMotifRefus, { motif });
+  const erreurs = isApprove ? vFrais.erreurs : vMotif.erreurs;
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!canSubmit) return;
-    setLoading(true);
     setError('');
-    try {
-      if (isApprove) {
-        await patchAdminBien.moderate(bien.id, {
-          statut_moderation: 'approuve',
-          frais_visite: Number(fraisVisite),
-        });
-      } else {
-        await patchAdminBien.moderate(bien.id, {
-          statut_moderation: 'rejete',
-          motif_refus: motif.trim(),
-        });
+    const envoyer = async (corps: Record<string, unknown>) => {
+      setLoading(true);
+      try {
+        await patchAdminBien.moderate(bien.id, corps);
+        onDone();
+        onClose();
+      } catch (err: any) {
+        const msg = apiMessage(err);
+        setError(msg || 'La décision n’a pas pu être enregistrée. Vérifiez votre connexion et réessayez.');
+        setLoading(false);
       }
-      onDone();
-      onClose();
-    } catch (err: any) {
-      const msg = apiMessage(err);
-      setError(msg || 'La décision n’a pas pu être enregistrée. Vérifiez votre connexion et réessayez.');
-      setLoading(false);
-    }
+    };
+    if (isApprove) void vFrais.soumettre(d => envoyer({ statut_moderation: 'approuve', frais_visite: d.frais }));
+    else void vMotif.soumettre(d => envoyer({ statut_moderation: 'rejete', motif_refus: d.motif }));
   }
 
   return (
@@ -121,31 +117,28 @@ function ModerationModal({
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           {isApprove ? (
             <div className="immo-form-field">
               <label className="immo-form-label" htmlFor="mod-frais">Frais de visite (FCFA) *</label>
               <div style={{ position: 'relative' }}>
-                <input
-                  id="mod-frais"
+                <NumberInput milliers
                   className="immo-form-input"
-                  type="number"
                   min={0}
                   max={999999}
-                  step={500}
                   placeholder="ex : 2000"
                   value={fraisVisite}
                   onChange={e => setFraisVisite(e.target.value)}
-                  onKeyDown={e => blockInvalidNumberKey(e, true)}
-                  required
                   autoFocus
                   style={{ paddingRight: 52 }}
+                  {...vFrais.propsChamp('frais')}
                 />
                 <span style={{
                   position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
                   fontSize: 11, fontWeight: 600, color: 'var(--c-muted)',
                 }}>FCFA</span>
               </div>
+              <ErreurChamp id={idErreur('mod', 'frais')} message={erreurs.frais} />
               {fraisVisite && Number(fraisVisite) === 0 && (
                 <div style={{ fontSize: 11, color: 'var(--c-muted)', marginTop: 4 }}>
                   Visite gratuite — le client ne paiera rien.
@@ -163,16 +156,17 @@ function ModerationModal({
                 ))}
               </div>
               <textarea
-                id="mod-motif"
                 className="immo-form-input"
                 rows={3}
                 placeholder="Ex : Photos manquantes, description insuffisante, localisation imprécise…"
                 value={motif}
                 onChange={e => setMotif(e.target.value)}
-                required
+                maxLength={500}
                 autoFocus
                 style={{ resize: 'vertical', minHeight: 80 }}
+                {...vMotif.propsChamp('motif')}
               />
+              <ErreurChamp id={idErreur('mod', 'motif')} message={erreurs.motif} />
             </div>
           )}
 
@@ -183,7 +177,7 @@ function ModerationModal({
             <button
               type="submit"
               className="btn-submit"
-              disabled={!canSubmit || loading}
+              disabled={loading}
               style={!isApprove ? { background: 'var(--c-red-solid)', borderColor: 'var(--c-red)' } : undefined}
             >
               {loading ? (

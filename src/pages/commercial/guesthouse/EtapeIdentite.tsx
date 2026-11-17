@@ -2,6 +2,7 @@ import { Card, Section } from '../formUi'
 import { baseInput, BLUE } from '../formStyles'
 import type { ChampsIdentite, TextesIdentite } from './guesthouseForm'
 import { Libelle, Texte } from './ui'
+import { PhoneInput } from '../../../shared/saisie/champs'
 
 const TEXTES_GUESTHOUSE: TextesIdentite = {
   titre: 'La guesthouse',
@@ -52,8 +53,7 @@ export default function EtapeIdentite({ form, maj, textes = TEXTES_GUESTHOUSE }:
           </div>
           <div>
             <Libelle>Téléphone</Libelle>
-            <Texte type="tel" value={form.proprioTelephone} onChange={v => maj({ proprioTelephone: v })}
-              placeholder="+229 01 97 00 00 00" maxLength={20} />
+            <PhoneInput indicatif value={form.proprioTelephone} onValueChange={v => maj({ proprioTelephone: v })} style={baseInput} />
           </div>
           <div>
             <Libelle facultatif>E-mail</Libelle>

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
-import { blockInvalidNumberKey } from '../../utils/inputNumbers'
 import { BLUE, S } from './formStyles'
+import { NumberInput } from '../../shared/saisie/champs'
 
 /**
  * Éléments de formulaire partagés par les pages de publication
@@ -100,7 +100,7 @@ export function NumberPicker({ presets, unit, value, isCustom, onPick, onCustomS
         <Chip label="Saisir" active={isCustom} onClick={onCustomStart} />
       </div>
       {isCustom && (
-        <input type="number" min="0" max="9999" step="1" value={customText} onChange={e => onCustomText(e.target.value)} onKeyDown={e => blockInvalidNumberKey(e, true)} placeholder="Nombre"
+        <NumberInput min={0} max={9999} value={customText} onChange={e => onCustomText(e.target.value)} placeholder="Nombre"
           style={{ marginTop: 10, width: '100%', borderRadius: 10, padding: '10px 16px', fontSize: 14, outline: 'none', border: `1px solid ${BLUE}`, background: 'var(--c-surface-2)', color: 'var(--c-text)', boxSizing: 'border-box' }} />
       )}
     </div>
@@ -110,7 +110,7 @@ export function NumberPicker({ presets, unit, value, isCustom, onPick, onCustomS
 export function MoneyInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
   return (
     <div style={{ position: 'relative' }}>
-      <input type="number" min="0" max="999999999" step="1" value={value} onChange={e => onChange(e.target.value)} onKeyDown={e => blockInvalidNumberKey(e, true)} placeholder={placeholder ?? '0'}
+      <NumberInput milliers min={0} max={999999999} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder ?? '0'}
         style={{ width: '100%', borderRadius: 10, padding: '12px 56px 12px 16px', fontSize: 14, outline: 'none', border: '1px solid var(--c-border)', background: 'var(--c-surface-2)', color: 'var(--c-text)', transition: 'border-color 0.15s', boxSizing: 'border-box' }}
         onFocus={e => (e.currentTarget.style.borderColor = BLUE)}
         onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')} />

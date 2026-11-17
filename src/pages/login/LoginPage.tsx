@@ -6,6 +6,9 @@ import appartementImg from '../../assets/login/appartement.jpg';
 import terrainImg     from '../../assets/login/terrain.jpg';
 import logoUrl        from '../../assets/logo_complet.jpeg';
 import { apiMessage } from '../../utils/apiMessage';
+import { EmailInput, ErreurChamp } from '../../shared/saisie/champs';
+import { idErreur, useValidation } from '../../shared/saisie/validation';
+import { schemaCodeOtp, schemaConnexion } from '../../validation/schemas';
 
 export default function LoginPage() {
   const { login, verifyOtp, isAuthenticated } = useAuth();
@@ -17,6 +20,8 @@ export default function LoginPage() {
   const [loading,  setLoading]  = useState(false);
   const [sessionToken, setSessionToken] = useState('');
   const [code,     setCode]     = useState('');
+  const vConnexion = useValidation('connexion', schemaConnexion, { email, password });
+  const vOtp = useValidation('connexion-otp', schemaCodeOtp, { code });
 
   useEffect(() => {
     document.body.classList.add('lp-page');
@@ -25,25 +30,27 @@ export default function LoginPage() {
 
   if (isAuthenticated) return <Navigate to="/" replace />;
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = (e: any) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
-    try {
-      if (sessionToken) {
-        await verifyOtp(sessionToken, code);
-      } else {
-        const res = await login({ email, password });
-        if (res.requiresOtp) setSessionToken(res.sessionToken);
+    const envoyer = async (action: () => Promise<void>) => {
+      setLoading(true);
+      try {
+        await action();
+        // La redirection est gérée par <Navigate> quand isAuthenticated devient true
+      } catch (err: any) {
+        const msg = apiMessage(err);
+        const fallback = sessionToken ? 'Code invalide ou expiré.' : 'Email ou mot de passe incorrect.';
+        setError(msg || fallback);
+      } finally {
+        setLoading(false);
       }
-      // La redirection est gérée par <Navigate> quand isAuthenticated devient true
-    } catch (err: any) {
-      const msg = apiMessage(err);
-      const fallback = sessionToken ? 'Code invalide ou expiré.' : 'Email ou mot de passe incorrect.';
-      setError(msg || fallback);
-    } finally {
-      setLoading(false);
-    }
+    };
+    if (sessionToken) void vOtp.soumettre(d => envoyer(() => verifyOtp(sessionToken, d.code)));
+    else void vConnexion.soumettre(d => envoyer(async () => {
+      const res = await login({ email: d.email, password: d.password });
+      if (res.requiresOtp) setSessionToken(res.sessionToken);
+    }));
   };
 
   return (
@@ -103,7 +110,7 @@ export default function LoginPage() {
           {error && <div className="lp-error">{error}</div>}
 
           {/* Formulaire */}
-          <form onSubmit={handleSubmit} className="lp-form">
+          <form onSubmit={handleSubmit} className="lp-form" noValidate>
 
             {sessionToken ? (
             <div className="lp-field">
@@ -116,10 +123,11 @@ export default function LoginPage() {
                 value={code}
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
                 placeholder="123456"
-                required
                 autoFocus
                 className="lp-input"
+                {...vOtp.propsChamp('code')}
               />
+              <ErreurChamp id={idErreur('connexion-otp', 'code')} message={vOtp.erreurs.code} />
               <button
                 type="button"
                 onClick={() => { setSessionToken(''); setCode(''); setError(''); }}
@@ -131,15 +139,15 @@ export default function LoginPage() {
             ) : (<>
             <div className="lp-field">
               <label className="lp-label">Adresse e-mail</label>
-              <input
-                type="email"
+              <EmailInput
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="admin@refuge-immo.com"
-                required
                 autoFocus
                 className="lp-input"
+                {...vConnexion.propsChamp('email')}
               />
+              <ErreurChamp id={idErreur('connexion', 'email')} message={vConnexion.erreurs.email} />
             </div>
 
             <div className="lp-field">
@@ -152,8 +160,10 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  required
+                  maxLength={128}
+                  autoComplete="current-password"
                   className="lp-input"
+                  {...vConnexion.propsChamp('password')}
                 />
                 <button
                   type="button"
@@ -178,6 +188,7 @@ export default function LoginPage() {
                   )}
                 </button>
               </div>
+              <ErreurChamp id={idErreur('connexion', 'password')} message={vConnexion.erreurs.password} />
             </div>
             </>)}
 

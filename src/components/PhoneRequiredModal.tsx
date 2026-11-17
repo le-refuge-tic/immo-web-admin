@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { patchAuth } from '../api/patchAuth';
 import { useAuth } from '../context/AuthContext';
 import { apiMessage } from '../utils/apiMessage';
+import { PhoneInput } from '../shared/saisie/champs';
 
 const ROLES_CONCERNES = ['commercial', 'admin', 'super_admin'];
 
@@ -157,14 +158,10 @@ export default function PhoneRequiredModal() {
                   }}>
                     +229
                   </span>
-                  <input
+                  <PhoneInput
                     className="immo-form-input"
-                    type="tel"
-                    inputMode="numeric"
-                    placeholder="01XXXXXXXX"
-                    maxLength={10}
                     value={localNumber}
-                    onChange={e => { setLocalNumber(e.target.value.replace(/\D/g, '').slice(0, 10)); setError(''); }}
+                    onChange={e => { setLocalNumber(e.target.value); setError(''); }}
                     autoFocus
                     disabled={loading}
                     required

@@ -14,6 +14,9 @@ import { useConfirm } from '../../shared/dialogues/useConfirm';
 import { photosDuBien } from '../../shared/biens/approbation';
 import { blocageApprobation } from '../moderation/moderationChecks';
 import DialogueDecision, { type DecisionTexte } from './DialogueDecision';
+import { EmailInput, ErreurChamp, PhoneInput } from '../../shared/saisie/champs';
+import { idErreur, useValidation } from '../../shared/saisie/validation';
+import { schemaProprietaire } from '../../validation/schemas';
 
 // ── Labels lisibles pour les champs amenites ────────────────────────────────
 const STANDING_LABELS: Record<string, string> = {
@@ -135,6 +138,7 @@ export default function AnnonceDetailPage() {
   const [propNom, setPropNom]         = useState('');
   const [propTel, setPropTel]         = useState('');
   const [propEmail, setPropEmail]     = useState('');
+  const vProprio = useValidation('proprio-detail', schemaProprietaire, { prenom: propPrenom, nom: propNom, telephone: propTel, email: propEmail });
 
   useEffect(() => {
     if (!id) return;
@@ -201,19 +205,13 @@ export default function AnnonceDetailPage() {
     else if (action === 'revoquer') void handleModerate('en_attente', { motif_refus: texte });
   }
 
-  async function handleSaveProprietaire() {
-    if (!propNom.trim() || !propPrenom.trim() || !propTel.trim()) return;
+  const handleSaveProprietaire = () => vProprio.soumettre(async (d) => {
     setSaving(true);
     try {
       const updated = await patchAdminBien.update(bien.id, {
         amenites: {
           ...bien.amenites,
-          proprietaire_info: {
-            prenom: propPrenom.trim(),
-            nom: propNom.trim(),
-            telephone: propTel.trim(),
-            email: propEmail.trim() || undefined,
-          },
+          proprietaire_info: { prenom: d.prenom, nom: d.nom, telephone: d.telephone, email: d.email },
         },
       });
       setBien((prev: any) => ({ ...prev, ...updated }));
@@ -224,7 +222,7 @@ export default function AnnonceDetailPage() {
     } finally {
       setSaving(false);
     }
-  }
+  });
 
   async function handleApprove() {
     const ok = await confirmer({
@@ -606,27 +604,31 @@ export default function AnnonceDetailPage() {
                   <div className="form-grid-2" style={{ gap: 8 }}>
                     <div>
                       <label className="detail-form-label">Prénom *</label>
-                      <input className="immo-form-input" value={propPrenom} onChange={e => setPropPrenom(e.target.value)} placeholder="Prénom" />
+                      <input className="immo-form-input" maxLength={100} value={propPrenom} onChange={e => setPropPrenom(e.target.value)} placeholder="Prénom" {...vProprio.propsChamp('prenom')} />
+                      <ErreurChamp id={idErreur('proprio-detail', 'prenom')} message={vProprio.erreurs.prenom} />
                     </div>
                     <div>
                       <label className="detail-form-label">Nom *</label>
-                      <input className="immo-form-input" value={propNom} onChange={e => setPropNom(e.target.value)} placeholder="Nom" />
+                      <input className="immo-form-input" maxLength={100} value={propNom} onChange={e => setPropNom(e.target.value)} placeholder="Nom" {...vProprio.propsChamp('nom')} />
+                      <ErreurChamp id={idErreur('proprio-detail', 'nom')} message={vProprio.erreurs.nom} />
                     </div>
                   </div>
                   <div>
                     <label className="detail-form-label">Téléphone *</label>
-                    <input className="immo-form-input" type="tel" value={propTel} onChange={e => setPropTel(e.target.value)} placeholder="+229 XX XX XX XX" />
+                    <PhoneInput className="immo-form-input" indicatif value={propTel} onChange={e => setPropTel(e.target.value)} {...vProprio.propsChamp('telephone')} />
+                    <ErreurChamp id={idErreur('proprio-detail', 'telephone')} message={vProprio.erreurs.telephone} />
                   </div>
                   <div>
                     <label className="detail-form-label">Email (optionnel)</label>
-                    <input className="immo-form-input" type="email" value={propEmail} onChange={e => setPropEmail(e.target.value)} placeholder="email@example.com" />
+                    <EmailInput className="immo-form-input" value={propEmail} onChange={e => setPropEmail(e.target.value)} placeholder="email@example.com" {...vProprio.propsChamp('email')} />
+                    <ErreurChamp id={idErreur('proprio-detail', 'email')} message={vProprio.erreurs.email} />
                   </div>
                   <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 4 }}>
                     <button className="btn-cancel" onClick={() => { setEditProprietaire(false); const pi = bien.amenites?.proprietaire_info; if (pi) { setPropPrenom(pi.prenom ?? ''); setPropNom(pi.nom ?? ''); setPropTel(pi.telephone ?? ''); setPropEmail(pi.email ?? ''); } }}>
                       Annuler
                     </button>
                     <button className="btn-submit" onClick={handleSaveProprietaire}
-                      disabled={saving || !propNom.trim() || !propPrenom.trim() || !propTel.trim()}>
+                      disabled={saving || vProprio.envoiEnCours}>
                       {saving ? 'Enregistrement…' : 'Enregistrer'}
                     </button>
                   </div>

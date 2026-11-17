@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { patchAuth } from '../api/patchAuth';
 import { apiMessage } from '../utils/apiMessage';
+import { PhoneInput } from '../shared/saisie/champs';
 
 const OTP_LENGTH = 6;
 const LOCAL_PHONE_LENGTH = 10;
@@ -129,17 +130,12 @@ export default function VerifyPhoneSection({ currentPhone, onVerified }: Props) 
               }}>
                 +229
               </span>
-              <input
+              <PhoneInput
                 id="vp-phone"
                 className="immo-form-input"
-                type="tel"
-                inputMode="numeric"
-                autoComplete="tel"
-                maxLength={LOCAL_PHONE_LENGTH}
-                placeholder="01XXXXXXXX"
                 value={localNumber}
                 onChange={e => {
-                  setLocalNumber(e.target.value.replace(/\D/g, '').slice(0, LOCAL_PHONE_LENGTH));
+                  setLocalNumber(e.target.value);
                   setError('');
                 }}
                 disabled={loading}
