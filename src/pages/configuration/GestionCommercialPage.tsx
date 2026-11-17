@@ -15,6 +15,7 @@ import { useChatSocket } from '../../hooks/useChatSocket';
 import GestionCommercialModal from './GestionCommercialModal';
 import { apiMessage } from '../../utils/apiMessage';
 import { suffixeUnite } from '../../utils/prix';
+import LienHistorique from '../../components/LienHistorique';
 
 /* ─── Helpers ─────────────────────────────────────────────── */
 
@@ -1120,6 +1121,7 @@ export default function GestionCommercialPage() {
                             <line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C9 2 12 7 12 7z"/>
                           </svg>
                         </button>
+                        <LienHistorique userId={c.id} role="commercial" />
                         {!isMe && (
                           confirmDeleteId === c.id ? (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'flex-end' }}>

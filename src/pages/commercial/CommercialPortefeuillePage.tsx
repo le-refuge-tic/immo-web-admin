@@ -7,7 +7,7 @@ import LigneHistorique from './LigneHistorique';
 import { COULEUR_TON, estEnCours, infoStatut } from '../../utils/retraitCommercial';
 import { useAuth } from '../../context/AuthContext';
 import { apiMessage } from '../../utils/apiMessage';
-import { ajouterPage, resteAPrendre } from './historiquePagine';
+import { ajouterPage, CHOIX_PAR_DEFAUT, filtresPortefeuille, resteAPrendre, suiviEnTete, type ChoixHistorique } from './historiquePagine';
 
 const TYPE_WALLET = 'commission_commerciale';
 const PAR_PAGE = 20;
@@ -35,7 +35,8 @@ export default function CommercialPortefeuillePage() {
   // Lot 16 : une erreur de l'API n'est plus jamais affichée comme un solde à 0.
   const [erreur, setErreur]         = useState('');
   const [showModal, setShowModal]   = useState(false);
-  const [filterTx, setFilterTx]    = useState<'tous' | 'credits' | 'retraits'>('tous');
+  // Lot 17 : période, sens et tri appliqués côté serveur (sur tout l'historique, pas seulement la page chargée).
+  const [choix, setChoix]           = useState<ChoixHistorique>(CHOIX_PAR_DEFAUT);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -43,7 +44,7 @@ export default function CommercialPortefeuillePage() {
     try {
       const [w, h, r] = await Promise.all([
         getWallet.solde(TYPE_WALLET),
-        getWallet.historique(TYPE_WALLET, 1, PAR_PAGE),
+        getWallet.historique(TYPE_WALLET, 1, PAR_PAGE, filtresPortefeuille(choix)),
         postRetrait.mesRetraits(),
       ]);
       setSolde(Number(w?.balance ?? 0));
@@ -56,12 +57,12 @@ export default function CommercialPortefeuillePage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [choix]);
 
   const chargerSuite = async () => {
     setChargementSuite(true);
     try {
-      const h = await getWallet.historique(TYPE_WALLET, page + 1, PAR_PAGE);
+      const h = await getWallet.historique(TYPE_WALLET, page + 1, PAR_PAGE, filtresPortefeuille(choix));
       setTrans(prev => ajouterPage(prev, Array.isArray(h?.data) ? h.data : []));
       setTotal(Number(h?.total) || 0);
       setPage(p => p + 1);
@@ -84,7 +85,7 @@ export default function CommercialPortefeuillePage() {
       // Suivi discret : un échec ponctuel garde l'affichage précédent (pas de faux zéro).
       const [w, h, r] = await Promise.all([
         getWallet.solde(TYPE_WALLET).catch(() => null),
-        getWallet.historique(TYPE_WALLET, 1, PAR_PAGE).catch(() => null),
+        suiviEnTete(choix) ? getWallet.historique(TYPE_WALLET, 1, PAR_PAGE, filtresPortefeuille(choix)).catch(() => null) : null,
         postRetrait.mesRetraits().catch(() => null),
       ]);
       if (w) setSolde(Number(w.balance ?? 0));
@@ -92,13 +93,9 @@ export default function CommercialPortefeuillePage() {
       if (Array.isArray(r)) setRetraits(r);
     }, 8000);
     return () => clearInterval(id);
-  }, [aDesEnCours]);
+  }, [aDesEnCours, choix]);
 
-  const filtered = filterTx === 'credits'
-    ? transactions.filter(t => t.type === 'depot')
-    : filterTx === 'retraits'
-    ? transactions.filter(t => t.type === 'retrait')
-    : transactions;
+  const choisir = (c: Partial<ChoixHistorique>) => setChoix(prev => ({ ...prev, ...c }));
 
   return (
     <div className="immo-page">
@@ -194,19 +191,34 @@ export default function CommercialPortefeuillePage() {
         </div>
 
         {/* Filtres */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-          {([['tous', 'Tous'], ['credits', 'Crédits'], ['retraits', 'Retraits']] as const).map(([k, l]) => (
-            <button key={k} onClick={() => setFilterTx(k)}
+        <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+          {([['tous', 'Tous'], ['credit', 'Crédits'], ['debit', 'Retraits']] as const).map(([k, l]) => (
+            <button key={k} type="button" aria-pressed={choix.sens === k} onClick={() => choisir({ sens: k })}
               style={{
                 padding: '5px 14px', borderRadius: 999, fontSize: 12, fontWeight: 600, cursor: 'pointer',
                 border: '1px solid',
-                background: filterTx === k ? 'var(--c-blue-solid)' : 'transparent',
-                color: filterTx === k ? '#fff' : 'var(--c-muted)',
-                borderColor: filterTx === k ? 'var(--c-blue)' : 'var(--c-border)',
+                background: choix.sens === k ? 'var(--c-blue-solid)' : 'transparent',
+                color: choix.sens === k ? '#fff' : 'var(--c-muted)',
+                borderColor: choix.sens === k ? 'var(--c-blue)' : 'var(--c-border)',
               }}>
               {l}
             </button>
           ))}
+          <div style={{ flex: 1 }} />
+          <select className="immo-select" aria-label="Période" value={choix.periode}
+            onChange={e => choisir({ periode: e.target.value as ChoixHistorique['periode'] })}>
+            <option value="tout">Toute la période</option>
+            <option value="7j">7 derniers jours</option>
+            <option value="mois">Mois en cours</option>
+            <option value="mois_precedent">Mois précédent</option>
+          </select>
+          <select className="immo-select" aria-label="Trier" value={choix.tri}
+            onChange={e => choisir({ tri: e.target.value as ChoixHistorique['tri'] })}>
+            <option value="recent">Plus récents d’abord</option>
+            <option value="ancien">Plus anciens d’abord</option>
+            <option value="montant_desc">Montant décroissant</option>
+            <option value="montant_asc">Montant croissant</option>
+          </select>
         </div>
 
         {loading ? (
@@ -215,13 +227,13 @@ export default function CommercialPortefeuillePage() {
           <div style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--c-muted)', fontSize: 13 }}>
             Historique indisponible pour le moment.
           </div>
-        ) : filtered.length === 0 ? (
+        ) : transactions.length === 0 ? (
           <div style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--c-muted)', fontSize: 13 }}>
-            Aucune transaction pour le moment.
+            {choix === CHOIX_PAR_DEFAUT ? 'Aucune transaction pour le moment.' : 'Aucune transaction pour ces critères.'}
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {filtered.map((t, i) => <LigneHistorique key={t.id} t={t} premier={i === 0} />)}
+            {transactions.map((t, i) => <LigneHistorique key={t.id} t={t} premier={i === 0} />)}
           </div>
         )}
         {!loading && resteAPrendre(transactions.length, total) && (

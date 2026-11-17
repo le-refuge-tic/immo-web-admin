@@ -23,6 +23,7 @@ import GestionCommercialPage from './pages/configuration/GestionCommercialPage';
 import GestionEquipesPage from './pages/configuration/GestionEquipesPage';
 import LoyersPage    from './pages/loyers/LoyersPage';
 import FinancesPage  from './pages/finances/FinancesPage';
+import HistoriqueTransactionsPage from './pages/finances/HistoriqueTransactionsPage';
 import FeedbacksPage from './pages/feedbacks/FeedbacksPage';
 import GestionLiaisonsPage from './pages/gestion/GestionLiaisonsPage';
 import RetraitsPage        from './pages/retraits/RetraitsPage';
@@ -88,6 +89,7 @@ export default function App() {
             <Route path="utilisateurs" element={<AdminRoute><UtilisateursPage /></AdminRoute>} />
             <Route path="loyers"       element={<AdminRoute><LoyersPage /></AdminRoute>} />
             <Route path="finances"     element={<AdminRoute><FinancesPage /></AdminRoute>} />
+            <Route path="finances/historique" element={<AdminRoute><HistoriqueTransactionsPage /></AdminRoute>} />
             <Route path="feedbacks"    element={<AdminRoute><FeedbacksPage /></AdminRoute>} />
             <Route path="moderation"   element={<AdminRoute><ModerationPage /></AdminRoute>} />
             <Route path="verifications" element={<AdminRoute><VerificationsPage /></AdminRoute>} />

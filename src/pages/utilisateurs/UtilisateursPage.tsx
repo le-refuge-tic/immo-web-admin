@@ -5,6 +5,7 @@ import { patchAdminUser } from '../../api/patchAdminUser';
 import { deleteAdminUser } from '../../api/deleteAdminUser';
 import { apiMessage } from '../../utils/apiMessage';
 import { useToast } from '../../context/ToastContext';
+import LienHistorique from '../../components/LienHistorique';
 
 const TABS = [
   { key: '',             label: 'Tous'          },
@@ -196,6 +197,7 @@ export default function UtilisateursPage() {
                     <td className="ut-date">{formatDate(u.created_at)}</td>
                     <td>
                       <div className="ut-actions">
+                        {!isConfirm && <LienHistorique userId={u.id} role={u.role} />}
                         {isConfirm ? (
                           <>
                             <button className="ut-action-btn ut-action-btn--confirm" onClick={() => handleDelete(u.id)} disabled={isDeleting}>
@@ -256,6 +258,7 @@ export default function UtilisateursPage() {
                     </button>
                     <span style={{ fontSize: 11, color: 'var(--c-muted)' }}>{formatDate(u.created_at)}</span>
                   </div>
+                  {!isConfirm && <LienHistorique userId={u.id} role={u.role} />}
                   {isConfirm ? (
                     <div style={{ display: 'flex', gap: 6 }}>
                       <button className="ut-action-btn ut-action-btn--confirm" onClick={() => handleDelete(u.id)} disabled={isDeleting}>

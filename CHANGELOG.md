@@ -5,6 +5,23 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ## [Non publié]
 
+### Ajouté (lot 17 — historique des transactions)
+- Finances › Historique détaillé (`/finances/historique`) : paiements et mouvements de
+  portefeuille dans une seule liste. Onglets Tout, Mon historique, Admins, Commerciaux,
+  Démarcheurs ; le super admin a aussi Loyers, Frais de visite et Autres paiements.
+  - Filtres : période (raccourcis en heure du Bénin ou dates libres), type, sens, statut, rôle,
+    méthode, utilisateur, bien et montant.
+  - Tri par date, type, utilisateur ou montant ; totaux des opérations abouties ; pagination
+    côté serveur. Tout l'état est dans l'URL.
+  - Panneau de détail : références (FedaPay comprise), payeur et bénéficiaire, bien, soldes
+    avant et après, explication de la prime.
+  - Export CSV et Excel de la sélection ; chaque export est journalisé côté serveur.
+- Lien « Historique » sur les pages Utilisateurs, Commerciaux et Administrateurs. Il n'apparaît
+  que si l'utilisateur est dans le périmètre du lecteur (un admin ne voit pas les clients).
+- Portefeuille : la période, les crédits ou retraits et le tri (date ou montant) sont
+  appliqués par le serveur sur tout l'historique. Avant, le filtre ne portait que sur les
+  lignes déjà chargées.
+
 ### Corrigé (lot 16 — portefeuille)
 - Portefeuille : une erreur de l'API n'est plus affichée comme un solde à 0 (« — » et message
   avec « Réessayer ») ; historique chargé par pages de 20 (« Afficher plus »).

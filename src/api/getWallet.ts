@@ -25,10 +25,19 @@ export type WalletTransaction = {
   created_at: string;
 };
 
+/** Lot 17 : filtres de l'historique personnel (dates du Bénin incluses). */
+export type FiltresPortefeuille = {
+  du?: string;
+  au?: string;
+  sens?: 'credit' | 'debit';
+  tri?: 'date' | 'montant';
+  ordre?: 'asc' | 'desc';
+};
+
 export const getWallet = {
   solde: (type: string): Promise<Wallet> => axios.get(`${BASE}/wallets/me/solde`, { ...auth(), params: { type } }).then(r => r.data),
   transactions: (type: string): Promise<WalletTransaction[]> => axios.get(`${BASE}/wallets/me/transactions`, { ...auth(), params: { type } }).then(r => r.data),
-  /** Lot 16 : une page de l'historique, la plus récente d'abord. */
-  historique: (type: string, page: number, limit = 20): Promise<{ data: WalletTransaction[]; total: number; page: number; limit: number }> =>
-    axios.get(`${BASE}/wallets/me/transactions`, { ...auth(), params: { type, page, limit } }).then(r => r.data),
+  /** Lot 16 : une page de l'historique ; lot 17 : filtres période / sens et tri côté serveur. */
+  historique: (type: string, page: number, limit = 20, filtres: FiltresPortefeuille = {}): Promise<{ data: WalletTransaction[]; total: number; page: number; limit: number }> =>
+    axios.get(`${BASE}/wallets/me/transactions`, { ...auth(), params: { type, page, limit, ...filtres } }).then(r => r.data),
 };
