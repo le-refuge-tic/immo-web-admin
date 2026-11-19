@@ -61,6 +61,7 @@ export default function Sidebar({
     ] },
     { id: 'finances', label: 'Finances', Icon: TrendingUpIcon, items: [
       { to: '/finances', label: 'Vue d\'ensemble', Icon: TrendingUpIcon },
+      { to: '/finances/historique', label: 'Historique détaillé', Icon: FileTextIcon },
       { to: '/loyers',   label: 'Loyers',          Icon: FileTextIcon },
       { to: '/retraits', label: 'Retraits MoMo',   Icon: WithdrawIcon },
       { to: '/remboursements', label: 'Remboursements', Icon: WithdrawIcon },
@@ -128,6 +129,7 @@ export default function Sidebar({
       <NavLink
         key={to}
         to={to}
+        end={to === '/finances'}
         title={minimized ? label : undefined}
         className={({ isActive }) => `immo-nav-item${isActive ? ' active' : ''}`}
       >

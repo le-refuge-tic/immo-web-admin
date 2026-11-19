@@ -5,6 +5,7 @@ import { deleteAdmins } from '../../api/deleteAdmins';
 import GestionAdminModal from './GestionAdminModal';
 import GestionAdminRoleBadge from './GestionAdminRoleBadge';
 import { apiMessage } from '../../utils/apiMessage';
+import LienHistorique from '../../components/LienHistorique';
 
 export default function GestionAdminPage() {
   const { user: me }                    = useAuth();
@@ -136,6 +137,7 @@ export default function GestionAdminPage() {
                       <div className="admin-info-email">{a.email ?? '—'}</div>
                     </div>
                     <GestionAdminRoleBadge role={a.role_principal} />
+                    <LienHistorique userId={a.id} role={a.role_principal} />
                     {canDelete ? (
                       confirmDeleteId === a.id ? (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-end', flexShrink: 0 }}>
