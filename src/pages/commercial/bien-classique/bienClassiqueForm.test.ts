@@ -9,7 +9,7 @@ import {
 import { choixDepuisBien } from '../../../shared/biens/referentielTypes'
 
 const formulaire = (o: Partial<BienClassiqueForm> = {}): BienClassiqueForm => ({
-  typeBien: 'chambre_salon', typeTransaction: 'location', prix: '50000', prixPromo: '',
+  typeBien: 'chambre_salon', typeTransaction: 'location', prix: '50000', prixCash: '',
   estMeuble: false, etatMeubleMaison: 'non_meuble', etatConstructionMaison: null,
   standing: null, standingAutre: '',
   prixLongSejour: '', prixSejourRestreint: '', prixHeure: '', tarifsAutres: [],
@@ -148,10 +148,11 @@ describe('manquesEtape', () => {
     expect(manquesEtape(0, meuble('villa', { prixHeure: '5000' }), 0)).toEqual([])
   })
 
-  it('étape 0 : prix promo d’un terrain à vendre inférieur au prix', () => {
-    const f = formulaire({ typeBien: 'terrain', typeTransaction: 'vente', prix: '5000000', prixPromo: '6000000' })
-    expect(manquesEtape(0, f, 0)).toEqual(['Le prix promo doit être inférieur au prix de vente'])
-    expect(manquesEtape(0, { ...f, prixPromo: '4500000' }, 0)).toEqual([])
+  it('étape 0 : prix cash d’un terrain à vendre inférieur au prix normal', () => {
+    const f = formulaire({ typeBien: 'terrain', typeTransaction: 'vente', prix: '5000000', prixCash: '6000000' })
+    expect(manquesEtape(0, f, 0)).toEqual(['Le prix cash doit être inférieur au prix normal.'])
+    expect(manquesEtape(0, { ...f, prixCash: '50' }, 0)).toEqual(["Le prix cash doit être d'au moins 100 FCFA."])
+    expect(manquesEtape(0, { ...f, prixCash: '4500000' }, 0)).toEqual([])
   })
 
   it('étape 1 : quartier obligatoire', () => {
@@ -240,12 +241,12 @@ describe('construirePayload', () => {
     expect(construirePayload(meuble('villa', { prixLongSejour: '400000' })).prix).toBe(400000)
   })
 
-  it('terrain à vendre : superficie en m², prix promo et titre en tête de description', () => {
+  it('terrain à vendre : superficie en m², prix cash et titre en tête de description', () => {
     const b = construirePayload(formulaire({
-      typeBien: 'terrain', typeTransaction: 'vente', prix: '5000000', prixPromo: '4500000',
+      typeBien: 'terrain', typeTransaction: 'vente', prix: '5000000', prixCash: '4500000',
       titreTerrain: 'Parcelle Calavi', superficieTerrain: '0,05', superficieUnite: 'ha', description: 'Belle vue',
     }))
-    expect(b).toMatchObject({ type: 'terrain', prix_promo: 4500000, details_terrain: { superficie: 500, cloture: false } })
+    expect(b).toMatchObject({ type: 'terrain', prix_cash: 4500000, details_terrain: { superficie: 500, cloture: false } })
     expect(b.description).toBe('Parcelle Calavi\n\nBelle vue')
     expect(b.pieces).toBeUndefined()
   })

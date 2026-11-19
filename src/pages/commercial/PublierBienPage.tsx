@@ -23,6 +23,7 @@ import {
   type BienClassiqueForm, type TarifCustom, type DetailCustom,
 } from './bien-classique/bienClassiqueForm'
 import { erreurFichierVideo } from '../../utils/videoAnnonce'
+import { erreurPrixCash, libelleReductionCash } from '../../utils/prixCash'
 import { NumberInput } from '../../shared/saisie/champs'
 
 // ─── Quartiers — même structure que immo-web-user ─────────────────────────────
@@ -157,7 +158,7 @@ export default function PublierBienPage() {
   const [typeBien, setTypeBien]               = useState('chambre_salon')
   const [typeTransaction, setTypeTransaction] = useState<'location' | 'vente'>('location')
   const [prix, setPrix]                       = useState('')
-  const [prixPromo, setPrixPromo]             = useState('')
+  const [prixCash, setPrixCash]             = useState('')
   const [estMeuble, setEstMeuble]             = useState(false)
   const [etatMeubleMaison, setEtatMeubleMaison] = useState<'non_meuble' | 'semi_meuble' | 'meuble'>('non_meuble')
   const [etatConstructionMaison, setEtatConstructionMaison] = useState<'semi_construite' | 'totalement_construite' | null>(null)
@@ -247,7 +248,7 @@ export default function PublierBienPage() {
 
   // ── Persistance du brouillon ──────────────────────────────────────────────
   const draftState = {
-    step, typeBien, typeTransaction, prix, prixPromo, estMeuble, etatMeubleMaison, etatConstructionMaison, standing, standingAutre,
+    step, typeBien, typeTransaction, prix, prixCash, estMeuble, etatMeubleMaison, etatConstructionMaison, standing, standingAutre,
     prixLongSejour, prixSejourRestreint, prixHeure, tarifsAutres,
     ville, quartier, arrondissement, indicationAdresse, quartierSearch,
     latitude, longitude, adresseNormalisee, adresseVerifiee,
@@ -343,7 +344,9 @@ export default function PublierBienPage() {
       if (d.typeBien)                  setTypeBien(d.typeBien)
       if (d.typeTransaction)           setTypeTransaction(d.typeTransaction)
       if (d.prix !== undefined)        setPrix(d.prix)
-      if (d.prixPromo !== undefined)   setPrixPromo(d.prixPromo)
+      // Anciens brouillons : le prix cash était rangé sous la clé « prixPromo » (avant le lot 11).
+      if (d.prixCash !== undefined)   setPrixCash(d.prixCash)
+      else if (d.prixPromo !== undefined) setPrixCash(d.prixPromo)
       if (d.estMeuble !== undefined)   setEstMeuble(d.estMeuble)
       if (d.etatMeubleMaison)          setEtatMeubleMaison(d.etatMeubleMaison)
       if (d.etatConstructionMaison !== undefined) setEtatConstructionMaison(d.etatConstructionMaison)
@@ -424,7 +427,7 @@ export default function PublierBienPage() {
 
   // Dérivés : toutes les règles viennent de bien-classique/bienClassiqueForm.
   const form: BienClassiqueForm = {
-    typeBien, typeTransaction, prix, prixPromo, estMeuble, etatMeubleMaison, etatConstructionMaison,
+    typeBien, typeTransaction, prix, prixCash, estMeuble, etatMeubleMaison, etatConstructionMaison,
     standing, standingAutre, prixLongSejour, prixSejourRestreint, prixHeure, tarifsAutres,
     ville, quartier, arrondissement, indicationAdresse, latitude, longitude,
     chambres, salons, cuisines, douches, typeCuisine, cuisineAutre, chambreACouloir,
@@ -761,14 +764,17 @@ export default function PublierBienPage() {
                 </Card>
               ) : (
                 <Card>
-                  <Section title={getPriceFieldLabel(typeTransaction)} />
+                  <Section title={isTerrain && typeTransaction === 'vente' ? 'Prix normal (paiement échelonné)' : getPriceFieldLabel(typeTransaction)} />
                   <MoneyInput value={prix} onChange={setPrix} />
                 </Card>
               )}
               {isTerrain && typeTransaction === 'vente' && (
                 <Card>
-                  <Section title="Prix promo (prix cash) — optionnel" />
-                  <MoneyInput value={prixPromo} onChange={setPrixPromo} placeholder="Facultatif" />
+                  <Section title="Prix si paiement cash — optionnel" />
+                  <MoneyInput value={prixCash} onChange={setPrixCash} placeholder="Facultatif" />
+                  <p style={{ fontSize: 12, marginTop: 8, color: 'var(--c-text-muted, #6B7280)' }} aria-live="polite">
+                    {libelleReductionCash(parsePrix(prix), parsePrix(prixCash)) || 'Plus bas que le prix normal : proposé à l’acheteur qui paie comptant.'}
+                  </p>
                 </Card>
               )}
             </div>
@@ -1534,9 +1540,9 @@ export default function PublierBienPage() {
                 ]} />
                 {prixCalcul > 0 && (
                   <RecapSection title="Prix" items={[
-                    `${isMeuble ? 'Tarif principal' : typeTransaction === 'location' ? 'Loyer mensuel' : 'Prix de vente'} : ${formatFcfa(prixCalcul)}`,
-                    ...(isTerrain && typeTransaction === 'vente' && parsePrix(prixPromo) !== undefined
-                      ? [`Prix promo (prix cash) : ${formatFcfa(parsePrix(prixPromo)!)}`]
+                    `${isMeuble ? 'Tarif principal' : typeTransaction === 'location' ? 'Loyer mensuel' : isTerrain ? 'Prix normal (paiement échelonné)' : 'Prix de vente'} : ${formatFcfa(prixCalcul)}`,
+                    ...(isTerrain && typeTransaction === 'vente' && parsePrix(prixCash) !== undefined && !erreurPrixCash(prixCalcul, parsePrix(prixCash))
+                      ? [`Prix cash : ${formatFcfa(parsePrix(prixCash)!)} (${libelleReductionCash(prixCalcul, parsePrix(prixCash))})`]
                       : []),
                   ]} />
                 )}
