@@ -10,6 +10,7 @@ import {
   type FiltresHistorique,
   type Periode,
 } from '../../utils/historiqueTransactions';
+import { NumberInput } from '../../shared/saisie/champs';
 
 interface Props {
   superAdmin: boolean;
@@ -122,17 +123,17 @@ export default function HistoriqueFiltres({ superAdmin, periode, filtres, verrou
             </label>
           )}
           <label style={champ}>N° utilisateur
-            <input type="number" min={1} style={saisie} disabled={verrou('utilisateur_id')} value={filtres.utilisateur_id ?? ''}
+            <NumberInput min={1} style={saisie} disabled={verrou('utilisateur_id')} value={filtres.utilisateur_id ?? ''}
               onChange={e => maj({ utilisateur_id: entier(e.target.value) })} />
           </label>
           <label style={champ}>N° bien
-            <input type="number" min={1} style={saisie} value={filtres.bien_id ?? ''} onChange={e => maj({ bien_id: entier(e.target.value) })} />
+            <NumberInput min={1} style={saisie} value={filtres.bien_id ?? ''} onChange={e => maj({ bien_id: entier(e.target.value) })} />
           </label>
           <label style={champ}>Montant min (FCFA)
-            <input type="number" min={0} style={saisie} value={filtres.montant_min ?? ''} onChange={e => maj({ montant_min: nombre(e.target.value) })} />
+            <NumberInput milliers min={0} style={saisie} value={filtres.montant_min ?? ''} onChange={e => maj({ montant_min: nombre(e.target.value) })} />
           </label>
           <label style={champ}>Montant max (FCFA)
-            <input type="number" min={0} style={saisie} value={filtres.montant_max ?? ''} onChange={e => maj({ montant_max: nombre(e.target.value) })} />
+            <NumberInput milliers min={0} style={saisie} value={filtres.montant_max ?? ''} onChange={e => maj({ montant_max: nombre(e.target.value) })} />
           </label>
         </div>
       )}

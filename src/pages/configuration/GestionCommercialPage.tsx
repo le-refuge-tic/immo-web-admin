@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useRef, type FormEvent } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import RegularisationPrimes from './RegularisationPrimes';
-import { blockInvalidNumberKey } from '../../utils/inputNumbers';
 import { getCommerciaux } from '../../api/getCommerciaux';
 import { deleteCommerciaux } from '../../api/deleteCommerciaux';
 import { postCommercialBonus } from '../../api/postCommercialBonus';
@@ -16,6 +15,9 @@ import GestionCommercialModal from './GestionCommercialModal';
 import { apiMessage } from '../../utils/apiMessage';
 import { suffixeUnite } from '../../utils/prix';
 import LienHistorique from '../../components/LienHistorique';
+import { ErreurChamp, NumberInput, TexteInput } from '../../shared/saisie/champs';
+import { idErreur, useValidation } from '../../shared/saisie/validation';
+import { schemaBonus } from '../../validation/schemas';
 
 /* ─── Helpers ─────────────────────────────────────────────── */
 
@@ -116,25 +118,24 @@ function ClientsListModal({ commercial, onClose }: { commercial: any; onClose: (
 function BonusCommercialModal({ commercial, onClose }: { commercial: any; onClose: () => void }) {
   const [montant, setMontant] = useState('');
   const [motif, setMotif]     = useState('');
-  const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
   const [success, setSuccess] = useState(false);
+  const v = useValidation('bonus', schemaBonus, { montant, motif });
+  const loading = v.envoiEnCours;
 
-  const canSubmit = Number(montant) > 0 && motif.trim().length >= 3;
-
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (!canSubmit) return;
-    setLoading(true);
     setError('');
-    try {
-      await postCommercialBonus.accorder(commercial.id, Number(montant), motif.trim());
-      setSuccess(true);
-    } catch (err: any) {
-      setError(apiMessage(err) ?? 'Erreur lors de l\'attribution du bonus.');
-    } finally {
-      setLoading(false);
-    }
+    void v.soumettre(async d => {
+      try {
+        await postCommercialBonus.accorder(commercial.id, d.montant, d.motif);
+        setSuccess(true);
+      } catch (err: any) {
+        if (!v.erreursDuServeur(err, { montant: /montant/i, motif: /motif/i })) {
+          setError(apiMessage(err) ?? 'Erreur lors de l\'attribution du bonus.');
+        }
+      }
+    });
   };
 
   return (
@@ -163,23 +164,24 @@ function BonusCommercialModal({ commercial, onClose }: { commercial: any; onClos
             <button className="btn-cancel" onClick={onClose}>Fermer</button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} noValidate>
             <div className="immo-form-field" style={{ marginBottom: 14 }}>
-              <label className="immo-form-label">Montant (FCFA) *</label>
-              <input
-                className="immo-form-input" type="number" min={1} max={99999999} step={100}
+              <label className="immo-form-label" htmlFor="bonus-montant">Montant (FCFA) *</label>
+              <NumberInput milliers
+                className="immo-form-input" min={1} max={99999999}
                 value={montant} onChange={e => setMontant(e.target.value)}
-                onKeyDown={e => blockInvalidNumberKey(e, true)}
-                placeholder="Ex: 5000" autoFocus disabled={loading} required
+                placeholder="Ex: 5 000" autoFocus disabled={loading} {...v.propsChamp('montant')}
               />
+              <ErreurChamp id={idErreur('bonus', 'montant')} message={v.erreurs.montant} />
             </div>
             <div className="immo-form-field" style={{ marginBottom: 14 }}>
-              <label className="immo-form-label">Motif *</label>
-              <input
-                className="immo-form-input" type="text"
+              <label className="immo-form-label" htmlFor="bonus-motif">Motif *</label>
+              <TexteInput
+                className="immo-form-input" maxLength={255}
                 value={motif} onChange={e => setMotif(e.target.value)}
-                placeholder="Ex: Excellente performance ce mois-ci" disabled={loading} required
+                placeholder="Ex: Excellente performance ce mois-ci" disabled={loading} {...v.propsChamp('motif')}
               />
+              <ErreurChamp id={idErreur('bonus', 'motif')} message={v.erreurs.motif} />
             </div>
 
             {error && (
@@ -190,7 +192,7 @@ function BonusCommercialModal({ commercial, onClose }: { commercial: any; onClos
 
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
               <button type="button" className="btn-cancel" onClick={onClose} disabled={loading}>Annuler</button>
-              <button type="submit" className="btn-submit" disabled={loading || !canSubmit}>
+              <button type="submit" className="btn-submit" disabled={loading}>
                 {loading ? 'Envoi…' : 'Créditer le bonus'}
               </button>
             </div>

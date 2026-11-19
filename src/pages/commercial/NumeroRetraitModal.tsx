@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { postRetrait } from '../../api/postRetrait';
 import { apiMessage } from '../../utils/apiMessage';
 import { numeroLocal, numeroValide } from '../../utils/retraitCommercial';
+import { PhoneInput } from '../../shared/saisie/champs';
 
 /**
  * Changement du NUMÉRO de retrait Mobile Money, en deux étapes : mot de passe puis code SMS envoyé
@@ -94,8 +95,8 @@ export default function NumeroRetraitModal({ onClose, onSaved }: { onClose: () =
             </p>
             <div className="immo-form-field" style={{ marginBottom: 12 }}>
               <label className="immo-form-label" htmlFor="nr-numero">Numéro Mobile Money *</label>
-              <input id="nr-numero" className="immo-form-input" type="tel" inputMode="numeric" maxLength={10} placeholder="01XXXXXXXX"
-                value={numero} onChange={e => { setNumero(e.target.value.replace(/\D/g, '').slice(0, 10)); setError(''); }} disabled={loading} autoFocus />
+              <PhoneInput id="nr-numero" className="immo-form-input" indicatif
+                value={numero} onChange={e => { setNumero(e.target.value); setError(''); }} disabled={loading} autoFocus />
             </div>
             <div className="immo-form-field" style={{ marginBottom: 12 }}>
               <label className="immo-form-label" htmlFor="nr-mdp">Mot de passe (confirmation) *</label>

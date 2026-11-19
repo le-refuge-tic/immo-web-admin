@@ -4,6 +4,7 @@
  * Mêmes règles que le backend (voir API_GUESTHOUSE.md) pour éviter les allers-retours.
  * Logique pure, sans React : testée dans guesthouseForm.test.ts.
  */
+import { estTelephoneBenin, telephoneCanonique } from '../../saisie/telephone'
 
 export const ETAPES = [
   'Identité et contact',
@@ -144,8 +145,9 @@ export function formulaireVide(proprio?: {
 export const HEURE = /^([01]\d|2[0-3]):[0-5]\d$/
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-export const telephoneNormalise = (t: string) => t.replace(/[\s.-]/g, '')
-const telephoneValide = (t: string) => /^\+?\d{8,15}$/.test(telephoneNormalise(t))
+/** Lot 15 : numéro béninois (01 + 8 chiffres), envoyé sous la forme +229XXXXXXXXXX. */
+export const telephoneNormalise = (t: string) => telephoneCanonique(t)
+const telephoneValide = (t: string) => estTelephoneBenin(t)
 
 /** Entier strictement positif (ou ≥ 0 si `zeroOk`) saisi en texte ; undefined sinon. */
 export function entierFcfa(v: string, zeroOk = false): number | undefined {
@@ -164,7 +166,7 @@ export function manquesIdentite(
   if (nom.length < 3 || nom.length > 100) m.push(libelleNom)
   if (!f.description.trim()) m.push('Description')
   if (!f.proprioNom.trim()) m.push('Nom du propriétaire ou gestionnaire')
-  if (!telephoneValide(f.proprioTelephone)) m.push('Téléphone du propriétaire (ex. +229 01 97 00 00 00)')
+  if (!telephoneValide(f.proprioTelephone)) m.push('Téléphone du propriétaire (10 chiffres commençant par 01)')
   if (f.proprioEmail.trim() && !EMAIL.test(f.proprioEmail.trim())) m.push('E-mail du propriétaire (format invalide)')
   return m
 }

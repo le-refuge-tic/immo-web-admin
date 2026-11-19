@@ -1,6 +1,6 @@
 import { BLUE, S } from '../formStyles'
-import { blockInvalidNumberKey } from '../../../utils/inputNumbers'
 import type { SalleFeteForm } from './salleFeteForm'
+import { NumberInput } from '../../../shared/saisie/champs'
 
 /** Props communes à chaque étape du formulaire salle de fêtes. */
 export type EtapeProps = {
@@ -19,8 +19,8 @@ export function NombreEntier({ value, onChange, unite, placeholder, max, ariaLab
 }) {
   return (
     <div style={{ position: 'relative' }}>
-      <input type="number" inputMode="numeric" min="0" max={max} step="1" value={value} aria-label={ariaLabel}
-        onChange={e => onChange(e.target.value)} onKeyDown={e => blockInvalidNumberKey(e, true)}
+      <NumberInput min={0} max={max} value={value} aria-label={ariaLabel}
+        onChange={e => onChange(e.target.value)}
         placeholder={placeholder ?? '0'}
         style={{ width: '100%', borderRadius: 10, padding: '12px 76px 12px 16px', fontSize: 14, outline: 'none', border: '1px solid var(--c-border)', background: 'var(--c-surface-2)', color: 'var(--c-text)', transition: 'border-color 0.15s', boxSizing: 'border-box' }}
         onFocus={e => (e.currentTarget.style.borderColor = BLUE)}

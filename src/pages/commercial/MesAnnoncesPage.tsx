@@ -24,6 +24,9 @@ function lireBrouillons(): ResumeBrouillon[] {
   return tousLesBrouillons();
 }
 import { prixAvecUnite } from '../../utils/prix';
+import { EmailInput, ErreurChamp, PhoneInput } from '../../shared/saisie/champs';
+import { idErreur, useValidation } from '../../shared/saisie/validation';
+import { schemaProprietaire } from '../../validation/schemas';
 
 /* ─── Helpers ─────────────────────────────────────────────── */
 
@@ -68,17 +71,14 @@ function ProprietaireInfoModal({ onConfirm, onClose }: {
   onConfirm: (info: { nom: string; prenom: string; telephone: string; email: string }) => void;
   onClose: () => void;
 }) {
-  const [nom, setNom]           = useState('');
-  const [prenom, setPrenom]     = useState('');
-  const [telephone, setTelephone] = useState('');
-  const [email, setEmail]       = useState('');
+  const [valeurs, setValeurs] = useState({ prenom: '', nom: '', telephone: '', email: '' });
+  const v = useValidation('proprio-info', schemaProprietaire, valeurs);
+  const champ = (k: keyof typeof valeurs) => (e: { target: { value: string } }) => setValeurs(x => ({ ...x, [k]: e.target.value }));
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (!nom.trim() || !prenom.trim() || !telephone.trim()) return;
-    onConfirm({ nom: nom.trim(), prenom: prenom.trim(), telephone: telephone.trim(), email: email.trim() });
+    void v.soumettre(d => onConfirm({ nom: d.nom, prenom: d.prenom, telephone: d.telephone, email: d.email ?? '' }));
   };
-
   return (
     <div className="immo-modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="immo-modal" style={{ maxWidth: 440 }}>
@@ -95,28 +95,32 @@ function ProprietaireInfoModal({ onConfirm, onClose }: {
             </svg>
           </button>
         </div>
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div className="immo-form-field">
-              <label className="immo-form-label">Prénom *</label>
-              <input className="immo-form-input" placeholder="Ex: Koffi" value={prenom} onChange={e => setPrenom(e.target.value)} required autoFocus />
+              <label className="immo-form-label" htmlFor="proprio-info-prenom">Prénom *</label>
+              <input className="immo-form-input" placeholder="Ex: Koffi" maxLength={100} value={valeurs.prenom} onChange={champ('prenom')} autoFocus {...v.propsChamp('prenom')} />
+              <ErreurChamp id={idErreur('proprio-info', 'prenom')} message={v.erreurs.prenom} />
             </div>
             <div className="immo-form-field">
-              <label className="immo-form-label">Nom *</label>
-              <input className="immo-form-input" placeholder="Ex: Adjovi" value={nom} onChange={e => setNom(e.target.value)} required />
+              <label className="immo-form-label" htmlFor="proprio-info-nom">Nom *</label>
+              <input className="immo-form-input" placeholder="Ex: Adjovi" maxLength={100} value={valeurs.nom} onChange={champ('nom')} {...v.propsChamp('nom')} />
+              <ErreurChamp id={idErreur('proprio-info', 'nom')} message={v.erreurs.nom} />
             </div>
           </div>
           <div className="immo-form-field">
-            <label className="immo-form-label">Téléphone *</label>
-            <input className="immo-form-input" type="tel" placeholder="+229 XX XX XX XX" value={telephone} onChange={e => setTelephone(e.target.value)} required />
+            <label className="immo-form-label" htmlFor="proprio-info-telephone">Téléphone *</label>
+            <PhoneInput className="immo-form-input" indicatif value={valeurs.telephone} onChange={champ('telephone')} {...v.propsChamp('telephone')} />
+            <ErreurChamp id={idErreur('proprio-info', 'telephone')} message={v.erreurs.telephone} />
           </div>
           <div className="immo-form-field">
-            <label className="immo-form-label">Email (optionnel)</label>
-            <input className="immo-form-input" type="email" placeholder="proprio@email.com" value={email} onChange={e => setEmail(e.target.value)} />
+            <label className="immo-form-label" htmlFor="proprio-info-email">Email (optionnel)</label>
+            <EmailInput className="immo-form-input" placeholder="proprio@email.com" value={valeurs.email} onChange={champ('email')} {...v.propsChamp('email')} />
+            <ErreurChamp id={idErreur('proprio-info', 'email')} message={v.erreurs.email} />
           </div>
           <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 }}>
             <button type="button" className="btn-cancel" onClick={onClose}>Annuler</button>
-            <button type="submit" className="btn-submit" disabled={!nom.trim() || !prenom.trim() || !telephone.trim()}>
+            <button type="submit" className="btn-submit" disabled={v.envoiEnCours}>
               Continuer
             </button>
           </div>

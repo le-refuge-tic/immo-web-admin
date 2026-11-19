@@ -1,4 +1,6 @@
 import { useState, type FormEvent } from 'react';
+import { valider } from '../shared/saisie/validation';
+import { schemaChangementMotDePasse } from '../validation/schemas';
 import { patchAuth } from '../api/patchAuth';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -109,7 +111,8 @@ export default function ChangePasswordForm({ onSuccess, submitLabel = 'Valider l
 
   const tooShort  = newPassword.length > 0 && newPassword.length < 8;
   const mismatch  = confirmPassword.length > 0 && newPassword !== confirmPassword;
-  const canSubmit = !!currentPassword && newPassword.length >= 8 && !mismatch && confirmPassword.length > 0;
+  // Lot 15 : mêmes règles que le DTO (8 à 128 caractères), décidées par le schéma.
+  const canSubmit = valider(schemaChangementMotDePasse, { actuel: currentPassword, nouveau: newPassword, confirmation: confirmPassword }).ok;
 
   const phone = user?.telephone ?? '';
 

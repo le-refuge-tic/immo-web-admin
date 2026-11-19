@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { patchAuth } from '../../api/patchAuth';
 import { apiMessage } from '../../utils/apiMessage';
 import VerifyPhoneSection from '../../components/VerifyPhoneSection';
+import { EmailInput, ErreurChamp, TexteInput } from '../../shared/saisie/champs';
+import { idErreur, useValidation } from '../../shared/saisie/validation';
+import { schemaProfil } from '../../validation/schemas';
 
 export default function ProfilEditModal({ initial, onClose, onSaved }: {
   initial: any;
@@ -23,25 +26,27 @@ export default function ProfilEditModal({ initial, onClose, onSaved }: {
 
   const set = (field: any) => (e: any) => setForm((f: any) => ({ ...f, [field]: e.target.value }));
 
-  const handleSubmit = async (e: any) => {
+  const v = useValidation('profil', schemaProfil, { nom: form.nom ?? '', prenom: form.prenom ?? '', email: form.email ?? '' });
+
+  const handleSubmit = (e: any) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
-    try {
-      // `telephone` est exclu volontairement : il ne change que par le flux
-      // vérifié par SMS (VerifyPhoneSection), jamais par ce PATCH.
-      await patchAuth.profile({
-        nom:    form.nom,
-        prenom: form.prenom,
-        email:  form.email || undefined,
-      });
-      await onSaved();
-      onClose();
-    } catch (err: any) {
-      setError(apiMessage(err) ?? 'Une erreur est survenue');
-    } finally {
-      setLoading(false);
-    }
+    void v.soumettre(async d => {
+      setLoading(true);
+      try {
+        // `telephone` est exclu volontairement : il ne change que par le flux
+        // vérifié par SMS (VerifyPhoneSection), jamais par ce PATCH.
+        await patchAuth.profile({ nom: d.nom, prenom: d.prenom, email: d.email });
+        await onSaved();
+        onClose();
+      } catch (err: any) {
+        if (!v.erreursDuServeur(err, { nom: /^nom|vrai nom/i, prenom: /prénom|prenom/i, email: /e-?mail/i })) {
+          setError(apiMessage(err) ?? 'Une erreur est survenue');
+        }
+      } finally {
+        setLoading(false);
+      }
+    });
   };
 
   return (
@@ -60,20 +65,23 @@ export default function ProfilEditModal({ initial, onClose, onSaved }: {
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             <div className="immo-form-field">
-              <label className="immo-form-label">Nom</label>
-              <input className="immo-form-input" value={form.nom} onChange={set('nom')} required placeholder="Hounssou" />
+              <label className="immo-form-label" htmlFor="profil-nom">Nom</label>
+              <TexteInput className="immo-form-input" maxLength={100} value={form.nom} onChange={set('nom')} placeholder="Hounssou" {...v.propsChamp('nom')} />
+              <ErreurChamp id={idErreur('profil', 'nom')} message={v.erreurs.nom} />
             </div>
             <div className="immo-form-field">
-              <label className="immo-form-label">Prénom</label>
-              <input className="immo-form-input" value={form.prenom} onChange={set('prenom')} required placeholder="Franck" />
+              <label className="immo-form-label" htmlFor="profil-prenom">Prénom</label>
+              <TexteInput className="immo-form-input" maxLength={100} value={form.prenom} onChange={set('prenom')} placeholder="Franck" {...v.propsChamp('prenom')} />
+              <ErreurChamp id={idErreur('profil', 'prenom')} message={v.erreurs.prenom} />
             </div>
           </div>
           <div className="immo-form-field">
-            <label className="immo-form-label">Adresse email</label>
-            <input className="immo-form-input" type="email" value={form.email} onChange={set('email')} placeholder="admin@refuge-immo.com" />
+            <label className="immo-form-label" htmlFor="profil-email">Adresse email</label>
+            <EmailInput className="immo-form-input" value={form.email} onChange={set('email')} placeholder="admin@refuge-immo.com" {...v.propsChamp('email')} />
+            <ErreurChamp id={idErreur('profil', 'email')} message={v.erreurs.email} />
           </div>
           <div className="immo-form-field">
             <label className="immo-form-label">Téléphone</label>

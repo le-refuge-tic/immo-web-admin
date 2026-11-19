@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useCallback, type FormEvent } from 'react';
 import { postRetrait } from '../../api/postRetrait';
-import { blockInvalidNumberKey } from '../../utils/inputNumbers';
 import { apiMessage } from '../../utils/apiMessage';
 import {
   RETRAIT_MINIMUM,
@@ -14,6 +13,7 @@ import {
 } from '../../utils/retraitCommercial';
 import NumeroRetraitModal from './NumeroRetraitModal';
 import SelecteurOperateur from './SelecteurOperateur';
+import { NumberInput } from '../../shared/saisie/champs';
 
 function formatFcfa(v: number) {
   return new Intl.NumberFormat('fr-FR').format(Math.round(v)) + ' FCFA';
@@ -184,16 +184,12 @@ export default function RetraitRequestModal({ solde, onClose, onSuccess }: {
           <form onSubmit={soumettre}>
             <div className="immo-form-field" style={{ marginBottom: 8 }}>
               <label className="immo-form-label" htmlFor="retrait-montant">Montant à retirer (FCFA) *</label>
-              <input
+              <NumberInput milliers
                 id="retrait-montant"
                 className="immo-form-input"
-                type="number"
                 min={min}
-                max={solde}
-                step={100}
                 value={montant}
                 onChange={e => { setMontant(e.target.value); setError(''); }}
-                onKeyDown={e => blockInvalidNumberKey(e, true)}
                 placeholder={`Minimum ${formatFcfa(min)}`}
                 aria-invalid={!!montantMessage}
                 aria-describedby="retrait-montant-aide"

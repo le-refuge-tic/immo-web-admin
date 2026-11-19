@@ -5,6 +5,29 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ## [Non publié]
 
+### Ajouté (lot 15 — validation des formulaires)
+- Champs communs (`src/shared/saisie`, identiques dans immo-web-user) :
+  - `NumberInput` et `MoneyInput` : chiffres seulement, à la frappe comme au collage ; milliers affichés ;
+  - `PhoneInput` : 10 chiffres commençant par 01, indicatif collé retiré ;
+  - `EmailInput`, `TexteInput`, `DateInput`.
+
+  Ils remplacent les 27 `<input type="number">` (le blocage de touches `blockInvalidNumberKey` laissait passer le collage) et les 6 champs téléphone libres.
+- Schémas zod (`src/validation/schemas.ts`, testés), avec les erreurs sous chaque champ et le focus sur le premier champ en erreur, pour :
+  - la connexion et le code SMS ;
+  - le profil ;
+  - les coordonnées du propriétaire (fiche d'annonce et « Mes annonces ») ;
+  - la création d'un commercial ou d'un admin ;
+  - le bonus commercial ;
+  - le tarif des frais de visite ;
+  - la modération (frais ou motif) ;
+  - la validation d'une mise en gestion.
+
+  Le changement de mot de passe utilise aussi son schéma.
+- Les modales « Nouveau commercial » et « Nouvel administrateur » partagent un seul formulaire (`NouveauCompteModal`). Les erreurs de l'API sont placées sous le bon champ.
+- Le téléphone du propriétaire d'une guesthouse suit la règle béninoise (01 + 8 chiffres). Avant, la règle acceptait de 8 à 15 chiffres.
+- `npm run check:inputs` refuse tout nouveau champ numérique ou téléphone brut.
+- Inventaire champ par champ dans `docs/VALIDATION_FORMULAIRES.md`.
+
 ### Ajouté (lot 17 — historique des transactions)
 - Finances › Historique détaillé (`/finances/historique`) : paiements et mouvements de
   portefeuille dans une seule liste. Onglets Tout, Mon historique, Admins, Commerciaux,
