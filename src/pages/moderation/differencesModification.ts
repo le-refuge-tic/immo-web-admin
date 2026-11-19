@@ -12,6 +12,7 @@ export interface Difference {
 const LIBELLES: Record<string, string> = {
   prix: 'Prix',
   prix_promo: 'Prix promotionnel',
+  prix_cash: 'Prix cash',
   description: 'Description',
   frais_visite: 'Frais de visite',
   disponible_a: 'Disponible à partir du',

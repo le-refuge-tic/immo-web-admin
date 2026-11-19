@@ -8,6 +8,7 @@
  * corps envoyé à l'API.
  */
 import { prixPrincipalDuplex } from '../duplexCalculs'
+import { erreurPrixCash } from '../../../utils/prixCash'
 import { SOUS_TYPES_BIENS, coupleBackend } from '../../../shared/biens/referentielTypes'
 
 export type Transaction = 'location' | 'vente'
@@ -50,7 +51,7 @@ export interface BienClassiqueForm {
   typeBien: string
   typeTransaction: Transaction
   prix: string
-  prixPromo: string
+  prixCash: string
   estMeuble: boolean
   etatMeubleMaison: EtatMeubleMaison
   etatConstructionMaison: 'semi_construite' | 'totalement_construite' | null
@@ -198,10 +199,8 @@ export function manquesEtape(etape: number, f: BienClassiqueForm, nbPhotos: numb
     } else {
       const principal = parsePrix(f.prix)
       if (!principal) manques.push('Veuillez entrer le prix')
-      const cash = parsePrix(f.prixPromo)
-      if (d.isTerrain && f.typeTransaction === 'vente' && principal && cash !== undefined && cash >= principal) {
-        manques.push('Le prix promo doit être inférieur au prix de vente')
-      }
+      const erreurCash = d.isTerrain && f.typeTransaction === 'vente' ? erreurPrixCash(principal, parsePrix(f.prixCash)) : null
+      if (erreurCash) manques.push(erreurCash)
     }
   }
   if (etape === 1 && !f.quartier.trim()) manques.push('Veuillez sélectionner un quartier')
@@ -330,13 +329,13 @@ export function construirePayload(f: BienClassiqueForm, proprietaireInfo?: unkno
   // Nom et superficie d'un terrain sont facultatifs : sans nom, « Terrain à <quartier> ».
   const titre = d.isTerrain ? (f.titreTerrain.trim() || titreTerrainParDefaut(f.quartier)) : ''
   const description = titre ? (notes ? `${titre}\n\n${notes}` : titre) : notes
-  const promo = parsePrix(f.prixPromo)
+  const cash = parsePrix(f.prixCash)
 
   const body: Record<string, unknown> = {
     type: d.typeBackend,
     transaction: f.typeTransaction,
     prix: prixPrincipal(f),
-    ...(d.isTerrain && f.typeTransaction === 'vente' && promo !== undefined ? { prix_promo: promo } : {}),
+    ...(d.isTerrain && f.typeTransaction === 'vente' && cash !== undefined ? { prix_cash: cash } : {}),
     frais_visite: FRAIS_VISITE,
     description: description || undefined,
     localisation: {

@@ -20,6 +20,7 @@ import { useToast } from '../../context/ToastContext';
 import SelecteurTypeBien from '../../components/SelecteurTypeBien';
 import { prixPrincipalDuplex } from '../commercial/duplexCalculs';
 import { libellePrix, prixAvecUnite } from '../../utils/prix';
+import { erreurPrixCash, estTerrainEnVente, libelleReductionCash, prixCashDuBien } from '../../utils/prixCash';
 import { NumberInput, type NumberInputProps } from '../../shared/saisie/champs';
 
 // ── Icônes SVG locales ────────────────────────────────────────────────────────
@@ -187,6 +188,8 @@ export default function AnnonceEditPage() {
   const [choixType, setChoixType]     = useState<ChoixType | null>(null);
   const [description, setDescription] = useState('');
   const [prix, setPrix]               = useState('');
+  // Lot 11 : terrain en vente, prix si paiement cash (facultatif).
+  const [prixCash, setPrixCash]         = useState('');
   // Tarifs d'un meublé (null = pas de tarifs meublés : le prix se saisit directement).
   const [tarifs, setTarifs] = useState<{ long: string; nuit: string; heure: string } | null>(null);
   const [superficie, setSuperficie]   = useState('');
@@ -254,6 +257,7 @@ export default function AnnonceEditPage() {
         setChoixType(choixDepuisBien(b.type ?? '', a.sous_type ?? '', a));
         setDescription(b.description ?? '');
         setPrix(b.prix != null ? String(b.prix) : '');
+        setPrixCash(b.prix_cash != null ? String(Math.round(Number(b.prix_cash))) : '');
         const tm = a.tarifs_meuble;
         setTarifs(tm ? {
           long:  tm.prix_long_sejour      != null ? String(tm.prix_long_sejour)      : '',
@@ -381,6 +385,7 @@ export default function AnnonceEditPage() {
 
     const payload: any = {
       type: dbType, description: description||undefined, prix: prixEnvoye,
+      ...(estTerrainEnVente({ type: dbType, transaction: bien?.transaction }) ? { prix_cash: prixCash.trim() ? Number(prixCash) : null } : {}),
       localisation: { ville:villeVal, quartier:quartierVal||undefined, adresse:adresse||undefined },
       amenites: ame,
       pieces: pieces.map(p => ({ id:p.id > 0 ? p.id : undefined, nom:p.nom, surface:p.surface!==''?Number(p.surface):null, longueur:p.longueur!==''?Number(p.longueur):null, largeur:p.largeur!==''?Number(p.largeur):null })),
@@ -467,6 +472,8 @@ export default function AnnonceEditPage() {
   const opt = choixType ? coupleBackend(choixType) : null;
   const dbType = opt?.type ?? bien?.type ?? '';
   const dbST   = opt?.sous_type ?? '';
+  const avecPrixCash = estTerrainEnVente({ type: dbType, transaction: bien?.transaction });
+  const erreurCash = avecPrixCash ? erreurPrixCash(Number(prix) || null, prixCash.trim() ? Number(prixCash) : null) : null;
   // Boutique, bureau : type maison en base, mais sans pièces ni état du meuble.
   const isLocalPro = LOCAUX_PRO.includes(dbST);
   const isMaison  = dbType === 'maison' && !isLocalPro;
@@ -639,8 +646,13 @@ export default function AnnonceEditPage() {
                     ))}
                   </>
                 ) : (
-                  <Field label={`${bien ? libellePrix(bien) : 'Prix'} (FCFA)`} hint="Modifiable après vérification sur site.">
+                  <Field label={`${avecPrixCash ? 'Prix normal (paiement échelonné)' : bien ? libellePrix(bien) : 'Prix'} (FCFA)`} hint="Modifiable après vérification sur site.">
                     <SNombre milliers min={0} max={999999999} placeholder="Ex : 50 000" value={prix} onChange={e => setPrix(e.target.value)} />
+                  </Field>
+                )}
+                {!tarifs && avecPrixCash && (
+                  <Field label="Prix si paiement cash (FCFA, facultatif)" hint={erreurCash || libelleReductionCash(Number(prix) || null, Number(prixCash) || null) || 'Plus bas que le prix normal : proposé à l’acheteur qui paie comptant.'}>
+                    <SNombre milliers min={0} max={999999999} placeholder="Laisser vide pour aucun prix cash" value={prixCash} onChange={e => setPrixCash(e.target.value)} />
                   </Field>
                 )}
                 <Field label="Description">
@@ -901,7 +913,8 @@ export default function AnnonceEditPage() {
               <SectionTitle>Conditions financières</SectionTitle>
               <p style={{ fontSize:12, color:'var(--c-muted)', margin:'0 0 20px', lineHeight:1.6 }}>Ces données sont définies par le propriétaire ou l'agent à la création. Le loyer mensuel est éditable dans l'onglet <strong>Type & Prix</strong>.</p>
               {([
-                [libellePrix(bien),     bien.prix!=null ? prixAvecUnite(bien) : '—'],
+                [prixCashDuBien(bien) != null ? 'Prix normal (paiement échelonné)' : libellePrix(bien),     bien.prix!=null ? prixAvecUnite(bien) : '—'],
+                ...(prixCashDuBien(bien) != null ? [['Prix cash (paiement comptant)', `${prixCashDuBien(bien)!.toLocaleString('fr-FR')} FCFA — ${libelleReductionCash(Number(bien.prix), prixCashDuBien(bien))}`]] : []),
                 ['Avance',              amenites.avance_mois!=null ? `${amenites.avance_mois} mois` : '—'],
                 ['Loyer prépayé',       amenites.loyer_prepaye_mois!=null ? `${amenites.loyer_prepaye_mois} mois` : '—'],
                 ['Caution eau',         amenites.caution_eau!=null ? `${Number(amenites.caution_eau).toLocaleString('fr-FR')} FCFA` : '—'],

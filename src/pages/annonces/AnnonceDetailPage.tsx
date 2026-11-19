@@ -9,6 +9,7 @@ import { ChevronLeftIcon, PinIcon, TrashIcon, EditIcon } from '../../components/
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { libellePrix, suffixeUnite, lignesTarifsMeuble } from '../../utils/prix';
+import { libelleReductionCash, prixCashDuBien } from '../../utils/prixCash';
 import { apiMessage } from '../../utils/apiMessage';
 import { useConfirm } from '../../shared/dialogues/useConfirm';
 import { photosDuBien } from '../../shared/biens/approbation';
@@ -444,8 +445,15 @@ export default function AnnonceDetailPage() {
               {formatPrice(bien.prix)} <span>FCFA{suffixeUnite(bien)}</span>
             </div>
             <div className="detail-bien-price-type">
-              {libellePrix(bien)}
+              {prixCashDuBien(bien) != null ? 'Prix normal (paiement échelonné)' : libellePrix(bien)}
             </div>
+            {prixCashDuBien(bien) != null && (
+              <div style={{ marginTop: 10 }}>
+                <div className="detail-bien-price-type">Prix cash (paiement comptant)</div>
+                <div className="detail-bien-price">{formatPrice(prixCashDuBien(bien)!)} <span>FCFA</span></div>
+                <div className="detail-bien-price-type">{libelleReductionCash(Number(bien.prix), prixCashDuBien(bien))}</div>
+              </div>
+            )}
             {lignesTarifsMeuble(bien.amenites).length > 0 && (
               <div className="detail-info-rows" style={{ marginTop: 10 }}>
                 {lignesTarifsMeuble(bien.amenites).map(t => (

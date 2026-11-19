@@ -5,6 +5,12 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ## [Non publié]
 
+### Ajouté (lot 11 — prix cash des terrains)
+- Terrain en vente : « Prix normal (paiement échelonné) » obligatoire et « Prix si paiement cash » facultatif (au moins 100 F, inférieur au prix normal), avec la réduction en direct (« soit −12 % / −300 000 F »), à la publication par le commercial et dans la modification d'une annonce. Le récapitulatif de publication et la fiche d'annonce affichent les deux prix côte à côte, sans mention de promotion.
+- Avant, le formulaire commercial rangeait le prix cash dans `prix_promo` (« Prix promo (prix cash) »). Il envoie maintenant `prix_cash` ; les anciens brouillons sont repris (clé `prixPromo` lue comme prix cash).
+- La modération d'une modification en attente nomme le champ « Prix cash ».
+- Règles dans `src/utils/prixCash.ts` (testé), alignées sur le backend (colonne `prix_cash`, migration 1787880000000).
+
 ### Ajouté (lot 15 — validation des formulaires)
 - Champs communs (`src/shared/saisie`, identiques dans immo-web-user) :
   - `NumberInput` et `MoneyInput` : chiffres seulement, à la frappe comme au collage ; milliers affichés ;
