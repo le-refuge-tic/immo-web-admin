@@ -4,6 +4,7 @@ import { patchAdminUser } from '../../api/patchAdminUser';
 import { deleteAdminUser } from '../../api/deleteAdminUser';
 import { SearchIcon, TrashIcon } from '../../components/Icons';
 import { apiMessage } from '../../utils/apiMessage';
+import BadgeStatutCompte from '../../components/BadgeStatutCompte';
 
 const AVATAR_COLORS = ['#2563EB', '#7C3AED', '#DB2777', '#D97706', '#16A34A'];
 
@@ -207,6 +208,7 @@ export default function UsersMgmtPage({ title, subtitle, roleFilter, emptyLabel 
                     <div>
                       <div className="mgmt-user-name">{u.prenom} {u.nom}</div>
                       <div className="mgmt-user-email">{u.email ?? '—'}</div>
+                      <BadgeStatutCompte user={u} />
                     </div>
                   </div>
                   <div>

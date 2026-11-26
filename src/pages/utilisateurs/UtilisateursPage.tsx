@@ -6,6 +6,7 @@ import { deleteAdminUser } from '../../api/deleteAdminUser';
 import { apiMessage } from '../../utils/apiMessage';
 import { useToast } from '../../context/ToastContext';
 import LienHistorique from '../../components/LienHistorique';
+import BadgeStatutCompte from '../../components/BadgeStatutCompte';
 
 const TABS = [
   { key: '',             label: 'Tous'          },
@@ -178,6 +179,7 @@ export default function UtilisateursPage() {
                         <div className="ut-user-info">
                           <div className="ut-user-name">{u.prenom} {u.nom}</div>
                           <div className="ut-user-email">{u.email ?? '—'}</div>
+                          <BadgeStatutCompte user={u} />
                         </div>
                       </div>
                     </td>
@@ -241,6 +243,7 @@ export default function UtilisateursPage() {
                     <div className="ut-user-name">{u.prenom} {u.nom}</div>
                     <div className="ut-user-email">{u.email ?? '—'}</div>
                     {u.telephone && <div className="ut-card-phone">{u.telephone}</div>}
+                    <BadgeStatutCompte user={u} />
                   </div>
                   <div className="ut-card-right">
                     <span className="ut-role-badge" style={{ color: rc?.color ?? 'var(--c-muted)', background: rc?.bg ?? 'var(--c-surface-2)' }}>
