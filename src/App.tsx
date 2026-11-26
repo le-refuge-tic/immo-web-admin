@@ -42,7 +42,6 @@ import MonEquipePage              from './pages/commercial/MonEquipePage';
 import SupervisionPage         from './pages/supervision/SupervisionPage';
 import PlaintesPage            from './pages/plaintes/PlaintesPage';
 import ModerationPage          from './pages/moderation/ModerationPage';
-import VerificationsPage       from './pages/verifications/VerificationsPage';
 import NotFoundPage from './pages/errors/NotFoundPage';
 
 function DefaultRedirect() {
@@ -92,7 +91,6 @@ export default function App() {
             <Route path="finances/historique" element={<AdminRoute><HistoriqueTransactionsPage /></AdminRoute>} />
             <Route path="feedbacks"    element={<AdminRoute><FeedbacksPage /></AdminRoute>} />
             <Route path="moderation"   element={<AdminRoute><ModerationPage /></AdminRoute>} />
-            <Route path="verifications" element={<AdminRoute><VerificationsPage /></AdminRoute>} />
             <Route path="reclamations" element={<AdminRoute><PlaintesPage /></AdminRoute>} />
             <Route path="liaisons"     element={<AdminRoute><GestionLiaisonsPage /></AdminRoute>} />
             <Route path="retraits"     element={<AdminRoute><RetraitsPage /></AdminRoute>} />

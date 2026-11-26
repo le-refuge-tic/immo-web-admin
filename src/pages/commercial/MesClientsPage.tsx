@@ -258,15 +258,6 @@ export default function MesClientsPage() {
                       {p.email    && <div style={{ fontSize: 12, color: 'var(--c-muted)' }}>{p.email}</div>}
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
-                      <span style={{
-                        padding: '3px 10px', borderRadius: 20, fontSize: 10, fontWeight: 700,
-                        letterSpacing: '0.5px', textTransform: 'uppercase',
-                        background: p.verifie ? 'var(--t-green-bg)' : 'var(--t-yellow-bg)',
-                        color:      p.verifie ? 'var(--s-green)' : 'var(--s-yellow)',
-                        border: `1px solid ${p.verifie ? '#BBF7D0' : '#FDE68A'}`,
-                      }}>
-                        {p.verifie ? 'Vérifié' : 'En attente'}
-                      </span>
                       <span style={{ fontSize: 11, color: 'var(--c-muted)' }}>
                         {p.biens?.length ?? 0} bien{(p.biens?.length ?? 0) > 1 ? 's' : ''}
                       </span>

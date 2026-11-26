@@ -57,7 +57,6 @@ export default function Sidebar({
     { id: 'utilisateurs', label: 'Utilisateurs', Icon: UsersIcon, items: [
       { to: '/utilisateurs',  label: 'Tous les utilisateurs', Icon: UsersIcon  },
       { to: '/liaisons',      label: 'Liaisons gestion',      Icon: KeyIcon    },
-      { to: '/verifications', label: 'Vérifications',        Icon: ShieldIcon },
     ] },
     { id: 'finances', label: 'Finances', Icon: TrendingUpIcon, items: [
       { to: '/finances', label: 'Vue d\'ensemble', Icon: TrendingUpIcon },
@@ -105,7 +104,6 @@ export default function Sidebar({
     '/retraits':     badges.retraits,
     '/remboursements': badges.remboursements,
     '/mes-annonces': badges.mesAnnonces,
-    '/verifications': badges.verifications,
   } as Record<string, number>)[to] ?? 0;
 
   const isPathActive = (to: string) => location.pathname === to || location.pathname.startsWith(to + '/');
