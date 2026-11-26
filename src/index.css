@@ -4182,3 +4182,16 @@ body.lp-page #root { overflow: auto; }
 .not-found-text { margin: 0; font-size: 0.875rem; color: var(--c-muted); line-height: 1.6; }
 .not-found-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; margin-top: 0.5rem; }
 .not-found-actions .btn-submit { text-decoration: none; display: inline-flex; align-items: center; }
+
+/* Tableaux en lecture seule (dossiers supprimés, historique des actions d'un retrait) */
+.tableau-lecture { width: 100%; border-collapse: collapse; min-width: 640px; }
+.tableau-lecture thead tr { background: var(--c-surface-2); border-bottom: 1px solid var(--c-border); }
+.tableau-lecture th {
+  padding: 0.625rem 1rem; font-size: 0.625rem; font-weight: 700; color: var(--c-muted);
+  text-transform: uppercase; letter-spacing: 0.05em; text-align: left; white-space: nowrap;
+}
+.tableau-lecture td { padding: 0.75rem 1rem; font-size: 0.8125rem; color: var(--c-text); vertical-align: top; }
+.tableau-lecture tbody tr { border-bottom: 1px solid var(--c-border); }
+.tableau-lecture tbody tr:last-child { border-bottom: none; }
+.tableau-lecture tbody tr.cliquable { cursor: pointer; }
+.tableau-lecture tbody tr.cliquable:hover { background: var(--c-surface-2); }

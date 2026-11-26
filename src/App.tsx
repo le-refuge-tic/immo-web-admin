@@ -42,6 +42,9 @@ import MonEquipePage              from './pages/commercial/MonEquipePage';
 import SupervisionPage         from './pages/supervision/SupervisionPage';
 import PlaintesPage            from './pages/plaintes/PlaintesPage';
 import ModerationPage          from './pages/moderation/ModerationPage';
+import DossiersSupprimesPage   from './pages/dossiers-supprimes/DossiersSupprimesPage';
+import DossierSupprimeDetailPage from './pages/dossiers-supprimes/DossierSupprimeDetailPage';
+import AccesSuperAdmin from './components/AccesSuperAdmin';
 import NotFoundPage from './pages/errors/NotFoundPage';
 
 function DefaultRedirect() {
@@ -91,6 +94,8 @@ export default function App() {
             <Route path="finances/historique" element={<AdminRoute><HistoriqueTransactionsPage /></AdminRoute>} />
             <Route path="feedbacks"    element={<AdminRoute><FeedbacksPage /></AdminRoute>} />
             <Route path="moderation"   element={<AdminRoute><ModerationPage /></AdminRoute>} />
+            <Route path="dossiers-supprimes"     element={<AccesSuperAdmin><DossiersSupprimesPage /></AccesSuperAdmin>} />
+            <Route path="dossiers-supprimes/:id" element={<AccesSuperAdmin><DossierSupprimeDetailPage /></AccesSuperAdmin>} />
             <Route path="reclamations" element={<AdminRoute><PlaintesPage /></AdminRoute>} />
             <Route path="liaisons"     element={<AdminRoute><GestionLiaisonsPage /></AdminRoute>} />
             <Route path="retraits"     element={<AdminRoute><RetraitsPage /></AdminRoute>} />

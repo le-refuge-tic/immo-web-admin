@@ -57,6 +57,7 @@ export default function Sidebar({
     { id: 'utilisateurs', label: 'Utilisateurs', Icon: UsersIcon, items: [
       { to: '/utilisateurs',  label: 'Tous les utilisateurs', Icon: UsersIcon  },
       { to: '/liaisons',      label: 'Liaisons gestion',      Icon: KeyIcon    },
+      ...(isSuperAdmin ? [{ to: '/dossiers-supprimes', label: 'Dossiers supprimés', Icon: FileTextIcon }] : []),
     ] },
     { id: 'finances', label: 'Finances', Icon: TrendingUpIcon, items: [
       { to: '/finances', label: 'Vue d\'ensemble', Icon: TrendingUpIcon },
