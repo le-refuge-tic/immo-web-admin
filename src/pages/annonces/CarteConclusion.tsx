@@ -7,6 +7,8 @@ type Props = {
   bien: any;
   onDeclaree: () => void;
   notifier: (msg: string, type?: 'success' | 'error' | 'info') => void;
+  /** Raison du blocage (bien masqué) : le bouton de déclaration est désactivé avec cette info-bulle. */
+  bloque?: string;
 };
 
 /** Taux usuels de la commission Refuge, pour préremplir la saisie (modifiable). */
@@ -17,7 +19,7 @@ const commissionSuggeree = (nature: 'location' | 'vente', prix: number) =>
  * Prime de résultat : l'admin déclare le bien loué ou vendu avec la commission encaissée ;
  * 10 % sont crédités au commercial qui l'a publié (50/50 en binôme).
  */
-export default function CarteConclusion({ bien, onDeclaree, notifier }: Props) {
+export default function CarteConclusion({ bien, onDeclaree, notifier, bloque }: Props) {
   const prix = Number(bien.prix ?? 0);
   const [ouvert, setOuvert] = useState(false);
   const [nature, setNature] = useState<'location' | 'vente'>(bien.transaction === 'vente' ? 'vente' : 'location');
@@ -64,7 +66,7 @@ export default function CarteConclusion({ bien, onDeclaree, notifier }: Props) {
         </ul>
       )}
       {!ouvert ? (
-        <button type="button" className="detail-btn detail-btn--approve" onClick={() => setOuvert(true)}>
+        <button type="button" className="detail-btn detail-btn--approve" onClick={() => setOuvert(true)} disabled={!!bloque} title={bloque}>
           Déclarer le bien loué ou vendu
         </button>
       ) : (

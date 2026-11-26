@@ -9,6 +9,7 @@ import ModificationsEnAttente from './ModificationsEnAttente';
 import { MOTIFS_REFUS, TYPE_LABELS, formatPrix, auteurNom, blocageApprobation } from './moderationChecks';
 import { suffixeUnite } from '../../utils/prix';
 import { apiMessage } from '../../utils/apiMessage';
+import { estBienMasque } from '../../utils/statutBien';
 import { ErreurChamp, NumberInput } from '../../shared/saisie/champs';
 import { idErreur, useValidation } from '../../shared/saisie/validation';
 import { schemaFraisModeration, schemaMotifRefus } from '../../validation/schemas';
@@ -280,6 +281,8 @@ export default function ModerationPage() {
         const next = biens[Math.min(biens.length - 1, Math.max(0, idx + (e.key === 'ArrowDown' ? 1 : -1)))];
         setSelectedId(next.id);
         listRef.current?.querySelector<HTMLElement>(`[data-id="${next.id}"]`)?.scrollIntoView({ block: 'nearest' });
+      } else if (selected && estBienMasque(selected)) {
+        // Bien masqué : ni approbation ni rejet (les boutons sont désactivés).
       } else if (selected && e.key.toLowerCase() === 'a') {
         // Guesthouse incomplète : pas d'approbation (le motif est affiché sous le bouton)
         if (!blocageApprobation(selected)) setModal({ bien: selected, type: 'approuve' });

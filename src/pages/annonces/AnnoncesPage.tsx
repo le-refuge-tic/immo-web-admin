@@ -3,13 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import { SearchIcon, PinIcon, ChevronLeftIcon, ChevronRightIcon } from '../../components/Icons';
 import { getAdminBien } from '../../api/getAdminBien';
 import { libellePrix, suffixeUnite } from '../../utils/prix';
+import { estBienMasque, LIBELLES_STATUT_BIEN } from '../../utils/statutBien';
+import { BadgeBienMasque } from '../../components/AvisBienMasque';
 
-const STATUT_FILTER = [
-  { key: '',            label: 'Tous' },
-  { key: 'en_attente',  label: 'En attente' },
-  { key: 'approuve',    label: 'Approuvés' },
-  { key: 'rejete',      label: 'Rejetés' },
-  { key: 'conditionnel',label: 'Conditionnels' },
+// `param` : champ de GET /admin/biens filtré (modération, ou statut du bien pour les biens masqués).
+const STATUT_FILTER: { key: string; label: string; param: 'statut_moderation' | 'statut' }[] = [
+  { key: '',            label: 'Tous', param: 'statut_moderation' },
+  { key: 'en_attente',  label: 'En attente', param: 'statut_moderation' },
+  { key: 'approuve',    label: 'Approuvés', param: 'statut_moderation' },
+  { key: 'rejete',      label: 'Rejetés', param: 'statut_moderation' },
+  { key: 'conditionnel',label: 'Conditionnels', param: 'statut_moderation' },
+  { key: 'masque_suppression_en_cours',  label: LIBELLES_STATUT_BIEN.masque_suppression_en_cours,  param: 'statut' },
+  { key: 'masque_proprietaire_supprime', label: LIBELLES_STATUT_BIEN.masque_proprietaire_supprime, param: 'statut' },
 ];
 
 const TYPE_BADGE: Record<string, string> = {
@@ -82,10 +87,11 @@ export default function AnnoncesPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
+      const param = STATUT_FILTER.find(f => f.key === filterStatut)?.param ?? 'statut_moderation';
       const res = await getAdminBien.list({
         page,
         limit: LIMIT,
-        statut_moderation: filterStatut || undefined,
+        [param]: filterStatut || undefined,
       });
       setBiens(res.data);
       setTotal(res.total);
@@ -247,6 +253,8 @@ export default function AnnoncesPage() {
                         </div>
                       </div>
                     </div>
+
+                    {estBienMasque(b) && <div style={{ margin: '4px 0' }}><BadgeBienMasque statut={b.statut} /></div>}
 
                     {b.localisation && (
                       <div className="annonce-location">

@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { CheckIcon, XIcon, HomeIcon, ChevronLeftIcon } from '../../components/Icons';
 import ModerationRisqueLabel from './ModerationRisqueLabel';
 import { moderationChecks, TYPE_LABELS, formatPrix, auteurNom, blocageApprobation } from './moderationChecks';
+import { estBienMasque, INFO_BULLE_BIEN_MASQUE } from '../../utils/statutBien';
+import AvisBienMasque from '../../components/AvisBienMasque';
 
 type Props = {
   bien: any;
@@ -75,17 +77,20 @@ export default function ModerationDetail({ bien: b, onApprove, onReject, onBack 
       {blocage && (
         <p id={`blocage-${b.id}`} role="note" style={{ fontSize: 12, color: 'var(--s-red)', margin: '0 0 8px' }}>{blocage}</p>
       )}
+      {estBienMasque(b) && <div style={{ margin: '0 0 8px' }}><AvisBienMasque statut={b.statut} /></div>}
       <div className="mod-detail-actions">
         <button type="button" className="btn-cancel mod-btn-voir"
           onClick={() => navigate(`/annonces/${b.id}`, { state: { from: 'moderation' } })}>
           Voir le bien
         </button>
-        <button type="button" className="btn-cancel mod-btn-reject" onClick={onReject}>
+        <button type="button" className="btn-cancel mod-btn-reject" onClick={onReject}
+          disabled={estBienMasque(b)} title={estBienMasque(b) ? INFO_BULLE_BIEN_MASQUE : undefined}>
           Rejeter… <kbd>R</kbd>
         </button>
         <button type="button" className="btn-submit mod-btn-approve" onClick={onApprove}
-          disabled={!!blocage} aria-describedby={blocage ? `blocage-${b.id}` : undefined}
-          style={blocage ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}>
+          disabled={!!blocage || estBienMasque(b)} aria-describedby={blocage ? `blocage-${b.id}` : undefined}
+          title={estBienMasque(b) ? INFO_BULLE_BIEN_MASQUE : undefined}
+          style={blocage || estBienMasque(b) ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}>
           Approuver… <kbd>A</kbd>
         </button>
       </div>

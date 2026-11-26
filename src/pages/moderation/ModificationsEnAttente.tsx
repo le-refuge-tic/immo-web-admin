@@ -5,6 +5,8 @@ import { useToast } from '../../context/ToastContext';
 import { refreshSidebarBadges } from '../../hooks/useSidebarBadges';
 import { useConfirm } from '../../shared/dialogues/useConfirm';
 import { apiMessage } from '../../utils/apiMessage';
+import { estBienMasque, INFO_BULLE_BIEN_MASQUE } from '../../utils/statutBien';
+import AvisBienMasque from '../../components/AvisBienMasque';
 import { TYPE_LABELS, auteurNom } from './moderationChecks';
 import { differencesModification } from './differencesModification';
 
@@ -194,9 +196,10 @@ export default function ModificationsEnAttente({ onChange }: { onChange: () => v
                   </tbody>
                 </table>
               )}
+              {estBienMasque(choisi) && <div style={{ marginTop: 16 }}><AvisBienMasque statut={choisi.statut} /></div>}
               <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-                <button type="button" className="btn-cancel" disabled={enCours} onClick={() => void decider(choisi, 'rejeter')}>Refuser</button>
-                <button type="button" className="btn-submit" disabled={enCours} style={{ flex: 1 }} onClick={() => void decider(choisi, 'approuver')}>
+                <button type="button" className="btn-cancel" disabled={enCours || estBienMasque(choisi)} title={estBienMasque(choisi) ? INFO_BULLE_BIEN_MASQUE : undefined} onClick={() => void decider(choisi, 'rejeter')}>Refuser</button>
+                <button type="button" className="btn-submit" disabled={enCours || estBienMasque(choisi)} title={estBienMasque(choisi) ? INFO_BULLE_BIEN_MASQUE : undefined} style={{ flex: 1 }} onClick={() => void decider(choisi, 'approuver')}>
                   {enCours ? 'Envoi…' : 'Approuver la modification'}
                 </button>
               </div>

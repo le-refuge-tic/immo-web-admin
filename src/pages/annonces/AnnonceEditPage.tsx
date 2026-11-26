@@ -13,6 +13,8 @@ import {
 } from '../../components/Icons';
 import { BENIN_VILLES, getQuartiersByVille, ALL_QUARTIERS } from '../../data/beninLocations';
 import { apiMessage } from '../../utils/apiMessage';
+import { estBienMasque } from '../../utils/statutBien';
+import AvisBienMasque from '../../components/AvisBienMasque';
 import { LOCAUX_PRO } from '../commercial/bien-classique/bienClassiqueForm';
 import { choixDepuisBien, coupleBackend, donneesPerduesConversion, sousTypeParCle, type ChoixType } from '../../shared/biens/referentielTypes';
 import { useConfirm } from '../../shared/dialogues/useConfirm';
@@ -529,6 +531,14 @@ export default function AnnonceEditPage() {
     <>
       <div style={TOP_STYLE}><button onClick={() => navigate(-1)} style={{ background:'none',border:'none',cursor:'pointer',color:'var(--c-muted)',fontSize:12,display:'flex',alignItems:'center',gap:5 }}><ChevronLeftIcon size={13}/> Retour</button></div>
       <div style={{ padding:32,color:'var(--s-red)' }}>{error || 'Bien introuvable'}</div>
+    </>
+  );
+
+  // Bien masqué (compte du propriétaire en suppression ou supprimé) : aucune écriture possible.
+  if (estBienMasque(bien)) return (
+    <>
+      <div style={TOP_STYLE}><button onClick={() => navigate(-1)} style={{ background:'none',border:'none',cursor:'pointer',color:'var(--c-muted)',fontSize:12,display:'flex',alignItems:'center',gap:5 }}><ChevronLeftIcon size={13}/> Retour</button></div>
+      <div style={{ padding:24 }}><AvisBienMasque statut={bien.statut} onRetour={() => navigate(-1)} /></div>
     </>
   );
 

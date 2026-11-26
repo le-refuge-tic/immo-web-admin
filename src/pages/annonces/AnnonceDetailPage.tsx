@@ -11,6 +11,8 @@ import { useToast } from '../../context/ToastContext';
 import { libellePrix, suffixeUnite, lignesTarifsMeuble } from '../../utils/prix';
 import { libelleReductionCash, prixCashDuBien } from '../../utils/prixCash';
 import { apiMessage } from '../../utils/apiMessage';
+import { estBienMasque, messageBienMasque, INFO_BULLE_BIEN_MASQUE } from '../../utils/statutBien';
+import AvisBienMasque from '../../components/AvisBienMasque';
 import { useConfirm } from '../../shared/dialogues/useConfirm';
 import { photosDuBien } from '../../shared/biens/approbation';
 import { blocageApprobation } from '../moderation/moderationChecks';
@@ -218,8 +220,8 @@ export default function AnnonceDetailPage() {
       setBien((prev: any) => ({ ...prev, ...updated }));
       setEditProprietaire(false);
       showToast('Informations propriétaire enregistrées.');
-    } catch {
-      showToast('Impossible d\'enregistrer les modifications.', 'error');
+    } catch (err) {
+      showToast(messageBienMasque(err) ?? 'Impossible d\'enregistrer les modifications.', 'error');
     } finally {
       setSaving(false);
     }
@@ -254,8 +256,8 @@ export default function AnnonceDetailPage() {
       await deleteAdminBien.byId(bien.id);
       showToast('Bien supprimé définitivement.', 'info');
       navigate(backTo);
-    } catch {
-      showToast('Impossible de supprimer ce bien.', 'error');
+    } catch (err) {
+      showToast(messageBienMasque(err) ?? 'Impossible de supprimer ce bien.', 'error');
     } finally {
       setSaving(false);
       setConfirmDelete(false);
@@ -286,6 +288,9 @@ export default function AnnonceDetailPage() {
   const mod   = bien.statut_moderation ?? 'en_attente';
   const blocage = blocageApprobation(bien);
   const badge = MOD_BADGE[mod] ?? MOD_BADGE.en_attente;
+  // Propriétaire en cours de suppression ou supprimé : toute écriture est refusée (403 BIEN_MASQUE).
+  const masque = estBienMasque(bien);
+  const bulleMasque = masque ? INFO_BULLE_BIEN_MASQUE : undefined;
 
   return (
     <>
@@ -310,13 +315,19 @@ export default function AnnonceDetailPage() {
           }}>{badge.label}</span>
         </span>
         {!isCommercial && (
-          <button className="detail-edit-btn" onClick={() => navigate(`/annonces/${id}/modifier`)}>
+          <button className="detail-edit-btn" onClick={() => navigate(`/annonces/${id}/modifier`)} disabled={masque} title={bulleMasque}
+            style={masque ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}>
             <EditIcon size={14} />
             Modifier
           </button>
         )}
       </div>
 
+      {masque && (
+        <div style={{ padding: '12px clamp(12px, 3vw, 24px) 0' }}>
+          <AvisBienMasque statut={bien.statut} />
+        </div>
+      )}
       <div className="immo-page detail-page-layout">
 
         {/* ════════════ Colonne gauche ════════════ */}
@@ -595,10 +606,11 @@ export default function AnnonceDetailPage() {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                 <div className="detail-section-title" style={{ margin: 0 }}>Propriétaire du bien</div>
                 {isSuperAdmin && !editProprietaire && (
-                  <button onClick={() => setEditProprietaire(true)} style={{
+                  <button onClick={() => setEditProprietaire(true)} disabled={masque} title={bulleMasque} style={{
+                    opacity: masque ? 0.5 : 1,
                     fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 6,
                     border: '1.5px solid var(--c-border)', background: 'transparent',
-                    color: 'var(--c-blue)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
+                    color: 'var(--c-blue)', cursor: masque ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 4,
                   }}>
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -636,7 +648,7 @@ export default function AnnonceDetailPage() {
                       Annuler
                     </button>
                     <button className="btn-submit" onClick={handleSaveProprietaire}
-                      disabled={saving || vProprio.envoiEnCours}>
+                      disabled={saving || vProprio.envoiEnCours || masque} title={bulleMasque}>
                       {saving ? 'Enregistrement…' : 'Enregistrer'}
                     </button>
                   </div>
@@ -714,7 +726,8 @@ export default function AnnonceDetailPage() {
                   <button
                     className="detail-btn detail-btn--approve"
                     onClick={() => void handleApprove()}
-                    disabled={saving || !!blocage}
+                    disabled={saving || !!blocage || masque}
+                    title={bulleMasque}
                     aria-describedby={blocage ? 'blocage-approbation' : undefined}
                   >
                     ✓ Approuver
@@ -724,7 +737,8 @@ export default function AnnonceDetailPage() {
                   <button
                     className="detail-btn detail-btn--reject"
                     onClick={() => { setErreurDecision(''); setAction('rejeter'); }}
-                    disabled={saving}
+                    disabled={saving || masque}
+                    title={bulleMasque}
                   >
                     ✗ Rejeter
                   </button>
@@ -733,7 +747,8 @@ export default function AnnonceDetailPage() {
                   <button
                     className="detail-btn detail-btn--cond"
                     onClick={() => { setErreurDecision(''); setAction('conditionnel'); }}
-                    disabled={saving}
+                    disabled={saving || masque}
+                    title={bulleMasque}
                   >
                     ⚠ Conditionnel
                   </button>
@@ -742,7 +757,8 @@ export default function AnnonceDetailPage() {
                   <button
                     className="detail-btn detail-btn--revoke"
                     onClick={() => { setErreurDecision(''); setAction('revoquer'); }}
-                    disabled={saving}
+                    disabled={saving || masque}
+                    title={bulleMasque}
                   >
                     ↩ Retirer la publication
                   </button>
@@ -764,7 +780,8 @@ export default function AnnonceDetailPage() {
                     <button
                       className="detail-btn detail-btn--delete"
                       onClick={handleDelete}
-                      disabled={saving}
+                      disabled={saving || masque}
+                      title={bulleMasque}
                       style={{ flex: 1 }}
                     >
                       <TrashIcon size={14} />
@@ -784,7 +801,8 @@ export default function AnnonceDetailPage() {
                 <button
                   className="detail-btn detail-btn--delete"
                   onClick={() => setConfirmDelete(true)}
-                  disabled={saving}
+                  disabled={saving || masque}
+                  title={bulleMasque}
                 >
                   <TrashIcon size={14} />
                   Supprimer définitivement
@@ -797,6 +815,7 @@ export default function AnnonceDetailPage() {
             <CarteConclusion
               bien={bien}
               notifier={showToast}
+              bloque={bulleMasque}
               onDeclaree={() => getAdminBien.byId(bien.id).then(setBien).catch(() => {})}
             />
           )}

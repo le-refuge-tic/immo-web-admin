@@ -11,6 +11,8 @@ import { donneesPerduesConversion, sousTypeParCle } from '../../shared/biens/ref
 import * as G from '../../shared/biens/formulaires/guesthouse';
 import * as S from '../../shared/biens/formulaires/salleFete';
 import { apiMessage } from '../../utils/apiMessage';
+import { estBienMasque } from '../../utils/statutBien';
+import AvisBienMasque from '../../components/AvisBienMasque';
 import EtapeTarifGuesthouse from '../commercial/guesthouse/EtapeTarif';
 import EtapeReglesGuesthouse from '../commercial/guesthouse/EtapeRegles';
 import EtapeTarifSalle from '../commercial/salle-fete/EtapeTarif';
@@ -80,6 +82,7 @@ export default function ConversionDediePage() {
   if (!cible || cible.formulaire === 'classique') return <p style={{ padding: 24 }}>Type de conversion inconnu.</p>;
   if (erreur && !bien) return <p role="alert" style={{ padding: 24, color: 'var(--s-red)' }}>{erreur}</p>;
   if (!bien || !form) return <p style={{ padding: 24, color: 'var(--c-muted)' }}>Chargement…</p>;
+  if (estBienMasque(bien)) return <div style={{ padding: 24 }}><AvisBienMasque statut={bien.statut} onRetour={() => navigate(-1)} /></div>;
 
   const totaux = estGuesthouse
     ? (() => { const f = form as G.GuesthouseForm; return <TotauxGuesthouseBloc t={totauxGuesthouse({ prixNuitee: f.prixNuitee, nuiteesMin: f.nuiteesMin, caution: f.caution, fraisMenage: f.fraisMenage, prixSemaine: f.prixSemaine, prixMois: f.prixMois })} />; })()
