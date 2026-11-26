@@ -59,3 +59,7 @@ export const dossiersSupprimes = {
   detail: (id: number): Promise<DetailDossier> =>
     axios.get(`${BASE}/admin/dossiers-supprimes/${id}`, auth()).then(r => r.data),
 };
+
+/** Réponse 403 : l'appelant n'est pas super administrateur. */
+export const estAccesRefuse = (err: unknown): boolean =>
+  (err as { response?: { status?: number } } | null)?.response?.status === 403;

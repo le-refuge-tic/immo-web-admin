@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SearchIcon, ChevronLeftIcon, ChevronRightIcon } from '../../components/Icons';
 import { AccesReserve } from '../../components/AccesSuperAdmin';
-import { dossiersSupprimes, type DossierSupprime } from '../../api/dossiersSupprimes';
+import { dossiersSupprimes, estAccesRefuse, type DossierSupprime } from '../../api/dossiersSupprimes';
 import { apiMessage } from '../../utils/apiMessage';
 import { dateCourte } from '../../utils/statutCompte';
 import { LIBELLES_ROLE, libelle } from '../../utils/historiqueTransactions';
@@ -23,26 +23,34 @@ export default function DossiersSupprimesPage() {
   const [interdit, setInterdit] = useState(false);
 
   useEffect(() => {
-    const t = setTimeout(() => { setQ(saisie.trim()); setPage(1); }, DELAI_RECHERCHE_MS);
+    const terme = saisie.trim();
+    if (terme === q) return;
+    const t = setTimeout(() => { setLoading(true); setQ(terme); setPage(1); }, DELAI_RECHERCHE_MS);
     return () => clearTimeout(t);
-  }, [saisie]);
+  }, [saisie, q]);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setErreur('');
-    try {
-      const res = await dossiersSupprimes.lister({ page, limit: LIMIT, q: q || undefined });
-      setDossiers(res.data ?? []);
-      setTotal(res.total ?? 0);
-    } catch (err: any) {
-      if (err?.response?.status === 403) setInterdit(true);
-      else setErreur(apiMessage(err) ?? 'Erreur lors du chargement des dossiers.');
-    } finally {
-      setLoading(false);
-    }
-  }, [page, q]);
+  // L'indicateur de chargement est posé par l'action qui relance la requête (page, recherche, réessai).
+  const [essai, setEssai] = useState(0);
+  useEffect(() => {
+    let annule = false;
+    dossiersSupprimes.lister({ page, limit: LIMIT, q: q || undefined })
+      .then(res => {
+        if (annule) return;
+        setDossiers(res.data ?? []);
+        setTotal(res.total ?? 0);
+        setErreur('');
+      })
+      .catch((err: unknown) => {
+        if (annule) return;
+        if (estAccesRefuse(err)) setInterdit(true);
+        else setErreur(apiMessage(err) ?? 'Erreur lors du chargement des dossiers.');
+      })
+      .finally(() => { if (!annule) setLoading(false); });
+    return () => { annule = true; };
+  }, [page, q, essai]);
 
-  useEffect(() => { load(); }, [load]);
+  const changerPage = (p: number) => { setLoading(true); setPage(p); };
+  const reessayer = () => { setLoading(true); setErreur(''); setEssai(n => n + 1); };
 
   if (interdit) return <AccesReserve />;
 
@@ -71,7 +79,7 @@ export default function DossiersSupprimesPage() {
         {erreur && (
           <div role="alert" style={{ background: 'var(--t-red-bg)', border: '1px solid var(--t-red-bd)', borderRadius: 8, padding: '10px 16px', fontSize: 13, color: 'var(--s-red)', fontWeight: 500 }}>
             {erreur}{' '}
-            <button onClick={load} style={{ background: 'none', border: 'none', color: 'var(--s-red)', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>
+            <button onClick={reessayer} style={{ background: 'none', border: 'none', color: 'var(--s-red)', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>
               Réessayer
             </button>
           </div>
@@ -121,11 +129,11 @@ export default function DossiersSupprimesPage() {
               {(page - 1) * LIMIT + 1}–{Math.min(page * LIMIT, total)} sur {total} dossiers
             </span>
             <div className="immo-pagination">
-              <button className="page-btn" disabled={page <= 1} onClick={() => setPage(p => p - 1)} aria-label="Page précédente">
+              <button className="page-btn" disabled={page <= 1} onClick={() => changerPage(page - 1)} aria-label="Page précédente">
                 <ChevronLeftIcon />
               </button>
               <span style={{ fontSize: 12, color: 'var(--c-muted)', padding: '0 8px' }}>Page {page} sur {totalPages}</span>
-              <button className="page-btn" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} aria-label="Page suivante">
+              <button className="page-btn" disabled={page >= totalPages} onClick={() => changerPage(page + 1)} aria-label="Page suivante">
                 <ChevronRightIcon />
               </button>
             </div>

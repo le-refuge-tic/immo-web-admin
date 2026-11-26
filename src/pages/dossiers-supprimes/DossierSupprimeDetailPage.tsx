@@ -2,7 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ChevronLeftIcon } from '../../components/Icons';
 import { AccesReserve } from '../../components/AccesSuperAdmin';
-import { dossiersSupprimes, type BienDossier, type DetailDossier } from '../../api/dossiersSupprimes';
+import { dossiersSupprimes, estAccesRefuse, type BienDossier, type DetailDossier } from '../../api/dossiersSupprimes';
 import { apiMessage } from '../../utils/apiMessage';
 import { dateCourte } from '../../utils/statutCompte';
 import { libelleStatutBien } from '../../utils/statutBien';
@@ -55,14 +55,13 @@ export default function DossierSupprimeDetailPage() {
   const [interdit, setInterdit] = useState(false);
 
   useEffect(() => {
+    // Chargement initial : `loading` vaut déjà true (une autre fiche s'ouvre par une nouvelle navigation).
     let annule = false;
-    setLoading(true);
-    setErreur('');
     dossiersSupprimes.detail(Number(id))
       .then(d => { if (!annule) setDetail(d); })
-      .catch((err: any) => {
+      .catch((err: unknown) => {
         if (annule) return;
-        if (err?.response?.status === 403) setInterdit(true);
+        if (estAccesRefuse(err)) setInterdit(true);
         else setErreur(apiMessage(err) ?? 'Erreur lors du chargement du dossier.');
       })
       .finally(() => { if (!annule) setLoading(false); });
