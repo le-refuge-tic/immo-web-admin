@@ -14,14 +14,30 @@ export type StatutRetrait =
   | 'approuve';
 
 export const STATUT_LABELS: Record<string, string> = {
-  en_attente: 'En attente',
-  en_cours: 'En cours',
-  en_attente_fonds: 'Attente de fonds',
+  en_attente: 'En cours d\'envoi',
+  approuve: 'En cours d\'envoi',
+  en_cours: 'En cours d\'envoi',
+  en_attente_fonds: 'En attente de fonds FedaPay',
   envoye: 'Envoyé',
-  echoue: 'Échoué',
+  echoue: 'Échec',
   rejete: 'Rejeté',
-  approuve: 'Approuvé (ancien)',
 };
+
+/** Libellés des actions manuelles du journal. */
+export const ACTION_LABELS: Record<string, string> = {
+  marquer_envoye: 'Marqué envoyé',
+  rejeter: 'Rejeté',
+};
+
+export function libelleStatutRetrait(statut: string | null | undefined): string {
+  if (!statut) return '—';
+  return STATUT_LABELS[statut] ?? statut;
+}
+
+/** Les trois champs du virement manuel sont obligatoires (espaces seuls = vide). */
+export function virementManuelComplet(v: { reference: string; moyen: string; commentaire: string }): boolean {
+  return !!v.reference.trim() && !!v.moyen.trim() && !!v.commentaire.trim();
+}
 
 export const STATUT_COLORS: Record<string, string> = {
   en_attente: '#f59e0b',

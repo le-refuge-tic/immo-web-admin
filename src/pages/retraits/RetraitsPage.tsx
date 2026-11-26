@@ -3,6 +3,8 @@ import { apiMessage } from '../../utils/apiMessage';
 import { useAuth } from '../../context/AuthContext';
 import { refreshSidebarBadges } from '../../hooks/useSidebarBadges';
 import { retraitsAdmin, type RetraitAdmin, type SoldeFedaPay } from '../../api/retraitsAdmin';
+import { useConfirm } from '../../shared/dialogues/useConfirm';
+import RetraitDetailModal from './RetraitDetailModal';
 import {
   FILTRES,
   STATUT_COLORS,
@@ -12,6 +14,7 @@ import {
   estEnCours,
   motifErreur,
   totalAttenteFonds,
+  virementManuelComplet,
   type FiltreRetrait,
 } from '../../utils/retraitStatut';
 
@@ -55,6 +58,12 @@ function StatutBadge({ statut }: { statut: string }) {
   );
 }
 
+const champSecours: React.CSSProperties = {
+  padding: '6px 10px', borderRadius: 8, border: '1.5px solid var(--c-border)', fontSize: 13,
+  background: 'var(--c-card)', color: 'var(--c-text)', width: '100%', boxSizing: 'border-box',
+};
+const libelleSecours: React.CSSProperties = { fontSize: 11, fontWeight: 600, color: 'var(--c-muted)' };
+
 const btn = (couleur: string, fond: string, inactif: boolean): React.CSSProperties => ({
   padding: '6px 14px', borderRadius: 8, border: 'none', background: fond, color: couleur,
   fontWeight: 600, fontSize: 13, cursor: inactif ? 'not-allowed' : 'pointer', opacity: inactif ? 0.7 : 1,
@@ -74,6 +83,12 @@ export default function RetraitsPage() {
   const [secoursId, setSecoursId]     = useState<number | null>(null);
   const [motifRejet, setMotifRejet]   = useState('');
   const [preuve, setPreuve]           = useState<File | null>(null);
+  // Virement manuel (secours) : référence, moyen et commentaire obligatoires.
+  const [reference, setReference]     = useState('');
+  const [moyen, setMoyen]             = useState('');
+  const [commentaire, setCommentaire] = useState('');
+  const [detailId, setDetailId]       = useState<number | null>(null);
+  const { confirmer } = useConfirm();
   const [solde, setSolde]             = useState<SoldeFedaPay | null>(null);
   const [soldeErreur, setSoldeErreur] = useState(false);
   const [soldeLoading, setSoldeLoading] = useState(true);
@@ -143,6 +158,14 @@ export default function RetraitsPage() {
   const aCouvrir = totalAttenteFonds(retraits);
   const fondsInsuffisants = solde !== null && aCouvrir > 0 && solde.disponible < aCouvrir;
 
+  const viderSecours = () => {
+    setMotifRejet('');
+    setPreuve(null);
+    setReference('');
+    setMoyen('');
+    setCommentaire('');
+  };
+
   const executer = async (id: number, action: () => Promise<unknown>, succes: string, erreur: string) => {
     setActionId(id);
     try {
@@ -150,8 +173,7 @@ export default function RetraitsPage() {
       showToast(succes);
       setRelanceId(null);
       setSecoursId(null);
-      setMotifRejet('');
-      setPreuve(null);
+      viderSecours();
       await load(true);
       chargerSolde();
     } catch (e) {
@@ -166,10 +188,31 @@ export default function RetraitsPage() {
     executer(id, () => retraitsAdmin.relancer(id), 'Retrait relancé : nouveau payout envoyé à FedaPay', 'Impossible de relancer ce retrait');
   const resynchroniser = (id: number) =>
     executer(id, () => retraitsAdmin.resynchroniser(id), 'Statut relu depuis FedaPay', 'Impossible de relire le statut chez FedaPay');
-  const marquerEnvoye = (id: number) =>
-    executer(id, () => retraitsAdmin.marquerEnvoye(id, preuve), 'Retrait marqué comme envoyé (secours)', "Impossible de marquer ce retrait comme envoyé");
-  const rejeter = (id: number) =>
-    executer(id, () => retraitsAdmin.rejeter(id, motifRejet), 'Retrait rejeté et remboursé (secours)', 'Impossible de rejeter ce retrait');
+  const infosVirement = { reference, moyen, commentaire };
+  const virementComplet = virementManuelComplet(infosVirement);
+  const motifRejetValide = !!motifRejet.trim();
+
+  const marquerEnvoye = async (r: RetraitAdmin) => {
+    if (!virementComplet) return;
+    const ok = await confirmer({
+      titre: `Marquer le retrait n° ${r.id} comme envoyé ?`,
+      message: <>Confirmez que <strong>{fmtMontant(r.montant)}</strong> ont bien été envoyés hors application vers {r.numero_telephone} (référence {reference.trim()}). L’utilisateur est prévenu et l’action est enregistrée dans l’historique.</>,
+      confirmer: 'Marquer envoyé',
+    });
+    if (!ok) return;
+    await executer(r.id, () => retraitsAdmin.marquerEnvoye(r.id, infosVirement, preuve), 'Retrait marqué comme envoyé (secours)', "Impossible de marquer ce retrait comme envoyé");
+  };
+  const rejeter = async (r: RetraitAdmin) => {
+    if (!motifRejetValide) return;
+    const ok = await confirmer({
+      titre: `Rejeter le retrait n° ${r.id} ?`,
+      message: 'Le montant sera recrédité sur le portefeuille de l\'utilisateur.',
+      confirmer: 'Rejeter',
+      danger: true,
+    });
+    if (!ok) return;
+    await executer(r.id, () => retraitsAdmin.rejeter(r.id, motifRejet), 'Retrait rejeté : montant recrédité (secours)', 'Impossible de rejeter ce retrait');
+  };
 
   if (!estAdmin) {
     return (
@@ -183,11 +226,17 @@ export default function RetraitsPage() {
   const renderActions = (r: RetraitAdmin) => {
     const a = actionsDisponibles(r, estSuperAdmin);
     const occupe = actionId === r.id;
+    const boutonDetail = (
+      <button onClick={() => setDetailId(r.id)} style={btn('var(--c-text)', 'var(--c-surface-2)', false)}>
+        Voir le détail
+      </button>
+    );
     if (!a.relancer && !a.resynchroniser && !a.secours) {
-      return <span style={{ color: 'var(--c-muted)', fontSize: 12 }}>—</span>;
+      return <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 190 }}>{boutonDetail}</div>;
     }
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 190 }}>
+        {boutonDetail}
         {a.resynchroniser && (
           <button onClick={() => resynchroniser(r.id)} disabled={occupe} style={btn('#1d4ed8', '#3b82f618', occupe)}>
             {occupe ? '…' : 'Resynchroniser'}
@@ -217,21 +266,42 @@ export default function RetraitsPage() {
         )}
 
         {a.secours && (
-          <details open={secoursId === r.id} onToggle={e => { if ((e.target as HTMLDetailsElement).open) setSecoursId(r.id); else if (secoursId === r.id) setSecoursId(null); }}>
+          <details open={secoursId === r.id} onToggle={e => {
+            if ((e.target as HTMLDetailsElement).open) {
+              // Une seule saisie de secours à la fois : changer de demande vide le formulaire.
+              if (secoursId !== r.id) viderSecours();
+              setSecoursId(r.id);
+            } else if (secoursId === r.id) setSecoursId(null);
+          }}>
             <summary style={{ cursor: 'pointer', fontSize: 12, color: 'var(--c-muted)', fontWeight: 600 }}>Secours (FedaPay indisponible)</summary>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
               <span style={{ fontSize: 11, color: 'var(--s-red)' }}>
                 Hors du flux normal. À utiliser seulement si FedaPay est indisponible : aucun payout n&apos;a été lancé pour cette demande.
               </span>
-              <input type="file" accept="image/png,image/jpeg,image/webp" aria-label="Preuve du virement (facultative)"
+              <label style={libelleSecours} htmlFor={`ref-${r.id}`}>Référence du virement *</label>
+              <input id={`ref-${r.id}`} value={reference} onChange={e => setReference(e.target.value)} maxLength={200}
+                required aria-required="true" style={champSecours} />
+              <label style={libelleSecours} htmlFor={`moyen-${r.id}`}>Moyen utilisé *</label>
+              <input id={`moyen-${r.id}`} value={moyen} onChange={e => setMoyen(e.target.value)} maxLength={100}
+                placeholder="ex. Mobile Money manuel" required aria-required="true" style={champSecours} />
+              <label style={libelleSecours} htmlFor={`com-${r.id}`}>Commentaire *</label>
+              <textarea id={`com-${r.id}`} value={commentaire} onChange={e => setCommentaire(e.target.value)} maxLength={1000}
+                rows={2} required aria-required="true" style={{ ...champSecours, resize: 'vertical' }} />
+              <label style={libelleSecours} htmlFor={`preuve-${r.id}`}>Preuve (facultative)</label>
+              <input id={`preuve-${r.id}`} type="file" accept="image/png,image/jpeg,image/webp"
                 onChange={e => setPreuve(e.target.files?.[0] ?? null)} style={{ fontSize: 12 }} />
-              <button onClick={() => marquerEnvoye(r.id)} disabled={occupe} style={btn('#fff', '#475569', occupe)}>
+              <button onClick={() => void marquerEnvoye(r)} disabled={occupe || !virementComplet}
+                title={virementComplet ? undefined : 'Renseignez la référence, le moyen et le commentaire'}
+                style={btn('#fff', '#475569', occupe || !virementComplet)}>
                 {occupe ? '…' : 'Marquer envoyé (virement fait hors app)'}
               </button>
-              <input placeholder="Motif du rejet (optionnel)" value={motifRejet} onChange={e => setMotifRejet(e.target.value)}
-                style={{ padding: '6px 10px', borderRadius: 8, border: '1.5px solid var(--c-border)', fontSize: 13 }} />
-              <button onClick={() => rejeter(r.id)} disabled={occupe} style={btn('var(--s-red)', 'var(--t-red-bg)', occupe)}>
-                {occupe ? '…' : 'Rejeter et rembourser'}
+              <label style={{ ...libelleSecours, marginTop: 6 }} htmlFor={`motif-${r.id}`}>Motif du rejet *</label>
+              <input id={`motif-${r.id}`} value={motifRejet} onChange={e => setMotifRejet(e.target.value)} maxLength={500}
+                required aria-required="true" style={champSecours} />
+              <button onClick={() => void rejeter(r)} disabled={occupe || !motifRejetValide}
+                title={motifRejetValide ? undefined : 'Indiquez le motif du rejet'}
+                style={btn('var(--s-red)', 'var(--t-red-bg)', occupe || !motifRejetValide)}>
+                {occupe ? '…' : 'Rejeter et recréditer'}
               </button>
             </div>
           </details>
@@ -271,6 +341,8 @@ export default function RetraitsPage() {
           <p>Virements Mobile Money automatiques (FedaPay). Cette page sert à superviser et à relancer, pas à valider.</p>
         </div>
       </div>
+
+      {detailId !== null && <RetraitDetailModal id={detailId} onClose={() => setDetailId(null)} />}
 
       <div className="immo-page">
         {toast && (

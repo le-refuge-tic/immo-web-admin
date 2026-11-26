@@ -30,6 +30,33 @@ export interface RetraitAdmin {
   validateur?: { prenom?: string; nom?: string; role?: string } | null;
 }
 
+/** Action manuelle tracée dans journal_actions_retraits (lecture seule). */
+export interface JournalActionRetrait {
+  id: number;
+  /** marquer_envoye ou rejeter. */
+  action: string;
+  admin: { id: number; nom: string | null; prenom: string | null; role: string | null } | null;
+  cree_le: string;
+  reference: string | null;
+  moyen: string | null;
+  /** Commentaire (marquer envoyé) ou motif (rejet). */
+  commentaire: string | null;
+  statut_avant: string | null;
+  statut_apres: string | null;
+}
+
+/** `GET /retraits/admin/:id` : le retrait et l'historique de ses actions manuelles. */
+export interface RetraitDetail extends RetraitAdmin {
+  journal_actions: JournalActionRetrait[];
+}
+
+/** Champs obligatoires de « marquer envoyé » (secours). */
+export interface InfosVirementManuel {
+  reference: string;
+  moyen: string;
+  commentaire: string;
+}
+
 export interface SoldeFedaPay {
   disponible: number;
   devise: string;
@@ -51,14 +78,24 @@ export const retraitsAdmin = {
   relancer: (id: number): Promise<RetraitAdmin> =>
     axios.post(`${BASE}/retraits/admin/${id}/relancer`, {}, auth()).then(r => r.data),
 
-  /** SECOURS (FedaPay indisponible) : le virement a été fait hors application. Preuve facultative. */
-  marquerEnvoye: (id: number, preuve?: File | null): Promise<RetraitAdmin> => {
+  /** Détail du retrait et historique des actions manuelles (lecture seule). */
+  detail: (id: number): Promise<RetraitDetail> =>
+    axios.get(`${BASE}/retraits/admin/${id}`, auth()).then(r => r.data),
+
+  /**
+   * SECOURS (FedaPay indisponible) : le virement a été fait hors application.
+   * Référence, moyen et commentaire obligatoires ; preuve facultative.
+   */
+  marquerEnvoye: (id: number, infos: InfosVirementManuel, preuve?: File | null): Promise<RetraitAdmin> => {
     const form = new FormData();
+    form.append('reference', infos.reference.trim());
+    form.append('moyen', infos.moyen.trim());
+    form.append('commentaire', infos.commentaire.trim());
     if (preuve) form.append('preuve', preuve);
     return axios.post(`${BASE}/retraits/admin/${id}/marquer-envoye`, form, auth()).then(r => r.data);
   },
 
-  /** SECOURS : refuse la demande et rembourse le portefeuille. */
-  rejeter: (id: number, motif?: string): Promise<RetraitAdmin> =>
-    axios.patch(`${BASE}/retraits/admin/${id}/rejeter-manuel`, { motif: motif || undefined }, auth()).then(r => r.data),
+  /** SECOURS : refuse la demande et recrédite le portefeuille. Motif obligatoire. */
+  rejeter: (id: number, motif: string): Promise<RetraitAdmin> =>
+    axios.patch(`${BASE}/retraits/admin/${id}/rejeter-manuel`, { motif: motif.trim() }, auth()).then(r => r.data),
 };
