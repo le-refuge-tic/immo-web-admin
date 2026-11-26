@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import type { RetraitAdmin } from '../../api/retraitsAdmin';
+import type { RetraitAdmin, VirementManuel } from '../../api/retraitsAdmin';
+import PanneauSecours from './PanneauSecours';
 import { fmtDate, fmtMontant, fmtTelephone, initiales, libelleOperateur, walletLabel } from './retraitFormat';
 import { STATUT_COLORS, STATUT_LABELS, actionsDisponibles, motifErreur } from '../../utils/retraitStatut';
 
@@ -19,15 +20,13 @@ type Props = {
   occupe: boolean;
   onRelancer: (id: number) => Promise<boolean>;
   onResynchroniser: (id: number) => Promise<boolean>;
-  onMarquerEnvoye: (id: number, preuve: File | null) => Promise<boolean>;
+  onMarquerEnvoye: (id: number, virement: VirementManuel) => Promise<boolean>;
   onRejeter: (id: number, motif: string) => Promise<boolean>;
 };
 
 export default function RetraitItem({ r, estSuperAdmin, occupe, onRelancer, onResynchroniser, onMarquerEnvoye, onRejeter }: Props) {
   const [confirmation, setConfirmation] = useState(false);
   const [secours, setSecours] = useState(false);
-  const [motifRejet, setMotifRejet] = useState('');
-  const [preuve, setPreuve] = useState<File | null>(null);
 
   const a = actionsDisponibles(r, estSuperAdmin);
   const nom = [r.user?.prenom, r.user?.nom].filter(Boolean).join(' ') || `Utilisateur #${r.user_id}`;
@@ -38,8 +37,6 @@ export default function RetraitItem({ r, estSuperAdmin, occupe, onRelancer, onRe
     if (!ok) return;
     setConfirmation(false);
     setSecours(false);
-    setMotifRejet('');
-    setPreuve(null);
   };
 
   return (
@@ -134,30 +131,9 @@ export default function RetraitItem({ r, estSuperAdmin, occupe, onRelancer, onRe
       )}
 
       {secours && a.secours && (
-        <div className="rt-panel rt-panel-secours" role="group" aria-label="Traitement de secours">
-          <p className="rt-warn">
-            Hors du flux normal. À utiliser seulement si FedaPay est indisponible : aucun payout n&apos;a été lancé pour cette demande.
-          </p>
-          <div className="rt-secours-grid">
-            <div className="rt-secours-col">
-              <div className="rt-label">Virement fait hors application</div>
-              <label className="rt-file">
-                <input type="file" accept="image/png,image/jpeg,image/webp" onChange={e => setPreuve(e.target.files?.[0] ?? null)} />
-                <span>{preuve ? preuve.name : 'Joindre une preuve (facultatif)'}</span>
-              </label>
-              <button type="button" className="rt-btn rt-btn-dark" disabled={occupe} onClick={() => onMarquerEnvoye(r.id, preuve).then(fermer)}>
-                {occupe ? 'Patientez…' : 'Marquer comme envoyé'}
-              </button>
-            </div>
-            <div className="rt-secours-col">
-              <div className="rt-label">Refuser la demande</div>
-              <input className="rt-input" placeholder="Motif du rejet (facultatif)" value={motifRejet} onChange={e => setMotifRejet(e.target.value)} />
-              <button type="button" className="rt-btn rt-btn-danger" disabled={occupe} onClick={() => onRejeter(r.id, motifRejet).then(fermer)}>
-                {occupe ? 'Patientez…' : 'Rejeter et rembourser'}
-              </button>
-            </div>
-          </div>
-        </div>
+        <PanneauSecours occupe={occupe}
+          onMarquerEnvoye={v => onMarquerEnvoye(r.id, v).then(fermer)}
+          onRejeter={m => onRejeter(r.id, m).then(fermer)} />
       )}
     </article>
   );

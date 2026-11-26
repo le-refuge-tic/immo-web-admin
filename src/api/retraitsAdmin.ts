@@ -36,6 +36,14 @@ export interface SoldeFedaPay {
   soldes: { id: number; montant: number; mode: string | null }[];
 }
 
+/** Virement de secours fait hors application : le serveur exige référence, moyen et commentaire. */
+export interface VirementManuel {
+  reference: string;
+  moyen: string;
+  commentaire: string;
+  preuve: File | null;
+}
+
 export const retraitsAdmin = {
   lister: (): Promise<RetraitAdmin[]> =>
     axios.get(`${BASE}/retraits/admin`, auth()).then(r => (Array.isArray(r.data) ? r.data : (r.data?.data ?? []))),
@@ -51,14 +59,17 @@ export const retraitsAdmin = {
   relancer: (id: number): Promise<RetraitAdmin> =>
     axios.post(`${BASE}/retraits/admin/${id}/relancer`, {}, auth()).then(r => r.data),
 
-  /** SECOURS (FedaPay indisponible) : le virement a été fait hors application. Preuve facultative. */
-  marquerEnvoye: (id: number, preuve?: File | null): Promise<RetraitAdmin> => {
+  /** SECOURS (FedaPay indisponible) : le virement a été fait hors application. Référence, moyen et commentaire obligatoires, preuve facultative. */
+  marquerEnvoye: (id: number, { reference, moyen, commentaire, preuve }: VirementManuel): Promise<RetraitAdmin> => {
     const form = new FormData();
+    form.append('reference', reference);
+    form.append('moyen', moyen);
+    form.append('commentaire', commentaire);
     if (preuve) form.append('preuve', preuve);
     return axios.post(`${BASE}/retraits/admin/${id}/marquer-envoye`, form, auth()).then(r => r.data);
   },
 
-  /** SECOURS : refuse la demande et rembourse le portefeuille. */
-  rejeter: (id: number, motif?: string): Promise<RetraitAdmin> =>
-    axios.patch(`${BASE}/retraits/admin/${id}/rejeter-manuel`, { motif: motif || undefined }, auth()).then(r => r.data),
+  /** SECOURS : refuse la demande (motif obligatoire) et rembourse le portefeuille. */
+  rejeter: (id: number, motif: string): Promise<RetraitAdmin> =>
+    axios.patch(`${BASE}/retraits/admin/${id}/rejeter-manuel`, { motif }, auth()).then(r => r.data),
 };

@@ -10,11 +10,15 @@ export function fmtDate(raw?: string | null) {
   });
 }
 
-/** 0166000001 → 01 66 00 00 01 : plus lisible à recopier. */
+/** 0166000001 → 01 66 00 00 01, +2290166000001 → +229 01 66 00 00 01 : plus lisible à recopier. */
 export function fmtTelephone(num?: string | null) {
   if (!num) return '—';
-  const chiffres = num.replace(/\s+/g, '');
-  return /^\d+$/.test(chiffres) ? chiffres.replace(/(\d{2})(?=\d)/g, '$1 ') : num;
+  const brut = num.replace(/\s+/g, '');
+  // Indicatif du Bénin séparé du numéro : +229 01 66 00 00 01.
+  const [, indicatif = '', chiffres = ''] = /^(\+229)?(\d+)$/.exec(brut) ?? [];
+  if (!chiffres) return num;
+  const paires = chiffres.replace(/(\d{2})(?=\d)/g, '$1 ');
+  return indicatif ? `${indicatif} ${paires}` : paires;
 }
 
 export function walletLabel(type?: string) {

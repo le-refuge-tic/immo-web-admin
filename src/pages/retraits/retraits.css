@@ -157,7 +157,7 @@
 .rt-secours-col { display: flex; flex-direction: column; gap: 0.5rem; }
 .rt-input {
   padding: 0.5625rem 0.75rem; border-radius: 9px; border: 1px solid var(--c-border);
-  background: var(--c-card); color: var(--c-text); font-size: 0.875rem;
+  background: var(--c-card); color: var(--c-text); font: inherit; font-size: 0.875rem; resize: vertical;
 }
 .rt-file {
   position: relative; display: flex; align-items: center; padding: 0.5625rem 0.75rem; border-radius: 9px;

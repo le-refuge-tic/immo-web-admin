@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { apiMessage } from '../../utils/apiMessage';
 import { useAuth } from '../../context/AuthContext';
 import { refreshSidebarBadges } from '../../hooks/useSidebarBadges';
-import { retraitsAdmin, type RetraitAdmin, type SoldeFedaPay } from '../../api/retraitsAdmin';
+import { retraitsAdmin, type RetraitAdmin, type SoldeFedaPay, type VirementManuel } from '../../api/retraitsAdmin';
 import {
   FILTRES,
   correspondAuFiltre,
@@ -120,8 +120,8 @@ export default function RetraitsPage() {
     executer(id, () => retraitsAdmin.relancer(id), 'Retrait relancé : nouveau payout envoyé à FedaPay', 'Impossible de relancer ce retrait');
   const resynchroniser = (id: number) =>
     executer(id, () => retraitsAdmin.resynchroniser(id), 'Statut relu depuis FedaPay', 'Impossible de relire le statut chez FedaPay');
-  const marquerEnvoye = (id: number, preuve: File | null) =>
-    executer(id, () => retraitsAdmin.marquerEnvoye(id, preuve), 'Retrait marqué comme envoyé (secours)', "Impossible de marquer ce retrait comme envoyé");
+  const marquerEnvoye = (id: number, virement: VirementManuel) =>
+    executer(id, () => retraitsAdmin.marquerEnvoye(id, virement), 'Retrait marqué comme envoyé (secours)', "Impossible de marquer ce retrait comme envoyé");
   const rejeter = (id: number, motif: string) =>
     executer(id, () => retraitsAdmin.rejeter(id, motif), 'Retrait rejeté et remboursé (secours)', 'Impossible de rejeter ce retrait');
 
