@@ -34,9 +34,9 @@ export const postRetrait = {
   mesRetraits: (): Promise<Retrait[]> =>
     axios.get(`${BASE}/retraits/me`, auth()).then(r => (Array.isArray(r.data) ? r.data : (r.data?.data ?? []))),
 
-  /** Montants minimum et maximum par retrait, fixés côté serveur. */
+  /** Limites d'un retrait de commission (minimum 500 F, plafond 2 000 000 F), fixées côté serveur. */
   limites: (): Promise<LimitesRetrait> =>
-    axios.get(`${BASE}/retraits/limites`, auth()).then(r => r.data),
+    axios.get(`${BASE}/retraits/limites`, { ...auth(), params: { wallet_type: 'commission_commerciale' } }).then(r => r.data),
 
   /** Numéro Mobile Money (par défaut : téléphone du compte), dernier opérateur utilisé et éventuelle suspension. */
   numeroRetrait: (): Promise<NumeroRetraitInfo> =>
