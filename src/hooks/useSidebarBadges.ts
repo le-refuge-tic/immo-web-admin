@@ -6,7 +6,6 @@ import { getMessages, getActiveCommercialIds } from '../api/getMessages';
 import { getAdminStats } from '../api/getAdminStats';
 import { getQuartiers } from '../api/getQuartiers';
 import { getMesBiens } from '../api/getMesBiens';
-import { verificationsApi } from '../api/verificationsApi';
 import { compterATraiter } from '../utils/retraitStatut';
 import { EVENEMENT_ALERTES } from '../layout/alertes/alertes';
 
@@ -54,10 +53,9 @@ export type SidebarBadges = {
   /** Remboursements de frais de visite à verser. */
   remboursements: number;
   mesAnnonces: number;
-  verifications: number;
 };
 
-const EMPTY: SidebarBadges = { supervision: 0, messages: 0, moderation: 0, quartiers: 0, retraits: 0, remboursements: 0, mesAnnonces: 0, verifications: 0 };
+const EMPTY: SidebarBadges = { supervision: 0, messages: 0, moderation: 0, quartiers: 0, retraits: 0, remboursements: 0, mesAnnonces: 0 };
 
 /**
  * Compteurs de la sidebar, regroupés : un seul socket, un seul polling de
@@ -88,11 +86,10 @@ export function useSidebarBadges({ isAdmin, isCommercial, userId }: { isAdmin: b
 
   const loadAdmin = useCallback(async () => {
     if (!isAdmin) return;
-    const [stats, quartiers, retraits, verifications, remboursements] = await Promise.allSettled([
+    const [stats, quartiers, retraits, remboursements] = await Promise.allSettled([
       getAdminStats.get(),
       getQuartiers.lister('en_attente'),
       axios.get(`${BASE}/retraits/admin`, auth()),
-      verificationsApi.list(),
       remboursementsAdmin.lister({ statut: 'a_rembourser', limit: 1 }),
     ]);
     const patch: Partial<SidebarBadges> = {};
@@ -105,9 +102,6 @@ export function useSidebarBadges({ isAdmin, isCommercial, userId }: { isAdmin: b
       patch.retraits = compterATraiter(Array.isArray(rd) ? rd : (rd?.data ?? []));
     }
     if (remboursements.status === 'fulfilled') patch.remboursements = remboursements.value?.a_rembourser?.nombre ?? 0;
-    if (verifications.status === 'fulfilled') {
-      patch.verifications = Array.isArray(verifications.value) ? verifications.value.length : 0;
-    }
     set(patch);
   }, [isAdmin, set]);
 
